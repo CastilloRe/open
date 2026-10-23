@@ -98,13 +98,14 @@ body.touch .keys { display: none; }
 /* ---------- menus & cards ---------- */
 .overlay {
   position: fixed; inset: 0;
-  display: grid; place-items: center;
+  display: flex; flex-direction: column;
   overflow-y: auto;
   padding-block: calc(16px + env(safe-area-inset-top, 0px)) calc(16px + env(safe-area-inset-bottom, 0px));
   padding-left: max(16px, env(safe-area-inset-left, 0px));
   padding-right: max(16px, env(safe-area-inset-right, 0px));
   background: rgba(14, 10, 18, 0.72);
 }
+.overlay > .panel { margin: auto; }
 .panel {
   width: 100%; max-width: 36rem;
   display: flex; flex-direction: column; gap: 1.1rem;
@@ -114,7 +115,8 @@ body.touch .keys { display: none; }
 .eyebrow { margin: 0; font-size: 0.75rem; letter-spacing: 0.24em; color: var(--lamp); }
 h1 { margin: 0; font-family: var(--display); font-weight: 400; font-size: clamp(3.2rem, 14vw, 5rem); line-height: 1; letter-spacing: 0.12em; text-shadow: 0 0 30px rgba(242, 185, 80, 0.35); }
 .lede { margin: 0; line-height: 1.75; max-width: 30em; }
-.levels { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; }
+.levels { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 10px; }
+@media (max-width: 520px) { .levels { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
 .lv {
   position: relative;
   display: flex; flex-direction: column; align-items: center; gap: 4px;
@@ -209,7 +211,7 @@ h1 { margin: 0; font-family: var(--display); font-weight: 400; font-size: clamp(
 
 <div class="overlay" id="overlay">
   <div class="panel">
-    <p class="eyebrow">影子拼图 · 八幕小戏</p>
+    <p class="eyebrow">影子拼图 · 十五幕小戏</p>
     <h1>灯下影</h1>
     <p class="lede">把手边的香蕉、饭团、碗和筷子挂在灯前。挪一挪、转一转、推近或拉远，让它们的影子正好填满墙上的粉笔画。</p>
     <div class="levels" id="levels"></div>
@@ -258,6 +260,22 @@ function crescentPts(r, d, n = 40) {
   for (let i = 1; i < n; i++) { const a = Math.PI + phi - (2 * phi * i) / n; p.push([d + r * Math.cos(a), r * Math.sin(a)]); }
   const cx = (-r + d / 2) / 2;
   return p.map(([x, yy]) => [x - cx, yy]);
+}
+
+function leafPts(w, h, n = 24) { // pointed at both ends
+  const p = [];
+  for (let i = 0; i <= n; i++) { const y = -h / 2 + (h * i) / n; p.push([(w / 2) * (1 - (2 * y / h) ** 2), y]); }
+  for (let i = n - 1; i > 0; i--) { const y = -h / 2 + (h * i) / n; p.push([-(w / 2) * (1 - (2 * y / h) ** 2), y]); }
+  return p;
+}
+function spoonPts(n = 36) { // oval bowl on top, straight handle below, centred on its bounding box
+  const rx = 26, ry = 34, cy = -40, hw = 5, hy = 80;
+  const a0 = Math.acos(-hw / rx), a1 = Math.acos(hw / rx) + TAU;
+  const p = [[-hw, hy]];
+  for (let i = 0; i <= n; i++) { const a = a0 + ((a1 - a0) * i) / n; p.push([rx * Math.cos(a), cy + ry * Math.sin(a)]); }
+  p.push([hw, hy]);
+  const mid = (cy - ry + hy) / 2;
+  return p.map(([x, y]) => [x, y - mid]);
 }
 
 function bbox(pts) {
@@ -358,6 +376,27 @@ const SKINS = {
       [[10, 12], [-8, 22], [16, -6], [-18, 4], [4, 34]].forEach(([x, y]) => c.fillRect(x, y, 2, 2));
     },
   },
+  leaf: {
+    name: '叶子', pts: leafPts(40, 90), sym: Math.PI, base: '#6aa84f',
+    paint(c) {
+      c.strokeStyle = 'rgba(225,255,195,0.6)'; c.lineWidth = 2;
+      c.beginPath(); c.moveTo(0, -45); c.lineTo(0, 45); c.stroke();
+      c.lineWidth = 1.2;
+      for (let y = -24; y <= 24; y += 16) {
+        c.beginPath(); c.moveTo(0, y + 6); c.lineTo(-14, y - 6); c.moveTo(0, y + 6); c.lineTo(14, y - 6); c.stroke();
+      }
+    },
+  },
+  spoon: {
+    name: '勺子', pts: spoonPts(), sym: TAU, base: '#c9ced6',
+    paint(c) {
+      c.fillStyle = 'rgba(255,255,255,0.55)';
+      c.beginPath(); c.ellipse(-7, -50, 8, 16, -0.2, 0, TAU); c.fill();
+      c.fillStyle = 'rgba(90,100,115,0.35)';
+      c.beginPath(); c.ellipse(4, -38, 14, 22, 0, 0, TAU); c.fill();
+      c.fillStyle = 'rgba(255,255,255,0.4)'; c.fillRect(-2, -2, 2, 76);
+    },
+  },
 };
 for (const s of Object.values(SKINS)) s.box = bbox(s.pts);
 
@@ -396,6 +435,45 @@ const LEVELS = [
       { k: 'zongzi', sol: [455, 190, 18, 1.2], init: [400, 560, 40, 1.5] },
       { k: 'egg', sol: [400, 410, 0, 1.6], init: [510, 570, 90, 1.2] },
       { k: 'banana', sol: [505, 450, 160, 1.2], init: [630, 560, 0, 1.5] }] },
+  { name: '苹果', verse: '一个盘子，一片叶子，就够画一个苹果。',
+    pieces: [
+      { k: 'plate', sol: [400, 370, 0, 1.4], init: [300, 560, 0, 1.2] },
+      { k: 'leaf', sol: [453, 252, 40, 1.15], init: [520, 565, 0, 1.5] }] },
+  { name: '雪人', verse: '一样的盘子，离灯近的大，离灯远的小，堆成一个雪人。',
+    tip: '两个一模一样的盘子，影子一定一样大吗？',
+    pieces: [
+      { k: 'plate', sol: [400, 260, 0, 1.15], init: [250, 565, 0, 1.4] },
+      { k: 'plate', sol: [400, 410, 0, 1.6], init: [400, 570, 0, 1.4] },
+      { k: 'book', sol: [400, 175, 0, 1.15], init: [560, 560, 15, 1.4] }] },
+  { name: '冰淇淋', verse: '筷子藏进了冰淇淋里，谁也没发现。',
+    tip: '这一幕有一样东西是多余的。把它的影子藏进别的影子里。',
+    pieces: [
+      { k: 'plate', sol: [400, 300, 0, 1.15], init: [270, 565, 0, 1.4] },
+      { k: 'zongzi', sol: [400, 405, 180, 1.6], init: [420, 565, 0, 1.3] },
+      { k: 'chopstick', init: [580, 550, 60, 1.4] }] },
+  { name: '风筝', verse: '两个三角对在一起，就能被风带走。',
+    pieces: [
+      { k: 'riceball', sol: [400, 260, 0, 1.3], init: [230, 565, 30, 1.5] },
+      { k: 'zongzi', sol: [400, 373, 180, 1.7], init: [380, 560, 0, 1.3] },
+      { k: 'chopstick', sol: [451, 517, -30, 1.2], init: [560, 560, 90, 1.5] }] },
+  { name: '蜗牛', verse: '勺子当触角，蜗牛慢慢爬过墙。',
+    pieces: [
+      { k: 'egg', sol: [370, 440, 90, 1.4], init: [230, 565, 0, 1.2] },
+      { k: 'plate', sol: [430, 370, 0, 1.3], init: [400, 560, 0, 1.2] },
+      { k: 'spoon', sol: [285, 342, -25, 1.15], init: [570, 560, 30, 1.5] }] },
+  { name: '小鸭', verse: '鸡蛋当身子，盘子当脑袋，粽子是一张扁扁的嘴。',
+    pieces: [
+      { k: 'egg', sol: [420, 430, 90, 1.6], init: [240, 565, 0, 1.3] },
+      { k: 'plate', sol: [345, 320, 0, 1.15], init: [400, 560, 0, 1.5] },
+      { k: 'zongzi', sol: [252, 328, -90, 1.15], init: [560, 565, 0, 1.4] }] },
+  { name: '兔子', verse: '叶子做耳朵，勺子藏进肚子里，最后一只兔子谢幕。',
+    tip: '老规矩，这一幕也有一件是多余的。',
+    pieces: [
+      { k: 'plate', sol: [400, 330, 0, 1.2], init: [170, 570, 0, 1.4] },
+      { k: 'leaf', sol: [365, 200, -12, 1.6], init: [290, 560, 60, 1.2] },
+      { k: 'leaf', sol: [435, 200, 12, 1.6], init: [390, 565, -30, 1.3] },
+      { k: 'egg', sol: [400, 470, 0, 1.7], init: [500, 570, 90, 1.2] },
+      { k: 'spoon', init: [620, 560, 0, 1.4] }] },
 ];
 
 // shadow outline of a piece on the wall (design coords)
@@ -474,7 +552,7 @@ function loadLevel(i) {
   li = i;
   const lv = LEVELS[i];
   pieces = lv.pieces.map((d, n) => ({ k: d.k, id: n, x: d.init[0], y: d.init[1], r: deg(d.init[2]), s: d.init[3] }));
-  slots = lv.pieces.map((d) => ({ k: d.k, x: d.sol[0], y: d.sol[1], r: deg(d.sol[2]), s: d.sol[3] }));
+  slots = lv.pieces.filter((d) => d.sol).map((d) => ({ k: d.k, x: d.sol[0], y: d.sol[1], r: deg(d.sol[2]), s: d.sol[3] }));
   sel = pieces.length === 1 ? 0 : -1;
   drag = null; hint = null; anim = null; hintsUsed = 0; peek = false; holding = 0;
   // target mask for scoring
@@ -544,6 +622,7 @@ function solve() {
   sel = -1; drag = null; hint = null; peek = false;
   const map = assign();
   anim = { t0: t, dur: 0.7, from: pieces.map((p) => ({ x: p.x, y: p.y, r: p.r, s: p.s })), to: pieces.map((p, i) => {
+    if (map[i] < 0) return { x: p.x, y: p.y, r: p.r, s: p.s }; // a hidden decoy stays where the player tucked it
     const o = slotObject(slots[map[i]]);
     return { x: o.x, y: o.y, r: p.r + angleDelta(p.r, o.r, SKINS[p.k].sym), s: o.s };
   }) };
@@ -558,8 +637,8 @@ function finishSolve() {
   solvedAt = t;
   const lv = LEVELS[li];
   $('#actName').textContent = lv.name;
-  $('#solvedName').textContent = lv.name.length > 1 ? lv.name.slice(0, 2) : lv.name;
-  $('#solvedName').style.fontSize = lv.name.length > 1 ? '1.6rem' : '2.4rem';
+  $('#solvedName').textContent = lv.name;
+  $('#solvedName').style.fontSize = ['2.4rem', '2.4rem', '1.6rem', '1.15rem'][Math.min(3, lv.name.length)];
   $('#solvedVerse').textContent = lv.verse;
   $('#solvedMeta').textContent = `第 ${li + 1} 幕完成 · 用了 ${hintsUsed} 次提示`;
   $('#btnNext').textContent = li + 1 < LEVELS.length ? '下一幕' : '谢幕';
@@ -595,7 +674,7 @@ function drawThumb(c, i, state) {
   c.width = c.height = size;
   const x = c.getContext('2d');
   const lv = LEVELS[i];
-  const sl = lv.pieces.map((d) => ({ k: d.k, x: d.sol[0], y: d.sol[1], r: deg(d.sol[2]), s: d.sol[3] }));
+  const sl = lv.pieces.filter((d) => d.sol).map((d) => ({ k: d.k, x: d.sol[0], y: d.sol[1], r: deg(d.sol[2]), s: d.sol[3] }));
   const all = sl.flatMap(slotPts), b = bbox(all);
   const sc = (size * 0.72) / Math.max(b.x1 - b.x0, b.y1 - b.y0);
   const g = x.createRadialGradient(size / 2, size / 2, 4, size / 2, size / 2, size * 0.6);
@@ -821,15 +900,23 @@ function giveHint() {
   const map = assign();
   let worst = -1, wc = -1;
   pieces.forEach((p, i) => {
+    if (map[i] < 0) return;
     const sl = slots[map[i]], o = slotObject(sl);
     const c = Math.hypot(p.x - o.x, p.y - o.y) + 60 * angleGap(p.r, o.r, SKINS[p.k].sym) + 300 * Math.abs(p.s - o.s);
     if (c > wc) { wc = c; worst = i; }
   });
+  hintsUsed++;
+  $('#hintCount').textContent = hintsUsed + ' 次';
+  const decoy = map.indexOf(-1);
+  if (decoy >= 0 && (worst < 0 || wc < 20)) {
+    // everything real is in place, so the decoy's shadow is what's spoiling the picture
+    showTip(`${SKINS[pieces[decoy].k].name}是多余的。把它的影子整个藏进别的影子里。`, 4);
+    select(decoy);
+    return;
+  }
   if (worst < 0) return;
   const p = pieces[worst], sl = slots[map[worst]];
   hint = { slot: sl, t0: t };
-  hintsUsed++;
-  $('#hintCount').textContent = hintsUsed + ' 次';
   const ds = sl.s - p.s;
   const depthWord = Math.abs(ds) < 0.04 ? '远近差不多了' : ds > 0 ? '还要再靠近灯一些' : '还要再靠近墙一些';
   showTip(`${SKINS[p.k].name}应该挂在虚线那里，${depthWord}。`, 4);
