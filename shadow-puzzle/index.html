@@ -167,6 +167,15 @@ h1 { margin: 0; font-family: var(--display); font-weight: 400; font-size: clamp(
   .tool { min-width: 56px; padding: 6px 8px; }
   .tool.sep { margin-left: 0; }
 }
+.meter-sub { white-space: nowrap; font-size: 0.68rem; color: var(--muted); font-variant-numeric: tabular-nums; letter-spacing: 0.04em; }
+.meter-sub .c0 { color: #aed2ff; }
+.meter-sub .c1 { color: #ffcf8f; }
+.lv .tag {
+  position: absolute; top: 6px; left: 6px;
+  padding: 1px 5px; border-radius: 4px;
+  font-size: 0.62rem; letter-spacing: 0.08em;
+  color: #cfe3ff; background: rgba(110, 150, 210, 0.25);
+}
 .meter.bump b { color: var(--lamp); }
 .meter.bump .bar i { box-shadow: 0 0 10px var(--lamp); }
 #btnSound.off { text-decoration: line-through; opacity: 0.6; }
@@ -188,6 +197,7 @@ h1 { margin: 0; font-family: var(--display); font-weight: 400; font-size: clamp(
     <div class="meter" aria-live="polite">
       <div class="meter-top"><span>吻合度</span><b id="scoreTxt">0%</b></div>
       <div class="bar"><i id="scoreBar"></i><u id="scoreMark"></u></div>
+      <div class="meter-sub" id="scoreSub" hidden></div>
     </div>
     <button class="ghost-btn" id="btnSound" type="button" aria-label="声音开关">♪</button>
     <button class="ghost-btn" id="btnMenu" type="button">选幕</button>
@@ -202,11 +212,12 @@ h1 { margin: 0; font-family: var(--display); font-weight: 400; font-size: clamp(
     <button class="tool" id="bRotR" type="button" aria-label="向右转"><span>↻</span><small>右转</small></button>
     <button class="tool" id="bNear" type="button"><span>靠近灯</span><small>影子变大</small></button>
     <button class="tool" id="bFar" type="button"><span>靠近墙</span><small>影子变小</small></button>
-    <button class="tool sep" id="bPeek" type="button"><span>只看影</span><small>按住</small></button>
+    <button class="tool sep" id="bLamp" type="button" hidden><span>换灯</span><small id="lampMode">两盏都开</small></button>
+    <button class="tool" id="bPeek" type="button"><span>只看影</span><small>按住</small></button>
     <button class="tool" id="bHint" type="button"><span>提示</span><small id="hintCount">0 次</small></button>
     <button class="tool" id="bReset" type="button"><span>重来</span><small>复位</small></button>
   </div>
-  <p class="keys">拖动物件移动 · 拖小圆点 / Q E / 滚轮旋转 · W S / Shift+滚轮 前后 · 按住空格只看影子 · Tab 切换物件</p>
+  <p class="keys">拖动物件移动 · 拖小圆点 / Q E / 滚轮旋转 · W S / Shift+滚轮 前后 · 按住空格只看影子 · L 换灯 · Tab 切换物件</p>
 </footer>
 
 <section class="solved" id="solved" hidden aria-live="polite">
@@ -221,7 +232,7 @@ h1 { margin: 0; font-family: var(--display); font-weight: 400; font-size: clamp(
 
 <div class="overlay" id="overlay">
   <div class="panel">
-    <p class="eyebrow">影子拼图 · 十五幕小戏</p>
+    <p class="eyebrow">影子拼图 · 十八幕小戏</p>
     <h1>灯下影</h1>
     <p class="lede">把手边的香蕉、饭团、碗和筷子挂在灯前。挪一挪、转一转、推近或拉远，让它们的影子正好填满墙上的粉笔画。</p>
     <div class="levels" id="levels"></div>
@@ -240,6 +251,13 @@ h1 { margin: 0; font-family: var(--display); font-weight: 400; font-size: clamp(
 const TAU = Math.PI * 2;
 const DES = 800;                 // the stage is an 800×800 design square
 const L = { x: 400, y: 380 };    // the lamp sits in front of the wall, facing it
+let lamps = [L];                 // two-lamp levels replace this with their own pair
+// a lamp's shadow is lit only by the other lamp, so it takes the other lamp's colour
+const LAMP_STYLE = [
+  { name: '暖灯', pool: ['#efc98e', '#b88752', '#5e4030'], chalk: 'rgba(174,210,255,0.95)', box: '蓝框', fill: 'rgba(58,88,140,0.92)', tint: '#2a4a86' },
+  { name: '冷灯', pool: ['#9ec3ec', '#5578a6', '#2c3a55'], chalk: 'rgba(255,207,143,0.95)', box: '橙框', fill: 'rgba(150,96,42,0.92)', tint: '#9a5418' },
+];
+const lampsOf = (lv) => (lv.lamps || [[L.x, L.y]]).map(([x, y]) => ({ x, y }));
 const S_MIN = 1.15, S_MAX = 1.7; // shadow magnification range (near wall … near lamp)
 const WIN = 0.78;                // overlap ratio that counts as solved
 const deg = (d) => (d * Math.PI) / 180;
@@ -484,22 +502,40 @@ const LEVELS = [
       { k: 'leaf', sol: [435, 200, 12, 1.6], init: [390, 565, -30, 1.3] },
       { k: 'egg', sol: [400, 470, 0, 1.7], init: [500, 570, 90, 1.2] },
       { k: 'spoon', init: [620, 560, 0, 1.4] }] },
+  { name: '两个月亮', lamps: [[120, 380], [680, 380]], verse: '一根香蕉，两盏灯，天上就有了两个月亮。',
+    tip: '这一幕有两盏灯。挡住暖灯的地方只剩冷光，是蓝影子；挡住冷灯的是橙影子。蓝影子填蓝框，橙影子填橙框。离灯越近，两个影子分得越开。',
+    pieces: [{ k: 'banana', sol: [540, 320, -25, 1.5], init: [330, 560, -25, 1.2] }] },
+  { name: '日出', lamps: [[120, 380], [680, 380]], verse: '蓝框里太阳挂在山顶，橙框里它才刚刚爬上来。',
+    tip: '看不清哪个影子是谁的？点「换灯」只开一盏。',
+    pieces: [
+      { k: 'riceball', sol: [490, 420, 0, 1.3], init: [300, 565, 20, 1.5] },
+      { k: 'plate', sol: [490, 280, 0, 1.6], init: [470, 560, 0, 1.2] }] },
+  { name: '雪人头', lamps: [[120, 380], [680, 380]], verse: '蓝框里是个好好的雪人，橙框里它的脑袋滚走了。',
+    pieces: [
+      { k: 'plate', sol: [560, 250, 0, 1.3], init: [300, 565, 0, 1.5] },
+      { k: 'plate', sol: [560, 410, 0, 1.7], init: [420, 570, 0, 1.2] },
+      { k: 'book', sol: [560, 170, 0, 1.3], init: [510, 560, 15, 1.3] }] },
 ];
 
 // shadow outline of a piece on the wall (design coords)
-function shadowPts(p, extra) {
+function shadowPts(p, extra, lamp) {
+  const Lp = lamp || lamps[0];
   const r = p.r + (extra || 0), pts = SKINS[p.k].pts, cs = Math.cos(r), sn = Math.sin(r);
   return pts.map(([x, y]) => {
     const ox = p.x + x * cs - y * sn, oy = p.y + x * sn + y * cs;
-    return [L.x + (ox - L.x) * p.s, L.y + (oy - L.y) * p.s];
+    return [Lp.x + (ox - Lp.x) * p.s, Lp.y + (oy - Lp.y) * p.s];
   });
 }
-function slotPts(slot) {
+// slot.x/y is the shadow centre under the first lamp; lamp j sees the same object from elsewhere
+function slotPts(slot, j, ls) {
+  const lsA = ls || lamps, L0 = lsA[0], Lj = lsA[j || 0];
+  const ox = L0.x + (slot.x - L0.x) / slot.s, oy = L0.y + (slot.y - L0.y) / slot.s;
+  const cx = Lj.x + (ox - Lj.x) * slot.s, cy = Lj.y + (oy - Lj.y) * slot.s;
   const pts = SKINS[slot.k].pts, cs = Math.cos(slot.r), sn = Math.sin(slot.r);
-  return pts.map(([x, y]) => [slot.x + (x * cs - y * sn) * slot.s, slot.y + (x * sn + y * cs) * slot.s]);
+  return pts.map(([x, y]) => [cx + (x * cs - y * sn) * slot.s, cy + (x * sn + y * cs) * slot.s]);
 }
 // where the object must hang for its shadow to land on a slot
-const slotObject = (slot) => ({ x: L.x + (slot.x - L.x) / slot.s, y: L.y + (slot.y - L.y) / slot.s, r: slot.r, s: slot.s });
+const slotObject = (slot) => ({ x: lamps[0].x + (slot.x - lamps[0].x) / slot.s, y: lamps[0].y + (slot.y - lamps[0].y) / slot.s, r: slot.r, s: slot.s });
 
 // ======================================================================
 //  State
@@ -522,6 +558,8 @@ if (!Array.isArray(progress.solved)) progress = { solved: [] };
 let VW = 0, VH = 0, DPR = 1, K = 1, OX = 0, OY = 0;
 let mode = 'menu'; // menu | play | solving | solved
 let li = 0, pieces = [], slots = [], targetMask = null, targetArea = 1;
+let targetMasks = [], targetAreas = [], targetCs = [], lampScores = [], lampView = 'both';
+const lightCvs = [document.createElement('canvas'), document.createElement('canvas')];
 let sel = -1, drag = null, peek = false, holding = 0;
 let score = 0, dirty = true, hintsUsed = 0, hint = null, tipTimer = 0;
 let anim = null, t = 0, solvedAt = 0, solveStart = -9;
@@ -652,7 +690,7 @@ const cat = {
   bubble: null, floats: [], taps: [], lastSay: -9,
 };
 let lastInteract = 0, lastPointer = { x: 0, y: 0 };
-let gap = { mx: 0, my: 0, mn: 0, ex: 0, ey: 0, en: 0 }, targetC = { x: 400, y: 380 };
+let gap = { mx: 0, my: 0, mn: 0, ex: 0, ey: 0, en: 0, cx: 400, cy: 380 }, targetC = { x: 400, y: 380 };
 
 function catLayout() {
   const bottom = $('#tools').hidden ? VH : VH - $('#tools').offsetHeight;
@@ -689,8 +727,9 @@ function petCat() {
   sfx.purr(); hearts(3); cat.happyUntil = t + 1.4;
   if (mode === 'play') {
     const decoy = LEVELS[li].pieces.some((d) => !d.sol);
-    if (gap.mn > 30 && gap.mn >= gap.en) say(`${dirWord(gap.mx - targetC.x, gap.my - targetC.y)}还空着喵`, 2.4, true);
-    else if (gap.en > 30) say(decoy ? '有影子跑到线外面了，是不是多余的那件？' : `${dirWord(gap.ex - targetC.x, gap.ey - targetC.y)}多出来一块`, 2.6, true);
+    const box = lamps.length > 1 ? LAMP_STYLE[gap.j].box + '的' : '';
+    if (gap.mn > 30 && gap.mn >= gap.en) say(`${box}${dirWord(gap.mx - gap.cx, gap.my - gap.cy)}还空着喵`, 2.4, true);
+    else if (gap.en > 30) say(decoy ? '有影子跑到线外面了，是不是多余的那件？' : `${box}${dirWord(gap.ex - gap.cx, gap.ey - gap.cy)}多出来一块`, 2.6, true);
     else say('呼噜……快好了', 2, true);
   } else if (mode === 'solved') say(['再来一幕嘛', '这个我喜欢', '呼噜呼噜'][Math.floor(Math.random() * 3)], 2, true);
 }
@@ -716,7 +755,7 @@ function updateCat(dt) {
   cat.earPerk = Math.max(0, cat.earPerk - dt * 2);
 
   // where the eyes go: the dragged prop, else whatever the outline is missing
-  let lx = OX + L.x * K, ly = OY + L.y * K;
+  let lx = OX + lamps[0].x * K, ly = OY + lamps[0].y * K;
   if (drag) { lx = lastPointer.x; ly = lastPointer.y; }
   else if (mode === 'play' && gap.mn > 20 && gap.mn >= gap.en) { lx = OX + gap.mx * K; ly = OY + gap.my * K; }
   else if (mode === 'play' && gap.en > 20) { lx = OX + gap.ex * K; ly = OY + gap.ey * K; }
@@ -851,7 +890,7 @@ function drawSparks() {
 function layout() {
   DPR = Math.min(window.devicePixelRatio || 1, 2);
   VW = window.innerWidth; VH = window.innerHeight;
-  for (const c of [cv, shadowCv, targetCv]) { c.width = Math.round(VW * DPR); c.height = Math.round(VH * DPR); }
+  for (const c of [cv, shadowCv, targetCv, ...lightCvs]) { c.width = Math.round(VW * DPR); c.height = Math.round(VH * DPR); }
   cv.style.width = VW + 'px'; cv.style.height = VH + 'px';
   const top = $('#hud').hidden ? 0 : $('#hud').offsetHeight;
   const bottom = $('#tools').hidden ? 0 : $('#tools').offsetHeight;
@@ -883,16 +922,30 @@ function loadLevel(i) {
   slots = lv.pieces.filter((d) => d.sol).map((d) => ({ k: d.k, x: d.sol[0], y: d.sol[1], r: deg(d.sol[2]), s: d.sol[3] }));
   sel = pieces.length === 1 ? 0 : -1;
   drag = null; hint = null; anim = null; hintsUsed = 0; peek = false; holding = 0;
-  // target mask for scoring
-  mctx.setTransform(1, 0, 0, 1, 0, 0);
-  mctx.clearRect(0, 0, MASK, MASK);
-  mctx.setTransform(MASK / DES, 0, 0, MASK / DES, 0, 0);
-  mctx.fillStyle = '#000';
-  for (const sl of slots) { pathPoly(mctx, slotPts(sl)); mctx.fill(); }
-  const d = mctx.getImageData(0, 0, MASK, MASK).data;
-  targetMask = new Uint8Array(MASK * MASK);
-  targetArea = 0;
-  for (let p = 0; p < MASK * MASK; p++) if (d[p * 4 + 3] > 127) { targetMask[p] = 1; targetArea++; }
+  lamps = lampsOf(lv);
+  lampView = 'both';
+  // one target mask per lamp for scoring, plus each outline's centre for the cat's directions
+  targetMasks = []; targetAreas = []; targetCs = [];
+  lamps.forEach((_, j) => {
+    mctx.setTransform(1, 0, 0, 1, 0, 0);
+    mctx.clearRect(0, 0, MASK, MASK);
+    mctx.setTransform(MASK / DES, 0, 0, MASK / DES, 0, 0);
+    mctx.fillStyle = '#000';
+    for (const sl of slots) { pathPoly(mctx, slotPts(sl, j)); mctx.fill(); }
+    const d = mctx.getImageData(0, 0, MASK, MASK).data;
+    const m = new Uint8Array(MASK * MASK);
+    let area = 0, sx = 0, sy = 0;
+    for (let q = 0; q < MASK * MASK; q++) if (d[q * 4 + 3] > 127) { m[q] = 1; area++; sx += q % MASK; sy += (q / MASK) | 0; }
+    targetMasks.push(m); targetAreas.push(area);
+    targetCs.push({ x: (sx / area + 0.5) * (DES / MASK), y: (sy / area + 0.5) * (DES / MASK) });
+  });
+  targetMask = targetMasks[0]; targetArea = targetAreas[0];
+  targetC = { x: targetCs.reduce((a, c) => a + c.x, 0) / targetCs.length, y: targetCs.reduce((a, c) => a + c.y, 0) / targetCs.length };
+  const single = lamps.length < 2;
+  $('#scoreSub').hidden = single;
+  $('#lampMode').textContent = '两盏都开';
+  $('#bLamp').classList.remove('on');
+  if ($('#bLamp').hidden !== single) { $('#bLamp').hidden = single; layout(); }
   dirty = true;
   $('#actNo').textContent = `第 ${i + 1} 幕`;
   $('#actName').textContent = progress.solved[i] ? lv.name : '？';
@@ -902,35 +955,41 @@ function loadLevel(i) {
   drawTarget();
   updateTools();
   if (lv.tip) showTip(lv.tip, 9); else hideTip();
-  // centre of the chalk outline, for the cat's directions
-  let sx = 0, sy = 0;
-  for (let q = 0; q < MASK * MASK; q++) if (targetMask[q]) { sx += q % MASK; sy += (q / MASK) | 0; }
-  targetC = { x: ((sx / targetArea) + 0.5) * (DES / MASK), y: ((sy / targetArea) + 0.5) * (DES / MASK) };
   scoreReady = false; said = {}; dropCheck = null; solveStart = -9;
   if (mode === 'play') {
     const lines = ['这次是什么呢？', '墙上画的是……喵？', '我猜是好吃的。'];
-    say(lv.pieces.some((d) => !d.sol) ? '有一件东西是多余的喵' : lines[i % lines.length], 2.4, true);
+    say(lv.pieces.some((d) => !d.sol) ? '有一件东西是多余的喵' : !single ? '两盏灯？我眼睛都花了' : lines[i % lines.length], 2.4, true);
   }
 }
 
+// a level counts only as well as its worst-matched lamp
 function computeScore() {
-  mctx.setTransform(1, 0, 0, 1, 0, 0);
-  mctx.clearRect(0, 0, MASK, MASK);
-  mctx.setTransform(MASK / DES, 0, 0, MASK / DES, 0, 0);
-  mctx.fillStyle = '#000';
-  for (const p of pieces) { pathPoly(mctx, shadowPts(p)); mctx.fill(); }
-  const d = mctx.getImageData(0, 0, MASK, MASK).data;
-  let inter = 0, uni = 0, mx = 0, my = 0, mn = 0, ex = 0, ey = 0, en = 0;
-  for (let i = 0; i < MASK * MASK; i++) {
-    const a = d[i * 4 + 3] > 127, b = targetMask[i] === 1;
-    if (a && b) inter++;
-    if (a || b) uni++;
-    if (b && !a) { mx += i % MASK; my += (i / MASK) | 0; mn++; }
-    else if (a && !b) { ex += i % MASK; ey += (i / MASK) | 0; en++; }
-  }
-  const u = DES / MASK;
-  gap = { mx: mn ? (mx / mn + 0.5) * u : 0, my: mn ? (my / mn + 0.5) * u : 0, mn, ex: en ? (ex / en + 0.5) * u : 0, ey: en ? (ey / en + 0.5) * u : 0, en };
-  return uni ? inter / uni : 0;
+  let worst = Infinity;
+  lampScores = [];
+  lamps.forEach((Lp, j) => {
+    mctx.setTransform(1, 0, 0, 1, 0, 0);
+    mctx.clearRect(0, 0, MASK, MASK);
+    mctx.setTransform(MASK / DES, 0, 0, MASK / DES, 0, 0);
+    mctx.fillStyle = '#000';
+    for (const p of pieces) { pathPoly(mctx, shadowPts(p, 0, Lp)); mctx.fill(); }
+    const d = mctx.getImageData(0, 0, MASK, MASK).data, tm = targetMasks[j];
+    let inter = 0, uni = 0, mx = 0, my = 0, mn = 0, ex = 0, ey = 0, en = 0;
+    for (let i = 0; i < MASK * MASK; i++) {
+      const a = d[i * 4 + 3] > 127, b = tm[i] === 1;
+      if (a && b) inter++;
+      if (a || b) uni++;
+      if (b && !a) { mx += i % MASK; my += (i / MASK) | 0; mn++; }
+      else if (a && !b) { ex += i % MASK; ey += (i / MASK) | 0; en++; }
+    }
+    const sc = uni ? inter / uni : 0, u = DES / MASK;
+    lampScores.push(sc);
+    if (sc < worst) {
+      worst = sc;
+      gap = { mx: mn ? (mx / mn + 0.5) * u : 0, my: mn ? (my / mn + 0.5) * u : 0, mn, ex: en ? (ex / en + 0.5) * u : 0, ey: en ? (ey / en + 0.5) * u : 0, en,
+        cx: targetCs[j].x, cy: targetCs[j].y, j };
+    }
+  });
+  return worst;
 }
 
 // pair every piece with the slot of the same kind it is closest to filling
@@ -938,7 +997,7 @@ function assign() {
   const pairs = [];
   pieces.forEach((p, pi) => slots.forEach((sl, si) => {
     if (sl.k !== p.k) return;
-    const cx = L.x + (p.x - L.x) * p.s, cy = L.y + (p.y - L.y) * p.s;
+    const L0 = lamps[0], cx = L0.x + (p.x - L0.x) * p.s, cy = L0.y + (p.y - L0.y) * p.s;
     pairs.push({ pi, si, c: Math.hypot(cx - sl.x, cy - sl.y) + 60 * angleGap(p.r, sl.r, SKINS[p.k].sym) + 300 * Math.abs(p.s - sl.s) });
   }));
   pairs.sort((a, b) => a.c - b.c);
@@ -1008,7 +1067,7 @@ function hideTip() { $('#tip').hidden = true; tipTimer = 0; }
 function updateTools() {
   const can = mode === 'play' && sel >= 0;
   for (const id of ['#bRotL', '#bRotR', '#bNear', '#bFar']) $(id).disabled = !can;
-  for (const id of ['#bPeek', '#bHint', '#bReset']) $(id).disabled = mode !== 'play';
+  for (const id of ['#bPeek', '#bHint', '#bReset', '#bLamp']) $(id).disabled = mode !== 'play';
   if (can) {
     $('#bNear').disabled = pieces[sel].s >= S_MAX - 1e-6;
     $('#bFar').disabled = pieces[sel].s <= S_MIN + 1e-6;
@@ -1027,7 +1086,9 @@ function drawThumb(c, i, state) {
   const x = c.getContext('2d');
   const lv = LEVELS[i];
   const sl = lv.pieces.filter((d) => d.sol).map((d) => ({ k: d.k, x: d.sol[0], y: d.sol[1], r: deg(d.sol[2]), s: d.sol[3] }));
-  const all = sl.flatMap(slotPts), b = bbox(all);
+  const ls = lampsOf(lv), dual = ls.length > 1;
+  const polysOf = (j) => sl.map((s) => slotPts(s, j, ls));
+  const all = ls.flatMap((_, j) => polysOf(j)).flat(), b = bbox(all);
   const sc = (size * 0.72) / Math.max(b.x1 - b.x0, b.y1 - b.y0);
   const g = x.createRadialGradient(size / 2, size / 2, 4, size / 2, size / 2, size * 0.6);
   g.addColorStop(0, state === 'locked' ? 'rgba(120,100,80,0.25)' : 'rgba(240,205,140,0.95)');
@@ -1035,12 +1096,12 @@ function drawThumb(c, i, state) {
   x.fillStyle = g; x.fillRect(0, 0, size, size);
   if (state === 'locked') return;
   x.setTransform(sc, 0, 0, sc, size / 2 - ((b.x0 + b.x1) / 2) * sc, size / 2 - ((b.y0 + b.y1) / 2) * sc);
-  if (state === 'done') {
-    x.fillStyle = 'rgba(20,13,10,0.9)';
-    for (const s of sl) { pathPoly(x, slotPts(s)); x.fill(); }
-  } else {
-    outline(x, sl.map(slotPts), 'rgba(255,244,220,0.95)', 6 / sc * 1.5);
-  }
+  ls.forEach((_, j) => {
+    if (state === 'done') {
+      x.fillStyle = dual ? LAMP_STYLE[j].fill : 'rgba(20,13,10,0.9)';
+      for (const p of polysOf(j)) { pathPoly(x, p); x.fill(); }
+    } else outline(x, polysOf(j), dual ? LAMP_STYLE[j].chalk : 'rgba(255,244,220,0.95)', 6 / sc * 1.5);
+  });
 }
 
 function renderMenu() {
@@ -1057,7 +1118,7 @@ function renderMenu() {
     const c = document.createElement('canvas');
     drawThumb(c, i, done ? 'done' : open ? 'open' : 'locked');
     b.appendChild(c);
-    b.insertAdjacentHTML('beforeend', `<span class="n">第 ${i + 1} 幕</span><span class="t">${done ? lv.name : open ? '？' : '未解锁'}</span>`);
+    b.insertAdjacentHTML('beforeend', `${lv.lamps ? '<span class="tag">双灯</span>' : ''}<span class="n">第 ${i + 1} 幕</span><span class="t">${done ? lv.name : open ? '？' : '未解锁'}</span>`);
     b.addEventListener('click', () => startLevel(i));
     box.appendChild(b);
   });
@@ -1105,10 +1166,81 @@ function drawTarget() {
   tctx.clearRect(0, 0, targetCv.width, targetCv.height);
   if (!slots.length) return;
   stageTransform(tctx);
-  const polys = slots.map(slotPts);
-  tctx.fillStyle = 'rgba(255,244,220,0.07)';
-  for (const p of polys) { pathPoly(tctx, p); tctx.fill(); }
-  outline(tctx, polys, 'rgba(255,248,230,0.85)', 2 / K);
+  const dual = lamps.length > 1;
+  lamps.forEach((_, j) => {
+    const polys = slots.map((sl) => slotPts(sl, j));
+    tctx.globalAlpha = lampView === 'both' || lampView === j ? 1 : 0.25;
+    tctx.fillStyle = 'rgba(255,244,220,0.07)';
+    for (const p of polys) { pathPoly(tctx, p); tctx.fill(); }
+    outline(tctx, polys, dual ? LAMP_STYLE[j].chalk : 'rgba(255,248,230,0.85)', (dual ? 2.4 : 2) / K);
+  });
+  tctx.globalAlpha = 1;
+}
+
+function sway(c) {
+  if (mode !== 'solved' || reduceMotion) return;
+  // once solved, the puppet breathes
+  const cx = slots.reduce((a, s) => a + s.x, 0) / slots.length, cy = slots.reduce((a, s) => a + s.y, 0) / slots.length;
+  const e = Math.min(1, (t - solvedAt) / 0.6);
+  c.translate(cx, cy + 140); c.rotate(Math.sin((t - solvedAt) * 2.2) * 0.035 * e); c.translate(-cx, -cy - 140);
+}
+
+// two lamps: both pools light the wall; each lamp's shadow tints it with the other lamp's colour,
+// and where both are blocked the tints multiply down to near black
+function renderTwoLamps(flare) {
+  ctx.save();
+  ctx.globalCompositeOperation = 'lighter';
+  ctx.globalAlpha = 0.66;
+  lamps.forEach((Lp, j) => {
+    if (lampView !== 'both' && lampView !== j) return;
+    const lx = OX + Lp.x * K, ly = OY + Lp.y * K, R = 620 * K * (1 + 0.14 * flare), st = LAMP_STYLE[j];
+    const g = ctx.createRadialGradient(lx, ly, 0, lx, ly, R);
+    g.addColorStop(0, st.pool[0]); g.addColorStop(0.5, st.pool[1]); g.addColorStop(0.8, st.pool[2]); g.addColorStop(1, 'rgba(0,0,0,0)');
+    ctx.fillStyle = g; ctx.fillRect(0, 0, VW, VH);
+  });
+  ctx.restore();
+  lamps.forEach((Lp, j) => {
+    const lc = lightCvs[j], x = lc.getContext('2d');
+    x.setTransform(1, 0, 0, 1, 0, 0);
+    x.clearRect(0, 0, lc.width, lc.height);
+    if (lampView !== 'both' && lampView !== j) return;
+    stageTransform(x);
+    sway(x);
+    x.fillStyle = LAMP_STYLE[j].tint;
+    for (const p of pieces) { pathPoly(x, shadowPts(p, swing(p), Lp)); x.fill(); }
+  });
+  ctx.save();
+  ctx.setTransform(1, 0, 0, 1, 0, 0);
+  ctx.globalCompositeOperation = 'multiply';
+  ctx.globalAlpha = 0.9;
+  for (const lc of lightCvs) ctx.drawImage(lc, 0, 0);
+  ctx.restore();
+  if (flare > 0) {
+    const f = ctx.createRadialGradient(OX + 400 * K, OY + 380 * K, 0, OX + 400 * K, OY + 380 * K, 480 * K);
+    f.addColorStop(0, `rgba(255,245,225,${0.3 * flare})`); f.addColorStop(1, 'rgba(255,245,225,0)');
+    ctx.fillStyle = f; ctx.fillRect(0, 0, VW, VH);
+  }
+  ctx.globalAlpha = solveStart > 0 ? Math.max(0.2, 1 - (t - solveStart) / 0.9) : 1;
+  ctx.drawImage(targetCv, 0, 0, VW, VH);
+  ctx.globalAlpha = 1;
+  // the bulbs themselves, hanging in front of the wall
+  ctx.save();
+  ctx.font = '12px system-ui, -apple-system, "PingFang SC", "Microsoft YaHei", sans-serif';
+  ctx.textAlign = 'center';
+  lamps.forEach((Lp, j) => {
+    const on = lampView === 'both' || lampView === j;
+    const bx = OX + Lp.x * K, by = OY + Lp.y * K, st = LAMP_STYLE[j];
+    ctx.strokeStyle = 'rgba(255,240,220,0.3)'; ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.moveTo(bx, 0); ctx.lineTo(bx, by - 9); ctx.stroke();
+    const gl = ctx.createRadialGradient(bx, by, 0, bx, by, 26);
+    gl.addColorStop(0, on ? st.pool[0] : 'rgba(90,80,90,0.9)'); gl.addColorStop(1, 'rgba(0,0,0,0)');
+    ctx.fillStyle = gl; ctx.beginPath(); ctx.arc(bx, by, 26, 0, TAU); ctx.fill();
+    ctx.fillStyle = on ? '#fff8ea' : '#5b5360';
+    ctx.beginPath(); ctx.arc(bx, by, 7, 0, TAU); ctx.fill();
+    ctx.fillStyle = on ? 'rgba(255,244,220,0.85)' : 'rgba(255,244,220,0.35)';
+    ctx.fillText(st.name, bx, by + 24);
+  });
+  ctx.restore();
 }
 
 // a released prop keeps swinging on its thread for a moment
@@ -1142,8 +1274,10 @@ function render() {
   ctx.fillStyle = '#15111c';
   ctx.fillRect(0, 0, VW, VH);
 
-  // the lamp's pool of light on the wall
   const flare = Math.max(0, 1 - (t - solveStart) / 1.6);
+  if (lamps.length > 1) renderTwoLamps(flare);
+  else {
+  // the lamp's pool of light on the wall
   const lx = OX + L.x * K, ly = OY + L.y * K, R = 600 * K * (1 + 0.14 * flare);
   const g = ctx.createRadialGradient(lx, ly, 0, lx, ly, R);
   g.addColorStop(0, '#f1d6a0'); g.addColorStop(0.45, '#d9b27a'); g.addColorStop(0.75, '#7a5741'); g.addColorStop(1, 'rgba(21,17,28,0)');
@@ -1164,17 +1298,13 @@ function render() {
   sctx.setTransform(1, 0, 0, 1, 0, 0);
   sctx.clearRect(0, 0, shadowCv.width, shadowCv.height);
   stageTransform(sctx);
-  if (mode === 'solved' && !reduceMotion) {
-    // once solved, the puppet breathes
-    const cx = slots.reduce((a, s) => a + s.x, 0) / slots.length, cy = slots.reduce((a, s) => a + s.y, 0) / slots.length;
-    const e = Math.min(1, (t - solvedAt) / 0.6);
-    sctx.translate(cx, cy + 140); sctx.rotate(Math.sin((t - solvedAt) * 2.2) * 0.035 * e); sctx.translate(-cx, -cy - 140);
-  }
+  sway(sctx);
   sctx.fillStyle = '#140d0a';
   for (const p of pieces) { pathPoly(sctx, shadowPts(p, swing(p))); sctx.fill(); }
   ctx.globalAlpha = 0.86;
   ctx.drawImage(shadowCv, 0, 0, VW, VH);
   ctx.globalAlpha = 1;
+  }
 
   stageTransform(ctx);
   // hint: the slot glows and a ghost shows where the prop should hang
@@ -1183,7 +1313,7 @@ function render() {
     ctx.save();
     ctx.setLineDash([8, 6]); ctx.lineWidth = 2.5;
     ctx.strokeStyle = `rgba(242,185,80,${0.5 + 0.5 * a})`;
-    pathPoly(ctx, slotPts(hint.slot)); ctx.stroke();
+    lamps.forEach((_, j) => { pathPoly(ctx, slotPts(hint.slot, j)); ctx.stroke(); });
     const o = slotObject(hint.slot);
     ctx.translate(o.x, o.y); ctx.rotate(o.r);
     pathPoly(ctx, SKINS[hint.slot.k].pts); ctx.stroke();
@@ -1385,6 +1515,15 @@ const peekBtn = $('#bPeek');
 const setPeek = (v) => { peek = v && mode === 'play'; peekBtn.classList.toggle('on', peek); };
 peekBtn.addEventListener('pointerdown', (e) => { e.preventDefault(); setPeek(true); });
 ['pointerup', 'pointerleave', 'pointercancel'].forEach((ev) => peekBtn.addEventListener(ev, () => setPeek(false)));
+function cycleLamp() {
+  if (mode !== 'play' || lamps.length < 2) return;
+  lampView = lampView === 'both' ? 0 : lampView === 0 ? 1 : 'both';
+  $('#lampMode').textContent = lampView === 'both' ? '两盏都开' : `只开${LAMP_STYLE[lampView].name}`;
+  $('#bLamp').classList.toggle('on', lampView !== 'both');
+  drawTarget();
+  note({ f: lampView === 'both' ? 880 : 660, dur: 0.06, vol: 0.08, type: 'square' });
+}
+$('#bLamp').addEventListener('click', cycleLamp);
 $('#bHint').addEventListener('click', giveHint);
 $('#bReset').addEventListener('click', resetLevel);
 $('#btnMenu').addEventListener('click', openMenu);
@@ -1414,6 +1553,7 @@ window.addEventListener('keydown', (e) => {
     case 'Tab': select(pieces.length ? (sel + 1) % pieces.length : -1); break;
     case 'Space': setPeek(true); break;
     case 'KeyH': if (!e.repeat) giveHint(); break;
+    case 'KeyL': if (!e.repeat) cycleLamp(); break;
     case 'KeyR': if (!e.repeat) resetLevel(); break;
     case 'Escape': openMenu(); break;
     default: return;
@@ -1447,8 +1587,7 @@ function scoreFeedback() {
     if (!p.fit && c < 16) {
       p.fit = true;
       sfx.fit();
-      const sx = OX + (L.x + (p.x - L.x) * p.s) * K, sy = OY + (L.y + (p.y - L.y) * p.s) * K;
-      burst(sx, sy, 14, ['#f2b950', '#fff4dc'], 120);
+      for (const Lp of lamps) burst(OX + (Lp.x + (p.x - Lp.x) * p.s) * K, OY + (Lp.y + (p.y - Lp.y) * p.s) * K, 14, ['#f2b950', '#fff4dc'], 120);
       if (!p.fitSaid) { p.fitSaid = true; say(`${SKINS[p.k].name}对了！`, 1.6, true); }
     } else if (p.fit && c > 28) p.fit = false;
   });
@@ -1477,6 +1616,7 @@ function frame(ts) {
     const pct = Math.round(score * 100);
     $('#scoreTxt').textContent = pct + '%';
     $('#scoreBar').style.width = Math.min(100, (score / 1) * 100) + '%';
+    if (lamps.length > 1) $('#scoreSub').innerHTML = lampScores.map((v, j) => `<span class="c${j}">${LAMP_STYLE[j].box[0]} ${Math.round(v * 100)}%</span>`).join(' · ');
     if (mode === 'play') scoreFeedback();
   }
   if (mode === 'play' && dropCheck != null && !drag) {
