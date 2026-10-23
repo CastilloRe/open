@@ -1,0 +1,1234 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>回声迷城</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=Noto+Serif+SC:wght@600;900&display=swap">
+<style>
+/* Layout: full-bleed dark canvas; a sonar-instrument panel floats centered for menus; HUD pinned to the corners */
+:root {
+  --ink: #04060b;
+  --panel: rgba(5, 10, 18, 0.86);
+  --echo: #7fe9ff;
+  --amber: #ffc66b;
+  --danger: #ff3b5c;
+  --violet: #b490ff;
+  --text: #cfe3ea;
+  --muted: #7d95a1;
+  --line: rgba(127, 233, 255, 0.2);
+  --display: "Noto Serif SC", "Songti SC", "STSong", "SimSun", serif;
+  --body: system-ui, -apple-system, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+  --mono: "IBM Plex Mono", ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+html, body { height: 100%; margin: 0; }
+body {
+  background: var(--ink);
+  color: var(--text);
+  font-family: var(--body);
+  font-size: 15px;
+  overflow: hidden;
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+}
+[hidden] { display: none !important; }
+canvas { position: fixed; inset: 0; display: block; touch-action: none; }
+
+/* ---------- menus ---------- */
+.overlay {
+  position: fixed; inset: 0;
+  display: grid; place-items: center;
+  overflow-y: auto;
+  padding-block: calc(16px + env(safe-area-inset-top, 0px)) calc(16px + env(safe-area-inset-bottom, 0px));
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  background: radial-gradient(ellipse at center, rgba(4, 6, 11, 0.2), rgba(4, 6, 11, 0.75));
+}
+.panel {
+  width: 100%; max-width: 34rem;
+  display: flex; flex-direction: column; gap: 1.1rem;
+  padding: clamp(1.4rem, 5vw, 2.4rem);
+  background: var(--panel);
+  border: 1px solid var(--line);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+}
+.eyebrow {
+  margin: 0;
+  font-family: var(--mono); font-size: 0.72rem;
+  letter-spacing: 0.22em; text-transform: uppercase;
+  color: var(--echo); opacity: 0.85;
+}
+h1, h2 { margin: 0; font-family: var(--display); font-weight: 900; text-wrap: balance; color: #f2fbff; }
+h1 {
+  font-size: clamp(2.8rem, 12vw, 4.6rem);
+  letter-spacing: 0.28em; margin-right: -0.28em;
+  line-height: 1.05;
+  text-shadow: 0 0 18px rgba(127, 233, 255, 0.55), 0 0 2px rgba(127, 233, 255, 0.9);
+}
+h2 { font-size: clamp(1.7rem, 7vw, 2.4rem); letter-spacing: 0.08em; }
+.lede { margin: 0; font-family: var(--display); font-weight: 600; font-size: 1.05rem; line-height: 1.8; color: var(--text); }
+.panel p { margin: 0; line-height: 1.7; }
+.rules { margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 0.7rem; }
+.rules li { display: grid; grid-template-columns: 1.4rem 1fr; gap: 0.5rem; line-height: 1.65; color: var(--text); }
+.rules li::before { content: ""; width: 7px; height: 7px; margin-top: 0.6em; margin-left: 0.3rem; border-radius: 50%; background: var(--echo); box-shadow: 0 0 8px var(--echo); }
+.rules li.r-amber::before { background: var(--amber); box-shadow: 0 0 8px var(--amber); }
+.rules li.r-danger::before { background: var(--danger); box-shadow: 0 0 8px var(--danger); }
+.rules li.r-violet::before { background: var(--violet); box-shadow: 0 0 8px var(--violet); }
+kbd {
+  font-family: var(--mono); font-size: 0.8em;
+  padding: 0.05em 0.4em; border: 1px solid var(--line); border-radius: 3px;
+  color: #eaf8ff; background: rgba(127, 233, 255, 0.06);
+}
+.amber { color: var(--amber); }
+.violet { color: var(--violet); }
+.danger { color: var(--danger); }
+.fine { font-size: 0.8rem; color: var(--muted); }
+.actions { display: flex; flex-wrap: wrap; gap: 0.8rem; align-items: center; }
+button.primary {
+  appearance: none; cursor: pointer;
+  font-family: var(--display); font-weight: 900; font-size: 1.05rem;
+  letter-spacing: 0.35em; padding: 0.75em 1.4em 0.75em 1.75em;
+  color: var(--ink); background: var(--echo);
+  border: 1px solid var(--echo);
+  box-shadow: 0 0 24px rgba(127, 233, 255, 0.35);
+  transition: box-shadow 0.2s, transform 0.2s;
+}
+button.primary:hover { box-shadow: 0 0 36px rgba(127, 233, 255, 0.6); }
+button.primary:active { transform: translateY(1px); }
+button:focus-visible { outline: 2px solid var(--amber); outline-offset: 3px; }
+.stats { margin: 0; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 0.6rem; }
+.stats div { display: flex; flex-direction: column; gap: 0.2rem; padding: 0.7rem 0.8rem; border: 1px solid var(--line); }
+.stats dt { font-size: 0.75rem; color: var(--muted); letter-spacing: 0.1em; }
+.stats dd { margin: 0; font-family: var(--mono); font-size: 1.2rem; color: #f2fbff; font-variant-numeric: tabular-nums; }
+
+/* ---------- HUD ---------- */
+.hud {
+  position: fixed; top: 0; left: 0; right: 0;
+  display: flex; justify-content: space-between; align-items: flex-start; gap: 1rem;
+  padding-top: calc(12px + env(safe-area-inset-top, 0px));
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  pointer-events: none;
+  font-family: var(--mono); font-size: 0.82rem; letter-spacing: 0.08em;
+  font-variant-numeric: tabular-nums;
+}
+.hud-group { display: flex; flex-wrap: wrap; align-items: center; gap: 0.5rem 1rem; }
+.hud-depth { color: var(--echo); }
+.hud-depth b { color: #f2fbff; font-weight: 500; }
+.gems, .stones { display: inline-flex; align-items: center; gap: 0.45rem; }
+.gem { width: 9px; height: 9px; transform: rotate(45deg); border: 1px solid var(--amber); opacity: 0.6; }
+.gem.got { background: var(--amber); opacity: 1; box-shadow: 0 0 8px var(--amber); }
+.stone { width: 6px; height: 6px; border-radius: 50%; background: #dfe9f2; }
+.stone.used { background: transparent; border: 1px solid rgba(223, 233, 242, 0.35); }
+.hud-label { color: var(--muted); }
+.hud button {
+  pointer-events: auto; cursor: pointer; appearance: none;
+  font: inherit; color: var(--text); background: transparent;
+  border: 1px solid var(--line); padding: 0.25em 0.6em;
+}
+.hud-group.right { flex-wrap: nowrap; gap: 0.5rem; }
+@media (max-width: 480px) {
+  .hud { font-size: 0.72rem; letter-spacing: 0.02em; }
+  .hud-group { gap: 0.4rem 0.7rem; }
+}
+.hint {
+  position: fixed; left: 50%; transform: translateX(-50%);
+  bottom: calc(28px + env(safe-area-inset-bottom, 0px));
+  width: max-content; max-width: calc(100% - 32px);
+  padding: 0.55em 1em;
+  font-size: 0.92rem; line-height: 1.5; text-align: center;
+  color: #eaf8ff; background: rgba(5, 10, 18, 0.7); border: 1px solid var(--line);
+  pointer-events: none;
+  transition: opacity 0.5s;
+}
+body.touch .hint { bottom: calc(150px + env(safe-area-inset-bottom, 0px)); }
+
+/* ---------- touch controls ---------- */
+.touch-ctl {
+  position: fixed;
+  right: calc(20px + env(safe-area-inset-right, 0px));
+  bottom: calc(24px + env(safe-area-inset-bottom, 0px));
+  display: flex; align-items: flex-end; gap: 14px;
+}
+.touch-ctl button {
+  appearance: none; touch-action: none;
+  border-radius: 50%; font-family: var(--display); font-weight: 900;
+  color: var(--text); background: rgba(5, 10, 18, 0.55);
+  border: 1px solid var(--line);
+}
+#tStone { width: 58px; height: 58px; font-size: 0.85rem; }
+#tEcho { width: 86px; height: 86px; font-size: 1rem; color: var(--echo); border-color: rgba(127, 233, 255, 0.5); }
+#tEcho.on { background: rgba(127, 233, 255, 0.16); box-shadow: 0 0 22px rgba(127, 233, 255, 0.4); }
+
+@media (prefers-reduced-motion: reduce) {
+  .hint, button.primary { transition: none; }
+}
+</style>
+</head>
+<body>
+<canvas id="game" aria-label="回声迷城游戏画面"></canvas>
+
+<div class="hud" id="hud" hidden>
+  <div class="hud-group">
+    <span class="hud-depth" id="hDepth"></span>
+    <span class="gems" id="hGems" aria-label="共鸣晶体"></span>
+    <span class="stones" id="hStones" aria-label="石子"></span>
+  </div>
+  <div class="hud-group right">
+    <span id="hTime">00:00</span>
+    <button id="btnMute" type="button">声音 开</button>
+    <button id="btnPause" type="button">暂停</button>
+  </div>
+</div>
+
+<div class="hint" id="hint" hidden></div>
+
+<div class="touch-ctl" id="touchCtl" hidden>
+  <button id="tStone" type="button">石子</button>
+  <button id="tEcho" type="button">回声</button>
+</div>
+
+<div class="overlay" id="overlay">
+  <div class="panel" id="panel"></div>
+</div>
+
+<script>
+(() => {
+'use strict';
+
+// ======================================================================
+//  Constants
+// ======================================================================
+const ECHO_SPEED = 13;          // tiles per second
+const DOT_LIFE = 3.2;           // seconds an echo dot stays visible
+const PLAYER_SPEED = 3.2;
+const PLAYER_R = 0.28;
+const WANDER_SPEED = 1.1;
+const CHARGE_TIME = 1.1;
+const CRYSTALS_PER_LEVEL = 3;
+const STONES_PER_LEVEL = 3;
+const METERS_PER_LEVEL = 12;
+// color indices for echo dots
+const C_WALL = 0, C_CRYSTAL = 1, C_MONSTER = 2, C_EXIT = 3, C_STONE = 4;
+const RGB = [[127, 233, 255], [255, 198, 107], [255, 59, 92], [180, 144, 255], [214, 226, 240]];
+
+const $ = (s) => document.querySelector(s);
+const cv = $('#game');
+const ctx = cv.getContext('2d');
+const overlay = $('#overlay'), panel = $('#panel');
+const hud = $('#hud'), hintEl = $('#hint'), touchCtl = $('#touchCtl');
+
+let VW = 0, VH = 0, DPR = 1, S = 32;
+function resize() {
+  DPR = Math.min(window.devicePixelRatio || 1, 2);
+  VW = window.innerWidth; VH = window.innerHeight;
+  cv.width = Math.round(VW * DPR); cv.height = Math.round(VH * DPR);
+  cv.style.width = VW + 'px'; cv.style.height = VH + 'px';
+  S = Math.max(22, Math.min(46, Math.min(VW, VH) / 13));
+}
+window.addEventListener('resize', resize);
+resize();
+
+const store = {
+  get(k, d) { try { const v = localStorage.getItem(k); return v == null ? d : JSON.parse(v); } catch (e) { return d; } },
+  set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) { /* storage unavailable */ } },
+};
+
+// ======================================================================
+//  Audio (all synthesized with WebAudio)
+// ======================================================================
+let AC = null, master = null, echoBus = null, noiseBuf = null;
+let muted = store.get('echo-maze-muted', false);
+
+function initAudio() {
+  if (AC) { if (AC.state === 'suspended') AC.resume(); return; }
+  try {
+    AC = new (window.AudioContext || window.webkitAudioContext)();
+    master = AC.createGain();
+    master.gain.value = muted ? 0 : 0.7;
+    master.connect(AC.destination);
+    // a feedback delay gives every ping its cave-like echo tail
+    const delay = AC.createDelay(1.0);
+    delay.delayTime.value = 0.21;
+    const fb = AC.createGain(); fb.gain.value = 0.42;
+    const lp = AC.createBiquadFilter(); lp.type = 'lowpass'; lp.frequency.value = 2000;
+    echoBus = AC.createGain();
+    echoBus.connect(delay); delay.connect(lp); lp.connect(fb); fb.connect(delay); lp.connect(master);
+    noiseBuf = AC.createBuffer(1, AC.sampleRate, AC.sampleRate);
+    const ch = noiseBuf.getChannelData(0);
+    for (let i = 0; i < ch.length; i++) ch[i] = Math.random() * 2 - 1;
+  } catch (e) { AC = null; }
+}
+
+function route(node, pan, echo) {
+  let out = node;
+  if (pan && AC.createStereoPanner) {
+    const p = AC.createStereoPanner();
+    p.pan.value = Math.max(-1, Math.min(1, pan));
+    node.connect(p); out = p;
+  }
+  out.connect(master);
+  if (echo) { const s = AC.createGain(); s.gain.value = echo; out.connect(s); s.connect(echoBus); }
+}
+
+function tone(o) {
+  if (!AC) return;
+  const t = AC.currentTime + (o.delay || 0);
+  const dur = o.dur || 0.3, vol = Math.max(0.0002, o.vol || 0.2);
+  const osc = AC.createOscillator();
+  osc.type = o.type || 'sine';
+  osc.frequency.setValueAtTime(o.f, t);
+  if (o.f2) osc.frequency.exponentialRampToValueAtTime(o.f2, t + dur);
+  const g = AC.createGain();
+  g.gain.setValueAtTime(0.0001, t);
+  g.gain.exponentialRampToValueAtTime(vol, t + (o.a || 0.008));
+  g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+  if (o.lp) {
+    const f = AC.createBiquadFilter(); f.type = 'lowpass'; f.frequency.value = o.lp;
+    osc.connect(f); f.connect(g);
+  } else osc.connect(g);
+  route(g, o.pan, o.echo);
+  osc.start(t); osc.stop(t + dur + 0.05);
+}
+
+function hiss(o) {
+  if (!AC) return;
+  const t = AC.currentTime + (o.delay || 0);
+  const dur = o.dur || 0.1;
+  const src = AC.createBufferSource(); src.buffer = noiseBuf;
+  const f = AC.createBiquadFilter(); f.type = o.ft || 'bandpass'; f.frequency.value = o.f || 2000; f.Q.value = o.q || 1;
+  if (o.f2) f.frequency.exponentialRampToValueAtTime(o.f2, t + dur);
+  const g = AC.createGain();
+  g.gain.setValueAtTime(Math.max(0.0002, o.vol || 0.2), t);
+  g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+  src.connect(f); f.connect(g);
+  route(g, o.pan, o.echo);
+  src.start(t, Math.random() * 0.5); src.stop(t + dur + 0.05);
+}
+
+const sfx = {
+  echo(c) {
+    const f = 1300 - 480 * c;
+    tone({ f, f2: f * 0.5, dur: 0.32 + 0.35 * c, vol: 0.2, echo: 0.9 });
+    tone({ f: f * 1.5, f2: f * 0.75, dur: 0.18, vol: 0.05, echo: 0.5 });
+  },
+  throwIt() { hiss({ f: 3000, dur: 0.08, vol: 0.08, ft: 'highpass' }); },
+  land(pan, v) {
+    hiss({ f: 2600, q: 4, dur: 0.05, vol: 0.35 * v, pan, echo: 0.7 });
+    hiss({ f: 1900, q: 4, dur: 0.04, vol: 0.2 * v, pan, delay: 0.08, echo: 0.5 });
+  },
+  hum(v, pan) {
+    tone({ f: 1568, dur: 1.0, vol: 0.16 * v, pan, a: 0.06, echo: 0.3 });
+    tone({ f: 2349, dur: 0.7, vol: 0.06 * v, pan, a: 0.06 });
+  },
+  pickup() {
+    [784, 988, 1175, 1568].forEach((f, i) => tone({ f, dur: 0.5, vol: 0.12, delay: i * 0.07, echo: 0.6, type: 'triangle' }));
+  },
+  open() {
+    [392, 494, 587, 784].forEach((f, i) => tone({ f, dur: 2.4, vol: 0.06, delay: i * 0.12, a: 0.3, echo: 0.6, type: 'triangle' }));
+  },
+  beacon(v, pan) { tone({ f: 523, f2: 392, dur: 1.2, vol: 0.12 * v, pan, a: 0.1, echo: 0.5, type: 'triangle' }); },
+  heart(d) {
+    tone({ f: 70, f2: 42, dur: 0.16, vol: 0.55 * d, a: 0.004 });
+    tone({ f: 62, f2: 40, dur: 0.14, vol: 0.38 * d, a: 0.004, delay: 0.17 });
+  },
+  growl(v, pan) {
+    tone({ f: 82, f2: 52, dur: 0.9, vol: 0.22 * v, pan, type: 'sawtooth', lp: 380, a: 0.08, echo: 0.4 });
+    tone({ f: 123, f2: 70, dur: 0.7, vol: 0.08 * v, pan, type: 'square', lp: 300, a: 0.1 });
+  },
+  death() {
+    tone({ f: 220, f2: 30, dur: 1.6, vol: 0.3, type: 'sawtooth', lp: 900, echo: 0.7 });
+    hiss({ f: 1200, f2: 120, q: 0.7, dur: 1.6, vol: 0.3, echo: 0.5 });
+  },
+  clear() {
+    [523, 659, 784, 1047, 1319].forEach((f, i) => tone({ f, dur: 0.9, vol: 0.1, delay: i * 0.09, echo: 0.7, type: 'triangle' }));
+  },
+};
+
+function setMuted(m) {
+  muted = m;
+  store.set('echo-maze-muted', m);
+  if (master) master.gain.value = m ? 0 : 0.7;
+  $('#btnMute').textContent = m ? '声音 关' : '声音 开';
+}
+
+// ======================================================================
+//  Maze
+// ======================================================================
+let G = null; // { W, H, grid, seen }
+
+function wall(x, y) {
+  if (x < 0 || y < 0 || x >= G.W || y >= G.H) return true;
+  return G.grid[y * G.W + x] === 1;
+}
+
+function genMaze(cw, ch) {
+  const W = cw * 2 + 1, H = ch * 2 + 1;
+  const g = new Uint8Array(W * H).fill(1);
+  const vis = new Uint8Array(cw * ch);
+  const dirs = [[1, 0], [-1, 0], [0, 1], [0, -1]];
+  const st = [[0, 0]];
+  vis[0] = 1; g[W + 1] = 0;
+  // recursive backtracker
+  while (st.length) {
+    const [cx, cy] = st[st.length - 1];
+    const opts = dirs.filter(([dx, dy]) => {
+      const nx = cx + dx, ny = cy + dy;
+      return nx >= 0 && ny >= 0 && nx < cw && ny < ch && !vis[ny * cw + nx];
+    });
+    if (!opts.length) { st.pop(); continue; }
+    const [dx, dy] = opts[(Math.random() * opts.length) | 0];
+    const nx = cx + dx, ny = cy + dy;
+    vis[ny * cw + nx] = 1;
+    g[(cy * 2 + 1 + dy) * W + (cx * 2 + 1 + dx)] = 0;
+    g[(ny * 2 + 1) * W + (nx * 2 + 1)] = 0;
+    st.push([nx, ny]);
+  }
+  // knock out extra walls so there are loops to escape through
+  const extra = Math.floor(cw * ch * 0.1);
+  for (let i = 0, tries = 0; i < extra && tries < extra * 30; tries++) {
+    const x = 1 + ((Math.random() * (W - 2)) | 0), y = 1 + ((Math.random() * (H - 2)) | 0);
+    if (g[y * W + x] !== 1) continue;
+    if ((x % 2 === 0 && y % 2 === 1) || (x % 2 === 1 && y % 2 === 0)) { g[y * W + x] = 0; i++; }
+  }
+  // a few small halls
+  const rooms = 1 + Math.floor(cw * ch / 60);
+  for (let r = 0; r < rooms; r++) {
+    const rx = 1 + 2 * ((Math.random() * (cw - 1)) | 0), ry = 1 + 2 * ((Math.random() * (ch - 1)) | 0);
+    for (let y = ry; y <= ry + 2; y++) for (let x = rx; x <= rx + 2; x++) g[y * W + x] = 0;
+  }
+  return { W, H, grid: g, seen: new Uint8Array(W * H) };
+}
+
+function bfs(sx, sy) {
+  const { W, H } = G;
+  const d = new Int32Array(W * H).fill(-1), prev = new Int32Array(W * H).fill(-1);
+  const q = new Int32Array(W * H);
+  let h = 0, t = 0;
+  const s = sy * W + sx;
+  d[s] = 0; q[t++] = s;
+  while (h < t) {
+    const c = q[h++], cx = c % W, cy = (c / W) | 0;
+    const ns = [c + 1, c - 1, c + W, c - W], nx = [cx + 1, cx - 1, cx, cx], ny = [cy, cy, cy + 1, cy - 1];
+    for (let k = 0; k < 4; k++) {
+      if (wall(nx[k], ny[k])) continue;
+      const n = ns[k];
+      if (d[n] >= 0) continue;
+      d[n] = d[c] + 1; prev[n] = c; q[t++] = n;
+    }
+  }
+  return { d, prev };
+}
+
+function findPath(sx, sy, tx, ty) {
+  if (wall(tx, ty) || wall(sx, sy)) return [];
+  const { d, prev } = bfs(sx, sy);
+  let c = ty * G.W + tx;
+  if (d[c] < 0) return [];
+  const s = sy * G.W + sx, out = [];
+  while (c !== s) { out.push(c); c = prev[c]; }
+  return out.reverse();
+}
+
+// ======================================================================
+//  Game state
+// ======================================================================
+let state = 'title';      // title | play | pause | clear | dead
+let level = 1, now = 0, levelTime = 0, echoes = 0, totalEchoes = 0;
+let player, cam = { x: 0, y: 0 }, monsters = [], crystals = [], exit = null;
+let particles = [], dots = [], stones = [], alerts = [];
+let crystalsGot = 0, stonesLeft = STONES_PER_LEVEL, exitOpen = false, beaconT = 0;
+let charging = false, charge = 0, cooldown = 0;
+let danger = 0, beat = 0, hbT = 0, demoT = 0;
+let best = store.get('echo-maze-best', 0);
+let isTouch = false;
+const hintsShown = new Set();
+
+function setupLevel(n) {
+  level = n;
+  const cw = Math.min(8 + n * 2, 22), ch = Math.min(6 + n, 15);
+  G = genMaze(cw, ch);
+  player = { x: 1.5, y: 1.5, fx: 1, fy: 0, moving: false };
+  cam.x = player.x; cam.y = player.y;
+  particles = []; dots = []; stones = []; alerts = [];
+  crystalsGot = 0; stonesLeft = STONES_PER_LEVEL; exitOpen = false; beaconT = 0;
+  levelTime = 0; echoes = 0; charging = false; charge = 0; cooldown = 0;
+  danger = 0; beat = 0; hbT = 0; hudCache = '';
+
+  const { d } = bfs(1, 1);
+  const cells = [];
+  for (let y = 1; y < G.H; y += 2) for (let x = 1; x < G.W; x += 2) {
+    const i = y * G.W + x;
+    if (d[i] < 0) continue;
+    const walls = wall(x + 1, y) + wall(x - 1, y) + wall(x, y + 1) + wall(x, y - 1);
+    cells.push({ x, y, d: d[i], dead: walls === 3 });
+  }
+  let maxD = 0;
+  for (const c of cells) maxD = Math.max(maxD, c.d);
+  const far = cells.filter((c) => c.d === maxD)[0];
+  exit = { x: far.x + 0.5, y: far.y + 0.5, seen: false, seenT: -9 };
+
+  // crystals: prefer dead ends, spread apart
+  const cand = cells.filter((c) => c.d > maxD * 0.3 && !(c.x === far.x && c.y === far.y));
+  cand.sort(() => Math.random() - 0.5);
+  cand.sort((a, b) => (a.dead ? 0 : 1) - (b.dead ? 0 : 1));
+  crystals = [];
+  for (let minD = 7; crystals.length < CRYSTALS_PER_LEVEL && minD >= 0; minD--) {
+    for (const c of cand) {
+      if (crystals.length >= CRYSTALS_PER_LEVEL) break;
+      const px = c.x + 0.5, py = c.y + 0.5;
+      if (Math.hypot(px - exit.x, py - exit.y) < minD) continue;
+      if (crystals.some((k) => Math.hypot(k.x - px, k.y - py) < minD)) continue;
+      crystals.push({ x: px, y: py, got: false, seen: false, seenT: -9, humT: Math.random() * 2.4 });
+    }
+  }
+
+  // listeners spawn far from the start
+  const count = Math.min(1 + Math.floor(n * 0.8), 8);
+  let spawn = cells.filter((c) => c.d > Math.max(10, maxD * 0.4) && Math.hypot(c.x - 1, c.y - 1) > 8);
+  if (spawn.length < count) spawn = cells.filter((c) => c.d > 6);
+  spawn.sort(() => Math.random() - 0.5);
+  monsters = [];
+  for (let i = 0; i < count && i < spawn.length; i++) {
+    monsters.push({
+      x: spawn[i].x + 0.5, y: spawn[i].y + 0.5, path: [], state: 'wander', t: 0,
+      gx: 0, gy: 0, ghostT: -9, ghostDur: 1.4, repath: 0,
+      huntSpeed: Math.min(2.0 + n * 0.15, 3.0),
+    });
+  }
+}
+
+// ======================================================================
+//  Echoes
+// ======================================================================
+function emitEcho(x, y, count, range, col, src) {
+  const off = Math.random() * Math.PI * 2;
+  for (let i = 0; i < count; i++) {
+    const a = off + (i / count) * Math.PI * 2 + (Math.random() - 0.5) * 0.02;
+    const life = range / ECHO_SPEED;
+    particles.push({ x, y, vx: Math.cos(a) * ECHO_SPEED, vy: Math.sin(a) * ECHO_SPEED, life, max: life, b: 1, col, src });
+  }
+}
+
+function addDot(x, y, c, a) {
+  dots.push({ x, y, c, a, t: now });
+}
+
+function updParticles(dt) {
+  const steps = Math.max(1, Math.ceil((ECHO_SPEED * dt) / 0.2));
+  const h = dt / steps;
+  for (let i = particles.length - 1; i >= 0; i--) {
+    const p = particles[i];
+    let dead = false;
+    for (let s = 0; s < steps && !dead; s++) {
+      const nx = p.x + p.vx * h, ny = p.y + p.vy * h;
+      const tx = Math.floor(nx), ty = Math.floor(ny);
+      if (wall(tx, ty)) {
+        addDot(p.x, p.y, p.col, p.life / p.max);
+        if (tx >= 0 && ty >= 0 && tx < G.W && ty < G.H) G.seen[ty * G.W + tx] = 1;
+        const wx = wall(tx, Math.floor(p.y)), wy = wall(Math.floor(p.x), ty);
+        if (wx) p.vx = -p.vx;
+        if (wy) p.vy = -p.vy;
+        if (!wx && !wy) { p.vx = -p.vx; p.vy = -p.vy; }
+        p.life *= 0.55;
+        if (--p.b < 0) dead = true;
+        continue;
+      }
+      p.x = nx; p.y = ny;
+      for (const m of monsters) {
+        if (Math.abs(p.x - m.x) < 0.4 && Math.abs(p.y - m.y) < 0.4) {
+          addDot(p.x, p.y, C_MONSTER, 1);
+          m.ghostT = now; m.gx = m.x; m.gy = m.y;
+          dead = true; break;
+        }
+      }
+      if (dead) break;
+      for (const c of crystals) {
+        if (!c.got && Math.abs(p.x - c.x) < 0.3 && Math.abs(p.y - c.y) < 0.3) {
+          addDot(p.x, p.y, C_CRYSTAL, 1);
+          c.seen = true; c.seenT = now;
+          dead = true; break;
+        }
+      }
+      if (dead) break;
+      if (p.src !== 'exit' && Math.abs(p.x - exit.x) < 0.42 && Math.abs(p.y - exit.y) < 0.42) {
+        addDot(p.x, p.y, C_EXIT, 1);
+        exit.seen = true; exit.seenT = now;
+        dead = true;
+      }
+    }
+    p.life -= dt;
+    if (p.life <= 0) dead = true;
+    if (dead) { particles[i] = particles[particles.length - 1]; particles.pop(); }
+  }
+  // dots are pushed in time order, so expired ones are always at the front
+  let k = 0;
+  while (k < dots.length && now - dots[k].t > DOT_LIFE) k++;
+  if (dots.length - k > 9000) k = dots.length - 9000;
+  if (k) dots.splice(0, k);
+}
+
+// ======================================================================
+//  Noise & listeners
+// ======================================================================
+function pathFrom(m, x, y) {
+  const sx = Math.floor(m.x), sy = Math.floor(m.y);
+  const p = findPath(sx, sy, Math.floor(x), Math.floor(y));
+  p.unshift(sy * G.W + sx); // walk back to the tile centre first so it never clips a corner
+  return p;
+}
+
+function makeNoise(x, y, r) {
+  for (const m of monsters) {
+    if (Math.hypot(m.x - x, m.y - y) <= r) alertMonster(m, x, y);
+  }
+}
+
+function alertMonster(m, x, y) {
+  const was = m.state === 'hunt';
+  m.state = 'hunt';
+  m.path = pathFrom(m, x, y);
+  if (was || state !== 'play') return;
+  const dx = m.x - player.x, dy = m.y - player.y, dp = Math.hypot(dx, dy);
+  if (dp < 14) {
+    sfx.growl(Math.pow(1 - dp / 14, 1.5) + 0.15, dx / 6);
+    alerts.push({ a: Math.atan2(dy, dx), t: now });
+    hint('growl', '低吼声——有聆听者被惊动了，屏幕边缘的红光指向它。');
+  }
+}
+
+function wander(m) {
+  for (let k = 0; k < 30; k++) {
+    const tx = Math.floor(m.x + (Math.random() * 2 - 1) * 8), ty = Math.floor(m.y + (Math.random() * 2 - 1) * 8);
+    if (wall(tx, ty)) continue;
+    const p = pathFrom(m, tx + 0.5, ty + 0.5);
+    if (p.length > 2) { m.path = p; return; }
+  }
+}
+
+function updMonster(m, dt) {
+  const dp = Math.hypot(player.x - m.x, player.y - m.y);
+  // they can feel you when you get too close, even in silence
+  if (dp < 1.3 || (player.moving && dp < 2.3)) {
+    m.repath -= dt;
+    if (m.state !== 'hunt' || m.repath <= 0) { alertMonster(m, player.x, player.y); m.repath = 0.35; }
+  }
+  if (m.state === 'search') {
+    m.t -= dt;
+    if (m.t <= 0) m.state = 'wander';
+    return;
+  }
+  if (m.state === 'wander' && !m.path.length) wander(m);
+  const spd = m.state === 'hunt' ? m.huntSpeed : WANDER_SPEED;
+  let step = spd * dt;
+  while (step > 0 && m.path.length) {
+    const c = m.path[0], tx = (c % G.W) + 0.5, ty = Math.floor(c / G.W) + 0.5;
+    const dx = tx - m.x, dy = ty - m.y, dist = Math.hypot(dx, dy);
+    if (dist <= step) { m.x = tx; m.y = ty; m.path.shift(); step -= dist; }
+    else { m.x += (dx / dist) * step; m.y += (dy / dist) * step; step = 0; }
+  }
+  if (!m.path.length && m.state === 'hunt') { m.state = 'search'; m.t = 1.6; }
+  if (Math.hypot(player.x - m.x, player.y - m.y) < 0.5) die();
+}
+
+// ======================================================================
+//  Player actions
+// ======================================================================
+function startCharge() {
+  if (state !== 'play' || charging) return;
+  charging = true; charge = 0;
+  $('#tEcho').classList.add('on');
+}
+
+function releaseCharge() {
+  if (!charging) return;
+  charging = false;
+  $('#tEcho').classList.remove('on');
+  if (state !== 'play' || cooldown > 0) return;
+  const c = charge;
+  const range = 4.5 + 9.5 * c;
+  emitEcho(player.x, player.y, Math.round(110 + 150 * c), range, C_WALL, 'player');
+  makeNoise(player.x, player.y, range * 1.1 + 1.5);
+  sfx.echo(c);
+  echoes++; totalEchoes++;
+  cooldown = 0.35;
+  if (level === 1 && echoes === 1) {
+    hint('crystal', '远处的叮——声是共鸣晶体，戴上耳机能听出它在左边还是右边。', 6);
+  }
+}
+
+function throwStone(useMouse) {
+  if (state !== 'play' || stonesLeft <= 0) return;
+  let ax = player.fx, ay = player.fy;
+  if ((useMouse || (mouse.active && !isTouch))) {
+    const sx = (player.x - cam.x) * S + VW / 2, sy = (player.y - cam.y) * S + VH / 2;
+    const dx = mouse.x - sx, dy = mouse.y - sy, l = Math.hypot(dx, dy);
+    if (l > 4) { ax = dx / l; ay = dy / l; }
+  }
+  stonesLeft--;
+  stones.push({ x: player.x, y: player.y, vx: ax * 10, vy: ay * 10, dist: 0 });
+  sfx.throwIt();
+}
+
+function updStones(dt) {
+  for (let i = stones.length - 1; i >= 0; i--) {
+    const s = stones[i];
+    let landed = false;
+    const steps = Math.ceil((10 * dt) / 0.1), h = dt / steps;
+    for (let k = 0; k < steps; k++) {
+      const nx = s.x + s.vx * h, ny = s.y + s.vy * h;
+      if (wall(Math.floor(nx), Math.floor(ny))) { landed = true; break; }
+      s.x = nx; s.y = ny; s.dist += 10 * h;
+      if (s.dist >= 7) { landed = true; break; }
+    }
+    if (!landed) continue;
+    stones.splice(i, 1);
+    emitEcho(s.x, s.y, 60, 3.8, C_STONE, 'stone');
+    makeNoise(s.x, s.y, 9);
+    const d = Math.hypot(s.x - player.x, s.y - player.y);
+    sfx.land(Math.max(0.25, 1 - d / 12), (s.x - player.x) / 6);
+  }
+}
+
+function die() {
+  if (state !== 'play') return;
+  state = 'dead';
+  charging = false;
+  sfx.death();
+  G.seen.fill(1);
+  for (const m of monsters) { m.ghostT = now; m.gx = m.x; m.gy = m.y; m.ghostDur = 1e9; }
+  for (const c of crystals) if (!c.got) { c.seen = true; c.seenT = now; }
+  exit.seen = true;
+  const reached = level - 1;
+  if (reached > best) { best = reached; store.set('echo-maze-best', best); }
+  setTimeout(() => { if (state === 'dead') showPanel('dead'); }, 900);
+}
+
+function clearLevel() {
+  state = 'clear';
+  charging = false;
+  sfx.clear();
+  if (level > best) { best = level; store.set('echo-maze-best', best); }
+  emitEcho(exit.x, exit.y, 220, 14, C_EXIT, 'exit');
+  setTimeout(() => { if (state === 'clear') showPanel('clear'); }, 700);
+}
+
+// ======================================================================
+//  Hints
+// ======================================================================
+let hintTimer = 0;
+function hint(id, text, dur) {
+  if (id && hintsShown.has(id)) return;
+  if (id) hintsShown.add(id);
+  hintEl.textContent = text;
+  hintEl.hidden = false;
+  hintEl.style.opacity = '1';
+  hintTimer = dur || 5;
+}
+
+// ======================================================================
+//  Input
+// ======================================================================
+const keys = new Set();
+const mouse = { x: 0, y: 0, active: false, charging: false };
+const joy = { id: null, ox: 0, oy: 0, x: 0, y: 0 };
+
+function setTouch(on) {
+  if (isTouch === on) return;
+  isTouch = on;
+  document.body.classList.toggle('touch', on);
+  touchCtl.hidden = !(on && state === 'play');
+}
+
+window.addEventListener('keydown', (e) => {
+  if (['Space', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.code)) e.preventDefault();
+  if (e.repeat) return;
+  keys.add(e.code);
+  initAudio();
+  if (e.code === 'KeyM') { setMuted(!muted); return; }
+  if (state === 'play') {
+    if (e.code === 'Space') startCharge();
+    else if (e.code === 'KeyE' || e.code === 'KeyF') throwStone(false);
+    else if (e.code === 'KeyP' || e.code === 'Escape') pause();
+  } else if (!overlay.hidden && (e.code === 'Enter' || e.code === 'Space' || (state === 'pause' && (e.code === 'KeyP' || e.code === 'Escape')))) {
+    primaryAction();
+  }
+});
+window.addEventListener('keyup', (e) => {
+  keys.delete(e.code);
+  if (e.code === 'Space') releaseCharge();
+});
+window.addEventListener('blur', () => { keys.clear(); releaseCharge(); });
+
+cv.addEventListener('contextmenu', (e) => e.preventDefault());
+window.addEventListener('pointerdown', (e) => setTouch(e.pointerType === 'touch'), true);
+cv.addEventListener('pointerdown', (e) => {
+  initAudio();
+  if (e.pointerType === 'touch') {
+    if (state === 'play' && joy.id == null && e.clientX < VW * 0.6) {
+      joy.id = e.pointerId; joy.ox = joy.x = e.clientX; joy.oy = joy.y = e.clientY;
+      try { cv.setPointerCapture(e.pointerId); } catch (err) { /* ignore */ }
+    }
+    return;
+  }
+  mouse.x = e.clientX; mouse.y = e.clientY; mouse.active = true;
+  if (state !== 'play') return;
+  if (e.button === 0) { mouse.charging = true; startCharge(); }
+  else if (e.button === 2) throwStone(true);
+});
+window.addEventListener('pointermove', (e) => {
+  if (e.pointerId === joy.id) { joy.x = e.clientX; joy.y = e.clientY; return; }
+  if (e.pointerType === 'mouse') { mouse.x = e.clientX; mouse.y = e.clientY; mouse.active = true; }
+});
+function pointerEnd(e) {
+  if (e.pointerId === joy.id) joy.id = null;
+  if (e.pointerType === 'mouse' && mouse.charging && e.button === 0) { mouse.charging = false; releaseCharge(); }
+}
+window.addEventListener('pointerup', pointerEnd);
+window.addEventListener('pointercancel', pointerEnd);
+
+const tEcho = $('#tEcho'), tStone = $('#tStone');
+tEcho.addEventListener('pointerdown', (e) => { e.preventDefault(); initAudio(); startCharge(); });
+['pointerup', 'pointercancel', 'pointerleave'].forEach((t) => tEcho.addEventListener(t, () => releaseCharge()));
+tStone.addEventListener('pointerdown', (e) => { e.preventDefault(); initAudio(); throwStone(false); });
+
+$('#btnMute').addEventListener('click', () => { initAudio(); setMuted(!muted); });
+$('#btnPause').addEventListener('click', () => pause());
+document.addEventListener('visibilitychange', () => { if (document.hidden) pause(); });
+
+function pause() {
+  if (state !== 'play') return;
+  releaseCharge();
+  state = 'pause';
+  showPanel('pause');
+}
+
+// ======================================================================
+//  Panels
+// ======================================================================
+const fmt = (t) => {
+  const s = Math.floor(t);
+  return String(Math.floor(s / 60)).padStart(2, '0') + ':' + String(s % 60).padStart(2, '0');
+};
+
+function showPanel(kind) {
+  if (kind !== 'pause') hud.hidden = true;
+  touchCtl.hidden = true;
+  hintEl.hidden = true;
+  let html = '';
+  if (kind === 'title') {
+    html = `
+      <p class="eyebrow">Echo · 一个靠耳朵玩的潜行游戏</p>
+      <h1>回声迷城</h1>
+      <p class="lede">你在一座没有光的城里醒来。<br>想看见什么，就得先发出声音。</p>
+      <ul class="rules">
+        <li><span><kbd>空格</kbd> 或 <kbd>按住鼠标</kbd> 蓄力，松开发出回声。声波撞到墙会亮起来，蓄得越久照得越远。</span></li>
+        <li class="r-danger"><span>声音也会传进 <b class="danger">聆听者</b> 的耳朵。它们看不见，却会循着声音扑过来。安静走路是安全的，但别贴得太近。</span></li>
+        <li class="r-amber"><span>找到 <b class="amber">3 枚共鸣晶体</b>。它们会周期性地嗡鸣，左右声道会告诉你方向。</span></li>
+        <li><span><kbd>E</kbd> 或 <kbd>右键</kbd> 朝鼠标方向扔石子：在远处制造响动，引开聆听者，也顺便照亮那里。每层 3 颗。</span></li>
+        <li class="r-violet"><span>晶体集齐后，<b class="violet">出口</b>会亮起紫光。走进去，下潜到更深的一层。</span></li>
+      </ul>
+      <div class="actions"><button class="primary" id="go" type="button">开始下潜</button>
+      ${best > 0 ? `<span class="fine">最深纪录：地下 ${best * METERS_PER_LEVEL} m</span>` : ''}</div>
+      <p class="fine">建议戴耳机 · WASD / 方向键移动 · M 静音 · P 暂停<br>手机：左半屏拖动移动，右下角按钮发回声、扔石子</p>`;
+  } else if (kind === 'pause') {
+    html = `
+      <p class="eyebrow">暂停 · 地下 ${level * METERS_PER_LEVEL} m</p>
+      <h2>屏住呼吸</h2>
+      <p>聆听者也在等你。</p>
+      <div class="actions"><button class="primary" id="go" type="button">继续</button></div>`;
+  } else if (kind === 'clear') {
+    const next = Math.min(1 + Math.floor((level + 1) * 0.8), 8);
+    html = `
+      <p class="eyebrow">第 ${level} 层 · 已穿越</p>
+      <h2>你听见了出口</h2>
+      <dl class="stats">
+        <div><dt>用时</dt><dd>${fmt(levelTime)}</dd></div>
+        <div><dt>回声</dt><dd>${echoes}</dd></div>
+        <div><dt>剩余石子</dt><dd>${stonesLeft}</dd></div>
+      </dl>
+      <p>下一层在地下 ${(level + 1) * METERS_PER_LEVEL} m。迷宫更大，聆听者有 ${next} 只。</p>
+      <div class="actions"><button class="primary" id="go" type="button">继续下潜</button></div>`;
+  } else if (kind === 'dead') {
+    html = `
+      <p class="eyebrow">信号中断 · 地下 ${level * METERS_PER_LEVEL} m</p>
+      <h2>聆听者找到了你</h2>
+      <p>这次你穿越了 <b>${level - 1}</b> 层，总共发出 ${totalEchoes} 次回声。红点是它们最后的位置。</p>
+      <p class="fine">最深纪录：${best > 0 ? `地下 ${best * METERS_PER_LEVEL} m（${best} 层）` : '还没有'}</p>
+      <div class="actions"><button class="primary" id="go" type="button">重新下潜</button></div>`;
+  }
+  panel.innerHTML = html;
+  overlay.hidden = false;
+  $('#go').addEventListener('click', primaryAction);
+  if (!isTouch) $('#go').focus({ preventScroll: true });
+}
+
+function hidePanel() {
+  overlay.hidden = true;
+  hud.hidden = false;
+  touchCtl.hidden = !isTouch;
+  if (document.activeElement && document.activeElement.blur) document.activeElement.blur();
+}
+
+function primaryAction() {
+  initAudio();
+  if (state === 'title' || state === 'dead') {
+    totalEchoes = 0;
+    setupLevel(1);
+    state = 'play';
+    hidePanel();
+    hint('start', isTouch ? '按住右下角「回声」蓄力，松开看看四周。' : '按住 空格 蓄力，松开看看四周。', 6);
+  } else if (state === 'clear') {
+    setupLevel(level + 1);
+    state = 'play';
+    hidePanel();
+  } else if (state === 'pause') {
+    state = 'play';
+    hidePanel();
+  }
+}
+
+// ======================================================================
+//  Update
+// ======================================================================
+let hudCache = '';
+function updHud() {
+  const key = level + '|' + crystalsGot + '|' + stonesLeft + '|' + Math.floor(levelTime);
+  if (key === hudCache) return;
+  hudCache = key;
+  $('#hDepth').innerHTML = `B${level} · 地下 <b>${level * METERS_PER_LEVEL}</b> m`;
+  $('#hGems').innerHTML = crystals.map((c) => `<span class="gem${c.got ? ' got' : ''}"></span>`).join('');
+  $('#hStones').innerHTML = Array.from({ length: STONES_PER_LEVEL }, (_, i) => `<span class="stone${i < stonesLeft ? '' : ' used'}"></span>`).join('');
+  $('#hTime').textContent = fmt(levelTime);
+}
+
+function updPlayer(dt) {
+  let ix = 0, iy = 0;
+  if (keys.has('KeyA') || keys.has('ArrowLeft')) ix -= 1;
+  if (keys.has('KeyD') || keys.has('ArrowRight')) ix += 1;
+  if (keys.has('KeyW') || keys.has('ArrowUp')) iy -= 1;
+  if (keys.has('KeyS') || keys.has('ArrowDown')) iy += 1;
+  if (joy.id != null) {
+    const dx = joy.x - joy.ox, dy = joy.y - joy.oy, l = Math.hypot(dx, dy);
+    if (l > 8) { const k = Math.min(1, l / 50); ix += (dx / l) * k; iy += (dy / l) * k; }
+  }
+  const len = Math.hypot(ix, iy);
+  player.moving = len > 0.1;
+  if (!player.moving) return;
+  const k = len > 1 ? 1 / len : 1;
+  ix *= k; iy *= k;
+  const fl = Math.hypot(ix, iy);
+  player.fx = ix / fl; player.fy = iy / fl;
+  const total = PLAYER_SPEED * dt, n = Math.ceil(total / 0.1);
+  for (let s = 0; s < n; s++) {
+    moveAxis(ix * total / n, 0);
+    moveAxis(0, iy * total / n);
+  }
+}
+
+function hitsWall(x, y, r) {
+  const x0 = Math.floor(x - r), x1 = Math.floor(x + r), y0 = Math.floor(y - r), y1 = Math.floor(y + r);
+  for (let ty = y0; ty <= y1; ty++) for (let tx = x0; tx <= x1; tx++) if (wall(tx, ty)) return true;
+  return false;
+}
+
+function moveAxis(dx, dy) {
+  const r = PLAYER_R;
+  if (dx) {
+    let nx = player.x + dx;
+    if (hitsWall(nx, player.y, r)) nx = dx > 0 ? Math.floor(nx + r) - r - 1e-4 : Math.floor(nx - r) + 1 + r + 1e-4;
+    player.x = nx;
+  }
+  if (dy) {
+    let ny = player.y + dy;
+    if (hitsWall(player.x, ny, r)) ny = dy > 0 ? Math.floor(ny + r) - r - 1e-4 : Math.floor(ny - r) + 1 + r + 1e-4;
+    player.y = ny;
+  }
+}
+
+function update(dt) {
+  if (hintTimer > 0) {
+    hintTimer -= dt;
+    if (hintTimer <= 0.6) hintEl.style.opacity = String(Math.max(0, hintTimer / 0.6));
+    if (hintTimer <= 0) hintEl.hidden = true;
+  }
+  if (state === 'pause') return;
+
+  if (state === 'title') {
+    demoT -= dt;
+    if (demoT <= 0) {
+      demoT = 1.5;
+      for (let k = 0; k < 30; k++) {
+        const tx = Math.floor(cam.x + (Math.random() * 2 - 1) * 6), ty = Math.floor(cam.y + (Math.random() * 2 - 1) * 4);
+        if (!wall(tx, ty)) { emitEcho(tx + 0.5, ty + 0.5, 150, 7, C_WALL, 'demo'); break; }
+      }
+    }
+    updParticles(dt);
+    return;
+  }
+
+  if (state !== 'play') { updParticles(dt); return; }
+
+  levelTime += dt;
+  cooldown = Math.max(0, cooldown - dt);
+  if (charging) charge = Math.min(1, charge + dt / CHARGE_TIME);
+  updPlayer(dt);
+  const ck = Math.min(1, dt * 8);
+  cam.x += (player.x - cam.x) * ck; cam.y += (player.y - cam.y) * ck;
+
+  updStones(dt);
+  updParticles(dt);
+  for (const m of monsters) { updMonster(m, dt); if (state !== 'play') return; }
+
+  // crystals hum and can be picked up
+  for (const c of crystals) {
+    if (c.got) continue;
+    const d = Math.hypot(c.x - player.x, c.y - player.y);
+    if (d < 0.55) {
+      c.got = true; crystalsGot++;
+      sfx.pickup();
+      for (let i = 0; i < 18; i++) {
+        const a = (i / 18) * Math.PI * 2;
+        addDot(c.x + Math.cos(a) * 0.45, c.y + Math.sin(a) * 0.45, C_CRYSTAL, 1);
+      }
+      if (crystalsGot === crystals.length) {
+        exitOpen = true; beaconT = 0.8;
+        sfx.open();
+        hint('exit', '出口开启了。循着紫色的光和钟声走。', 6);
+      } else {
+        hint('gem' + crystalsGot, `拿到第 ${crystalsGot} 枚，还差 ${crystals.length - crystalsGot} 枚。`, 3);
+      }
+      continue;
+    }
+    c.humT -= dt;
+    if (c.humT <= 0) {
+      c.humT = 2.4 + Math.random() * 0.6;
+      if (d < 15) {
+        const v = Math.pow(1 - d / 15, 2);
+        sfx.hum(v, (c.x - player.x) / 6);
+        addDot(c.x, c.y, C_CRYSTAL, 0.12 + 0.6 * v);
+      }
+    }
+  }
+
+  // exit
+  const de = Math.hypot(exit.x - player.x, exit.y - player.y);
+  if (exitOpen) {
+    beaconT -= dt;
+    if (beaconT <= 0) {
+      beaconT = 2.6;
+      emitEcho(exit.x, exit.y, 54, 4.5, C_EXIT, 'exit');
+      sfx.beacon(Math.max(0.15, 1 - de / 20), (exit.x - player.x) / 8);
+    }
+    if (de < 0.55) { clearLevel(); return; }
+  } else if (de < 0.8) {
+    hintsShown.delete('locked');
+    hint('locked', `出口紧闭。还差 ${crystals.length - crystalsGot} 枚共鸣晶体。`, 2.5);
+  }
+
+  // heartbeat when a listener is near
+  let dn = Infinity;
+  for (const m of monsters) dn = Math.min(dn, Math.hypot(m.x - player.x, m.y - player.y));
+  danger = Math.max(0, Math.min(1, 1 - (dn - 0.5) / 5.5));
+  beat = Math.max(0, beat - dt * 2.5);
+  if (danger > 0) {
+    hbT -= dt;
+    if (hbT <= 0) { hbT = 1.15 - 0.8 * danger; sfx.heart(0.3 + 0.7 * danger); beat = 1; }
+  } else hbT = 0;
+
+  updHud();
+}
+
+// ======================================================================
+//  Render
+// ======================================================================
+function makeSprite([r, g, b]) {
+  const c = document.createElement('canvas');
+  c.width = c.height = 32;
+  const x = c.getContext('2d');
+  const gr = x.createRadialGradient(16, 16, 0, 16, 16, 16);
+  gr.addColorStop(0, 'rgba(255,255,255,1)');
+  gr.addColorStop(0.16, `rgba(${r},${g},${b},1)`);
+  gr.addColorStop(0.45, `rgba(${r},${g},${b},0.28)`);
+  gr.addColorStop(1, `rgba(${r},${g},${b},0)`);
+  x.fillStyle = gr;
+  x.fillRect(0, 0, 32, 32);
+  return c;
+}
+const SPR = RGB.map(makeSprite);
+const SPR_PLAYER = makeSprite([200, 245, 255]);
+
+function render() {
+  ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+  ctx.globalCompositeOperation = 'source-over';
+  ctx.globalAlpha = 1;
+  ctx.fillStyle = '#04060b';
+  ctx.fillRect(0, 0, VW, VH);
+  if (!G) return;
+
+  const ox = VW / 2 - cam.x * S, oy = VH / 2 - cam.y * S;
+  const X = (wx) => wx * S + ox, Y = (wy) => wy * S + oy;
+
+  // remembered walls
+  const tx0 = Math.max(0, Math.floor(cam.x - VW / 2 / S) - 1), tx1 = Math.min(G.W - 1, Math.ceil(cam.x + VW / 2 / S) + 1);
+  const ty0 = Math.max(0, Math.floor(cam.y - VH / 2 / S) - 1), ty1 = Math.min(G.H - 1, Math.ceil(cam.y + VH / 2 / S) + 1);
+  ctx.fillStyle = 'rgba(110, 200, 235, 0.06)';
+  for (let ty = ty0; ty <= ty1; ty++) for (let tx = tx0; tx <= tx1; tx++) {
+    const i = ty * G.W + tx;
+    if (G.seen[i] && G.grid[i] === 1) ctx.fillRect(X(tx) + 0.5, Y(ty) + 0.5, S - 1, S - 1);
+  }
+
+  // remembered objects
+  ctx.lineWidth = 1.2;
+  for (const c of crystals) {
+    if (c.got || !c.seen) continue;
+    const fresh = Math.max(0, 1 - (now - c.seenT) / 2.2);
+    diamond(X(c.x), Y(c.y), S * 0.17, `rgba(255,198,107,${0.22 + 0.7 * fresh})`, fresh > 0.05);
+  }
+  if (exit.seen || exitOpen) {
+    const pulse = exitOpen ? 0.3 + 0.2 * Math.sin(now * 3) : 0.18 + 0.6 * Math.max(0, 1 - (now - exit.seenT) / 2.2);
+    ctx.strokeStyle = `rgba(180,144,255,${pulse})`;
+    ctx.beginPath(); ctx.arc(X(exit.x), Y(exit.y), S * 0.3, 0, Math.PI * 2); ctx.stroke();
+    if (exitOpen) {
+      ctx.globalCompositeOperation = 'lighter';
+      ctx.globalAlpha = pulse;
+      const s = S * 1.6;
+      ctx.drawImage(SPR[C_EXIT], X(exit.x) - s / 2, Y(exit.y) - s / 2, s, s);
+      ctx.globalAlpha = 1;
+      ctx.globalCompositeOperation = 'source-over';
+    }
+  }
+
+  ctx.globalCompositeOperation = 'lighter';
+  // echo dots
+  const ds = S * 0.42, pad = ds;
+  for (let i = 0; i < dots.length; i++) {
+    const d = dots[i];
+    const sx = X(d.x), sy = Y(d.y);
+    if (sx < -pad || sy < -pad || sx > VW + pad || sy > VH + pad) continue;
+    const age = now - d.t;
+    let a = d.a * Math.pow(Math.max(0, 1 - age / DOT_LIFE), 1.6);
+    if (age < 0.1) a = Math.min(1, a * 1.6);
+    if (a < 0.01) continue;
+    ctx.globalAlpha = a;
+    ctx.drawImage(SPR[d.c], sx - ds / 2, sy - ds / 2, ds, ds);
+  }
+  // wavefront
+  const ps = S * 0.22;
+  for (const p of particles) {
+    ctx.globalAlpha = 0.35 * (p.life / p.max);
+    ctx.drawImage(SPR[p.col], X(p.x) - ps / 2, Y(p.y) - ps / 2, ps, ps);
+  }
+  // listener afterimages: you only ever see where they *were*
+  for (const m of monsters) {
+    const age = now - m.ghostT;
+    if (age > m.ghostDur) continue;
+    const a = m.ghostDur > 100 ? 0.9 : 1 - age / m.ghostDur;
+    const gx = X(m.gx), gy = Y(m.gy);
+    ctx.globalAlpha = 0.35 * a;
+    const bs = S * 1.5;
+    ctx.drawImage(SPR[C_MONSTER], gx - bs / 2, gy - bs / 2, bs, bs);
+    ctx.globalAlpha = a;
+    const es = S * 0.32;
+    ctx.drawImage(SPR[C_MONSTER], gx - S * 0.14 - es / 2, gy - S * 0.05 - es / 2, es, es);
+    ctx.drawImage(SPR[C_MONSTER], gx + S * 0.14 - es / 2, gy - S * 0.05 - es / 2, es, es);
+  }
+  // thrown stones
+  for (const s of stones) {
+    ctx.globalAlpha = 0.9;
+    const ss = S * 0.3;
+    ctx.drawImage(SPR[C_STONE], X(s.x) - ss / 2, Y(s.y) - ss / 2, ss, ss);
+  }
+  ctx.globalAlpha = 1;
+
+  // player
+  if (state !== 'title') {
+    const px = X(player.x), py = Y(player.y);
+    const breathe = 1 + 0.06 * Math.sin(now * 2.4);
+    const s = S * 0.9 * breathe;
+    ctx.globalAlpha = state === 'dead' ? 0.3 : 0.75;
+    ctx.drawImage(SPR_PLAYER, px - s / 2, py - s / 2, s, s);
+    ctx.globalAlpha = 1;
+    ctx.globalCompositeOperation = 'source-over';
+    ctx.fillStyle = '#eafcff';
+    ctx.beginPath(); ctx.arc(px, py, S * 0.1, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = 'rgba(234,252,255,0.5)';
+    ctx.beginPath(); ctx.arc(px + player.fx * S * 0.32, py + player.fy * S * 0.32, S * 0.04, 0, Math.PI * 2); ctx.fill();
+    if (charging) {
+      ctx.strokeStyle = `rgba(127,233,255,${0.25 + 0.6 * charge})`;
+      ctx.lineWidth = 1.5;
+      ctx.beginPath(); ctx.arc(px, py, S * (0.45 + charge * 1.3), 0, Math.PI * 2); ctx.stroke();
+      ctx.lineWidth = 3;
+      ctx.beginPath(); ctx.arc(px, py, S * 0.32, -Math.PI / 2, -Math.PI / 2 + Math.PI * 2 * charge); ctx.stroke();
+    }
+  }
+  ctx.globalCompositeOperation = 'source-over';
+
+  // edge warnings pointing at a listener that just heard you
+  for (let i = alerts.length - 1; i >= 0; i--) {
+    const al = alerts[i], age = now - al.t;
+    if (age > 1.1) { alerts.splice(i, 1); continue; }
+    const R = Math.min(VW, VH) * 0.44;
+    ctx.strokeStyle = `rgba(255,59,92,${0.9 * (1 - age / 1.1)})`;
+    ctx.lineWidth = 4;
+    ctx.beginPath(); ctx.arc(VW / 2, VH / 2, R, al.a - 0.2, al.a + 0.2); ctx.stroke();
+  }
+
+  // danger vignette, throbbing with the heartbeat
+  if (state === 'play' && danger > 0) {
+    const a = danger * (0.18 + 0.32 * beat);
+    const g = ctx.createRadialGradient(VW / 2, VH / 2, Math.min(VW, VH) * 0.3, VW / 2, VH / 2, Math.max(VW, VH) * 0.75);
+    g.addColorStop(0, 'rgba(255,40,70,0)');
+    g.addColorStop(1, `rgba(255,40,70,${a})`);
+    ctx.fillStyle = g;
+    ctx.fillRect(0, 0, VW, VH);
+  }
+
+  // virtual joystick
+  if (joy.id != null && state === 'play') {
+    ctx.strokeStyle = 'rgba(127,233,255,0.3)';
+    ctx.lineWidth = 1.5;
+    ctx.beginPath(); ctx.arc(joy.ox, joy.oy, 50, 0, Math.PI * 2); ctx.stroke();
+    const dx = joy.x - joy.ox, dy = joy.y - joy.oy, l = Math.hypot(dx, dy), k = l > 50 ? 50 / l : 1;
+    ctx.fillStyle = 'rgba(127,233,255,0.35)';
+    ctx.beginPath(); ctx.arc(joy.ox + dx * k, joy.oy + dy * k, 18, 0, Math.PI * 2); ctx.fill();
+  }
+}
+
+function diamond(x, y, r, color, fill) {
+  ctx.beginPath();
+  ctx.moveTo(x, y - r); ctx.lineTo(x + r, y); ctx.lineTo(x, y + r); ctx.lineTo(x - r, y); ctx.closePath();
+  if (fill) { ctx.fillStyle = color; ctx.fill(); }
+  else { ctx.strokeStyle = color; ctx.stroke(); }
+}
+
+// ======================================================================
+//  Boot
+// ======================================================================
+let last = performance.now();
+function frame(ts) {
+  const dt = Math.min(0.05, (ts - last) / 1000);
+  last = ts;
+  if (state !== 'pause') now += dt;
+  update(dt);
+  render();
+  requestAnimationFrame(frame);
+}
+
+setMuted(muted);
+setupLevel(1);
+// park the title-screen camera mid-maze so the demo echoes have walls to light up
+cam.x = Math.floor(G.W / 4) * 2 + 1.5;
+cam.y = Math.floor(G.H / 4) * 2 + 1.5;
+showPanel('title');
+requestAnimationFrame(frame);
+})();
+</script>
+</body>
+</html>
