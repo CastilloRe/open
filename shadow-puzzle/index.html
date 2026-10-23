@@ -232,7 +232,7 @@ h1 { margin: 0; font-family: var(--display); font-weight: 400; font-size: clamp(
 
 <div class="overlay" id="overlay">
   <div class="panel">
-    <p class="eyebrow">影子拼图 · 二十二幕小戏</p>
+    <p class="eyebrow">影子拼图 · 二十五幕小戏</p>
     <h1>灯下影</h1>
     <p class="lede">把手边的香蕉、饭团、碗和筷子挂在灯前。挪一挪、转一转、推近或拉远，让它们的影子正好填满墙上的粉笔画。</p>
     <div class="levels" id="levels"></div>
@@ -470,6 +470,35 @@ const SKINS = {
       c.beginPath(); c.moveTo(-50, 0); c.lineTo(50, 0); c.moveTo(0, -50); c.lineTo(0, 50); c.stroke();
     },
   },
+  // coloured glass: `glass` is the light it lets through, multiplied like a real filter
+  rmarble: {
+    name: '红玻璃珠', pts: circlePts(36), sym: 0, base: '#ff5a5a', glass: 'rgb(255,70,70)',
+    paint(c) {
+      c.fillStyle = 'rgba(255,255,255,0.7)';
+      c.beginPath(); c.ellipse(-12, -14, 9, 5, -0.6, 0, TAU); c.fill();
+      c.strokeStyle = 'rgba(140,20,20,0.5)'; c.lineWidth = 2;
+      c.beginPath(); c.arc(0, 0, 24, 0.4, 2.4); c.stroke();
+    },
+  },
+  ycandy: {
+    name: '黄糖纸', pts: [[-30, -28], [30, -28], [62, -34], [62, 34], [30, 28], [-30, 28], [-62, 34], [-62, -34]],
+    sym: Math.PI, base: '#ffd84a', glass: 'rgb(255,225,60)',
+    paint(c) {
+      c.strokeStyle = 'rgba(160,120,10,0.45)'; c.lineWidth = 1.2;
+      for (const sx of [-1, 1]) for (const dy of [-22, -8, 8, 22]) {
+        c.beginPath(); c.moveTo(sx * 32, dy * 0.8); c.lineTo(sx * 60, dy); c.stroke();
+      }
+      c.fillStyle = 'rgba(255,255,255,0.6)'; c.fillRect(-22, -20, 30, 6);
+    },
+  },
+  cruler: {
+    name: '青玻璃尺', pts: rectPts(130, 50), sym: Math.PI, base: '#4fd6f0', glass: 'rgb(60,225,255)',
+    paint(c) {
+      c.strokeStyle = 'rgba(10,80,100,0.55)'; c.lineWidth = 1;
+      for (let x = -60; x <= 60; x += 10) { c.beginPath(); c.moveTo(x, -25); c.lineTo(x, x % 50 === 0 ? -12 : -18); c.stroke(); }
+      c.fillStyle = 'rgba(255,255,255,0.55)'; c.fillRect(-58, 6, 116, 4);
+    },
+  },
   spoon: {
     name: '勺子', pts: spoonPts(), sym: TAU, base: '#c9ced6',
     paint(c) {
@@ -594,6 +623,24 @@ const LEVELS = [
       { k: 'zongzi', sol: [455, 220, 20, 1.3], init: [440, 565, 30, 1.5] },
       { k: 'egg', sol: [400, 430, 0, 1.5], init: [540, 570, 90, 1.25] },
       { k: 'chopstick', sol: [496, 410, 35, 1.15], init: [640, 560, 0, 1.4] }] },
+  { name: '夕阳', verse: '红玻璃珠沉到饭团后面，天就黑了一半。',
+    tip: '彩色玻璃挡住了光，却让同色的光透过去，所以它的影子是彩色的。粉笔框里染红的地方要用红玻璃。',
+    pieces: [
+      { k: 'riceball', sol: [400, 420, 0, 1.65], init: [260, 565, 20, 1.3] },
+      { k: 'rmarble', sol: [400, 350, 0, 1.6], init: [520, 560, 0, 1.25] }] },
+  { name: '灯塔', verse: '黄糖纸做灯，青玻璃尺做海，灯塔亮了。',
+    pieces: [
+      { k: 'book', sol: [400, 470, 90, 1.5], init: [220, 565, 0, 1.25] },
+      { k: 'ycandy', sol: [400, 345, 0, 1.3], init: [350, 560, 30, 1.5] },
+      { k: 'riceball', sol: [400, 245, 0, 1.3], init: [470, 565, 0, 1.5] },
+      { k: 'cruler', sol: [400, 560, 0, 1.5], init: [590, 555, -20, 1.2] }] },
+  { name: '彩窗', verse: '红、黄、青三片玻璃，在窗花里拼出了第四种颜色。',
+    tip: '黄玻璃叠在青玻璃上，透过来的是绿光。',
+    pieces: [
+      { k: 'window', sol: [400, 360, 0, 1.6], init: [230, 565, 15, 1.3] },
+      { k: 'rmarble', sol: [366.4, 326.4, 0, 1.15], init: [360, 560, 0, 1.4] },
+      { k: 'ycandy', sol: [433.6, 360, 90, 1.15], init: [480, 565, 0, 1.4] },
+      { k: 'cruler', sol: [400, 393.6, 0, 1.15], init: [600, 555, 30, 1.3] }] },
 ];
 
 // shadow outline of a piece on the wall (design coords)
@@ -643,6 +690,13 @@ let mode = 'menu'; // menu | play | solving | solved
 let li = 0, pieces = [], slots = [], targetMask = null, targetArea = 1;
 let targetMasks = [], targetAreas = [], targetCs = [], lampScores = [], lampView = 'both';
 const lightCvs = [document.createElement('canvas'), document.createElement('canvas')];
+// a pale preview of the colours the outline wants, shown only on glass levels
+const WASH = 400, washCv = document.createElement('canvas');
+washCv.width = washCv.height = WASH;
+const washCtx = washCv.getContext('2d', { willReadFrequently: true });
+const washOut = document.createElement('canvas');
+washOut.width = washOut.height = WASH;
+let hasWash = false;
 let sel = -1, drag = null, peek = false, holding = 0;
 let score = 0, dirty = true, hintsUsed = 0, hint = null, tipTimer = 0;
 let anim = null, t = 0, solvedAt = 0, solveStart = -9;
@@ -1010,19 +1064,14 @@ function loadLevel(i) {
   // one target mask per lamp for scoring, plus each outline's centre for the cat's directions
   targetMasks = []; targetAreas = []; targetCs = [];
   lamps.forEach((_, j) => {
-    mctx.setTransform(1, 0, 0, 1, 0, 0);
-    mctx.clearRect(0, 0, MASK, MASK);
-    mctx.setTransform(MASK / DES, 0, 0, MASK / DES, 0, 0);
-    mctx.fillStyle = '#000';
-    for (const sl of slots) fillShape(mctx, slotShape(sl, j));
-    const d = mctx.getImageData(0, 0, MASK, MASK).data;
-    const m = new Uint8Array(MASK * MASK);
+    const m = new Uint8ClampedArray(lightMask(slots.map((sl) => [sl.k, slotShape(sl, j)]), MASK, MASK / DES));
     let area = 0, sx = 0, sy = 0;
-    for (let q = 0; q < MASK * MASK; q++) if (d[q * 4 + 3] > 127) { m[q] = 1; area++; sx += q % MASK; sy += (q / MASK) | 0; }
+    for (let q = 0; q < MASK * MASK; q++) if (shaded(m, q * 4)) { area++; sx += q % MASK; sy += (q / MASK) | 0; }
     targetMasks.push(m); targetAreas.push(area);
     targetCs.push({ x: (sx / area + 0.5) * (DES / MASK), y: (sy / area + 0.5) * (DES / MASK) });
   });
   targetMask = targetMasks[0]; targetArea = targetAreas[0];
+  buildWash();
   targetC = { x: targetCs.reduce((a, c) => a + c.x, 0) / targetCs.length, y: targetCs.reduce((a, c) => a + c.y, 0) / targetCs.length };
   const single = lamps.length < 2;
   $('#scoreSub').hidden = single;
@@ -1041,27 +1090,42 @@ function loadLevel(i) {
   scoreReady = false; said = {}; dropCheck = null; solveStart = -9;
   if (mode === 'play') {
     const lines = ['这次是什么呢？', '墙上画的是……喵？', '我猜是好吃的。'];
-    say(lv.pieces.some((d) => !d.sol) ? '有一件东西是多余的喵' : !single ? '两盏灯？我眼睛都花了' : lines[i % lines.length], 2.4, true);
+    say(lv.pieces.some((d) => !d.sol) ? '有一件东西是多余的喵' : !single ? '两盏灯？我眼睛都花了'
+      : lv.pieces.some((d) => SKINS[d.k].glass) ? '彩色的影子？好漂亮喵' : lines[i % lines.length], 2.4, true);
   }
 }
+
+// what reaches the wall: white light multiplied by each prop in the way (opaque = black, glass = its tint)
+const filterOf = (k) => SKINS[k].glass || '#000';
+function lightMask(shapes, size, scale) {
+  const c = size === MASK ? mctx : washCtx;
+  c.setTransform(1, 0, 0, 1, 0, 0);
+  c.globalCompositeOperation = 'source-over';
+  c.fillStyle = '#fff'; c.fillRect(0, 0, size, size);
+  c.setTransform(scale, 0, 0, scale, 0, 0);
+  c.globalCompositeOperation = 'multiply';
+  for (const [k, sh] of shapes) { c.fillStyle = filterOf(k); fillShape(c, sh); }
+  c.globalCompositeOperation = 'source-over';
+  return c.getImageData(0, 0, size, size).data;
+}
+// a pixel is "in shadow" once any channel is cut below half; two pixels match when their colours agree
+const shaded = (d, k) => Math.min(d[k], d[k + 1], d[k + 2]) < 128;
+const dim = (d, k) => Math.max(d[k], d[k + 1], d[k + 2]) < 128; // plain shadow, edges included
+const sameLight = (a, b, k) => (dim(a, k) && dim(b, k)) ||
+  (Math.abs(a[k] - b[k]) < 60 && Math.abs(a[k + 1] - b[k + 1]) < 60 && Math.abs(a[k + 2] - b[k + 2]) < 60);
 
 // a level counts only as well as its worst-matched lamp
 function computeScore() {
   let worst = Infinity;
   lampScores = [];
   lamps.forEach((Lp, j) => {
-    mctx.setTransform(1, 0, 0, 1, 0, 0);
-    mctx.clearRect(0, 0, MASK, MASK);
-    mctx.setTransform(MASK / DES, 0, 0, MASK / DES, 0, 0);
-    mctx.fillStyle = '#000';
-    for (const p of pieces) fillShape(mctx, shadowShape(p, 0, Lp));
-    const d = mctx.getImageData(0, 0, MASK, MASK).data, tm = targetMasks[j];
+    const d = lightMask(pieces.map((p) => [p.k, shadowShape(p, 0, Lp)]), MASK, MASK / DES), tm = targetMasks[j];
     let inter = 0, uni = 0, mx = 0, my = 0, mn = 0, ex = 0, ey = 0, en = 0;
     for (let i = 0; i < MASK * MASK; i++) {
-      const a = d[i * 4 + 3] > 127, b = tm[i] === 1;
-      if (a && b) inter++;
+      const k = i * 4, a = shaded(d, k), b = shaded(tm, k), ok = a && b && sameLight(d, tm, k);
+      if (ok) inter++;
       if (a || b) uni++;
-      if (b && !a) { mx += i % MASK; my += (i / MASK) | 0; mn++; }
+      if (b && !ok) { mx += i % MASK; my += (i / MASK) | 0; mn++; }
       else if (a && !b) { ex += i % MASK; ey += (i / MASK) | 0; en++; }
     }
     const sc = uni ? inter / uni : 0, u = DES / MASK;
@@ -1180,8 +1244,12 @@ function drawThumb(c, i, state) {
   if (state === 'locked') return;
   x.setTransform(sc, 0, 0, sc, size / 2 - ((b.x0 + b.x1) / 2) * sc, size / 2 - ((b.y0 + b.y1) / 2) * sc);
   ls.forEach((_, j) => {
-    if (state === 'done') {
-      x.fillStyle = dual ? LAMP_STYLE[j].fill : 'rgba(20,13,10,0.9)';
+    if (state === 'done' && !dual) {
+      x.globalCompositeOperation = 'multiply';
+      sl.forEach((s, n) => { x.fillStyle = SKINS[s.k].glass || '#2e2420'; fillShape(x, polysOf(j)[n]); });
+      x.globalCompositeOperation = 'source-over';
+    } else if (state === 'done') {
+      x.fillStyle = LAMP_STYLE[j].fill;
       for (const sh of polysOf(j)) fillShape(x, sh);
     } else outline(x, polysOf(j), dual ? LAMP_STYLE[j].chalk : 'rgba(255,244,220,0.95)', 6 / sc * 1.5);
   });
@@ -1201,7 +1269,7 @@ function renderMenu() {
     const c = document.createElement('canvas');
     drawThumb(c, i, done ? 'done' : open ? 'open' : 'locked');
     b.appendChild(c);
-    const tag = lv.lamps ? '双灯' : lv.pieces.some((d) => SKINS[d.k].holes) ? '镂空' : '';
+    const tag = lv.lamps ? '双灯' : lv.pieces.some((d) => SKINS[d.k].glass) ? '彩色' : lv.pieces.some((d) => SKINS[d.k].holes) ? '镂空' : '';
     b.insertAdjacentHTML('beforeend', `${tag ? `<span class="tag">${tag}</span>` : ''}<span class="n">第 ${i + 1} 幕</span><span class="t">${done ? lv.name : open ? '？' : '未解锁'}</span>`);
     b.addEventListener('click', () => startLevel(i));
     box.appendChild(b);
@@ -1246,6 +1314,19 @@ function outline(c, shapes, color, width) {
   c.save(); c.setTransform(1, 0, 0, 1, 0, 0); c.drawImage(tmp, 0, 0); c.restore();
 }
 
+function buildWash() {
+  hasWash = lamps.length === 1 && slots.some((sl) => SKINS[sl.k].glass);
+  if (!hasWash) return;
+  const d = lightMask(slots.map((sl) => [sl.k, slotShape(sl, 0)]), WASH, WASH / DES);
+  const out = washOut.getContext('2d'), img = out.createImageData(WASH, WASH);
+  for (let k = 0; k < d.length; k += 4) {
+    const lit = Math.min(d[k], d[k + 1], d[k + 2]) > 200, dark = Math.max(d[k], d[k + 1], d[k + 2]) < 90;
+    img.data[k] = d[k]; img.data[k + 1] = d[k + 1]; img.data[k + 2] = d[k + 2];
+    img.data[k + 3] = lit || dark ? 0 : 120;
+  }
+  out.putImageData(img, 0, 0);
+}
+
 function drawTarget() {
   tctx.setTransform(1, 0, 0, 1, 0, 0);
   tctx.clearRect(0, 0, targetCv.width, targetCv.height);
@@ -1257,6 +1338,7 @@ function drawTarget() {
     tctx.globalAlpha = lampView === 'both' || lampView === j ? 1 : 0.25;
     tctx.fillStyle = 'rgba(255,244,220,0.07)';
     for (const sh of polys) fillShape(tctx, sh);
+    if (hasWash) tctx.drawImage(washOut, 0, 0, DES, DES);
     outline(tctx, polys, dual ? LAMP_STYLE[j].chalk : 'rgba(255,248,230,0.85)', (dual ? 2.4 : 2) / K);
   });
   tctx.globalAlpha = 1;
@@ -1342,8 +1424,10 @@ function drawPiece(c, p, alpha) {
   c.translate(p.x, p.y); c.rotate(p.r + swing(p)); c.scale(lift, lift);
   const shape = [sk.pts, ...(sk.holes || [])];
   pathShape(c, shape);
+  if (sk.glass) c.globalAlpha = alpha * 0.6;
   c.fillStyle = sk.base; c.fill('evenodd');
   c.save(); c.clip('evenodd'); sk.paint(c, sk.box); c.restore();
+  c.globalAlpha = alpha;
   pathShape(c, shape);
   c.strokeStyle = 'rgba(40,25,15,0.55)'; c.lineWidth = 1.5; c.stroke();
   c.restore();
@@ -1380,16 +1464,20 @@ function render() {
   ctx.drawImage(targetCv, 0, 0, VW, VH);
   ctx.globalAlpha = 1;
 
-  // shadows, drawn as one silhouette so overlaps don't darken twice
+  // shadows: a white sheet multiplied by each prop's filter, then multiplied onto the lit wall,
+  // so opaque props go dark, glass casts coloured light and stacked glass mixes
   sctx.setTransform(1, 0, 0, 1, 0, 0);
-  sctx.clearRect(0, 0, shadowCv.width, shadowCv.height);
+  sctx.globalCompositeOperation = 'source-over';
+  sctx.fillStyle = '#fff';
+  sctx.fillRect(0, 0, shadowCv.width, shadowCv.height);
   stageTransform(sctx);
   sway(sctx);
-  sctx.fillStyle = '#140d0a';
-  for (const p of pieces) fillShape(sctx, shadowShape(p, swing(p)));
-  ctx.globalAlpha = 0.86;
+  sctx.globalCompositeOperation = 'multiply';
+  for (const p of pieces) { sctx.fillStyle = SKINS[p.k].glass || '#2e2420'; fillShape(sctx, shadowShape(p, swing(p))); }
+  sctx.globalCompositeOperation = 'source-over';
+  ctx.globalCompositeOperation = 'multiply';
   ctx.drawImage(shadowCv, 0, 0, VW, VH);
-  ctx.globalAlpha = 1;
+  ctx.globalCompositeOperation = 'source-over';
   }
 
   stageTransform(ctx);
