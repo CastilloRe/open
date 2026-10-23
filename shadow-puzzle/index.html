@@ -1,0 +1,993 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>灯下影</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Ma+Shan+Zheng&display=swap">
+<style>
+/* Layout: a dark theatre; the lit wall is a fitted 800×800 stage between a slim top HUD and a bottom prop toolbar */
+:root {
+  --room: #15111c;
+  --panel: rgba(26, 20, 32, 0.9);
+  --chalk: #fff4dc;
+  --lamp: #f2b950;
+  --seal: #c8433a;
+  --muted: #a99c8f;
+  --line: rgba(255, 236, 200, 0.16);
+  --display: "Ma Shan Zheng", "STKaiti", "KaiTi", "Kaiti SC", "楷体", serif;
+  --body: system-ui, -apple-system, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+html, body { height: 100%; margin: 0; }
+body {
+  background: var(--room);
+  color: var(--chalk);
+  font-family: var(--body);
+  font-size: 15px;
+  overflow: hidden;
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+}
+[hidden] { display: none !important; }
+canvas#stage { position: fixed; inset: 0; display: block; touch-action: none; }
+button { font: inherit; color: inherit; cursor: pointer; appearance: none; }
+button:focus-visible { outline: 2px solid var(--lamp); outline-offset: 2px; }
+button:disabled { opacity: 0.35; cursor: default; }
+
+/* ---------- HUD ---------- */
+.hud {
+  position: fixed; top: 0; left: 0; right: 0;
+  display: flex; align-items: center; justify-content: space-between; gap: 12px;
+  padding-top: calc(10px + env(safe-area-inset-top, 0px));
+  padding-bottom: 8px;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+}
+.act { display: flex; align-items: baseline; gap: 10px; min-width: 0; }
+.act-no { font-size: 0.8rem; letter-spacing: 0.18em; color: var(--muted); white-space: nowrap; }
+.act-name { font-family: var(--display); font-size: 1.6rem; line-height: 1; color: var(--chalk); white-space: nowrap; }
+.hud-right { display: flex; align-items: center; gap: 12px; }
+.meter { display: flex; flex-direction: column; gap: 4px; width: clamp(96px, 22vw, 180px); }
+.meter-top { display: flex; justify-content: space-between; font-size: 0.75rem; color: var(--muted); letter-spacing: 0.06em; }
+.meter-top b { font-weight: 600; color: var(--chalk); font-variant-numeric: tabular-nums; }
+.bar { position: relative; height: 6px; border-radius: 3px; background: rgba(255, 236, 200, 0.1); overflow: hidden; }
+.bar i { position: absolute; inset: 0 auto 0 0; width: 0; background: var(--lamp); border-radius: 3px; transition: width 0.12s; }
+.bar u { position: absolute; top: -2px; bottom: -2px; width: 2px; background: var(--chalk); opacity: 0.7; }
+.ghost-btn { padding: 6px 12px; border: 1px solid var(--line); background: rgba(26, 20, 32, 0.6); border-radius: 999px; font-size: 0.85rem; }
+
+/* ---------- toolbar ---------- */
+.tools {
+  position: fixed; left: 0; right: 0; bottom: 0;
+  display: flex; flex-direction: column; align-items: center; gap: 8px;
+  padding-top: 10px;
+  padding-bottom: calc(12px + env(safe-area-inset-bottom, 0px));
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  background: linear-gradient(to top, rgba(21, 17, 28, 0.95) 60%, rgba(21, 17, 28, 0));
+}
+.tool-row { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; }
+.tool {
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1px;
+  min-width: 64px; padding: 7px 10px;
+  border: 1px solid var(--line); border-radius: 10px;
+  background: rgba(26, 20, 32, 0.8);
+  touch-action: none;
+  line-height: 1.2;
+}
+.tool span { font-size: 0.9rem; }
+.tool small { font-size: 0.68rem; color: var(--muted); }
+.tool.on { border-color: var(--lamp); background: rgba(242, 185, 80, 0.14); }
+.tool.sep { margin-left: 8px; }
+.keys { margin: 0; font-size: 0.72rem; color: var(--muted); text-align: center; line-height: 1.5; }
+body.touch .keys { display: none; }
+
+.tip {
+  position: fixed; left: 50%; transform: translateX(-50%);
+  max-width: min(30rem, calc(100% - 32px)); width: max-content;
+  padding: 8px 14px; border-radius: 10px;
+  background: rgba(26, 20, 32, 0.82); border: 1px solid var(--line);
+  font-size: 0.88rem; line-height: 1.55; text-align: center;
+  pointer-events: none;
+}
+
+/* ---------- menus & cards ---------- */
+.overlay {
+  position: fixed; inset: 0;
+  display: grid; place-items: center;
+  overflow-y: auto;
+  padding-block: calc(16px + env(safe-area-inset-top, 0px)) calc(16px + env(safe-area-inset-bottom, 0px));
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  background: rgba(14, 10, 18, 0.72);
+}
+.panel {
+  width: 100%; max-width: 36rem;
+  display: flex; flex-direction: column; gap: 1.1rem;
+  padding: clamp(1.3rem, 5vw, 2.2rem);
+  background: var(--panel); border: 1px solid var(--line); border-radius: 16px;
+}
+.eyebrow { margin: 0; font-size: 0.75rem; letter-spacing: 0.24em; color: var(--lamp); }
+h1 { margin: 0; font-family: var(--display); font-weight: 400; font-size: clamp(3.2rem, 14vw, 5rem); line-height: 1; letter-spacing: 0.12em; text-shadow: 0 0 30px rgba(242, 185, 80, 0.35); }
+.lede { margin: 0; line-height: 1.75; max-width: 30em; }
+.levels { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; }
+.lv {
+  position: relative;
+  display: flex; flex-direction: column; align-items: center; gap: 4px;
+  padding: 8px 4px 8px; border-radius: 12px;
+  border: 1px solid var(--line); background: rgba(255, 236, 200, 0.03);
+}
+.lv canvas { width: 100%; max-width: 96px; aspect-ratio: 1; height: auto; }
+.lv .n { font-size: 0.72rem; color: var(--muted); letter-spacing: 0.1em; }
+.lv .t { font-family: var(--display); font-size: 1.15rem; line-height: 1; min-height: 1.15rem; }
+.lv.done::after {
+  content: "成"; position: absolute; top: 6px; right: 6px;
+  width: 20px; height: 20px; display: grid; place-items: center;
+  font-family: var(--display); font-size: 0.8rem; color: #fff;
+  background: var(--seal); border-radius: 3px;
+}
+.lv:not(:disabled):hover { border-color: rgba(242, 185, 80, 0.5); }
+.actions { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+.primary {
+  padding: 0.7em 1.6em; border-radius: 999px; border: 0;
+  background: var(--lamp); color: #1b130c;
+  font-weight: 700; letter-spacing: 0.2em;
+  box-shadow: 0 0 26px rgba(242, 185, 80, 0.35);
+}
+.secondary { padding: 0.7em 1.3em; border-radius: 999px; border: 1px solid var(--line); background: transparent; letter-spacing: 0.1em; }
+.fine { margin: 0; font-size: 0.78rem; color: var(--muted); line-height: 1.6; }
+
+.solved {
+  position: fixed; left: 50%; transform: translateX(-50%);
+  bottom: calc(16px + env(safe-area-inset-bottom, 0px));
+  width: min(30rem, calc(100% - 32px));
+  display: grid; grid-template-columns: auto 1fr; gap: 6px 16px; align-items: center;
+  padding: 16px 18px; border-radius: 16px;
+  background: var(--panel); border: 1px solid var(--line);
+}
+.solved .seal {
+  grid-row: span 2;
+  width: 64px; height: 64px; display: grid; place-items: center;
+  font-family: var(--display); font-size: 2.4rem; line-height: 1; color: #fff;
+  background: var(--seal); border-radius: 6px;
+  box-shadow: inset 0 0 0 3px rgba(255, 255, 255, 0.25);
+}
+.solved .verse { margin: 0; line-height: 1.6; }
+.solved .meta { margin: 0; font-size: 0.78rem; color: var(--muted); }
+.solved .actions { grid-column: 1 / -1; justify-content: flex-end; margin-top: 6px; }
+
+@media (max-width: 520px) {
+  .act-name { font-size: 1.3rem; }
+  .tool { min-width: 56px; padding: 6px 8px; }
+  .tool.sep { margin-left: 0; }
+}
+@media (prefers-reduced-motion: reduce) { .bar i { transition: none; } }
+</style>
+</head>
+<body>
+<canvas id="stage" aria-label="灯下影：墙上的影子舞台"></canvas>
+
+<header class="hud" id="hud" hidden>
+  <div class="act"><span class="act-no" id="actNo">第 1 幕</span><span class="act-name" id="actName">？</span></div>
+  <div class="hud-right">
+    <div class="meter" aria-live="polite">
+      <div class="meter-top"><span>吻合度</span><b id="scoreTxt">0%</b></div>
+      <div class="bar"><i id="scoreBar"></i><u id="scoreMark"></u></div>
+    </div>
+    <button class="ghost-btn" id="btnMenu" type="button">选幕</button>
+  </div>
+</header>
+
+<div class="tip" id="tip" hidden></div>
+
+<footer class="tools" id="tools" hidden>
+  <div class="tool-row">
+    <button class="tool" id="bRotL" type="button" aria-label="向左转"><span>↺</span><small>左转</small></button>
+    <button class="tool" id="bRotR" type="button" aria-label="向右转"><span>↻</span><small>右转</small></button>
+    <button class="tool" id="bNear" type="button"><span>靠近灯</span><small>影子变大</small></button>
+    <button class="tool" id="bFar" type="button"><span>靠近墙</span><small>影子变小</small></button>
+    <button class="tool sep" id="bPeek" type="button"><span>只看影</span><small>按住</small></button>
+    <button class="tool" id="bHint" type="button"><span>提示</span><small id="hintCount">0 次</small></button>
+    <button class="tool" id="bReset" type="button"><span>重来</span><small>复位</small></button>
+  </div>
+  <p class="keys">拖动物件移动 · 拖小圆点 / Q E / 滚轮旋转 · W S / Shift+滚轮 前后 · 按住空格只看影子 · Tab 切换物件</p>
+</footer>
+
+<section class="solved" id="solved" hidden aria-live="polite">
+  <div class="seal" id="solvedName">猫</div>
+  <p class="verse" id="solvedVerse"></p>
+  <p class="meta" id="solvedMeta"></p>
+  <div class="actions">
+    <button class="secondary" id="btnToMenu" type="button">选幕</button>
+    <button class="primary" id="btnNext" type="button">下一幕</button>
+  </div>
+</section>
+
+<div class="overlay" id="overlay">
+  <div class="panel">
+    <p class="eyebrow">影子拼图 · 八幕小戏</p>
+    <h1>灯下影</h1>
+    <p class="lede">把手边的香蕉、饭团、碗和筷子挂在灯前。挪一挪、转一转、推近或拉远，让它们的影子正好填满墙上的粉笔画。</p>
+    <div class="levels" id="levels"></div>
+    <div class="actions"><button class="primary" id="btnStart" type="button">开演</button></div>
+    <p class="fine">物件离灯越近，影子越大，也离灯越远。粉笔画只画了外轮廓，里面是哪几样东西、各自朝哪边，要你自己去想。</p>
+  </div>
+</div>
+
+<script>
+(() => {
+'use strict';
+
+// ======================================================================
+//  Geometry
+// ======================================================================
+const TAU = Math.PI * 2;
+const DES = 800;                 // the stage is an 800×800 design square
+const L = { x: 400, y: 380 };    // the lamp sits in front of the wall, facing it
+const S_MIN = 1.15, S_MAX = 1.7; // shadow magnification range (near wall … near lamp)
+const WIN = 0.78;                // overlap ratio that counts as solved
+const deg = (d) => (d * Math.PI) / 180;
+
+function circlePts(r, n = 56) {
+  const p = [];
+  for (let i = 0; i < n; i++) { const a = (i / n) * TAU; p.push([Math.cos(a) * r, Math.sin(a) * r]); }
+  return p;
+}
+function ellipsePts(rx, ry, n = 56) {
+  const p = [];
+  for (let i = 0; i < n; i++) { const a = (i / n) * TAU; p.push([Math.cos(a) * rx, Math.sin(a) * ry]); }
+  return p;
+}
+const rectPts = (w, h) => [[-w / 2, -h / 2], [w / 2, -h / 2], [w / 2, h / 2], [-w / 2, h / 2]];
+const triPts = (w, h) => [[0, -h / 2], [w / 2, h / 2], [-w / 2, h / 2]];
+const rodPts = (w, h) => [[-w / 2, -h / 2], [w / 2, -h / 2], [w * 0.3, h / 2], [-w * 0.3, h / 2]];
+function halfPts(r, n = 40) { // flat edge on top
+  const p = [];
+  for (let i = 0; i <= n; i++) { const a = (Math.PI * i) / n; p.push([Math.cos(a) * r, -r / 2 + Math.sin(a) * r]); }
+  return p;
+}
+function crescentPts(r, d, n = 40) {
+  // outer circle at the origin minus an equal circle shifted right by d
+  const y = Math.sqrt(r * r - (d * d) / 4), phi = Math.atan2(y, d / 2);
+  const p = [];
+  for (let i = 0; i <= n; i++) { const a = phi + ((TAU - 2 * phi) * i) / n; p.push([r * Math.cos(a), r * Math.sin(a)]); }
+  for (let i = 1; i < n; i++) { const a = Math.PI + phi - (2 * phi * i) / n; p.push([d + r * Math.cos(a), r * Math.sin(a)]); }
+  const cx = (-r + d / 2) / 2;
+  return p.map(([x, yy]) => [x - cx, yy]);
+}
+
+function bbox(pts) {
+  let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity;
+  for (const [x, y] of pts) { x0 = Math.min(x0, x); y0 = Math.min(y0, y); x1 = Math.max(x1, x); y1 = Math.max(y1, y); }
+  return { x0, y0, x1, y1 };
+}
+function inPoly(x, y, pts) {
+  let inside = false;
+  for (let i = 0, j = pts.length - 1; i < pts.length; j = i++) {
+    const [xi, yi] = pts[i], [xj, yj] = pts[j];
+    if ((yi > y) !== (yj > y) && x < ((xj - xi) * (y - yi)) / (yj - yi) + xi) inside = !inside;
+  }
+  return inside;
+}
+function pathPoly(c, pts) {
+  c.beginPath();
+  c.moveTo(pts[0][0], pts[0][1]);
+  for (let i = 1; i < pts.length; i++) c.lineTo(pts[i][0], pts[i][1]);
+  c.closePath();
+}
+
+// ======================================================================
+//  Props: each one is a real object whose outline becomes its shadow
+// ======================================================================
+const BLUE = '#2f5d9e';
+const SKINS = {
+  banana: {
+    name: '香蕉', pts: crescentPts(70, 40), sym: TAU, base: '#f0c444',
+    paint(c, b) {
+      const g = c.createLinearGradient(b.x0, 0, b.x1, 0);
+      g.addColorStop(0, 'rgba(255,236,150,0.6)'); g.addColorStop(1, 'rgba(170,110,20,0.35)');
+      c.fillStyle = g; c.fillRect(b.x0, b.y0, b.x1 - b.x0, b.y1 - b.y0);
+      c.strokeStyle = 'rgba(150,100,20,0.45)'; c.lineWidth = 2;
+      c.beginPath(); c.arc(-(-70 + 20) / 2, 0, 58, Math.PI * 0.62, Math.PI * 1.38); c.stroke();
+      c.fillStyle = '#5a3d17';
+      c.fillRect(b.x1 - 10, b.y0, 10, 10); c.fillRect(b.x1 - 10, b.y1 - 10, 10, 10);
+    },
+  },
+  riceball: {
+    name: '饭团', pts: triPts(100, 88), sym: TAU, base: '#f5f2ea',
+    paint(c) {
+      c.fillStyle = 'rgba(200,190,170,0.35)';
+      for (let i = 0; i < 14; i++) c.fillRect(-30 + ((i * 37) % 60), -10 + ((i * 23) % 30), 4, 2);
+      c.fillStyle = '#1f2a22'; c.fillRect(-26, 14, 52, 32);
+      c.fillStyle = 'rgba(80,110,80,0.35)'; c.fillRect(-26, 14, 52, 3);
+    },
+  },
+  zongzi: {
+    name: '粽子', pts: triPts(60, 66), sym: TAU, base: '#5f8f3e',
+    paint(c) {
+      c.strokeStyle = 'rgba(190,220,140,0.45)'; c.lineWidth = 1.5;
+      for (let i = -3; i <= 3; i++) { c.beginPath(); c.moveTo(i * 9, -40); c.lineTo(i * 9 + 14, 40); c.stroke(); }
+      c.fillStyle = '#d8c38f'; c.fillRect(-40, 6, 80, 5);
+    },
+  },
+  plate: {
+    name: '盘子', pts: circlePts(60), sym: 0, base: '#f3efe6',
+    paint(c) {
+      c.strokeStyle = BLUE; c.lineWidth = 6;
+      c.beginPath(); c.arc(0, 0, 47, 0, TAU); c.stroke();
+      c.lineWidth = 1.5; c.beginPath(); c.arc(0, 0, 33, 0, TAU); c.stroke();
+      c.fillStyle = BLUE; c.beginPath(); c.arc(0, 0, 6, 0, TAU); c.fill();
+    },
+  },
+  book: {
+    name: '书', pts: rectPts(110, 74), sym: Math.PI, base: '#a9372a',
+    paint(c) {
+      c.fillStyle = '#efe4cc'; c.fillRect(47, -37, 8, 74);
+      c.fillStyle = '#6e2018'; c.fillRect(-55, -37, 9, 74);
+      c.fillStyle = '#efe4cc'; c.fillRect(-26, -20, 36, 12);
+    },
+  },
+  chopstick: {
+    name: '筷子', pts: rodPts(14, 170), sym: TAU, base: '#9a6235',
+    paint(c) {
+      c.fillStyle = '#5e3a1d'; c.fillRect(-8, -85, 16, 30);
+      c.strokeStyle = 'rgba(255,220,180,0.25)'; c.lineWidth = 1;
+      c.beginPath(); c.moveTo(-2, -50); c.lineTo(-1, 80); c.stroke();
+    },
+  },
+  bowl: {
+    name: '碗', pts: halfPts(74), sym: TAU, base: '#eef1f4',
+    paint(c) {
+      c.fillStyle = BLUE; c.fillRect(-80, -30, 160, 7);
+      c.strokeStyle = BLUE; c.lineWidth = 1.5;
+      for (let i = -2; i <= 2; i++) { c.beginPath(); c.arc(i * 24, -6, 7, 0, TAU); c.stroke(); }
+      c.fillStyle = 'rgba(47,93,158,0.6)'; c.fillRect(-22, 28, 44, 9);
+    },
+  },
+  egg: {
+    name: '鸡蛋', pts: ellipsePts(40, 54), sym: Math.PI, base: '#f2e2c4',
+    paint(c) {
+      const g = c.createRadialGradient(-14, -20, 4, 0, 0, 60);
+      g.addColorStop(0, 'rgba(255,255,255,0.7)'); g.addColorStop(1, 'rgba(160,120,70,0.25)');
+      c.fillStyle = g; c.fillRect(-45, -60, 90, 120);
+      c.fillStyle = 'rgba(150,110,70,0.35)';
+      [[10, 12], [-8, 22], [16, -6], [-18, 4], [4, 34]].forEach(([x, y]) => c.fillRect(x, y, 2, 2));
+    },
+  },
+};
+for (const s of Object.values(SKINS)) s.box = bbox(s.pts);
+
+// sol = shadow centre x, y, rotation°, magnification; init = object centre x, y, rotation°, magnification
+const LEVELS = [
+  { name: '新月', verse: '一根香蕉，借来半个夜晚。',
+    tip: '拖动香蕉，让它的影子填进粉笔线里。',
+    pieces: [{ k: 'banana', sol: [420, 320, -25, 1.5], init: [250, 560, -25, 1.5] }] },
+  { name: '远山', verse: '饭团立起来，就是一座远山。',
+    tip: '拖动物件上方的小圆点来旋转，也可以用「左转」「右转」（键盘 Q / E、滚轮）。',
+    pieces: [{ k: 'riceball', sol: [400, 330, 0, 1.65], init: [520, 560, 50, 1.65] }] },
+  { name: '太阳', verse: '盘子离灯近一点，就升成了太阳。',
+    tip: '影子不够大？点「靠近灯」把盘子推向灯，影子会变大，也会向外跑。',
+    pieces: [{ k: 'plate', sol: [400, 320, 0, 1.7], init: [300, 560, 0, 1.2] }] },
+  { name: '房子', verse: '一本书，一个饭团，搭出一个能回去的地方。',
+    pieces: [
+      { k: 'book', sol: [400, 400, 0, 1.5], init: [260, 570, 10, 1.25] },
+      { k: 'riceball', sol: [400, 276, 0, 1.7], init: [540, 560, -30, 1.3] }] },
+  { name: '蘑菇', verse: '雨后，倒扣的碗底长出一朵蘑菇。',
+    pieces: [
+      { k: 'bowl', sol: [400, 290, 180, 1.6], init: [270, 560, 0, 1.3] },
+      { k: 'egg', sol: [400, 399, 0, 1.3], init: [530, 570, 30, 1.6] }] },
+  { name: '鱼', verse: '鸡蛋摆一摆尾巴，游走了。',
+    pieces: [
+      { k: 'egg', sol: [380, 340, 90, 1.7], init: [250, 565, 0, 1.3] },
+      { k: 'zongzi', sol: [509, 340, -90, 1.6], init: [540, 560, 20, 1.25] }] },
+  { name: '帆船', verse: '一根筷子，撑起整片海。',
+    pieces: [
+      { k: 'bowl', sol: [400, 430, 0, 1.5], init: [230, 565, 180, 1.2] },
+      { k: 'chopstick', sol: [400, 270, 0, 1.3], init: [400, 560, 70, 1.6] },
+      { k: 'riceball', sol: [466, 280, 90, 1.3], init: [570, 560, 0, 1.5] }] },
+  { name: '猫', verse: '盘子、粽子、鸡蛋和香蕉，凑成了一只猫。',
+    pieces: [
+      { k: 'plate', sol: [400, 270, 0, 1.3], init: [180, 575, 0, 1.2] },
+      { k: 'zongzi', sol: [345, 190, -18, 1.2], init: [300, 560, 0, 1.5] },
+      { k: 'zongzi', sol: [455, 190, 18, 1.2], init: [400, 560, 40, 1.5] },
+      { k: 'egg', sol: [400, 410, 0, 1.6], init: [510, 570, 90, 1.2] },
+      { k: 'banana', sol: [505, 450, 160, 1.2], init: [630, 560, 0, 1.5] }] },
+];
+
+// shadow outline of a piece on the wall (design coords)
+function shadowPts(p) {
+  const pts = SKINS[p.k].pts, cs = Math.cos(p.r), sn = Math.sin(p.r);
+  return pts.map(([x, y]) => {
+    const ox = p.x + x * cs - y * sn, oy = p.y + x * sn + y * cs;
+    return [L.x + (ox - L.x) * p.s, L.y + (oy - L.y) * p.s];
+  });
+}
+function slotPts(slot) {
+  const pts = SKINS[slot.k].pts, cs = Math.cos(slot.r), sn = Math.sin(slot.r);
+  return pts.map(([x, y]) => [slot.x + (x * cs - y * sn) * slot.s, slot.y + (x * sn + y * cs) * slot.s]);
+}
+// where the object must hang for its shadow to land on a slot
+const slotObject = (slot) => ({ x: L.x + (slot.x - L.x) / slot.s, y: L.y + (slot.y - L.y) / slot.s, r: slot.r, s: slot.s });
+
+// ======================================================================
+//  State
+// ======================================================================
+const $ = (s) => document.querySelector(s);
+const cv = $('#stage'), ctx = cv.getContext('2d');
+const shadowCv = document.createElement('canvas'), sctx = shadowCv.getContext('2d');
+const targetCv = document.createElement('canvas'), tctx = targetCv.getContext('2d');
+const MASK = 200;
+const maskCv = document.createElement('canvas'); maskCv.width = maskCv.height = MASK;
+const mctx = maskCv.getContext('2d', { willReadFrequently: true });
+
+const store = {
+  get(k, d) { try { const v = localStorage.getItem(k); return v == null ? d : JSON.parse(v); } catch (e) { return d; } },
+  set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) { /* storage unavailable */ } },
+};
+let progress = store.get('shadow-puzzle-progress', { solved: [] });
+if (!Array.isArray(progress.solved)) progress = { solved: [] };
+
+let VW = 0, VH = 0, DPR = 1, K = 1, OX = 0, OY = 0;
+let mode = 'menu'; // menu | play | solving | solved
+let li = 0, pieces = [], slots = [], targetMask = null, targetArea = 1;
+let sel = -1, drag = null, peek = false, holding = 0;
+let score = 0, dirty = true, hintsUsed = 0, hint = null, tipTimer = 0;
+let anim = null, t = 0, solvedAt = 0;
+let isTouch = false;
+const reduceMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+// ======================================================================
+//  Layout
+// ======================================================================
+function layout() {
+  DPR = Math.min(window.devicePixelRatio || 1, 2);
+  VW = window.innerWidth; VH = window.innerHeight;
+  for (const c of [cv, shadowCv, targetCv]) { c.width = Math.round(VW * DPR); c.height = Math.round(VH * DPR); }
+  cv.style.width = VW + 'px'; cv.style.height = VH + 'px';
+  const top = $('#hud').hidden ? 0 : $('#hud').offsetHeight;
+  const bottom = $('#tools').hidden ? 0 : $('#tools').offsetHeight;
+  const availH = Math.max(200, VH - top - bottom);
+  K = Math.min(VW / DES, availH / DES) * 0.98;
+  OX = (VW - DES * K) / 2;
+  OY = top + (availH - DES * K) / 2;
+  $('#tip').style.top = top + 6 + 'px';
+  drawTarget();
+}
+window.addEventListener('resize', layout);
+
+const toDesign = (cx, cy) => ({ x: (cx - OX) / K, y: (cy - OY) / K });
+function stageTransform(c) { c.setTransform(DPR * K, 0, 0, DPR * K, DPR * OX, DPR * OY); }
+function visibleBounds() {
+  const a = toDesign(0, $('#hud').hidden ? 0 : $('#hud').offsetHeight);
+  const b = toDesign(VW, VH - ($('#tools').hidden ? 0 : $('#tools').offsetHeight));
+  return { x0: a.x + 20, y0: a.y + 20, x1: b.x - 20, y1: b.y - 20 };
+}
+
+// ======================================================================
+//  Levels
+// ======================================================================
+function loadLevel(i) {
+  li = i;
+  const lv = LEVELS[i];
+  pieces = lv.pieces.map((d, n) => ({ k: d.k, id: n, x: d.init[0], y: d.init[1], r: deg(d.init[2]), s: d.init[3] }));
+  slots = lv.pieces.map((d) => ({ k: d.k, x: d.sol[0], y: d.sol[1], r: deg(d.sol[2]), s: d.sol[3] }));
+  sel = pieces.length === 1 ? 0 : -1;
+  drag = null; hint = null; anim = null; hintsUsed = 0; peek = false; holding = 0;
+  // target mask for scoring
+  mctx.setTransform(1, 0, 0, 1, 0, 0);
+  mctx.clearRect(0, 0, MASK, MASK);
+  mctx.setTransform(MASK / DES, 0, 0, MASK / DES, 0, 0);
+  mctx.fillStyle = '#000';
+  for (const sl of slots) { pathPoly(mctx, slotPts(sl)); mctx.fill(); }
+  const d = mctx.getImageData(0, 0, MASK, MASK).data;
+  targetMask = new Uint8Array(MASK * MASK);
+  targetArea = 0;
+  for (let p = 0; p < MASK * MASK; p++) if (d[p * 4 + 3] > 127) { targetMask[p] = 1; targetArea++; }
+  dirty = true;
+  $('#actNo').textContent = `第 ${i + 1} 幕`;
+  $('#actName').textContent = progress.solved[i] ? lv.name : '？';
+  $('#hintCount').textContent = '0 次';
+  $('#solved').hidden = true;
+  $('#tools').style.visibility = '';
+  drawTarget();
+  updateTools();
+  if (lv.tip) showTip(lv.tip, 9); else hideTip();
+}
+
+function computeScore() {
+  mctx.setTransform(1, 0, 0, 1, 0, 0);
+  mctx.clearRect(0, 0, MASK, MASK);
+  mctx.setTransform(MASK / DES, 0, 0, MASK / DES, 0, 0);
+  mctx.fillStyle = '#000';
+  for (const p of pieces) { pathPoly(mctx, shadowPts(p)); mctx.fill(); }
+  const d = mctx.getImageData(0, 0, MASK, MASK).data;
+  let inter = 0, uni = 0;
+  for (let i = 0; i < MASK * MASK; i++) {
+    const a = d[i * 4 + 3] > 127, b = targetMask[i] === 1;
+    if (a && b) inter++;
+    if (a || b) uni++;
+  }
+  return uni ? inter / uni : 0;
+}
+
+// pair every piece with the slot of the same kind it is closest to filling
+function assign() {
+  const pairs = [];
+  pieces.forEach((p, pi) => slots.forEach((sl, si) => {
+    if (sl.k !== p.k) return;
+    const cx = L.x + (p.x - L.x) * p.s, cy = L.y + (p.y - L.y) * p.s;
+    pairs.push({ pi, si, c: Math.hypot(cx - sl.x, cy - sl.y) + 60 * angleGap(p.r, sl.r, SKINS[p.k].sym) + 300 * Math.abs(p.s - sl.s) });
+  }));
+  pairs.sort((a, b) => a.c - b.c);
+  const out = new Array(pieces.length).fill(-1), used = new Set();
+  for (const pr of pairs) {
+    if (out[pr.pi] >= 0 || used.has(pr.si)) continue;
+    out[pr.pi] = pr.si; used.add(pr.si);
+  }
+  return out;
+}
+function angleDelta(from, to, sym) {
+  if (!sym) return 0;
+  let d = (to - from) % sym;
+  if (d > sym / 2) d -= sym;
+  if (d < -sym / 2) d += sym;
+  return d;
+}
+const angleGap = (a, b, sym) => Math.abs(angleDelta(a, b, sym));
+
+function solve() {
+  mode = 'solving';
+  sel = -1; drag = null; hint = null; peek = false;
+  const map = assign();
+  anim = { t0: t, dur: 0.7, from: pieces.map((p) => ({ x: p.x, y: p.y, r: p.r, s: p.s })), to: pieces.map((p, i) => {
+    const o = slotObject(slots[map[i]]);
+    return { x: o.x, y: o.y, r: p.r + angleDelta(p.r, o.r, SKINS[p.k].sym), s: o.s };
+  }) };
+  progress.solved[li] = true;
+  store.set('shadow-puzzle-progress', progress);
+  hideTip();
+  updateTools();
+}
+
+function finishSolve() {
+  mode = 'solved';
+  solvedAt = t;
+  const lv = LEVELS[li];
+  $('#actName').textContent = lv.name;
+  $('#solvedName').textContent = lv.name.length > 1 ? lv.name.slice(0, 2) : lv.name;
+  $('#solvedName').style.fontSize = lv.name.length > 1 ? '1.6rem' : '2.4rem';
+  $('#solvedVerse').textContent = lv.verse;
+  $('#solvedMeta').textContent = `第 ${li + 1} 幕完成 · 用了 ${hintsUsed} 次提示`;
+  $('#btnNext').textContent = li + 1 < LEVELS.length ? '下一幕' : '谢幕';
+  $('#solved').hidden = false;
+  $('#tools').style.visibility = 'hidden';
+  if (!isTouch) $('#btnNext').focus({ preventScroll: true });
+}
+
+// ======================================================================
+//  Tips, tools, menu
+// ======================================================================
+function showTip(text, dur) { const el = $('#tip'); el.textContent = text; el.hidden = false; tipTimer = dur || 4; }
+function hideTip() { $('#tip').hidden = true; tipTimer = 0; }
+
+function updateTools() {
+  const can = mode === 'play' && sel >= 0;
+  for (const id of ['#bRotL', '#bRotR', '#bNear', '#bFar']) $(id).disabled = !can;
+  for (const id of ['#bPeek', '#bHint', '#bReset']) $(id).disabled = mode !== 'play';
+  if (can) {
+    $('#bNear').disabled = pieces[sel].s >= S_MAX - 1e-6;
+    $('#bFar').disabled = pieces[sel].s <= S_MIN + 1e-6;
+  }
+}
+
+function setPlayUI(on) {
+  $('#hud').hidden = !on;
+  $('#tools').hidden = !on;
+  layout();
+}
+
+function drawThumb(c, i, state) {
+  const size = 192;
+  c.width = c.height = size;
+  const x = c.getContext('2d');
+  const lv = LEVELS[i];
+  const sl = lv.pieces.map((d) => ({ k: d.k, x: d.sol[0], y: d.sol[1], r: deg(d.sol[2]), s: d.sol[3] }));
+  const all = sl.flatMap(slotPts), b = bbox(all);
+  const sc = (size * 0.72) / Math.max(b.x1 - b.x0, b.y1 - b.y0);
+  const g = x.createRadialGradient(size / 2, size / 2, 4, size / 2, size / 2, size * 0.6);
+  g.addColorStop(0, state === 'locked' ? 'rgba(120,100,80,0.25)' : 'rgba(240,205,140,0.95)');
+  g.addColorStop(1, 'rgba(120,80,50,0)');
+  x.fillStyle = g; x.fillRect(0, 0, size, size);
+  if (state === 'locked') return;
+  x.setTransform(sc, 0, 0, sc, size / 2 - ((b.x0 + b.x1) / 2) * sc, size / 2 - ((b.y0 + b.y1) / 2) * sc);
+  if (state === 'done') {
+    x.fillStyle = 'rgba(20,13,10,0.9)';
+    for (const s of sl) { pathPoly(x, slotPts(s)); x.fill(); }
+  } else {
+    outline(x, sl.map(slotPts), 'rgba(255,244,220,0.95)', 6 / sc * 1.5);
+  }
+}
+
+function renderMenu() {
+  const box = $('#levels');
+  box.innerHTML = '';
+  LEVELS.forEach((lv, i) => {
+    const done = !!progress.solved[i];
+    const open = i === 0 || done || !!progress.solved[i - 1];
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.className = 'lv' + (done ? ' done' : '');
+    b.disabled = !open;
+    b.setAttribute('aria-label', `第 ${i + 1} 幕` + (done ? `：${lv.name}` : open ? '' : '（未解锁）'));
+    const c = document.createElement('canvas');
+    drawThumb(c, i, done ? 'done' : open ? 'open' : 'locked');
+    b.appendChild(c);
+    b.insertAdjacentHTML('beforeend', `<span class="n">第 ${i + 1} 幕</span><span class="t">${done ? lv.name : open ? '？' : '未解锁'}</span>`);
+    b.addEventListener('click', () => startLevel(i));
+    box.appendChild(b);
+  });
+  const next = LEVELS.findIndex((_, i) => !progress.solved[i]);
+  $('#btnStart').textContent = next < 0 ? '再看一遍第一幕' : next === 0 ? '开演' : `继续第 ${next + 1} 幕`;
+}
+
+function openMenu() {
+  mode = 'menu';
+  sel = -1; drag = null; peek = false;
+  $('#solved').hidden = true;
+  hideTip();
+  setPlayUI(false);
+  renderMenu();
+  $('#overlay').hidden = false;
+}
+
+function startLevel(i) {
+  $('#overlay').hidden = true;
+  mode = 'play';
+  setPlayUI(true);
+  loadLevel(i);
+  if (document.activeElement && document.activeElement.blur) document.activeElement.blur();
+}
+
+// ======================================================================
+//  Drawing
+// ======================================================================
+function outline(c, polys, color, width) {
+  // stroke every polygon, then erase their interiors so only the union's outer edge remains
+  const tmp = document.createElement('canvas');
+  tmp.width = c.canvas.width; tmp.height = c.canvas.height;
+  const x = tmp.getContext('2d');
+  x.setTransform(c.getTransform());
+  x.strokeStyle = color; x.lineWidth = width * 2; x.lineJoin = 'round';
+  for (const p of polys) { pathPoly(x, p); x.stroke(); }
+  x.globalCompositeOperation = 'destination-out';
+  x.fillStyle = '#000';
+  for (const p of polys) { pathPoly(x, p); x.fill(); }
+  c.save(); c.setTransform(1, 0, 0, 1, 0, 0); c.drawImage(tmp, 0, 0); c.restore();
+}
+
+function drawTarget() {
+  tctx.setTransform(1, 0, 0, 1, 0, 0);
+  tctx.clearRect(0, 0, targetCv.width, targetCv.height);
+  if (!slots.length) return;
+  stageTransform(tctx);
+  const polys = slots.map(slotPts);
+  tctx.fillStyle = 'rgba(255,244,220,0.07)';
+  for (const p of polys) { pathPoly(tctx, p); tctx.fill(); }
+  outline(tctx, polys, 'rgba(255,248,230,0.85)', 2 / K);
+}
+
+function drawPiece(c, p, alpha) {
+  const sk = SKINS[p.k];
+  c.save();
+  c.globalAlpha = alpha;
+  c.translate(p.x, p.y); c.rotate(p.r);
+  pathPoly(c, sk.pts);
+  c.fillStyle = sk.base; c.fill();
+  c.save(); c.clip(); sk.paint(c, sk.box); c.restore();
+  pathPoly(c, sk.pts);
+  c.strokeStyle = 'rgba(40,25,15,0.55)'; c.lineWidth = 1.5; c.stroke();
+  c.restore();
+}
+
+function handlePos(p) {
+  const b = SKINS[p.k].box;
+  const rad = Math.max(-b.y0, b.y1, -b.x0, b.x1) + 26;
+  return { x: p.x + Math.sin(p.r) * rad, y: p.y - Math.cos(p.r) * rad, rad };
+}
+
+function render() {
+  ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+  ctx.fillStyle = '#15111c';
+  ctx.fillRect(0, 0, VW, VH);
+
+  // the lamp's pool of light on the wall
+  const lx = OX + L.x * K, ly = OY + L.y * K, R = 600 * K;
+  const g = ctx.createRadialGradient(lx, ly, 0, lx, ly, R);
+  g.addColorStop(0, '#f1d6a0'); g.addColorStop(0.45, '#d9b27a'); g.addColorStop(0.75, '#7a5741'); g.addColorStop(1, 'rgba(21,17,28,0)');
+  ctx.fillStyle = g;
+  ctx.fillRect(0, 0, VW, VH);
+
+  ctx.drawImage(targetCv, 0, 0, VW, VH);
+
+  // shadows, drawn as one silhouette so overlaps don't darken twice
+  sctx.setTransform(1, 0, 0, 1, 0, 0);
+  sctx.clearRect(0, 0, shadowCv.width, shadowCv.height);
+  stageTransform(sctx);
+  if (mode === 'solved' && !reduceMotion) {
+    // once solved, the puppet breathes
+    const cx = slots.reduce((a, s) => a + s.x, 0) / slots.length, cy = slots.reduce((a, s) => a + s.y, 0) / slots.length;
+    const e = Math.min(1, (t - solvedAt) / 0.6);
+    sctx.translate(cx, cy + 140); sctx.rotate(Math.sin((t - solvedAt) * 2.2) * 0.035 * e); sctx.translate(-cx, -cy - 140);
+  }
+  sctx.fillStyle = '#140d0a';
+  for (const p of pieces) { pathPoly(sctx, shadowPts(p)); sctx.fill(); }
+  ctx.globalAlpha = 0.86;
+  ctx.drawImage(shadowCv, 0, 0, VW, VH);
+  ctx.globalAlpha = 1;
+
+  stageTransform(ctx);
+  // hint: the slot glows and a ghost shows where the prop should hang
+  if (hint && t - hint.t0 < 3.5) {
+    const a = 0.5 + 0.5 * Math.sin((t - hint.t0) * 6);
+    ctx.save();
+    ctx.setLineDash([8, 6]); ctx.lineWidth = 2.5;
+    ctx.strokeStyle = `rgba(242,185,80,${0.5 + 0.5 * a})`;
+    pathPoly(ctx, slotPts(hint.slot)); ctx.stroke();
+    const o = slotObject(hint.slot);
+    ctx.translate(o.x, o.y); ctx.rotate(o.r);
+    pathPoly(ctx, SKINS[hint.slot.k].pts); ctx.stroke();
+    ctx.restore();
+  }
+
+  if (!peek && mode !== 'menu') {
+    pieces.forEach((p, i) => {
+      // hanging thread
+      ctx.strokeStyle = 'rgba(255,240,220,0.28)'; ctx.lineWidth = 1 / K;
+      ctx.beginPath(); ctx.moveTo(p.x, p.y); ctx.lineTo(p.x, (0 - OY) / K); ctx.stroke();
+      const dragging = drag && drag.i === i;
+      drawPiece(ctx, p, dragging ? 0.45 : mode === 'solved' ? 0.35 : 0.92);
+    });
+    if (sel >= 0 && mode === 'play') {
+      const p = pieces[sel], h = handlePos(p);
+      ctx.save();
+      ctx.translate(p.x, p.y); ctx.rotate(p.r);
+      ctx.setLineDash([6 / K, 5 / K]); ctx.lineWidth = 1.6 / K; ctx.strokeStyle = '#f2b950';
+      pathPoly(ctx, SKINS[p.k].pts); ctx.stroke();
+      ctx.restore();
+      ctx.strokeStyle = 'rgba(242,185,80,0.7)'; ctx.lineWidth = 1.4 / K;
+      ctx.beginPath(); ctx.moveTo(p.x, p.y); ctx.lineTo(h.x, h.y); ctx.stroke();
+      ctx.fillStyle = '#f2b950';
+      ctx.beginPath(); ctx.arc(h.x, h.y, 9 / K, 0, TAU); ctx.fill();
+      ctx.fillStyle = '#1b130c';
+      ctx.beginPath(); ctx.arc(h.x, h.y, 3.5 / K, 0, TAU); ctx.fill();
+    }
+  }
+}
+
+// ======================================================================
+//  Interaction
+// ======================================================================
+function select(i) {
+  sel = i;
+  if (i >= 0 && i !== pieces.length - 1) {
+    // bring to front
+    const [p] = pieces.splice(i, 1);
+    pieces.push(p);
+    sel = pieces.length - 1;
+  }
+  updateTools();
+}
+
+function hitPiece(x, y) {
+  const pad = 14 / K;
+  const local = (p) => {
+    const dx = x - p.x, dy = y - p.y, cs = Math.cos(-p.r), sn = Math.sin(-p.r);
+    return [dx * cs - dy * sn, dx * sn + dy * cs];
+  };
+  // exact outline first, then the padded bounding box (thin chopsticks, the hollow of a banana)
+  for (let i = pieces.length - 1; i >= 0; i--) {
+    const [lx, ly] = local(pieces[i]);
+    if (inPoly(lx, ly, SKINS[pieces[i].k].pts)) return i;
+  }
+  for (let i = pieces.length - 1; i >= 0; i--) {
+    const [lx, ly] = local(pieces[i]), b = SKINS[pieces[i].k].box;
+    if (lx > b.x0 - pad && lx < b.x1 + pad && ly > b.y0 - pad && ly < b.y1 + pad) return i;
+  }
+  return -1;
+}
+
+function clampPiece(p) {
+  const v = visibleBounds();
+  p.x = Math.max(v.x0, Math.min(v.x1, p.x));
+  p.y = Math.max(v.y0, Math.min(v.y1, p.y));
+}
+
+function rotateSel(d) { if (mode !== 'play' || sel < 0) return; pieces[sel].r += d; dirty = true; }
+function depthSel(d) {
+  if (mode !== 'play' || sel < 0) return;
+  const p = pieces[sel];
+  p.s = Math.max(S_MIN, Math.min(S_MAX, +(p.s + d).toFixed(3)));
+  dirty = true;
+  updateTools();
+}
+function moveSel(dx, dy) { if (mode !== 'play' || sel < 0) return; pieces[sel].x += dx; pieces[sel].y += dy; clampPiece(pieces[sel]); dirty = true; }
+
+function giveHint() {
+  if (mode !== 'play') return;
+  const map = assign();
+  let worst = -1, wc = -1;
+  pieces.forEach((p, i) => {
+    const sl = slots[map[i]], o = slotObject(sl);
+    const c = Math.hypot(p.x - o.x, p.y - o.y) + 60 * angleGap(p.r, o.r, SKINS[p.k].sym) + 300 * Math.abs(p.s - o.s);
+    if (c > wc) { wc = c; worst = i; }
+  });
+  if (worst < 0) return;
+  const p = pieces[worst], sl = slots[map[worst]];
+  hint = { slot: sl, t0: t };
+  hintsUsed++;
+  $('#hintCount').textContent = hintsUsed + ' 次';
+  const ds = sl.s - p.s;
+  const depthWord = Math.abs(ds) < 0.04 ? '远近差不多了' : ds > 0 ? '还要再靠近灯一些' : '还要再靠近墙一些';
+  showTip(`${SKINS[p.k].name}应该挂在虚线那里，${depthWord}。`, 4);
+  select(worst);
+}
+
+function resetLevel() { if (mode === 'play') loadLevel(li); }
+
+cv.addEventListener('pointerdown', (e) => {
+  if (mode !== 'play') return;
+  const p = toDesign(e.clientX, e.clientY);
+  if (sel >= 0) {
+    const h = handlePos(pieces[sel]);
+    if (Math.hypot(p.x - h.x, p.y - h.y) < 22 / K) {
+      drag = { i: sel, kind: 'rotate' };
+      try { cv.setPointerCapture(e.pointerId); } catch (err) { /* ignore */ }
+      return;
+    }
+  }
+  const i = hitPiece(p.x, p.y);
+  if (i < 0) { select(-1); return; }
+  select(i);
+  const q = pieces[sel];
+  drag = { i: sel, kind: 'move', ox: p.x - q.x, oy: p.y - q.y };
+  try { cv.setPointerCapture(e.pointerId); } catch (err) { /* ignore */ }
+});
+cv.addEventListener('pointermove', (e) => {
+  if (!drag) {
+    if (mode === 'play' && e.pointerType === 'mouse') {
+      const p = toDesign(e.clientX, e.clientY);
+      const overHandle = sel >= 0 && Math.hypot(p.x - handlePos(pieces[sel]).x, p.y - handlePos(pieces[sel]).y) < 22 / K;
+      cv.style.cursor = overHandle ? 'alias' : hitPiece(p.x, p.y) >= 0 ? 'grab' : 'default';
+    }
+    return;
+  }
+  const p = toDesign(e.clientX, e.clientY), q = pieces[drag.i];
+  if (drag.kind === 'move') { q.x = p.x - drag.ox; q.y = p.y - drag.oy; clampPiece(q); }
+  else q.r = Math.atan2(p.y - q.y, p.x - q.x) + Math.PI / 2;
+  dirty = true;
+});
+const endDrag = () => { drag = null; };
+cv.addEventListener('pointerup', endDrag);
+cv.addEventListener('pointercancel', endDrag);
+cv.addEventListener('wheel', (e) => {
+  if (mode !== 'play') return;
+  e.preventDefault();
+  if (sel < 0) { const p = toDesign(e.clientX, e.clientY); const i = hitPiece(p.x, p.y); if (i < 0) return; select(i); }
+  const dir = Math.sign(e.deltaY || e.deltaX);
+  if (e.shiftKey) depthSel(-dir * 0.03); else rotateSel(dir * deg(4));
+}, { passive: false });
+
+window.addEventListener('pointerdown', (e) => {
+  isTouch = e.pointerType === 'touch';
+  document.body.classList.toggle('touch', isTouch);
+}, true);
+
+function holdable(btn, fn) {
+  let delay = 0, rep = 0;
+  const stop = () => {
+    if (!delay && !rep) return;
+    clearTimeout(delay); clearInterval(rep); delay = rep = 0;
+    holding = Math.max(0, holding - 1);
+  };
+  btn.addEventListener('pointerdown', (e) => {
+    e.preventDefault();
+    if (btn.disabled) return;
+    stop();
+    holding++;
+    fn();
+    delay = setTimeout(() => { rep = setInterval(() => { if (btn.disabled) stop(); else fn(); }, 60); }, 280);
+  });
+  ['pointerup', 'pointerleave', 'pointercancel'].forEach((ev) => btn.addEventListener(ev, stop));
+  btn.addEventListener('keydown', (e) => { if (e.key === 'Enter') fn(); });
+}
+holdable($('#bRotL'), () => rotateSel(-deg(3)));
+holdable($('#bRotR'), () => rotateSel(deg(3)));
+holdable($('#bNear'), () => depthSel(0.02));
+holdable($('#bFar'), () => depthSel(-0.02));
+
+const peekBtn = $('#bPeek');
+const setPeek = (v) => { peek = v && mode === 'play'; peekBtn.classList.toggle('on', peek); };
+peekBtn.addEventListener('pointerdown', (e) => { e.preventDefault(); setPeek(true); });
+['pointerup', 'pointerleave', 'pointercancel'].forEach((ev) => peekBtn.addEventListener(ev, () => setPeek(false)));
+$('#bHint').addEventListener('click', giveHint);
+$('#bReset').addEventListener('click', resetLevel);
+$('#btnMenu').addEventListener('click', openMenu);
+$('#btnToMenu').addEventListener('click', openMenu);
+$('#btnNext').addEventListener('click', () => { if (li + 1 < LEVELS.length) startLevel(li + 1); else openMenu(); });
+$('#btnStart').addEventListener('click', () => {
+  const next = LEVELS.findIndex((_, i) => !progress.solved[i]);
+  startLevel(next < 0 ? 0 : next);
+});
+
+window.addEventListener('keydown', (e) => {
+  if (mode !== 'play') return;
+  const fine = e.shiftKey;
+  switch (e.code) {
+    case 'KeyQ': rotateSel(-deg(fine ? 1 : 4)); break;
+    case 'KeyE': rotateSel(deg(fine ? 1 : 4)); break;
+    case 'KeyW': case 'Equal': case 'NumpadAdd': depthSel(0.02); break;
+    case 'KeyS': case 'Minus': case 'NumpadSubtract': depthSel(-0.02); break;
+    case 'ArrowLeft': moveSel(fine ? -1 : -5, 0); break;
+    case 'ArrowRight': moveSel(fine ? 1 : 5, 0); break;
+    case 'ArrowUp': moveSel(0, fine ? -1 : -5); break;
+    case 'ArrowDown': moveSel(0, fine ? 1 : 5); break;
+    case 'Tab': select(pieces.length ? (sel + 1) % pieces.length : -1); break;
+    case 'Space': setPeek(true); break;
+    case 'KeyH': if (!e.repeat) giveHint(); break;
+    case 'KeyR': if (!e.repeat) resetLevel(); break;
+    case 'Escape': openMenu(); break;
+    default: return;
+  }
+  e.preventDefault();
+});
+window.addEventListener('keyup', (e) => { if (e.code === 'Space') setPeek(false); });
+
+// ======================================================================
+//  Loop
+// ======================================================================
+let last = performance.now();
+function frame(ts) {
+  const dt = Math.min(0.05, (ts - last) / 1000);
+  last = ts; t += dt;
+
+  if (tipTimer > 0) { tipTimer -= dt; if (tipTimer <= 0) hideTip(); }
+
+  if (mode === 'solving' && anim) {
+    const u = Math.min(1, (t - anim.t0) / anim.dur), e = 1 - Math.pow(1 - u, 3);
+    pieces.forEach((p, i) => {
+      const a = anim.from[i], b = anim.to[i];
+      p.x = a.x + (b.x - a.x) * e; p.y = a.y + (b.y - a.y) * e; p.r = a.r + (b.r - a.r) * e; p.s = a.s + (b.s - a.s) * e;
+    });
+    dirty = true;
+    if (u >= 1) { anim = null; finishSolve(); }
+  }
+
+  if (dirty && targetMask) {
+    dirty = false;
+    score = computeScore();
+    const pct = Math.round(score * 100);
+    $('#scoreTxt').textContent = pct + '%';
+    $('#scoreBar').style.width = Math.min(100, (score / 1) * 100) + '%';
+  }
+  if (mode === 'play' && score >= WIN && !drag && !holding) solve();
+
+  render();
+  requestAnimationFrame(frame);
+}
+
+$('#scoreMark').style.left = WIN * 100 + '%';
+loadLevel(0);
+hideTip();
+openMenu();
+requestAnimationFrame(frame);
+
+// exposed for automated checks
+window.__shadow = { LEVELS, slots: () => slots, pieces: () => pieces, slotObject, computeScore, loadLevel, startLevel, get mode() { return mode; } };
+})();
+</script>
+</body>
+</html>
