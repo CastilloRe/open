@@ -9,6 +9,8 @@
 | 残局 | `xiangqi-roguelike/index.html` | 象棋规则的回合制 Roguelike |
 | 风控之夜 | `action-roguelike/index.html` | 自动攻击、升级选天赋的动作肉鸽 |
 
+风控之夜的 3D 模型要从同一个文件夹读取，直接双击 `index.html` 打开会退回立绘。想下载下来玩，就用 `action-roguelike/风控之夜.html`：图片、3D 模型和 three.js 都打包在这一个文件里（约 2.4 MB），下载后双击就能玩，不用联网。改完 `index.html` 后运行 `python3 action-roguelike/tools/build-offline.py` 重新生成它。
+
 ---
 
 # 回声迷城 · Echo Maze
