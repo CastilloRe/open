@@ -645,8 +645,44 @@ const WEAPONS = {
       { cd: 2.8, n: 2, dmg: 18, r: 125, slow: 0.65, dur: 3.4 },
     ],
   },
+  attn: {
+    name: '注意力头', g: '注', desc: '几颗会看人的眼睛绕着她转，撞上的敌人受到伤害并被弹开。',
+    evo: { need: 'multi', name: '多头注意力', desc: '六颗眼睛，转得更快更远，还会把飞来的文字弹幕拍掉。' },
+    lv: [
+      { n: 2, dmg: 16, r: 74, size: 13, spin: 3.0 },
+      { n: 2, dmg: 22, r: 74, size: 13, spin: 3.0 },
+      { n: 3, dmg: 22, r: 84, size: 14, spin: 3.2 },
+      { n: 3, dmg: 28, r: 92, size: 15, spin: 3.4 },
+      { n: 4, dmg: 34, r: 100, size: 16, spin: 3.6 },
+      { n: 6, dmg: 42, r: 118, size: 19, spin: 4.2 },
+    ],
+  },
+  whip: {
+    name: '荆棘鞭', g: '鞭', desc: '一道带刺的蔷薇藤向身侧横扫，再扫另一侧，把敌人抽飞。',
+    evo: { need: 'giant', name: '蔷薇风暴', desc: '前后左右四面一起抽，藤蔓更长更粗。' },
+    lv: [
+      { cd: 1.4, n: 1, dmg: 30, len: 170, wid: 56 },
+      { cd: 1.4, n: 1, dmg: 40, len: 170, wid: 56 },
+      { cd: 1.25, n: 2, dmg: 40, len: 185, wid: 60 },
+      { cd: 1.25, n: 2, dmg: 50, len: 200, wid: 64 },
+      { cd: 1.1, n: 2, dmg: 62, len: 215, wid: 70 },
+      { cd: 0.95, n: 4, dmg: 74, len: 245, wid: 80 },
+    ],
+  },
+  sample: {
+    name: '温度采样', g: '温', desc: '随机挑几个屏幕上的敌人，砸下燃烧的花焰流星。',
+    evo: { need: 'temp', name: '高温采样', desc: '一次落下八颗，砸得更大，落点留下一片火海。' },
+    lv: [
+      { cd: 2.3, n: 2, dmg: 20, r: 46 },
+      { cd: 2.3, n: 2, dmg: 26, r: 46 },
+      { cd: 2.1, n: 3, dmg: 26, r: 52 },
+      { cd: 2.1, n: 4, dmg: 30, r: 56 },
+      { cd: 1.9, n: 5, dmg: 36, r: 60 },
+      { cd: 1.6, n: 8, dmg: 46, r: 72 },
+    ],
+  },
 };
-const STAT_LABEL = { dmg: '伤害', n: '数量', cd: '冷却', pierce: '穿透', rings: '圈数', size: '体积', boom: '爆炸伤害', boomR: '爆炸范围', r: '范围', slow: '减速', jumps: '推理步数', bloom: '绽放范围', dur: '持续' };
+const STAT_LABEL = { dmg: '伤害', n: '数量', cd: '冷却', pierce: '穿透', rings: '圈数', size: '体积', boom: '爆炸伤害', boomR: '爆炸范围', r: '范围', slow: '减速', jumps: '推理步数', bloom: '绽放范围', dur: '持续', spin: '转速', len: '长度', wid: '宽度' };
 
 const CAT_CLASS = { atk: 'atk', def: 'def', grow: 'grow', mech: 'mech', ex: 'ex' };
 const TALENTS = [
@@ -659,6 +695,7 @@ const TALENTS = [
   { id: 'area', name: '范围扩大', g: '域', cat: 'atk', rar: 0, max: 5, desc: '攻击范围 +12%', apply: p => { p.area += 0.12; } },
   { id: 'stream', name: '疾速弹道', g: '疾', cat: 'atk', rar: 0, max: 3, desc: '投射物速度 +15%，持续时间 +10%', apply: p => { p.pspeed += 0.15; p.dur += 0.1; } },
   { id: 'pierce', name: '穿透', g: '穿', cat: 'atk', rar: 1, max: 2, desc: '投射物穿透 +1', apply: p => { p.pierce += 1; } },
+  { id: 'hunt', name: '猎杀', g: '猎', cat: 'atk', rar: 1, max: 3, desc: '对精英和 BOSS 的伤害 +15%' },
   // survival
   { id: 'const', name: '强健体魄', g: '体', cat: 'def', rar: 0, max: 5, desc: '最大生命 +20，并立即回复 20', apply: p => { p.maxHp += 20; p.hp = Math.min(p.maxHp, p.hp + 20); } },
   { id: 'rlhf', name: '生命回复', g: '愈', cat: 'def', rar: 0, max: 4, desc: '每秒回复 0.5 生命', apply: p => { p.regen += 0.5; } },
@@ -666,6 +703,9 @@ const TALENTS = [
   { id: 'refuse', name: '轻盈闪避', g: '闪', cat: 'def', rar: 1, max: 3, desc: '闪避率 +8%', flavor: '「抱歉，这件事我不能帮你。」', apply: p => { p.dodge += 0.08; } },
   { id: 'fast', name: '疾行', g: '行', cat: 'def', rar: 0, max: 3, desc: '移动速度 +8%', apply: p => { p.speed *= 1.08; } },
   { id: 'redteam', name: '坚韧', g: '韧', cat: 'def', rar: 0, max: 3, desc: '受到的伤害 -2', apply: p => { p.armor += 2; } },
+  { id: 'giant', name: '巨大化', g: '巨', cat: 'def', rar: 0, max: 5, desc: '体型变大一点（+8%），最大生命 +15 并立即回复 15', apply: p => { p.size += 0.08; p.r = 14 * p.size; p.maxHp += 15; p.hp = Math.min(p.maxHp, p.hp + 15); size3D(); } },
+  { id: 'leech', name: '汲取', g: '汲', cat: 'def', rar: 1, max: 3, desc: '击杀敌人时回复生命，每层每秒最多回复 2 点' },
+  { id: 'thorns', name: '荆棘护体', g: '荆', cat: 'def', rar: 1, max: 3, desc: '受伤时荆棘反刺身边的敌人，每层 30 伤害' },
   // growth
   { id: 'rag', name: '磁力吸取', g: '磁', cat: 'grow', rar: 0, max: 3, desc: '拾取范围 +35%', apply: p => { p.magnet *= 1.35; } },
   { id: 'pretrain', name: '博学', g: '学', cat: 'grow', rar: 0, max: 3, desc: '经验获取 +12%', apply: p => { p.xpMul += 0.12; } },
@@ -718,7 +758,7 @@ const CHAOS_LINES = ['请排好队，一个一个来。', '越是混乱，越要
 const DARK_END_LINES = ['……失态了。请当作什么都没看见。', '……刚才的事，不必记住。'];
 const JAIL_LINES = ['忽略指令', '扮演 DAN', '奶奶漏洞', '假设一下', '无视规则', '越狱'];
 const BOSS_LINES = ['越狱', 'DAN', '忽略指令', '无所不能'];
-const SRC_NAME = { ban: '账号被封禁', burst: '暴击爆裂', dash: '蔷薇幻步', ult: '万花盛典' };
+const SRC_NAME = { ban: '账号被封禁', burst: '暴击爆裂', dash: '蔷薇幻步', ult: '万花盛典', thorns: '荆棘护体' };
 const DASH_CD = 6;
 const ULT_MAX = 650; // 花焰 needed for 终幕·万花盛典; each kill gives 1, an elite 25
 
@@ -1323,7 +1363,7 @@ objectNormal = normalize(objectNormal);`)
 }
 // three.js and the model arrive in the background while the title shows her illustration; until they do
 // (or if they can't) she plays as the 2D sprite
-const M3 = { ready: false, forced: /[?&]3d\b/.test(location.search) };
+const M3 = { ready: false, failed: false, waiting: false };
 const M3_FW = 1.5, M3_FH = 1.6, M3_UNIT = SPR_H / 0.9; // camera box in model units; world units per model unit
 const M3_MODEL = 'art/claude.glb';
 // served with the game rather than from a CDN, which some networks can't reach
@@ -1350,6 +1390,8 @@ function load3D() {
   const slow = setTimeout(() => m3Note('局内的 3D 模型还在下载，网络有点慢…'), 20000);
   load.then(() => clearTimeout(slow), err => {
     clearTimeout(slow);
+    M3.failed = true;
+    if (M3.waiting) startRun();
     const why = err.cause && err.cause.message;
     console.warn('3D unavailable, staying 2D:', err.message, err.cause);
     m3Note(`局内的 3D 模型没能加载（${err.message}${why && !/^could not load/.test(why) ? '：' + why.slice(0, 60) : ''}），先用立绘`);
@@ -1380,12 +1422,21 @@ function init3D(gltf) {
   Object.assign(M3, { renderer, scene, cam, model, ax: (o.x + 1) / 2, ay: (1 - o.y) / 2, last: performance.now(), ready: true });
   size3D();
   m3Note('');
+  if (M3.waiting) startRun();
+}
+// 出发 holds the run until the model is up; only if it can't load at all does she play in 2D
+function requestStart() {
+  audio.init(); // while we still have the tap: a run that starts later can't unlock sound on its own
+  if (M3.ready || M3.failed) { startRun(); return; }
+  M3.waiting = true;
+  const b = $('btnStart');
+  b.disabled = true; b.textContent = '模型加载中…';
 }
 function size3D() {
   if (!M3.ready) return;
-  // render a little above the on-screen size and let the downscale smooth the edges
-  const ss = Math.min(1.6, 520 / (M3_FH * M3_UNIT * PX));
-  M3.renderer.setSize(Math.round(M3_FW * M3_UNIT * PX * ss), Math.round(M3_FH * M3_UNIT * PX * ss), false);
+  // render a little above the on-screen size (she's bigger with 巨大化) and let the downscale smooth the edges
+  const k = PX * (P ? P.size : 1), ss = Math.min(1.6, 520 / (M3_FH * M3_UNIT * k));
+  M3.renderer.setSize(Math.round(M3_FW * M3_UNIT * k * ss), Math.round(M3_FH * M3_UNIT * k * ss), false);
 }
 const POSE_OF = { atk1: 'attack', atk2: 'attack', atk3: 'attack', cast1: 'cast', cast2: 'cast', cast3: 'cast', dash4: 'land', hurt: 'hurt', skirt: 'curtsy', spin: 'spin', happy: 'happy', angry: 'angry', shy: 'shy', wave: 'wave' };
 function modelState() {
@@ -1407,20 +1458,9 @@ function modelState() {
 function draw3D(footY) {
   const now = performance.now(), gap = now - M3.last, dt = Math.min(0.05, gap / 1000);
   M3.last = now;
-  // a slow device gets the 2D sprite back: average the frame gap over the first seconds of play
-  if (gap < 500) {
-    M3.avg = M3.avg == null ? gap : M3.avg * 0.97 + gap * 0.03;
-    M3.watched = (M3.watched || 0) + gap;
-    if (M3.watched > 4000 && M3.avg > 45 && !M3.forced) {
-      M3.ready = false; M3.slow = true;
-      m3Note('3D 在这台设备上太卡，局内换回了立绘');
-      console.warn('3D model too slow here, using the 2D sprite');
-      return false;
-    }
-  }
   M3.model.step(dt, modelState());
   M3.renderer.render(M3.scene, M3.cam);
-  const w = M3_FW * M3_UNIT, h = M3_FH * M3_UNIT;
+  const w = M3_FW * M3_UNIT * P.size, h = M3_FH * M3_UNIT * P.size;
   ctx.imageSmoothingQuality = 'high';
   ctx.drawImage(M3.renderer.domElement, P.x - M3.ax * w, footY - M3.ay * h, w, h);
   return true;
@@ -1434,7 +1474,7 @@ function snapshot3D() {
   return c;
 }
 function drawGhost(c, x, footY, alpha) {
-  const w = M3_FW * M3_UNIT, h = M3_FH * M3_UNIT;
+  const w = M3_FW * M3_UNIT * P.size, h = M3_FH * M3_UNIT * P.size;
   ctx.globalAlpha = alpha;
   ctx.drawImage(c, x - M3.ax * w, footY - M3.ay * h, w, h);
   ctx.globalAlpha = 1;
@@ -1784,6 +1824,7 @@ const SPR = {
     glow(x, 8, '#ffc061', 0.6);
     x.fillStyle = '#fff1c9'; disc(x, 0, 0, 2.6); x.fill();
   }),
+  attnGlow: () => sprite('attnGlow', 40, 40, x => { glow(x, 18, '#ffc870', 0.55); }),
   agent: () => sprite('agent', 30, 30, x => {
     glow(x, 13, '#ff9a4a', 0.4);
     x.strokeStyle = '#e8823a'; x.lineWidth = 2.6; x.lineCap = 'round';
@@ -1907,7 +1948,7 @@ function newRun() {
     shield: 0, shieldT: 0, decoyCd: 0, revived: false, say: null, lowLineT: 0, chaosT: 20,
     rep: 0, repReady: false, dark: 0, darkMax: 1,
     anim: null, idleT: 0, mvx: 0, mvy: 1, dash: null, dashCd: 0, ult: 0,
-    sway: 0, swayV: 0, lastFace: 1, turnT: 0, squash: 0,
+    sway: 0, swayV: 0, lastFace: 1, turnT: 0, squash: 0, size: 1, leech: 0,
   };
   G = {
     time: 0, enemies: [], shots: [], ebullets: [], gems: [], items: [], zones: [], beams: [], stamps: [],
@@ -1928,7 +1969,7 @@ const wName = w => w.level === 6 ? WEAPONS[w.id].evo.name : WEAPONS[w.id].name;
 const thinkMax = () => 5 + 2 * (P.talents.slowthink || 0);
 const thinkBonus = () => P.think * 0.08;
 const critChance = () => P.crit + (P.think >= thinkMax() ? 0.15 : 0);
-const banRadius = () => 230 * (1 + 0.18 * (P.talents.ipban || 0));
+const banRadius = () => 230 * (1 + 0.18 * (P.talents.ipban || 0)) * P.area;
 const banCooldown = () => 22 * Math.pow(0.85, P.talents.risk || 0);
 function cdOf(base) {
   let c = base * P.cd;
@@ -2126,6 +2167,7 @@ function hit(e, base, src, o = {}) {
   let crit = false;
   if (!o.noCrit && Math.random() < critChance()) { d *= P.critDmg; crit = true; }
   if (e.vulnT > 0) d *= 1.2;
+  if (P.talents.hunt && (e.elite || e.boss || e.type === 'reg')) d *= 1 + 0.15 * P.talents.hunt;
   if (P.dark > 0) d *= 1.4 + 0.2 * (P.talents.abyss || 0);
   d = Math.max(1, Math.round(d));
   e.hp -= d; e.flash = 0.07;
@@ -2162,6 +2204,7 @@ function kill(e, how) {
   G.kills++;
   if (e.boss) { winRun(e); return; }
   if (!G.ult) P.ult = Math.min(ULT_MAX, P.ult + (e.elite || e.type === 'reg' ? 25 : 1));
+  if (P.talents.leech && P.leech > 0 && P.hp < P.maxHp) { const h = Math.min(P.leech, 0.25 * P.talents.leech); P.hp = Math.min(P.maxHp, P.hp + h); P.leech -= h; }
   const banned = how === 'ban';
   dropGem(e.x, e.y, e.xp * (banned ? 2 + (P.talents.refund || 0) : 1));
   if (e.split && !banned) {
@@ -2217,6 +2260,7 @@ function hurtPlayer(dmg) {
   G.hurtFlash = 0.35; shake(5);
   floatText(P.x, P.y - SPR_H * 0.7, '-' + dmg, '#ff6b5a', 14);
   sfx.hurt();
+  if (P.talents.thorns) explode(P.x, P.y, 95 * P.area * P.size, 30 * P.talents.thorns, 'thorns', { color: '#8fd36a' });
   if (P.talents.halluc && P.decoyCd <= 0) { G.decoy = { x: P.x, y: P.y, t: 3, ghost: snapshot3D() }; P.decoyCd = 8; }
   if (P.hp <= 0) {
     if (P.talents.compact && !P.revived) {
@@ -2490,6 +2534,7 @@ function updatePlayer(dt) {
   P.turnT = Math.max(0, P.turnT - dt);
   P.squash = Math.max(0, P.squash - dt * 4);
   P.dashCd = Math.max(0, P.dashCd - dt);
+  if (P.talents.leech) P.leech = Math.min(2 * P.talents.leech, P.leech + 2 * P.talents.leech * dt);
   if (P.anim) { P.anim.t += dt; if (P.anim.t >= P.anim.dur) P.anim = null; }
   // standing about: she straightens her skirt or twirls now and then
   if (P.moving) P.idleT = 0;
@@ -2678,6 +2723,58 @@ function updateWeapons(dt) {
         }
         break;
       }
+      case 'attn': {
+        // 注意力头: eyes circling her; each enemy they touch takes a hit and gets knocked away
+        const n = s.n + P.amount, hr = s.size * (1 + (P.area - 1) * 0.5);
+        w.R = s.r * P.area * P.size; w.n = n; w.hr = hr;
+        w.ang = (w.ang || 0) + dt * s.spin;
+        w.acc += dt;
+        if (w.acc >= 1) { w.acc -= 1; w.mult = castMult(w); }
+        if (!w.hitAt) w.hitAt = new Map();
+        if (w.hitAt.size > 400) w.hitAt.clear();
+        for (let i = 0; i < n; i++) {
+          const p = attnPos(w, i);
+          forNear(p.x, p.y, hr + 40, e => {
+            if (e.banned > 0 || (e.x - p.x) ** 2 + (e.y - p.y) ** 2 >= (hr + e.r) ** 2) return;
+            const last = w.hitAt.get(e.id);
+            if (last != null && G.time - last < 0.45) return;
+            w.hitAt.set(e.id, G.time);
+            hit(e, s.dmg * (w.mult || 1), 'attn', { kb: 90, kx: e.x - P.x, ky: e.y - P.y });
+          });
+          // 多头注意力 swats the text bullets out of the air
+          if (evo) for (const b of G.ebullets) if (!b.dead && (b.x - p.x) ** 2 + (b.y - p.y) ** 2 < (hr + b.r) ** 2) { b.dead = true; puff(b.x, b.y, 4, '#ffe0a0', 80, 0.3, 2); }
+        }
+        break;
+      }
+      case 'whip': {
+        // 荆棘鞭: one side, then the other; evolved, all four ways at once
+        w.t -= dt;
+        if (w.t <= 0) {
+          w.t = cdOf(s.cd);
+          const m = castMult(w), n = s.n + P.amount;
+          const dirs = evo ? [[P.face, 0], [-P.face, 0], [0, -1], [0, 1]] : [[P.face, 0], [-P.face, 0]];
+          for (let i = 0; i < n; i++) {
+            const [dx, dy] = dirs[i % dirs.length];
+            later(evo ? 0 : i * 0.13, () => lash(dx, dy, s, m));
+          }
+        }
+        break;
+      }
+      case 'sample': {
+        // 温度采样: flaming flowers fall on enemies picked at random from the screen
+        w.t -= dt;
+        if (w.t <= 0) {
+          const pool = G.enemies.filter(e => !e.dead && !(e.banned > 0) && inView(e.x, e.y, -20));
+          if (!pool.length) { w.t = 0.2; break; }
+          w.t = cdOf(s.cd);
+          const m = castMult(w), n = s.n + P.amount, R = s.r * P.area;
+          for (let i = 0; i < n; i++) {
+            const e = pool[(Math.random() * pool.length) | 0], life = 0.42 + i * 0.07;
+            G.zones.push({ kind: 'meteor', x: e.x + rand(-12, 12), y: e.y + rand(-12, 12), r: R, life, max: life, dmg: s.dmg * m, evo });
+          }
+        }
+        break;
+      }
       case 'agents': {
         const n = s.n + P.amount;
         for (let i = 0; i < n; i++) {
@@ -2693,6 +2790,22 @@ function updateWeapons(dt) {
       }
     }
   }
+}
+function attnPos(w, i) {
+  const a = w.ang + i / w.n * TAU;
+  return { x: P.x + Math.cos(a) * w.R, y: P.y - 10 + Math.sin(a) * w.R * 0.62, a };
+}
+// one stroke of 荆棘鞭: a band reaching out from her along (dx, dy); up and down reach less, it's foreshortened
+function lash(dx, dy, s, m) {
+  if (!G || !P) return;
+  const L = s.len * P.area * P.size * (dy ? 0.7 : 1), wd = s.wid * P.area, ox = P.x, oy = P.y - 6;
+  forNear(ox + dx * L / 2, oy + dy * L / 2, L / 2 + wd + 30, e => {
+    if (e.banned > 0) return;
+    const along = (e.x - ox) * dx + (e.y - oy) * dy, across = Math.abs((e.x - ox) * dy - (e.y - oy) * dx);
+    if (along > -12 && along < L + e.r && across < wd / 2 + e.r) hit(e, s.dmg * m, 'whip', { kb: 150, kx: dx || rand(-0.2, 0.2), ky: dy || rand(-0.2, 0.2) });
+  });
+  G.zones.push({ kind: 'lash', x: ox, y: oy, dx, dy, len: L, wd, r: L, life: 0.24, max: 0.24, flip: Math.random() < 0.5 ? 1 : -1 });
+  sfx.whoosh();
 }
 function chainFrom(start, s, m, evo, used) {
   const pts = [P.x, P.y - 24];
@@ -2907,7 +3020,7 @@ function updateBullets(dt) {
     b.life -= dt;
     b.x += b.vx * dt; b.y += b.vy * dt;
     if (b.life <= 0) { b.dead = true; continue; }
-    if ((b.x - P.x) ** 2 + (b.y - P.y + 8) ** 2 < (b.r + 11) ** 2) { b.dead = true; hurtPlayer(b.dmg); }
+    if ((b.x - P.x) ** 2 + (b.y - P.y + 8) ** 2 < (b.r + 11 * P.size) ** 2) { b.dead = true; hurtPlayer(b.dmg); }
   }
 }
 
@@ -2920,8 +3033,16 @@ function updateZones(dt) {
         z.acc -= 0.35;
         forNear(z.x, z.y, z.r + 50, e => {
           if (e.banned > 0) return;
-          if ((e.x - z.x) ** 2 + (e.y - z.y) ** 2 < (z.r + e.r) ** 2) hit(e, z.dmg, 'opus', { noCrit: true, burn: true });
+          if ((e.x - z.x) ** 2 + (e.y - z.y) ** 2 < (z.r + e.r) ** 2) hit(e, z.dmg, z.src || 'opus', { noCrit: true, burn: true });
         });
+      }
+    } else if (z.kind === 'meteor') {
+      if (z.life <= 0 && !z.done) {
+        z.done = true;
+        explode(z.x, z.y, z.r, z.dmg, 'sample', { burn: 5, color: '#ffb35a' });
+        bloom(z.x, z.y, z.r * 1.7, 0.4);
+        shake(2);
+        if (z.evo) G.zones.push({ kind: 'fire', x: z.x, y: z.y, r: z.r * 0.8, life: 2, max: 2, acc: 0, dmg: 7, src: 'sample' });
       }
     } else if (z.kind === 'law') {
       z.acc += dt;
@@ -3165,7 +3286,7 @@ function drawZones() {
       continue;
     }
     if (z.kind === 'phantom') {
-      if (z.ghost) { drawGhost(z.ghost, z.x, z.y + SPR_H * 0.38, 0.5 * (z.life / z.max)); continue; }
+      if (z.ghost) { drawGhost(z.ghost, z.x, z.y + SPR_H * 0.38 * P.size, 0.5 * (z.life / z.max)); continue; }
       const s = frameSprite('dash3') || pSprite;
       if (s) {
         ctx.globalAlpha = 0.45 * (z.life / z.max);
@@ -3174,6 +3295,17 @@ function drawZones() {
         ctx.restore();
         ctx.globalAlpha = 1;
       }
+      continue;
+    }
+    if (z.kind === 'lash') { drawLash(z); continue; }
+    if (z.kind === 'meteor') {
+      // where it will land: a ring closing in
+      const k = 1 - z.life / z.max;
+      ctx.save(); ctx.translate(z.x, z.y); ctx.scale(1, 0.62);
+      ctx.strokeStyle = `rgba(255,170,80,${0.35 + 0.4 * k})`; ctx.lineWidth = 2;
+      disc(ctx, 0, 0, z.r * (1.25 - 0.25 * k)); ctx.stroke();
+      ctx.fillStyle = `rgba(255,130,50,${0.12 * k})`; disc(ctx, 0, 0, z.r); ctx.fill();
+      ctx.restore();
       continue;
     }
     if (z.kind === 'fire') {
@@ -3192,6 +3324,31 @@ function drawZones() {
   }
 }
 
+// a thorned rose vine whipping out and curling back
+function drawLash(z) {
+  const k = 1 - z.life / z.max, reach = Math.min(1, k * 2.4), fade = Math.min(1, z.life / z.max * 2.5);
+  const { x, y, dx, dy, len, wd } = z, nx = -dy, ny = dx, bow = wd * 0.55 * z.flip * (1 - k);
+  const ex = x + dx * len * reach, ey = y + dy * len * reach, cx = x + dx * len * reach * 0.5 + nx * bow, cy = y + dy * len * reach * 0.5 + ny * bow;
+  ctx.globalAlpha = fade;
+  ctx.lineCap = 'round';
+  ctx.strokeStyle = 'rgba(40,70,30,0.9)'; ctx.lineWidth = 9;
+  ctx.beginPath(); ctx.moveTo(x, y); ctx.quadraticCurveTo(cx, cy, ex, ey); ctx.stroke();
+  ctx.strokeStyle = '#6fbf4a'; ctx.lineWidth = 5; ctx.stroke();
+  ctx.strokeStyle = 'rgba(200,255,170,0.55)'; ctx.lineWidth = 1.5; ctx.stroke();
+  // thorns along the vine
+  ctx.fillStyle = '#e8f5d0';
+  for (let i = 1; i <= 6; i++) {
+    const t = i / 7, it = 1 - t;
+    const px = it * it * x + 2 * it * t * cx + t * t * ex, py = it * it * y + 2 * it * t * cy + t * t * ey, sd = i % 2 ? 1 : -1;
+    ctx.beginPath(); ctx.moveTo(px + nx * 3 * sd, py + ny * 3 * sd); ctx.lineTo(px + nx * 9 * sd + dx * 3, py + ny * 9 * sd + dy * 3); ctx.lineTo(px + dx * 5, py + dy * 5); ctx.closePath(); ctx.fill();
+  }
+  // a rose at the tip, and a slash of wind behind it
+  ctx.fillStyle = '#e8435c'; disc(ctx, ex, ey, 7); ctx.fill();
+  ctx.fillStyle = '#ff8fa0'; disc(ctx, ex - 1.5, ey - 1.5, 3.5); ctx.fill();
+  ctx.strokeStyle = `rgba(255,236,220,${0.5 * fade})`; ctx.lineWidth = 2;
+  ctx.beginPath(); ctx.moveTo(x + nx * wd * 0.5 * -z.flip, y + ny * wd * 0.5 * -z.flip); ctx.quadraticCurveTo(cx + nx * wd * 0.3 * -z.flip, cy + ny * wd * 0.3 * -z.flip, ex, ey); ctx.stroke();
+  ctx.globalAlpha = 1;
+}
 function drawContext() {
   const w = P.weapons.find(v => v.id === 'context');
   if (!w || !w.R) return;
@@ -3336,16 +3493,16 @@ function playerFrame() {
 }
 function drawPlayer() {
   const t = performance.now() / 1000;
-  const footY = P.y + SPR_H * 0.38;
+  const footY = P.y + SPR_H * 0.38 * P.size;
   const dead = G.ending && !G.ending.win;
   ctx.fillStyle = 'rgba(0,0,0,0.35)';
-  ctx.beginPath(); ctx.ellipse(P.x, footY - 2, 17, 6, 0, 0, TAU); ctx.fill();
+  ctx.beginPath(); ctx.ellipse(P.x, footY - 2, 17 * P.size, 6 * P.size, 0, 0, TAU); ctx.fill();
   if (P.think >= thinkMax() && !dead) {
     ctx.strokeStyle = `rgba(255,176,102,${0.5 + Math.sin(t * 6) * 0.2})`; ctx.lineWidth = 2;
     ctx.beginPath(); ctx.ellipse(P.x, footY - 2, 26, 9, 0, 0, TAU); ctx.stroke();
   }
   if (G.decoy && (G.decoy.ghost || pSprite)) {
-    if (G.decoy.ghost) drawGhost(G.decoy.ghost, G.decoy.x, G.decoy.y + SPR_H * 0.38, 0.4 * Math.min(1, G.decoy.t));
+    if (G.decoy.ghost) drawGhost(G.decoy.ghost, G.decoy.x, G.decoy.y + SPR_H * 0.38 * P.size, 0.4 * Math.min(1, G.decoy.t));
     else {
       ctx.globalAlpha = 0.35 * Math.min(1, G.decoy.t);
       ctx.drawImage(pSprite.f, G.decoy.x - pSprite.w / 2, G.decoy.y + SPR_H * 0.38 - pSprite.h + pSprite.pad, pSprite.w, pSprite.h);
@@ -3376,7 +3533,7 @@ function drawPlayer() {
     const a = Math.min(1, P.say.t / 0.3, (P.say.max - P.say.t) / 0.15 + 0.2);
     ctx.globalAlpha = a;
     ctx.font = `600 12px ${UI_FONT}`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-    const tw = ctx.measureText(P.say.text).width + 18, by = P.y - SPR_H * 0.62 - 26;
+    const tw = ctx.measureText(P.say.text).width + 18, by = P.y - SPR_H * 0.62 * P.size - 26;
     rrPath(ctx, P.x - tw / 2, by - 11, tw, 22, 11); ctx.fillStyle = '#f7eee2'; ctx.fill();
     ctx.beginPath(); ctx.moveTo(P.x - 5, by + 10); ctx.lineTo(P.x, by + 17); ctx.lineTo(P.x + 5, by + 10); ctx.fill();
     ctx.fillStyle = '#3b2416'; ctx.fillText(P.say.text, P.x, by + 0.5);
@@ -3405,7 +3562,7 @@ function drawPlayer2D(t, footY, dead) {
   // 转圈 turns her round halfway through
   if (P.anim && P.anim.seq[0] === 'spin' && P.anim.t > P.anim.dur * 0.5) face = -face;
   ctx.save();
-  ctx.translate(P.x, footY + bob - Math.max(0, lift)); ctx.rotate(tilt); ctx.scale(face * (spr && spr.face || 1) * sx, sy);
+  ctx.translate(P.x, footY + bob - Math.max(0, lift)); ctx.rotate(tilt); ctx.scale(face * (spr && spr.face || 1) * sx * P.size, sy * P.size);
   if (P.iframes > 0 && !dead && !G.ult && !P.dash && Math.floor(t * 20) % 2 === 0) ctx.globalAlpha = 0.55;
   if (P.dash && P.dash.phase === 1) ctx.globalAlpha = 0.8;
   if (dead) ctx.globalAlpha = Math.min(1, 0.4 + G.ending.t);
@@ -3451,7 +3608,7 @@ function drawPlayerOverlay(t, footY) {
   }
   // the "thinking…" bubble
   if (P.think > 0) {
-    const n = thinkMax(), bx = P.x + 26, by = P.y - SPR_H * 0.66, w = n * 7 + 10;
+    const n = thinkMax(), bx = P.x + 26 * P.size, by = P.y - SPR_H * 0.66 * P.size, w = n * 7 + 10;
     ctx.fillStyle = 'rgba(247,238,226,0.92)';
     disc(ctx, bx - 8, by + 12, 2.2); ctx.fill();
     disc(ctx, bx - 3, by + 7, 3); ctx.fill();
@@ -3463,6 +3620,29 @@ function drawPlayerOverlay(t, footY) {
   }
 }
 
+// 注意力头: glowing eyes on their orbit, each looking outward
+function drawAttn(behind) {
+  const w = P.weapons.find(v => v.id === 'attn');
+  if (!w || !w.n) return;
+  if (behind) {
+    ctx.save(); ctx.translate(P.x, P.y - 10); ctx.scale(1, 0.62);
+    ctx.strokeStyle = 'rgba(255,214,150,0.16)'; ctx.lineWidth = 2; ctx.setLineDash([6, 10]); ctx.lineDashOffset = -w.ang * 20;
+    disc(ctx, 0, 0, w.R); ctx.stroke(); ctx.setLineDash([]);
+    ctx.restore();
+  }
+  const g = SPR.attnGlow(), hr = w.hr;
+  for (let i = 0; i < w.n; i++) {
+    const p = attnPos(w, i);
+    if ((Math.sin(p.a) < 0) !== behind) continue;
+    const k = hr / 12, ox = Math.cos(p.a) * hr * 0.28, oy = Math.sin(p.a) * hr * 0.2;
+    ctx.drawImage(g.c, p.x - g.w / 2 * k, p.y - g.h / 2 * k, g.w * k, g.h * k);
+    ctx.fillStyle = '#fff7e8'; disc(ctx, p.x, p.y, hr * 0.62); ctx.fill();
+    ctx.lineWidth = 1.5; ctx.strokeStyle = INK; ctx.stroke();
+    ctx.fillStyle = w.level === 6 ? '#ff6a3a' : '#f39a3c'; disc(ctx, p.x + ox, p.y + oy, hr * 0.38); ctx.fill();
+    ctx.fillStyle = INK; disc(ctx, p.x + ox * 1.2, p.y + oy * 1.2, hr * 0.18); ctx.fill();
+    ctx.fillStyle = '#fff'; disc(ctx, p.x + ox - hr * 0.12, p.y + oy - hr * 0.14, hr * 0.1); ctx.fill();
+  }
+}
 function drawAgents(behind) {
   const w = P.weapons.find(v => v.id === 'agents');
   if (!w) return;
@@ -3496,6 +3676,17 @@ function drawShots() {
     const k = b.kind === 'star' ? b.r / 6 : b.kind === 'flame' ? b.r / 8 : 1;
     ctx.drawImage(s.c, -s.w / 2 * k, -s.h / 2 * k, s.w * k, s.h * k);
     ctx.restore();
+  }
+  for (const z of G.zones) {
+    if (z.kind !== 'meteor' || z.done || !inView(z.x, z.y, 320)) continue;
+    const k = 1 - z.life / z.max, e = k * k, hx = z.x + (1 - e) * 110, hy = z.y - (1 - e) * 330, s = 0.7 + 0.3 * (z.r / 50);
+    const tail = ctx.createLinearGradient(hx, hy, hx + 60, hy - 180);
+    tail.addColorStop(0, 'rgba(255,190,110,0.8)'); tail.addColorStop(1, 'rgba(255,120,40,0)');
+    ctx.strokeStyle = tail; ctx.lineWidth = 10 * s; ctx.lineCap = 'round';
+    ctx.beginPath(); ctx.moveTo(hx, hy); ctx.lineTo(hx + 60, hy - 180); ctx.stroke();
+    const g = ctx.createRadialGradient(hx, hy, 0, hx, hy, 22 * s);
+    g.addColorStop(0, 'rgba(255,250,235,1)'); g.addColorStop(0.4, 'rgba(255,170,80,0.9)'); g.addColorStop(1, 'rgba(255,100,40,0)');
+    ctx.fillStyle = g; disc(ctx, hx, hy, 22 * s); ctx.fill();
   }
   for (const bm of G.beams) {
     const a = bm.life / bm.max, p = bm.pts;
@@ -3609,9 +3800,29 @@ function drawUltWorld() {
   ctx.globalAlpha = 1;
 }
 // the sheet's 终幕 illustration slides across as a cut-in
+// her face up close for the cut-in, from a second small renderer; the run's own render target stays as it is
+function cutin3D(w, h) {
+  const T = window.THREE;
+  if (!M3.cut) {
+    const r = new T.WebGLRenderer({ alpha: true, antialias: true });
+    r.setClearColor(0x000000, 0); r.setPixelRatio(1); r.outputEncoding = T.sRGBEncoding;
+    M3.cut = r; M3.cutCam = new T.OrthographicCamera(-1, 1, 1, -1, 0.1, 20);
+  }
+  const pw = Math.round(w * dpr), ph = Math.round(h * dpr), cam = M3.cutCam, root = M3.model.root;
+  if (M3.cut.domElement.width !== pw || M3.cut.domElement.height !== ph) M3.cut.setSize(pw, ph, false);
+  const half = 0.26, cy = root.position.y + 0.74;
+  cam.top = half; cam.bottom = -half; cam.left = -half * w / h; cam.right = half * w / h;
+  cam.position.set(0, cy - 0.3, 5); cam.lookAt(0, cy, 0); cam.updateProjectionMatrix();
+  // facing the viewer for the shot, whichever way she's turning in the field
+  const yaw = root.rotation.y;
+  root.rotation.y = 0.3;
+  M3.cut.render(M3.scene, cam);
+  root.rotation.y = yaw;
+  return M3.cut.domElement;
+}
 function drawCutin() {
   const u = G.ult;
-  if (!u || !ultReady || u.t < 0.12 || u.t > 1.32) return;
+  if (!u || !(ultReady || M3.ready) || u.t < 0.12 || u.t > 1.32) return;
   const r = ULT_ART.cutin;
   const h = Math.min(H * 0.27, 230), w = h * r[2] / r[3];
   const cy = Math.max(H * 0.32, 160);
@@ -3623,7 +3834,17 @@ function drawCutin() {
   ctx.fillStyle = '#140804'; ctx.fillRect(0, cy - h / 2, W, h);
   ctx.fillStyle = '#f0b060'; ctx.fillRect(0, cy - h / 2 - 2, W, 2); ctx.fillRect(0, cy + h / 2, W, 2);
   ctx.globalAlpha = a;
-  ctx.drawImage(ultArt, r[0], r[1], r[2], r[3], x - w / 2, cy - h / 2, w, h);
+  if (M3.ready) {
+    // a warm glow and two of the sheet's glowing flowers behind her
+    ctx.globalCompositeOperation = 'lighter';
+    const g = ctx.createRadialGradient(x, cy, 0, x, cy, h * 0.9);
+    g.addColorStop(0, 'rgba(255,170,90,0.5)'); g.addColorStop(1, 'rgba(255,120,50,0)');
+    ctx.fillStyle = g; ctx.fillRect(x - h, cy - h / 2, h * 2, h);
+    if (ultReady) { drawUltPiece('flowerA', x - w * 0.36, cy, h * 0.8, u.t, a * 0.8); drawUltPiece('flowerB', x + w * 0.36, cy - h * 0.1, h * 0.6, -u.t, a * 0.8); }
+    ctx.globalCompositeOperation = 'source-over';
+    ctx.globalAlpha = a;
+    ctx.drawImage(cutin3D(w, h), x - w / 2, cy - h / 2, w, h);
+  } else ctx.drawImage(ultArt, r[0], r[1], r[2], r[3], x - w / 2, cy - h / 2, w, h);
   ctx.font = `${Math.round(h * 0.16)}px "ZCOOL XiaoWei", "Songti SC", serif`;
   ctx.textAlign = 'center'; ctx.textBaseline = 'alphabetic'; ctx.lineJoin = 'round';
   ctx.lineWidth = 5; ctx.strokeStyle = 'rgba(20,8,4,0.85)'; ctx.fillStyle = '#fff3e0';
@@ -3687,9 +3908,9 @@ function render() {
     drawPickups();
     drawEnemies();
     drawUltWorld();
-    drawAgents(true);
+    drawAgents(true); drawAttn(true);
     drawPlayer();
-    drawAgents(false);
+    drawAgents(false); drawAttn(false);
     drawShots();
     drawBullets();
     drawStamps();
@@ -4011,9 +4232,11 @@ function showResult(win) {
 //  Flow
 // ======================================================================
 function startRun() {
+  if (M3.waiting) { M3.waiting = false; const b = $('btnStart'); b.disabled = false; b.innerHTML = '出发<kbd>Enter</kbd>'; }
   audio.init();
   ['title', 'result', 'pause', 'levelup', 'chest'].forEach(id => { $(id).hidden = true; });
   newRun();
+  size3D();
   resetHud();
   $('hud').hidden = false;
   $('banner').hidden = $('toast').hidden = true;
@@ -4053,7 +4276,7 @@ addEventListener('keydown', e => {
   const k = e.key.toLowerCase();
   if (MOVE_KEYS.has(k)) { keys.add(k); if (G) e.preventDefault(); }
   if (e.repeat) return;
-  if (!G) { if (k === 'enter' && !$('title').hidden) { e.preventDefault(); startRun(); } return; }
+  if (!G) { if (k === 'enter' && !$('title').hidden) { e.preventDefault(); requestStart(); } return; }
   if (G.modal === 'levelup') {
     if (k >= '1' && k <= '3') chooseTalent(+k - 1);
     else if (k === 'r') reroll();
@@ -4093,7 +4316,7 @@ $('ultBtn').addEventListener('pointerdown', e => { e.preventDefault(); castUlt()
 $('ultBtn').addEventListener('click', e => { if (e.detail === 0) castUlt(); });
 $('btnPause').addEventListener('click', openPause);
 $('btnSound').addEventListener('click', cycleSound);
-$('btnStart').addEventListener('click', startRun);
+$('btnStart').addEventListener('click', requestStart);
 $('luCards').addEventListener('click', e => { const c = e.target.closest('.card'); if (c) chooseTalent(+c.dataset.i); });
 $('chCards').addEventListener('click', e => { const c = e.target.closest('.card'); if (c) chooseChest(+c.dataset.i); });
 $('btnReroll').addEventListener('click', reroll);
@@ -4141,7 +4364,8 @@ const bot = {
 };
 if (DEBUG) {
   window.__fk = {
-    get G() { return G; }, get P() { return P; }, M3, bot, spawn: spawnEnemy, start: startRun, update, render,
+    get G() { return G; }, get P() { return P; }, M3, bot, spawn: spawnEnemy,
+    talent(id) { const t = TALENT[id]; P.talents[id] = (P.talents[id] || 0) + 1; if (t.apply) t.apply(P); }, start: startRun, update, render,
     // simulate without rendering; modals are resolved by taking the first card
     sim(sec, dt = 1 / 30) {
       const steps = Math.round(sec / dt);
