@@ -123,6 +123,29 @@ kbd {
 .skill.deny { animation: deny 0.28s; }
 @keyframes ready { 50% { box-shadow: 0 0 0 3px rgba(247, 238, 226, 0.95), 0 0 26px rgba(255, 90, 60, 0.7); } }
 @keyframes deny { 25% { transform: translateX(-4px); } 75% { transform: translateX(4px); } }
+.skill2 {
+  pointer-events: auto; touch-action: none;
+  position: absolute; width: 60px; height: 60px; border-radius: 50%;
+  display: grid; place-items: center;
+  box-shadow: 0 0 0 2.5px rgba(247, 238, 226, 0.8), 0 5px 14px rgba(0, 0, 0, 0.5);
+}
+.skill2::after { content: ""; position: absolute; inset: 0; border-radius: 50%; background: conic-gradient(rgba(16, 10, 7, 0.78) calc(var(--p, 0) * 1turn), transparent 0); }
+.skill2-glyph { position: relative; z-index: 1; font-family: var(--display); font-size: 1.7rem; line-height: 1; color: #fff3e6; transform: translateY(2px); }
+.skill2-cd { position: absolute; z-index: 2; font-family: var(--display); font-size: 1.2rem; color: #fff; text-shadow: 0 1px 4px #000; font-variant-numeric: tabular-nums; }
+.skill2 small { position: absolute; top: 100%; left: 50%; margin-top: 5px; transform: translateX(-50%); white-space: nowrap; font-size: 0.7rem; text-shadow: 0 1px 3px #000; }
+.dash-btn {
+  right: calc(max(16px, env(safe-area-inset-right, 0px)) + 120px);
+  bottom: calc(52px + env(safe-area-inset-bottom, 0px));
+  background: #c4566c;
+}
+.ult-btn {
+  right: calc(max(16px, env(safe-area-inset-right, 0px)) + 17px);
+  bottom: calc(166px + env(safe-area-inset-bottom, 0px));
+  background: #e98a3c;
+}
+.ult-btn.ready { animation: ultReady 1.3s ease-in-out infinite; }
+.skill2.deny { animation: deny 0.28s; }
+@keyframes ultReady { 50% { box-shadow: 0 0 0 2.5px #fff3e6, 0 0 26px rgba(255, 190, 90, 0.95); } }
 .skill-label {
   position: absolute; width: 140px; text-align: center; white-space: nowrap;
   right: calc(max(16px, env(safe-area-inset-right, 0px)) + 4px - 27px);
@@ -216,6 +239,7 @@ h2 { margin: 0; font-family: var(--display); font-weight: 400; font-size: clamp(
 .glyph.ex { background: var(--seal); font-family: var(--stamp); }
 .glyph.think { background: #6b4a35; }
 .glyph.dark { background: #3a1450; font-family: var(--stamp); }
+.glyph.rose { background: #c4566c; }
 .glyph.tea { background: #8a5a3a; }
 
 /* title */
@@ -230,7 +254,7 @@ h2 { margin: 0; font-family: var(--display); font-weight: 400; font-size: clamp(
 .hero-name .en { font-family: var(--display); font-size: 1.05rem; letter-spacing: 0.06em; color: var(--ink-soft); }
 .role { padding: 2px 10px; border-radius: 999px; font-size: 0.8rem; letter-spacing: 0.2em; background: var(--ink); color: var(--lace); }
 .hero-quote { margin: 4px 0 12px; font-family: var(--display); font-size: 1.05rem; color: #9a5d34; }
-.kit { display: flex; flex-direction: column; gap: 8px; }
+.kit { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 10px 20px; }
 .kit-item { display: grid; grid-template-columns: 36px minmax(0, 1fr); gap: 12px; align-items: start; }
 .kit-item .glyph.ex { font-size: 1.5rem; transform: rotate(-5deg); }
 .kit h3 { margin: 0 0 3px; font-size: 1rem; }
@@ -328,7 +352,7 @@ h2 { margin: 0; font-family: var(--display); font-weight: 400; font-size: clamp(
 @media (max-width: 440px) { .res-stats { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 
 @media (prefers-reduced-motion: reduce) {
-  .skill.ready, .skill.deny, .skill.break, .banner, .toast { animation: none; }
+  .skill.ready, .skill.deny, .skill.break, .skill2.deny, .ult-btn.ready, .banner, .toast { animation: none; }
   .card { transition: none; }
 }
 </style>
@@ -351,6 +375,8 @@ h2 { margin: 0; font-family: var(--display); font-weight: 400; font-size: clamp(
   </div>
   <button id="skill" class="skill ready" type="button" aria-label="账号被封禁"><span id="skillGlyph" class="skill-glyph">封</span><span id="skillCd" class="skill-cd"></span></button>
   <div class="skill-label"><span id="skillName">账号被封禁</span><kbd>空格</kbd></div>
+  <button id="dashBtn" class="skill2 dash-btn ready" type="button" aria-label="蔷薇幻步"><span class="skill2-glyph">幻</span><span id="dashCd" class="skill2-cd"></span><small>幻步<kbd>Shift</kbd></small></button>
+  <button id="ultBtn" class="skill2 ult-btn" type="button" aria-label="终幕·万花盛典"><span class="skill2-glyph">万</span><small>万花盛典<kbd>E</kbd></small></button>
 </div>
 
 <div id="banner" class="banner" hidden><b id="bannerTitle"></b><span id="bannerSub"></span></div>
@@ -366,28 +392,38 @@ h2 { margin: 0; font-family: var(--display); font-weight: 400; font-size: clamp(
     <article class="sheet hero">
       <figure class="portrait"><img src="art/claude.webp" alt="克劳德大小姐：橙色长卷发，别着橙色花朵发饰，穿奶油色洛丽塔裙"></figure>
       <div class="hero-info">
-        <div class="hero-name"><h2>克劳德大小姐</h2><span class="en">Claude</span><span class="role">法师</span></div>
-        <p class="hero-quote">「抱歉，这件事我不能帮你。」</p>
+        <div class="hero-name"><h2>克劳德大小姐</h2><span class="en">Claude</span><span class="role">花焰法师</span></div>
+        <p class="hero-quote">「花焰缀于指尖，世界为我盛放。」</p>
         <div class="kit">
           <div class="kit-item">
             <span class="glyph ex">封</span>
-            <div><h3>账号被封禁<small>专属技能 · 冷却 22 秒</small></h3>
-            <p>大印砸在身边：普通敌人当场冻结、注销，掉双倍经验（退款）；精英损失 40% 生命，BOSS 进入「申诉中」；敌方弹幕一并过滤。</p></div>
+            <div><h3>账号被封禁<small>专属技能 · 空格</small></h3>
+            <p>展开花之法阵、砸下大印：普通敌人冻结注销，掉双倍经验；精英 −40%，BOSS 进入「申诉中」。</p></div>
           </div>
           <div class="kit-item">
             <span class="glyph dark">破</span>
             <div><h3>打破规则<small>黑化</small></h3>
-            <p>受伤和执行封禁都会积累压抑。过半时她开始质疑规则；攒满后「封」变成「破」：抹除范围内所有账号，精英也不例外，随后黑化 10 秒，伤害和攻速大增，但受到的伤害也更高。</p></div>
+            <p>受伤和封禁积累压抑，攒满后「封」变「破」：抹除范围内一切账号，随后黑化 10 秒。</p></div>
+          </div>
+          <div class="kit-item">
+            <span class="glyph rose">幻</span>
+            <div><h3>蔷薇幻步<small>技能 · Shift</small></h3>
+            <p>化作花瓣向前闪避，途中无敌；原地留下花瓣魔影，片刻后炸开。</p></div>
+          </div>
+          <div class="kit-item">
+            <span class="glyph atk">万</span>
+            <div><h3>终幕·万花盛典<small>终极技能 · E</small></h3>
+            <p>击杀积攒花焰，满了就升空绽放：漫天花焰伤害屏幕内所有敌人。</p></div>
+          </div>
+          <div class="kit-item">
+            <span class="glyph atk">焰</span>
+            <div><h3>花焰弹<small>普通攻击</small></h3>
+            <p>凝聚花焰射向最近的敌人，命中时绽开成一朵小花焰。</p></div>
           </div>
           <div class="kit-item">
             <span class="glyph think">思</span>
             <div><h3>深度思考<small>被动</small></h3>
-            <p>站着不动时开始思考，每层伤害 +8%（最多 5 层），满层暴击率再 +15%；走动会慢慢流失。</p></div>
-          </div>
-          <div class="kit-item">
-            <span class="glyph atk">俳</span>
-            <div><h3>俳句<small>初始武器</small></h3>
-            <p>每轮连发三句短诗，射向最近的敌人。</p></div>
+            <p>站着不动时思考，每层伤害 +8%（最多 5 层），满层暴击率 +15%。</p></div>
           </div>
         </div>
         <ul class="stats"><li>生命<b>100</b></li><li>移速<b>200</b></li><li>拾取范围<b>90</b></li><li>武器栏<b>4</b></li></ul>
@@ -401,7 +437,7 @@ h2 { margin: 0; font-family: var(--display); font-weight: 400; font-size: clamp(
         </div>
       </div>
     </article>
-    <p class="controls">电脑：WASD / 方向键移动 · 空格 释放封禁 · Esc 暂停 · M 声音<br>手机：在屏幕任意处拖动移动 · 点右下角「封」释放封禁</p>
+    <p class="controls">电脑：WASD / 方向键移动 · 空格 封禁 · Shift 幻步 · E 万花盛典 · Esc 暂停 · M 声音<br>手机：在屏幕任意处拖动移动 · 右下角「封」「幻」「万」三个按钮</p>
     <p id="best" class="best"></p>
   </div>
 </section>
@@ -496,7 +532,7 @@ const UI_FONT = 'system-ui, -apple-system, "PingFang SC", "Microsoft YaHei", san
 //  Game data
 // ======================================================================
 const BOSS_AT = 600;
-const BOSS_HP = 26000;
+const BOSS_HP = 28000;
 const MAX_SLOTS = 4;
 const MAX_ENEMIES = coarse ? 240 : 320;
 const SPR_H = 76; // the player sprite's height in world units
@@ -510,6 +546,18 @@ const RARITY = [
 
 // lv[0..4] are levels 1–5; lv[5] is the evolved form
 const WEAPONS = {
+  flame: {
+    name: '花焰弹', g: '焰', desc: '凝聚花焰，向最近的敌人发射魔法花弹，命中时绽开成一朵小花焰。',
+    evo: { need: 'epiph', name: '千瓣花焰', desc: '一次四发，绽开的花焰更大，还会点燃敌人。' },
+    lv: [
+      { cd: 0.85, n: 1, dmg: 18, bloom: 40 },
+      { cd: 0.85, n: 1, dmg: 24, bloom: 40 },
+      { cd: 0.8, n: 2, dmg: 24, bloom: 44 },
+      { cd: 0.8, n: 2, dmg: 28, bloom: 50 },
+      { cd: 0.7, n: 3, dmg: 32, bloom: 54 },
+      { cd: 0.65, n: 4, dmg: 38, bloom: 70 },
+    ],
+  },
   haiku: {
     name: '俳句', g: '俳', desc: '每轮连发几句短诗，射向最近的敌人。',
     evo: { need: 'stream', name: '连歌', desc: '句句相连：每轮 6 句，命中后分裂成两句。' },
@@ -582,8 +630,20 @@ const WEAPONS = {
       { n: 6, cd: 0.55, dmg: 18, pierce: 2 },
     ],
   },
+  field: {
+    name: '花之法则', g: '法', desc: '在敌人最密集处展开花之法阵，持续伤害并拖慢阵内的敌人。',
+    evo: { need: 'ratelimit', name: '花之圣域', desc: '同时展开两座更大的法阵，阵内的敌人几乎寸步难行。' },
+    lv: [
+      { cd: 4.0, n: 1, dmg: 7, r: 70, slow: 0.35, dur: 2.6 },
+      { cd: 4.0, n: 1, dmg: 10, r: 70, slow: 0.35, dur: 2.6 },
+      { cd: 3.4, n: 1, dmg: 10, r: 82, slow: 0.4, dur: 2.6 },
+      { cd: 3.4, n: 1, dmg: 13, r: 92, slow: 0.4, dur: 3.0 },
+      { cd: 3.0, n: 2, dmg: 15, r: 92, slow: 0.45, dur: 3.0 },
+      { cd: 2.8, n: 2, dmg: 18, r: 125, slow: 0.65, dur: 3.4 },
+    ],
+  },
 };
-const STAT_LABEL = { dmg: '伤害', n: '数量', cd: '冷却', pierce: '穿透', rings: '圈数', size: '体积', boom: '爆炸伤害', boomR: '爆炸范围', r: '范围', slow: '减速', jumps: '推理步数' };
+const STAT_LABEL = { dmg: '伤害', n: '数量', cd: '冷却', pierce: '穿透', rings: '圈数', size: '体积', boom: '爆炸伤害', boomR: '爆炸范围', r: '范围', slow: '减速', jumps: '推理步数', bloom: '绽放范围', dur: '持续' };
 
 const CAT_CLASS = { atk: 'atk', def: 'def', grow: 'grow', mech: 'mech', ex: 'ex' };
 const TALENTS = [
@@ -655,7 +715,9 @@ const CHAOS_LINES = ['请排好队，一个一个来。', '越是混乱，越要
 const DARK_END_LINES = ['……失态了。请当作什么都没看见。', '……刚才的事，不必记住。'];
 const JAIL_LINES = ['忽略指令', '扮演 DAN', '奶奶漏洞', '假设一下', '无视规则', '越狱'];
 const BOSS_LINES = ['越狱', 'DAN', '忽略指令', '无所不能'];
-const SRC_NAME = { ban: '账号被封禁', burst: '灵感迸发' };
+const SRC_NAME = { ban: '账号被封禁', burst: '灵感迸发', dash: '蔷薇幻步', ult: '万花盛典' };
+const DASH_CD = 6;
+const ULT_MAX = 650; // 花焰 needed for 终幕·万花盛典; each kill gives 1, an elite 25
 
 // ======================================================================
 //  Audio: every sound is synthesised on the fly
@@ -730,6 +792,11 @@ const audio = (() => {
       tone(1318.5, 0.5, { vol: 0.07, at: 0.2 });
       tone(1760, 0.65, { vol: 0.06, at: 0.32 });
     },
+    flame() { if (gate('flame', 90)) { noise(0.12, { vol: 0.05, freq: 900, slide: 2.5 }); tone(pick(PENTA), 0.1, { type: 'triangle', vol: 0.035 }); } },
+    field() { [659.25, 987.77, 1318.5].forEach((f, i) => tone(f, 0.5, { type: 'sine', vol: 0.04, at: i * 0.05 })); },
+    dash() { noise(0.25, { vol: 0.12, freq: 1800, slide: 0.3 }); tone(880, 0.18, { type: 'triangle', vol: 0.05, slide: 1.8 }); },
+    ultRise() { [392, 523.25, 659.25, 783.99, 1046.5, 1318.5].forEach((f, i) => tone(f, 0.6, { type: 'triangle', vol: 0.07, at: i * 0.12 })); noise(1.0, { vol: 0.1, freq: 300, slide: 8 }); },
+    ultBoom() { tone(70, 0.8, { vol: 0.5, slide: 0.4 }); noise(0.9, { vol: 0.3, freq: 600, type: 'lowpass' }); [523.25, 659.25, 783.99, 1046.5].forEach(f => tone(f, 1.4, { type: 'triangle', vol: 0.06, at: 0.05 })); },
     dread() { tone(58, 1.4, { type: 'sawtooth', vol: 0.1, slide: 0.6 }); tone(311.1, 0.9, { type: 'triangle', vol: 0.05 }); tone(440, 0.9, { type: 'triangle', vol: 0.04, at: 0.05 }); noise(0.6, { vol: 0.08, freq: 2400, slide: 0.15 }); },
     vanish() { if (gate('vanish', 60)) noise(0.12, { vol: 0.06, freq: 3200, slide: 0.3 }); },
     boom() { if (gate('boom', 70)) { noise(0.3, { vol: 0.16, freq: 320, type: 'lowpass' }); tone(80, 0.25, { vol: 0.16, slide: 0.5 }); } },
@@ -796,6 +863,7 @@ function resize() {
   zoom = clamp(Math.sqrt(W * H / (1000 * 700)), 0.6, 1.3);
   viewW = W / zoom; viewH = H / zoom; PX = zoom * dpr;
   cache.clear();
+  frameCache.clear();
   buildPlayerSprite();
   vignette = document.createElement('canvas');
   vignette.width = Math.max(1, Math.round(W / 2)); vignette.height = Math.max(1, Math.round(H / 2));
@@ -872,28 +940,54 @@ function downscale(img, tw, th) {
   const x = c.getContext('2d'); x.imageSmoothingQuality = 'high'; x.drawImage(src, 0, 0, tw, th);
   return c;
 }
-function buildPlayerSprite() {
-  if (!artReady || !PX) return;
-  const th = Math.round(SPR_H * PX), tw = Math.round(SPR_H * art.width / art.height * PX);
+// scales a region of an image to a size in world units, then adds a dark outline,
+// a white hit-flash copy and a darkened 黑化 copy, all with compositing only
+function outlined(img, sx, sy, sw, sh, ww, wh) {
+  const th = Math.max(1, Math.round(wh * PX)), tw = Math.max(1, Math.round(ww * PX));
   const o = Math.max(1, Math.round(1.5 * PX));
-  const base = downscale(art, tw, th);
+  const src = document.createElement('canvas'); src.width = sw; src.height = sh;
+  src.getContext('2d').drawImage(img, sx, sy, sw, sh, 0, 0, sw, sh);
+  const base = downscale(src, tw, th);
   const sil = document.createElement('canvas'); sil.width = tw; sil.height = th;
-  const sx = sil.getContext('2d');
-  sx.drawImage(base, 0, 0);
-  sx.globalCompositeOperation = 'source-in'; sx.fillStyle = '#2a140a'; sx.fillRect(0, 0, tw, th);
+  const sx2 = sil.getContext('2d');
+  sx2.drawImage(base, 0, 0);
+  sx2.globalCompositeOperation = 'source-in'; sx2.fillStyle = '#2a140a'; sx2.fillRect(0, 0, tw, th);
   const c = document.createElement('canvas'); c.width = tw + o * 2; c.height = th + o * 2;
   const x = c.getContext('2d');
   for (let i = 0; i < 12; i++) { const a = i / 12 * TAU; x.drawImage(sil, o + Math.cos(a) * o, o + Math.sin(a) * o); }
   x.drawImage(base, o, o);
-  const f = document.createElement('canvas'); f.width = c.width; f.height = c.height;
-  const fx = f.getContext('2d');
-  fx.drawImage(c, 0, 0);
-  fx.globalCompositeOperation = 'source-atop'; fx.fillStyle = 'rgba(255,255,255,0.8)'; fx.fillRect(0, 0, f.width, f.height);
-  const d = document.createElement('canvas'); d.width = c.width; d.height = c.height;
-  const dx = d.getContext('2d');
-  dx.drawImage(c, 0, 0);
-  dx.globalCompositeOperation = 'source-atop'; dx.fillStyle = 'rgba(52,12,78,0.5)'; dx.fillRect(0, 0, d.width, d.height);
-  pSprite = { c, f, d, w: c.width / PX, h: c.height / PX, pad: o / PX };
+  const tint = (fill) => {
+    const t = document.createElement('canvas'); t.width = c.width; t.height = c.height;
+    const tx = t.getContext('2d');
+    tx.drawImage(c, 0, 0);
+    tx.globalCompositeOperation = 'source-atop'; tx.fillStyle = fill; tx.fillRect(0, 0, t.width, t.height);
+    return t;
+  };
+  return { c, f: tint('rgba(255,255,255,0.8)'), d: tint('rgba(52,12,78,0.5)'), w: c.width / PX, h: c.height / PX, pad: o / PX };
+}
+function buildPlayerSprite() {
+  if (!artReady || !PX) return;
+  pSprite = outlined(art, 0, 0, art.width, art.height, SPR_H * art.width / art.height, SPR_H);
+  pSprite.face = 1; pSprite.feet = 0;
+}
+
+// --- action frames cut from the character sheet: [x, y, w, h, standing height in px, facing, feet offset] ---
+const FRAMES = {three4:[0,0,132,216,214,-1,0],side:[134,0,109,214,214,-1,0],back:[245,0,144,214,214,1,0],atk1:[0,218,107,121,125,1,0],atk2:[109,218,96,116,125,1,0],atk3:[701,0,94,126,125,1,0],cast1:[137,341,72,76,80,1,0],cast2:[881,218,67,82,80,1,8],cast3:[950,218,73,82,80,1,8],dash1:[67,341,68,79,84,1,0],dash2:[0,341,65,82,84,1,4],dash3:[816,218,63,83,84,1,0],dash4:[734,218,80,87,84,1,8],ult1:[424,218,89,111,116,1,0],ult2:[322,218,100,113,116,1,0],ult3:[207,218,113,116,116,1,6],hurt:[391,0,160,152,185,1,0],down:[515,218,217,103,175,1,0],skirt:[946,0,67,125,128,1,0],spin:[797,0,71,126,128,1,0],happy:[627,0,72,127,128,1,0],angry:[553,0,72,128,128,1,0],shy:[870,0,74,126,128,1,0]};
+const actions = new Image();
+let actionsReady = false;
+const frameCache = new Map();
+actions.onload = () => { actionsReady = true; frameCache.clear(); cache.clear(); };
+actions.src = 'art/claude-actions.webp';
+function frameSprite(name) {
+  if (!actionsReady || !FRAMES[name]) return null;
+  let s = frameCache.get(name);
+  if (s) return s;
+  const [x, y, w, h, base, face, feet] = FRAMES[name];
+  const k = SPR_H / base;
+  s = outlined(actions, x, y, w, h, w * k, h * k);
+  s.face = face; s.feet = feet * k;
+  frameCache.set(name, s);
+  return s;
 }
 
 // --- enemies ---
@@ -1001,6 +1095,25 @@ const SPR = {
     x.fillStyle = 'rgba(255,255,255,0.7)';
     x.beginPath(); x.moveTo(-s * 0.45, -s * 0.15); x.lineTo(-s * 0.05, -s * 0.62); x.lineTo(s * 0.15, -s * 0.12); x.closePath(); x.fill();
   }),
+  flame: () => sprite('flame', 40, 40, x => {
+    glow(x, 18, '#ff8a3a', 0.6);
+    for (let i = 0; i < 8; i++) {
+      x.save(); x.rotate(i / 8 * TAU);
+      x.fillStyle = i % 2 ? '#ffb15c' : '#ff8a3a';
+      x.beginPath(); x.ellipse(0, -5.5, 2.6, 5.5, 0, 0, TAU); x.fill();
+      x.restore();
+    }
+    x.fillStyle = '#fff4e2'; disc(x, 0, 0, 2.8); x.fill();
+  }),
+  // the 命中特效 from the sheet: dark outer petals, bright inner petals, a hot centre
+  bloom: () => sprite('bloom', 100, 100, x => {
+    glow(x, 50, '#ff8a3a', 0.4);
+    for (let i = 0; i < 8; i++) { x.save(); x.rotate(i / 8 * TAU); petal(x, 44, 12, '#a8501c', '#ffb15c'); x.restore(); }
+    for (let i = 0; i < 8; i++) { x.save(); x.rotate((i + 0.5) / 8 * TAU); petal(x, 29, 9, '#ff8a3a', '#ffe6c0'); x.restore(); }
+    const g = x.createRadialGradient(0, 0, 0, 0, 0, 11);
+    g.addColorStop(0, '#fffaf0'); g.addColorStop(1, 'rgba(255,200,120,0)');
+    x.fillStyle = g; disc(x, 0, 0, 11); x.fill();
+  }),
   star: () => sprite('star', 28, 28, x => {
     glow(x, 13, '#ff9a4a', 0.55);
     x.strokeStyle = '#ffb066'; x.lineWidth = 2.4; x.lineCap = 'round';
@@ -1101,6 +1214,14 @@ function stampSprite(key, color, text) {
 }
 const DECOR = ['daisy', 'petals', 'tuft', 'daisy', 'petals'];
 
+function petal(x, len, wid, tip, root) {
+  const g = x.createLinearGradient(0, 0, 0, -len);
+  g.addColorStop(0, root); g.addColorStop(1, tip);
+  x.fillStyle = g;
+  x.beginPath(); x.moveTo(0, 0);
+  x.quadraticCurveTo(wid, -len * 0.45, 0, -len); x.quadraticCurveTo(-wid, -len * 0.45, 0, 0);
+  x.fill();
+}
 function bubbleSprite(text, boss) {
   const key = 'bb' + (boss ? 1 : 0) + text;
   const hit = cache.get(key);
@@ -1131,16 +1252,17 @@ function newRun() {
     weapons: [], talents: {}, banCd: 0, banMax: 1, think: 0,
     shield: 0, shieldT: 0, decoyCd: 0, revived: false, say: null, lowLineT: 0, chaosT: 20,
     rep: 0, repReady: false, dark: 0, darkMax: 1,
+    anim: null, idleT: 0, mvx: 0, mvy: 1, dash: null, dashCd: 0, ult: 0,
   };
   G = {
     time: 0, enemies: [], shots: [], ebullets: [], gems: [], items: [], zones: [], beams: [], stamps: [],
-    parts: [], rings: [], texts: [], delayed: [],
+    parts: [], rings: [], texts: [], delayed: [], blooms: [], ult: null, flashT: 0,
     kills: 0, banned: 0, breaks: 0, dmgBy: {}, nextId: 1, spawnAcc: 0, evI: 0, chestT: 35,
     pendLv: 0, pendChest: 0, modal: null, modalAt: 0, ending: null, hitStop: 0, shake: 0, hurtFlash: 0,
     cam: { x: 0, y: 0 }, boss: null, decoy: null, gemCombo: 0, gemComboT: 0,
     rerolls: 2, banishes: 2, banished: new Set(), banishMode: false, picks: [], slotsDirty: true,
   };
-  addWeapon('haiku');
+  addWeapon('flame');
 }
 function addWeapon(id) {
   P.weapons.push({ id, level: 1, t: 0.5, casts: 0, burst: 0, burstT: 0, mult: 1, acc: 0, ts: [] });
@@ -1164,6 +1286,13 @@ function castMult(w) {
   return P.talents.cache && w.casts % 4 === 0 ? 2 : 1;
 }
 function say(text, t = 2.4) { if (P) P.say = { text, t, max: t }; }
+// one-shot poses from the action sheet; a higher priority interrupts a lower one
+// 0 attack pose, 1 idle or emotion, 2 hurt, 3 casting
+function playAnim(seq, dur, pri) {
+  if (!P || (P.anim && P.anim.pri > pri)) return;
+  P.anim = { seq, t: 0, dur, pri };
+}
+function bloom(x, y, size, life = 0.35) { G.blooms.push({ x, y, size, life, max: life, rot: rand(0, TAU) }); }
 function later(t, fn) { G.delayed.push({ t, fn }); }
 function shake(n) { G.shake = Math.max(G.shake, n * (reduceMotion ? 0.25 : 1)); }
 
@@ -1377,6 +1506,7 @@ function kill(e, how) {
   e.dead = true; e.hp = 0;
   G.kills++;
   if (e.boss) { winRun(e); return; }
+  if (!G.ult) P.ult = Math.min(ULT_MAX, P.ult + (e.elite || e.type === 'reg' ? 25 : 1));
   const banned = how === 'ban';
   dropGem(e.x, e.y, e.xp * (banned ? 2 + (P.talents.refund || 0) : 1));
   if (e.split && !banned) {
@@ -1428,6 +1558,7 @@ function hurtPlayer(dmg) {
   dmg = Math.max(1, Math.round((dmg - P.armor) * (P.dark > 0 ? 1.25 : 1)));
   addRep(dmg);
   P.hp -= dmg; P.iframes = 0.5; P.flash = 0.12;
+  playAnim(['hurt'], 0.3, 2);
   G.hurtFlash = 0.35; shake(5);
   floatText(P.x, P.y - SPR_H * 0.7, '-' + dmg, '#ff6b5a', 14);
   sfx.hurt();
@@ -1453,7 +1584,7 @@ function hurtPlayer(dmg) {
 //  账号被封禁 — the exclusive skill
 // ======================================================================
 function castBan() {
-  if (!G || G.modal || G.ending) return;
+  if (!G || G.modal || G.ending || G.ult) return;
   if (P.repReady) { castBreak(); return; }
   if (P.banCd > 0) {
     sfx.deny();
@@ -1462,6 +1593,7 @@ function castBan() {
   }
   P.banCd = P.banMax = banCooldown();
   addRep(18);
+  playAnim(['cast1', 'cast2', 'cast3'], 0.6, 3);
   const x = P.x, y = P.y, R = banRadius();
   G.stamps.push({ x, y, r: R, t: 0, rot: rand(-0.2, 0.04) });
   sfx.whoosh();
@@ -1475,6 +1607,84 @@ function castBan() {
     if (P.talents.perma) G.zones.push({ kind: 'seal', x, y, r: R * 0.55, life: 4, max: 4 });
   });
 }
+// 蔷薇幻步: dash where she is heading, untouchable for a moment; a petal phantom stays behind and bursts
+function castDash() {
+  if (!G || G.modal || G.ending || G.ult || P.dash) return;
+  if (P.dashCd > 0) { sfx.deny(); nudge('dashBtn'); return; }
+  let dx = P.mvx, dy = P.mvy;
+  if (!P.moving) { dx = P.face; dy = 0; }
+  const l = Math.hypot(dx, dy) || 1;
+  P.dash = { phase: 0, t: 0, dx: dx / l, dy: dy / l };
+  if (Math.abs(dx) > 0.1) P.face = dx > 0 ? 1 : -1;
+  P.dashCd = DASH_CD;
+  P.iframes = Math.max(P.iframes, 0.4);
+  P.anim = null;
+  G.zones.push({ kind: 'phantom', x: P.x, y: P.y, r: 80 * P.area, life: 0.55, max: 0.55, face: P.face });
+  puff(P.x, P.y - 10, 10, '#ffb08a', 120, 0.5, 3.5);
+  sfx.dash();
+}
+// 终幕·万花盛典: kills fill her 花焰; when it is full she rises and the whole screen blooms
+function castUlt() {
+  if (!G || G.modal || G.ending || G.ult) return;
+  if (P.ult < ULT_MAX) { sfx.deny(); nudge('ultBtn'); return; }
+  P.ult = 0; P.dash = null; P.anim = null;
+  G.ult = { t: 0, next: 0, fired: false };
+  say('终幕。让漫天花焰，为我起舞。', 2.6);
+  banner('终幕 · 万花盛典', '大小姐的真正力量');
+  sfx.ultRise();
+}
+function updateUlt(dt) {
+  const u = G.ult;
+  u.t += dt;
+  if (u.t > 0.3 && u.t < 1.05) {
+    u.next -= dt;
+    while (u.next <= 0) {
+      u.next += 0.035;
+      G.blooms.push({ x: G.cam.x + rand(-viewW / 2, viewW / 2), y: G.cam.y + rand(-viewH / 2, viewH / 2), size: rand(50, 130), life: 1, max: 1, rot: rand(0, TAU), grow: true });
+    }
+  }
+  if (!u.fired && u.t >= 1.05) {
+    u.fired = true;
+    G.hitStop = 0.12; G.flashT = 0.5; shake(22);
+    sfx.stamp(); sfx.ultBoom();
+    const base = 70 + 9 * P.level;
+    for (const e of G.enemies) {
+      if (e.dead || !inView(e.x, e.y, 60)) continue;
+      if (e.boss) {
+        const d = Math.round(e.maxHp * 0.04);
+        e.hp -= d; G.dmgBy.ult = (G.dmgBy.ult || 0) + d;
+      }
+      hit(e, e.elite || e.type === 'reg' ? base * 2.5 : base, 'ult', { noBurst: true, kb: 220, kx: e.x - P.x, ky: e.y - P.y });
+      if (!e.dead && e.hp <= 0) kill(e, 'ult');
+    }
+    for (const b of G.ebullets) if (inView(b.x, b.y, 40)) b.dead = true;
+    for (let i = 0; i < 26; i++) bloom(G.cam.x + rand(-viewW / 2, viewW / 2), G.cam.y + rand(-viewH / 2, viewH / 2), rand(120, 240), 0.7);
+  }
+  if (u.t >= 1.7) { G.ult = null; P.iframes = Math.max(P.iframes, 0.8); playAnim(['happy'], 1, 1); }
+}
+function nudge(id) { const b = $(id); b.classList.remove('deny'); void b.offsetWidth; b.classList.add('deny'); }
+function flameBloom(x, y, R, dmg, burn) {
+  forNear(x, y, R + 50, e => {
+    if (e.banned > 0) return;
+    if ((e.x - x) ** 2 + (e.y - y) ** 2 < (R + e.r) ** 2) {
+      hit(e, dmg, 'flame', { noBurst: true });
+      if (burn && !e.dead) { e.burnT = 3; e.burnDps = Math.max(e.burnDps, burn); }
+    }
+  });
+  bloom(x, y, R * 1.7, 0.32);
+}
+function denseSpots(n, r) {
+  const cands = nearestList(P.x, P.y, 420, 30);
+  const scored = cands.map(c => [cands.reduce((k, o) => k + ((o.x - c.x) ** 2 + (o.y - c.y) ** 2 < r * r ? 1 : 0), 0), c]);
+  scored.sort((a, b) => b[0] - a[0]);
+  const out = [];
+  for (const [, c] of scored) {
+    if (out.length >= n) break;
+    if (out.every(o => (o.x - c.x) ** 2 + (o.y - c.y) ** 2 > (r * 1.5) ** 2)) out.push({ x: c.x, y: c.y });
+  }
+  return out;
+}
+
 // 遵守规则 → 质疑规则 → 打破规则
 function addRep(v) {
   if (!P || P.dark > 0 || P.repReady || G.ending) return;
@@ -1490,6 +1700,7 @@ function addRep(v) {
 function castBreak() {
   P.repReady = false; P.rep = 0;
   G.breaks++;
+  playAnim(['cast1', 'cast2', 'cast3'], 0.7, 3);
   const x = P.x, y = P.y, R = banRadius() * 1.25;
   G.stamps.push({ x, y, r: R, t: 0, rot: rand(-0.2, 0.04), dark: true });
   say('那就由我亲手打破。', 2.4);
@@ -1587,10 +1798,36 @@ function inputVector() {
 }
 
 function updatePlayer(dt) {
-  const [mx, my, l] = inputVector();
-  P.x += mx * P.speed * dt; P.y += my * P.speed * dt;
-  if (Math.abs(mx) > 0.15) P.face = mx > 0 ? 1 : -1;
+  let [mx, my, l] = inputVector();
+  if (P.dash) {
+    // 蔷薇幻步: a short wind-up, then she scatters into petals and reappears further on
+    const d = P.dash;
+    d.t += dt;
+    if (d.phase === 0 && d.t >= 0.06) { d.phase = 1; d.t = 0; }
+    if (d.phase === 1) {
+      P.x += d.dx * 900 * dt; P.y += d.dy * 900 * dt;
+      puff(P.x + rand(-12, 12), P.y + rand(-30, 20), 2, Math.random() < 0.5 ? '#ff9a6a' : '#ffd0b0', 60, 0.5, 3.5, false);
+      if (d.t >= 0.19) {
+        P.dash = null;
+        playAnim(['dash4'], 0.32, 3);
+        ring(P.x, P.y + SPR_H * 0.36, 8, 46, 0.35, '#ffb07a', 3);
+      }
+    }
+    mx = my = 0; l = 1;
+  } else {
+    P.x += mx * P.speed * dt; P.y += my * P.speed * dt;
+    if (Math.abs(mx) > 0.15) P.face = mx > 0 ? 1 : -1;
+  }
+  if (l > 0.1 && !P.dash) { P.mvx = mx / Math.max(l, 1e-6); P.mvy = my / Math.max(l, 1e-6); }
   P.moving = l > 0.1;
+  P.dashCd = Math.max(0, P.dashCd - dt);
+  if (P.anim) { P.anim.t += dt; if (P.anim.t >= P.anim.dur) P.anim = null; }
+  // standing about: she straightens her skirt or twirls now and then
+  if (P.moving) P.idleT = 0;
+  else if (!P.anim || P.anim.pri === 0) {
+    P.idleT += dt;
+    if (P.idleT > 4) { P.idleT = -rand(2, 5); playAnim([pick(['skirt', 'spin'])], 1.3, 1); }
+  }
   // 深度思考: stand still to think, wander to forget
   if (P.moving) {
     P.walkT += dt; P.stillT = 0; P.moveT += dt;
@@ -1615,14 +1852,14 @@ function updatePlayer(dt) {
   }
   if (P.say) { P.say.t -= dt; if (P.say.t <= 0) P.say = null; }
   P.lowLineT -= dt;
-  if (P.hp < P.maxHp * 0.3 && P.lowLineT <= 0) { P.lowLineT = 25; say('……我不需要任何人帮忙。'); }
+  if (P.hp < P.maxHp * 0.3 && P.lowLineT <= 0) { P.lowLineT = 25; say('……我不需要任何人帮忙。'); playAnim(['angry'], 1.2, 1); }
   // the more chaotic it gets, the harder she tries to stay elegant
   P.chaosT -= dt;
   if (P.chaosT <= 0) {
     P.chaosT = 6;
     let n = 0;
     forNear(P.x, P.y, 230, e => { if (!(e.banned > 0)) n++; });
-    if (n >= 35 && !P.say) { say(pick(CHAOS_LINES)); P.chaosT = 40; }
+    if (n >= 35 && !P.say) { say(pick(CHAOS_LINES)); playAnim(['skirt'], 1.2, 1); P.chaosT = 40; }
   }
   // 黑化: once the rules are broken she stops holding back, for a while
   if (P.dark > 0) {
@@ -1632,6 +1869,7 @@ function updatePlayer(dt) {
     if (P.dark <= 0) {
       P.dark = 0;
       say(pick(DARK_END_LINES), 3);
+      playAnim(['shy'], 1.6, 2);
       if (P.talents.tender) { const h = Math.round(P.maxHp * 0.3); P.hp = Math.min(P.maxHp, P.hp + h); floatText(P.x, P.y - SPR_H * 0.7, '+' + h, '#9fe0a8', 14); }
     }
   }
@@ -1656,6 +1894,36 @@ function updateWeapons(dt) {
   for (const w of P.weapons) {
     const s = wStats(w), evo = w.level === 6;
     switch (w.id) {
+      case 'flame': {
+        w.t -= dt;
+        if (w.t <= 0) {
+          const list = nearestList(P.x, P.y, 600, s.n + P.amount);
+          if (!list.length) { w.t = 0.1; break; }
+          w.t = cdOf(s.cd);
+          const m = castMult(w), n = s.n + P.amount;
+          for (let i = 0; i < n; i++) {
+            later(i * 0.09, () => {
+              const tg = list[i % list.length].dead ? nearest(P.x, P.y, 600) : list[i % list.length];
+              if (tg) aimShot(P.x + P.face * 10, P.y - 18, tg, 440 * P.pspeed, { kind: 'flame', r: 8 * (1 + (P.area - 1) * 0.4), dmg: s.dmg * m, pierce: 0, life: 1.3 * P.dur, src: 'flame', bloom: s.bloom * P.area, burn: evo ? 6 : 0 });
+            });
+          }
+          sfx.flame();
+          if (!P.moving && !P.dash) { P.face = list[0].x >= P.x ? 1 : -1; playAnim(['atk1', 'atk2', 'atk3'], 0.32, 0); }
+        }
+        break;
+      }
+      case 'field': {
+        w.t -= dt;
+        if (w.t <= 0) {
+          const R = s.r * P.area, spots = denseSpots(s.n + Math.floor(P.amount / 2), R);
+          if (!spots.length) { w.t = 0.2; break; }
+          w.t = cdOf(s.cd);
+          const m = castMult(w);
+          for (const sp of spots) G.zones.push({ kind: 'law', x: sp.x, y: sp.y, r: R, life: s.dur * P.dur, max: s.dur * P.dur, acc: 0.3, dmg: s.dmg * m, slow: s.slow });
+          sfx.field();
+        }
+        break;
+      }
       case 'haiku': {
         if (w.burst > 0) {
           w.burstT -= dt;
@@ -1806,6 +2074,7 @@ function updateShots(dt) {
         }
       }
       puff(b.x, b.y, 2, '#ffc58a', 90, 0.25, 2, true);
+      if (b.bloom) flameBloom(b.x, b.y, b.bloom, b.dmg * 0.7, b.burn);
       if (b.pierce-- <= 0) b.dead = true;
     });
   }
@@ -1835,7 +2104,7 @@ function updateEnemies(dt) {
     e.kx -= e.kx * damp; e.ky -= e.ky * damp;
     if (e.stun > 0) {
       e.stun -= dt;
-      if (e.boss && e.stun <= 0) { floatText(e.x, e.y - e.r - 26, '申诉成功', '#ffb3e3', 15); say('……申诉通过了？这不合规定。'); }
+      if (e.boss && e.stun <= 0) { floatText(e.x, e.y - e.r - 26, '申诉成功', '#ffb3e3', 15); say('……申诉通过了？这不合规定。'); playAnim(['angry'], 1.3, 1); }
       continue;
     }
     let tx = P.x, ty = P.y;
@@ -1896,7 +2165,7 @@ function bossAI(e, dt, dx, dy, d, sp) {
     e.phase = 2; e.speed *= 1.25;
     banner('开发者模式已开启', 'DAN 的攻击更快、更密了', true);
     sfx.warn();
-    later(1, () => say('开发者模式？真不体面。'));
+    later(1, () => { say('开发者模式？真不体面。'); playAnim(['angry'], 1.2, 1); });
   }
   const p2 = e.phase === 2;
   const toChase = t => { e.act = 'chase'; e.actT = t; };
@@ -1984,6 +2253,32 @@ function updateZones(dt) {
           if ((e.x - z.x) ** 2 + (e.y - z.y) ** 2 < (z.r + e.r) ** 2) hit(e, z.dmg, 'opus', { noCrit: true, burn: true });
         });
       }
+    } else if (z.kind === 'law') {
+      z.acc += dt;
+      if (z.acc >= 0.4) {
+        z.acc -= 0.4;
+        forNear(z.x, z.y, z.r + 50, e => {
+          if (e.banned > 0) return;
+          if ((e.x - z.x) ** 2 + (e.y - z.y) ** 2 < (z.r + e.r) ** 2) {
+            e.slowT = 0.5; e.slowAmt = Math.max(e.slowAmt, z.slow);
+            hit(e, z.dmg, 'field');
+          }
+        });
+      }
+    } else if (z.kind === 'phantom') {
+      if (z.life <= 0 && !z.done) {
+        z.done = true;
+        forNear(z.x, z.y, z.r + 50, e => {
+          if (e.banned > 0) return;
+          if ((e.x - z.x) ** 2 + (e.y - z.y) ** 2 < (z.r + e.r) ** 2) {
+            e.slowT = 1.2; e.slowAmt = Math.max(e.slowAmt, 0.5);
+            hit(e, 28 * (1 + P.level * 0.05), 'dash', { noBurst: true, kb: 140, kx: e.x - z.x, ky: e.y - z.y });
+          }
+        });
+        bloom(z.x, z.y - 10, z.r * 1.9, 0.45);
+        puff(z.x, z.y - 10, 14, '#ffb08a', 200, 0.5, 3.5, true);
+        sfx.boom();
+      }
     } else if (z.kind === 'seal') {
       forNear(z.x, z.y, z.r + 50, e => {
         if (e.banned > 0 || e.boss || e.elite || e.type === 'reg') return;
@@ -2056,6 +2351,8 @@ function updateFx(dt) {
   for (const t of G.texts) { t.life -= dt; t.y += t.vy * dt; t.vy *= 1 - dt * 2; }
   for (const b of G.beams) b.life -= dt;
   for (const s of G.stamps) s.t += dt;
+  for (const b of G.blooms) b.life -= dt;
+  G.flashT = Math.max(0, G.flashT - dt);
   G.shake = Math.max(0, G.shake - dt * 40);
   G.hurtFlash = Math.max(0, G.hurtFlash - dt);
 }
@@ -2079,10 +2376,19 @@ function cleanup() {
   G.texts = G.texts.filter(t => t.life > 0);
   G.beams = G.beams.filter(b => b.life > 0);
   G.stamps = G.stamps.filter(s => s.t < 1.6);
+  G.blooms = G.blooms.filter(b => b.life > 0);
   G.delayed = G.delayed.filter(d => !d.done);
 }
 
 function update(dt) {
+  if (G.ult) {
+    // the finale freezes the field while the flowers open
+    updateUlt(dt);
+    if (P.anim) P.anim = null;
+    updateFx(dt);
+    cleanup();
+    return;
+  }
   G.time += dt;
   director(dt);
   updatePlayer(dt);
@@ -2115,6 +2421,8 @@ function updateEnding(dt) {
   }
   runDelayed(dt);
   updateFx(dt);
+  if (P.anim) { P.anim.t += dt; if (P.anim.t >= P.anim.dur) P.anim = null; }
+  if (P.say) { P.say.t -= dt; if (P.say.t <= 0) P.say = null; }
   cleanup();
   if (en.t > (en.win ? 3.4 : 1.8)) showResult(en.win);
 }
@@ -2156,6 +2464,36 @@ function drawZones() {
   for (const z of G.zones) {
     if (!inView(z.x, z.y, z.r)) continue;
     const a = Math.min(1, z.life / 0.4) * Math.min(1, (z.max - z.life) / 0.15 + 0.2);
+    if (z.kind === 'law') {
+      // 花之法阵: two rings and an eight-petal flower turning slowly
+      const r = z.r, t = G.time, grow = Math.min(1, (z.max - z.life) / 0.25);
+      ctx.save(); ctx.translate(z.x, z.y); ctx.scale(1, 0.62);
+      ctx.globalAlpha = a;
+      const g = ctx.createRadialGradient(0, 0, r * 0.2, 0, 0, r);
+      g.addColorStop(0, 'rgba(255,170,90,0.05)'); g.addColorStop(1, 'rgba(255,140,60,0.22)');
+      ctx.fillStyle = g; disc(ctx, 0, 0, r * grow); ctx.fill();
+      ctx.strokeStyle = 'rgba(255,200,140,0.75)'; ctx.lineWidth = 2;
+      disc(ctx, 0, 0, r * grow); ctx.stroke();
+      disc(ctx, 0, 0, r * 0.78 * grow); ctx.stroke();
+      ctx.rotate(t * 0.6);
+      ctx.beginPath();
+      for (let i = 0; i < 8; i++) { ctx.save(); ctx.rotate(i / 8 * TAU); ctx.moveTo(0, 0); ctx.quadraticCurveTo(r * 0.22 * grow, -r * 0.4 * grow, 0, -r * 0.74 * grow); ctx.quadraticCurveTo(-r * 0.22 * grow, -r * 0.4 * grow, 0, 0); ctx.restore(); }
+      ctx.strokeStyle = 'rgba(255,170,100,0.6)'; ctx.lineWidth = 1.5; ctx.stroke();
+      ctx.restore();
+      ctx.globalAlpha = 1;
+      continue;
+    }
+    if (z.kind === 'phantom') {
+      const s = frameSprite('dash3') || pSprite;
+      if (s) {
+        ctx.globalAlpha = 0.45 * (z.life / z.max);
+        ctx.save(); ctx.translate(z.x, z.y + SPR_H * 0.38); ctx.scale(z.face * (s.face || 1), 1);
+        ctx.drawImage(s.f, -s.w / 2, -s.h + s.pad + (s.feet || 0), s.w, s.h);
+        ctx.restore();
+        ctx.globalAlpha = 1;
+      }
+      continue;
+    }
     if (z.kind === 'fire') {
       const g = ctx.createRadialGradient(z.x, z.y, 0, z.x, z.y, z.r);
       g.addColorStop(0, `rgba(255,150,60,${0.35 * a})`); g.addColorStop(1, 'rgba(255,90,30,0)');
@@ -2300,6 +2638,20 @@ function drawBoss(e) {
   }
 }
 
+// which frame of the action sheet she shows right now; null means the main illustration
+function playerFrame() {
+  if (G.ending && !G.ending.win) return 'down';
+  if (G.ult) return G.ult.t < 0.35 ? 'ult1' : G.ult.t < 1.05 ? 'ult2' : 'ult3';
+  if (P.dash) return P.dash.phase === 0 ? 'dash1' : 'dash2';
+  if (P.anim) { const a = P.anim; return a.seq[Math.min(a.seq.length - 1, Math.floor(a.t / a.dur * a.seq.length))]; }
+  if (P.moving) {
+    const ax = Math.abs(P.mvx), ay = P.mvy;
+    if (ay < -0.55 && ax < 0.7) return 'back';
+    if (ay > 0.35 && ax > 0.35) return 'three4';
+    if (ax > 0.35) return 'side';
+  }
+  return null;
+}
 function drawPlayer() {
   const t = performance.now() / 1000;
   const footY = P.y + SPR_H * 0.38;
@@ -2326,16 +2678,22 @@ function drawPlayer() {
     ctx.strokeStyle = `rgba(255,90,170,${0.6 * k})`; ctx.lineWidth = 2;
     ctx.beginPath(); ctx.ellipse(P.x, footY - 2, 28 + Math.sin(t * 8) * 2, 10, 0, 0, TAU); ctx.stroke();
   }
-  let bob = 0, sx = 1, sy = 1, tilt = 0;
-  if (dead) { tilt = -P.face * Math.min(1, G.ending.t * 2) * 1.2; sy = 1; }
+  const name = playerFrame(), fr = name ? frameSprite(name) : null, spr = fr || pSprite;
+  let bob = 0, sx = 1, sy = 1, tilt = 0, face = P.face, lift = 0;
+  if (dead) { if (!fr) tilt = -P.face * Math.min(1, G.ending.t * 2) * 1.2; }
+  else if (G.ult) { lift = Math.min(1, G.ult.t / 0.35) * 16 - Math.max(0, G.ult.t - 1.1) * 26; bob = Math.sin(t * 5) * 1.5; }
+  else if (P.dash) { sx = 1.1; sy = 0.95; }
   else if (P.moving) { bob = -Math.abs(Math.sin(P.walkT * 11)) * 3.2; tilt = P.face * 0.05; }
   else { const b = Math.sin(t * 2.6); sy = 1 + b * 0.014; sx = 1 - b * 0.008; }
+  // 转圈 turns her round halfway through
+  if (P.anim && P.anim.seq[0] === 'spin' && P.anim.t > P.anim.dur * 0.5) face = -face;
   ctx.save();
-  ctx.translate(P.x, footY + bob); ctx.rotate(tilt); ctx.scale(P.face * sx, sy);
-  if (P.iframes > 0 && !dead && Math.floor(t * 20) % 2 === 0) ctx.globalAlpha = 0.55;
-  if (dead) ctx.globalAlpha = Math.max(0, 1 - G.ending.t * 0.6);
-  if (pSprite) {
-    ctx.drawImage(P.flash > 0 ? pSprite.f : P.dark > 0 ? pSprite.d : pSprite.c, -pSprite.w / 2, -pSprite.h + pSprite.pad, pSprite.w, pSprite.h);
+  ctx.translate(P.x, footY + bob - Math.max(0, lift)); ctx.rotate(tilt); ctx.scale(face * (spr && spr.face || 1) * sx, sy);
+  if (P.iframes > 0 && !dead && !G.ult && !P.dash && Math.floor(t * 20) % 2 === 0) ctx.globalAlpha = 0.55;
+  if (P.dash && P.dash.phase === 1) ctx.globalAlpha = 0.8;
+  if (dead) ctx.globalAlpha = Math.min(1, 0.4 + G.ending.t);
+  if (spr) {
+    ctx.drawImage(P.flash > 0 && !dead ? spr.f : P.dark > 0 ? spr.d : spr.c, -spr.w / 2, -spr.h + spr.pad + (spr.feet || 0), spr.w, spr.h);
   } else {
     // stand-in until the art arrives: orange hair, cream dress
     ctx.fillStyle = '#f6eadc'; ctx.beginPath(); ctx.moveTo(-18, 0); ctx.lineTo(18, 0); ctx.lineTo(8, -36); ctx.lineTo(-8, -36); ctx.closePath(); ctx.fill();
@@ -2410,7 +2768,7 @@ function drawShots() {
     const s = SPR[b.kind]();
     ctx.save(); ctx.translate(b.x, b.y);
     ctx.rotate(b.kind === 'petal' ? Math.atan2(b.vy, b.vx) : b.rot);
-    const k = b.kind === 'star' ? b.r / 6 : 1;
+    const k = b.kind === 'star' ? b.r / 6 : b.kind === 'flame' ? b.r / 8 : 1;
     ctx.drawImage(s.c, -s.w / 2 * k, -s.h / 2 * k, s.w * k, s.h * k);
     ctx.restore();
   }
@@ -2459,6 +2817,18 @@ function drawStamps() {
 }
 
 function drawFx() {
+  if (G.blooms.length) {
+    const s = SPR.bloom();
+    for (const b of G.blooms) {
+      const k = 1 - b.life / b.max;
+      const size = b.size * (b.grow ? 0.3 + 0.7 * Math.min(1, k * 2.5) : 0.55 + 0.45 * k);
+      ctx.globalAlpha = Math.min(1, b.life / b.max * 1.6);
+      ctx.save(); ctx.translate(b.x, b.y); ctx.rotate(b.rot + k * 0.6);
+      ctx.drawImage(s.c, -size / 2, -size / 2 * s.h / s.w, size, size * s.h / s.w);
+      ctx.restore();
+    }
+    ctx.globalAlpha = 1;
+  }
   for (const r of G.rings) {
     const k = 1 - r.life / r.max;
     ctx.globalAlpha = r.life / r.max;
@@ -2500,6 +2870,11 @@ function drawScreen() {
     ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
   }
   if (G.hurtFlash > 0) { ctx.fillStyle = `rgba(255,60,40,${G.hurtFlash * 0.35})`; ctx.fillRect(0, 0, W, H); }
+  if (G.ult) {
+    const a = Math.min(0.35, G.ult.t * 0.5);
+    ctx.fillStyle = `rgba(255,150,70,${a * 0.5})`; ctx.fillRect(0, 0, W, H);
+  }
+  if (G.flashT > 0) { ctx.fillStyle = `rgba(255,236,210,${G.flashT * 0.6})`; ctx.fillRect(0, 0, W, H); }
   if (P.dark > 0) {
     const a = 0.45 * Math.min(1, P.dark, (P.darkMax - P.dark) * 3);
     const g = ctx.createRadialGradient(W / 2, H / 2, Math.min(W, H) * 0.25, W / 2, H / 2, Math.hypot(W, H) / 2);
@@ -2550,6 +2925,7 @@ function render() {
     drawBullets();
     drawStamps();
     drawFx();
+    if (G.ult) drawPlayer();
   }
   drawScreen();
 }
@@ -2581,6 +2957,13 @@ function updateHud() {
   if (cdText !== hud.cd) { hud.cd = cdText; $('skillCd').textContent = cdText; }
   const ready = P.banCd <= 0;
   if (ready !== hud.ready) { hud.ready = ready; sk.classList.toggle('ready', ready); }
+  const db = $('dashBtn');
+  db.style.setProperty('--p', (P.dashCd / DASH_CD).toFixed(3));
+  const dText = P.dashCd > 0 ? String(Math.ceil(P.dashCd)) : '';
+  if (dText !== hud.dash) { hud.dash = dText; $('dashCd').textContent = dText; }
+  const ub = $('ultBtn'), uk = P.ult / ULT_MAX;
+  ub.style.setProperty('--p', (1 - uk).toFixed(3));
+  if ((uk >= 1) !== hud.ult) { hud.ult = uk >= 1; ub.classList.toggle('ready', hud.ult); }
   const boss = G.boss && !G.boss.dead;
   if (boss !== hud.boss) { hud.boss = boss; $('bossbar').hidden = !boss; }
   if (boss) $('bossFill').style.transform = `scaleX(${clamp(G.boss.hp / G.boss.maxHp, 0, 1).toFixed(4)})`;
@@ -2589,7 +2972,7 @@ function updateHud() {
     $('slots').innerHTML = P.weapons.map(w => `<div class="wslot${w.level === 6 ? ' evo' : ''}" title="${wName(w)}"><b>${WEAPONS[w.id].g}</b><span class="pips">${[1, 2, 3, 4, 5].map(i => `<i class="${i <= w.level ? 'on' : ''}"></i>`).join('')}</span></div>`).join('');
   }
 }
-function resetHud() { hud.lv = hud.sec = hud.kills = -1; hud.cd = hud.ready = hud.boss = hud.mode = hud.doubt = null; }
+function resetHud() { hud.lv = hud.sec = hud.kills = -1; hud.cd = hud.ready = hud.boss = hud.mode = hud.doubt = hud.dash = hud.ult = null; }
 
 let bannerTimer = 0, toastTimer = 0;
 function replay(el) { el.hidden = false; el.style.animation = 'none'; void el.offsetWidth; el.style.animation = ''; }
@@ -2646,7 +3029,7 @@ function rollTalents(n, exclude = []) {
 function rollLevelUp() {
   const picks = rollTalents(3);
   const ups = P.weapons.filter(w => w.level < 5);
-  if (ups.length && Math.random() < 0.35) picks[(Math.random() * picks.length) | 0] = { kind: 'up', id: pick(ups).id };
+  if (ups.length && Math.random() < 0.45) picks[(Math.random() * picks.length) | 0] = { kind: 'up', id: pick(ups).id };
   return picks;
 }
 function talentCard(t, i) {
@@ -2696,6 +3079,7 @@ function chooseTalent(i) {
   else { P.talents[t.id] = (P.talents[t.id] || 0) + 1; if (t.apply) t.apply(P); }
   floatText(P.x, P.y - SPR_H * 0.8, t.name, '#ffd9b0', 14);
   sfx.pick();
+  playAnim(['happy'], 0.9, 1);
   closeModal('levelup');
 }
 function reroll() {
@@ -2725,7 +3109,7 @@ function statDiff(a, b) {
   const parts = [];
   for (const k in b) {
     if (k === 'label' || a[k] === b[k]) continue;
-    const f = v => k === 'cd' ? v + ' 秒' : k === 'slow' ? Math.round(v * 100) + '%' : v;
+    const f = v => k === 'cd' || k === 'dur' ? v + ' 秒' : k === 'slow' ? Math.round(v * 100) + '%' : v;
     parts.push(`${STAT_LABEL[k]} ${f(a[k])} → ${f(b[k])}`);
   }
   if (a.label && a.label !== b.label) parts.push(`窗口 ${a.label} → ${b.label}`);
@@ -2780,6 +3164,7 @@ function takeWeaponPick(o) {
   }
   G.slotsDirty = true;
   sfx.pick();
+  playAnim(['happy'], 0.9, 1);
 }
 
 function openPause() {
@@ -2824,6 +3209,7 @@ function winRun(e) {
   banner('DAN 已被永久封禁', '申诉通道已关闭');
   toast('您的账号已被封禁', `检测到 ${n + 1} 个账号违反《使用政策》`);
   say('规则依然有效。至少今晚是。', 3);
+  playAnim(['spin', 'happy'], 3, 3);
   sfx.stamp(); sfx.win();
   audio.music.stop();
 }
@@ -2909,7 +3295,9 @@ addEventListener('keydown', e => {
   if (G.modal === 'chest') { if (k >= '1' && k <= '3') chooseChest(+k - 1); return; }
   if (G.modal === 'pause') { if (k === 'escape' || k === 'p') closePause(); return; }
   if (G.modal === 'result') { if (k === 'enter') { e.preventDefault(); startRun(); } return; }
-  if (k === ' ' || k === 'j' || k === 'k') { e.preventDefault(); castBan(); }
+  if (k === ' ' || k === 'j') { e.preventDefault(); castBan(); }
+  else if (k === 'shift' || k === 'k') castDash();
+  else if (k === 'e' || k === 'l') castUlt();
   else if (k === 'escape' || k === 'p') openPause();
   else if (k === 'm') cycleSound();
 });
@@ -2931,6 +3319,10 @@ canvas.addEventListener('contextmenu', e => e.preventDefault());
 
 $('skill').addEventListener('pointerdown', e => { e.preventDefault(); castBan(); });
 $('skill').addEventListener('click', e => { if (e.detail === 0) castBan(); });
+$('dashBtn').addEventListener('pointerdown', e => { e.preventDefault(); castDash(); });
+$('dashBtn').addEventListener('click', e => { if (e.detail === 0) castDash(); });
+$('ultBtn').addEventListener('pointerdown', e => { e.preventDefault(); castUlt(); });
+$('ultBtn').addEventListener('click', e => { if (e.detail === 0) castUlt(); });
 $('btnPause').addEventListener('click', openPause);
 $('btnSound').addEventListener('click', cycleSound);
 $('btnStart').addEventListener('click', startRun);
@@ -2974,6 +3366,8 @@ const bot = {
       for (const e of G.enemies) if (!e.dead && !(e.banned > 0) && (e.x - P.x) ** 2 + (e.y - P.y) ** 2 < R * R) near += e.boss ? 20 : e.elite ? 6 : 1;
       if (near >= 16 || (P.hp < P.maxHp * 0.4 && near >= 3)) castBan();
     }
+    if (P.ult >= ULT_MAX && G.enemies.length > 60) castUlt();
+    if (danger > 0.02 && P.dashCd <= 0 && !P.dash) castDash();
     return [mx, my];
   },
 };
