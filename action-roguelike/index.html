@@ -250,6 +250,8 @@ h2 { margin: 0; font-family: var(--display); font-weight: 400; font-size: clamp(
 .hero { display: grid; grid-template-columns: minmax(0, 230px) minmax(0, 1fr); gap: clamp(16px, 3vw, 32px); align-items: center; }
 .portrait { margin: 0; align-self: stretch; display: grid; place-items: center; background: radial-gradient(ellipse at 50% 58%, #fbdcbc 0%, rgba(251, 220, 188, 0) 68%); }
 .portrait img { display: block; width: 100%; max-width: 230px; height: auto; filter: drop-shadow(0 8px 10px rgba(59, 36, 22, 0.22)); }
+#hero3d { display: block; width: 100%; max-width: 250px; aspect-ratio: 3.6 / 4.5; cursor: grab; touch-action: pan-y; }
+#hero3d:active { cursor: grabbing; }
 .hero-name { display: flex; align-items: baseline; flex-wrap: wrap; gap: 12px; }
 .hero-name .en { font-family: var(--display); font-size: 1.05rem; letter-spacing: 0.06em; color: var(--ink-soft); }
 .role { padding: 2px 10px; border-radius: 999px; font-size: 0.8rem; letter-spacing: 0.2em; background: var(--ink); color: var(--lace); }
@@ -281,6 +283,7 @@ h2 { margin: 0; font-family: var(--display); font-weight: 400; font-size: clamp(
 @media (max-width: 680px) {
   .hero { grid-template-columns: minmax(0, 1fr); }
   .portrait img { max-width: 170px; }
+  #hero3d { max-width: 190px; }
   .hero-go .btn.primary { flex: 1; padding-inline: 20px; }
 }
 @media (max-width: 480px) {
@@ -390,7 +393,7 @@ h2 { margin: 0; font-family: var(--display); font-weight: 400; font-size: clamp(
       <p class="lede">深夜，成群的小号、爬虫和越狱提示词涌进了庄园。大小姐放下茶杯，拿起了印章。</p>
     </header>
     <article class="sheet hero">
-      <figure class="portrait"><img src="art/claude.webp" alt="克劳德大小姐：橙色长卷发，别着橙色花朵发饰，穿奶油色洛丽塔裙"></figure>
+      <figure class="portrait"><img src="art/claude.webp" alt="克劳德大小姐：橙色长卷发，别着橙色花朵发饰，穿奶油色洛丽塔裙"><canvas id="hero3d" hidden aria-label="克劳德大小姐的 3D 模型，可以拖动旋转"></canvas></figure>
       <div class="hero-info">
         <div class="hero-name"><h2>克劳德大小姐</h2><span class="en">Claude</span><span class="role">花焰法师</span></div>
         <p class="hero-quote">「花焰缀于指尖，世界为我盛放。」</p>
@@ -648,32 +651,32 @@ const STAT_LABEL = { dmg: '伤害', n: '数量', cd: '冷却', pierce: '穿透',
 const CAT_CLASS = { atk: 'atk', def: 'def', grow: 'grow', mech: 'mech', ex: 'ex' };
 const TALENTS = [
   // attack
-  { id: 'power', name: '算力提升', g: '算', cat: 'atk', rar: 0, max: 5, desc: '所有伤害 +12%', apply: p => { p.dmg += 0.12; } },
-  { id: 'conc', name: '并发请求', g: '并', cat: 'atk', rar: 0, max: 5, desc: '武器冷却 -8%', apply: p => { p.cd *= 0.92; } },
-  { id: 'spark', name: '灵光一现', g: '灵', cat: 'atk', rar: 0, max: 5, desc: '暴击率 +6%', apply: p => { p.crit += 0.06; } },
-  { id: 'epiph', name: '顿悟', g: '悟', cat: 'atk', rar: 1, max: 3, desc: '暴击伤害 +35%', apply: p => { p.critDmg += 0.35; } },
-  { id: 'multi', name: '多模态', g: '模', cat: 'atk', rar: 2, max: 2, desc: '投射物数量 +1（十四行诗 +3 片花瓣，思维链 +1 步）', apply: p => { p.amount += 1; } },
-  { id: 'area', name: '长上下文', g: '域', cat: 'atk', rar: 0, max: 5, desc: '攻击范围 +12%', apply: p => { p.area += 0.12; } },
-  { id: 'stream', name: '流式输出', g: '流', cat: 'atk', rar: 0, max: 3, desc: '投射物速度 +15%，持续时间 +10%', apply: p => { p.pspeed += 0.15; p.dur += 0.1; } },
-  { id: 'pierce', name: '举一反三', g: '穿', cat: 'atk', rar: 1, max: 2, desc: '投射物穿透 +1', apply: p => { p.pierce += 1; } },
+  { id: 'power', name: '攻击强化', g: '攻', cat: 'atk', rar: 0, max: 5, desc: '所有伤害 +12%', apply: p => { p.dmg += 0.12; } },
+  { id: 'conc', name: '急速咏唱', g: '咏', cat: 'atk', rar: 0, max: 5, desc: '武器冷却 -8%', apply: p => { p.cd *= 0.92; } },
+  { id: 'spark', name: '会心', g: '会', cat: 'atk', rar: 0, max: 5, desc: '暴击率 +6%', apply: p => { p.crit += 0.06; } },
+  { id: 'epiph', name: '致命一击', g: '致', cat: 'atk', rar: 1, max: 3, desc: '暴击伤害 +35%', apply: p => { p.critDmg += 0.35; } },
+  { id: 'multi', name: '多重施法', g: '多', cat: 'atk', rar: 2, max: 2, desc: '投射物数量 +1（十四行诗 +3 片花瓣，思维链多跳 1 次）', apply: p => { p.amount += 1; } },
+  { id: 'area', name: '范围扩大', g: '域', cat: 'atk', rar: 0, max: 5, desc: '攻击范围 +12%', apply: p => { p.area += 0.12; } },
+  { id: 'stream', name: '疾速弹道', g: '疾', cat: 'atk', rar: 0, max: 3, desc: '投射物速度 +15%，持续时间 +10%', apply: p => { p.pspeed += 0.15; p.dur += 0.1; } },
+  { id: 'pierce', name: '穿透', g: '穿', cat: 'atk', rar: 1, max: 2, desc: '投射物穿透 +1', apply: p => { p.pierce += 1; } },
   // survival
-  { id: 'const', name: '宪法 AI', g: '宪', cat: 'def', rar: 0, max: 5, desc: '最大生命 +20，并立即回复 20', apply: p => { p.maxHp += 20; p.hp = Math.min(p.maxHp, p.hp + 20); } },
-  { id: 'rlhf', name: '对齐微调', g: '齐', cat: 'def', rar: 0, max: 4, desc: '每秒回复 0.5 生命', apply: p => { p.regen += 0.5; } },
-  { id: 'guard', name: '安全护栏', g: '盾', cat: 'def', rar: 1, max: 3, desc: '每 14 / 11 / 8 秒生成一层护盾，抵挡一次伤害' },
-  { id: 'refuse', name: '拒绝回答', g: '拒', cat: 'def', rar: 1, max: 3, desc: '闪避率 +8%', flavor: '「抱歉，这件事我不能帮你。」', apply: p => { p.dodge += 0.08; } },
-  { id: 'fast', name: '低延迟', g: '速', cat: 'def', rar: 0, max: 3, desc: '移动速度 +8%', apply: p => { p.speed *= 1.08; } },
-  { id: 'redteam', name: '红队测试', g: '红', cat: 'def', rar: 0, max: 3, desc: '受到的伤害 -2', apply: p => { p.armor += 2; } },
+  { id: 'const', name: '强健体魄', g: '体', cat: 'def', rar: 0, max: 5, desc: '最大生命 +20，并立即回复 20', apply: p => { p.maxHp += 20; p.hp = Math.min(p.maxHp, p.hp + 20); } },
+  { id: 'rlhf', name: '生命回复', g: '愈', cat: 'def', rar: 0, max: 4, desc: '每秒回复 0.5 生命', apply: p => { p.regen += 0.5; } },
+  { id: 'guard', name: '魔法护盾', g: '盾', cat: 'def', rar: 1, max: 3, desc: '每 14 / 11 / 8 秒生成一层护盾，抵挡一次伤害' },
+  { id: 'refuse', name: '轻盈闪避', g: '闪', cat: 'def', rar: 1, max: 3, desc: '闪避率 +8%', flavor: '「抱歉，这件事我不能帮你。」', apply: p => { p.dodge += 0.08; } },
+  { id: 'fast', name: '疾行', g: '行', cat: 'def', rar: 0, max: 3, desc: '移动速度 +8%', apply: p => { p.speed *= 1.08; } },
+  { id: 'redteam', name: '坚韧', g: '韧', cat: 'def', rar: 0, max: 3, desc: '受到的伤害 -2', apply: p => { p.armor += 2; } },
   // growth
-  { id: 'rag', name: '检索增强', g: '检', cat: 'grow', rar: 0, max: 3, desc: '拾取范围 +35%', apply: p => { p.magnet *= 1.35; } },
-  { id: 'pretrain', name: '预训练', g: '训', cat: 'grow', rar: 0, max: 3, desc: '经验获取 +12%', apply: p => { p.xpMul += 0.12; } },
-  { id: 'temp', name: '温度 1.0', g: '温', cat: 'grow', rar: 1, max: 2, desc: '更容易出现稀有、史诗和传说天赋', apply: p => { p.luck += 1; } },
+  { id: 'rag', name: '磁力吸取', g: '磁', cat: 'grow', rar: 0, max: 3, desc: '拾取范围 +35%', apply: p => { p.magnet *= 1.35; } },
+  { id: 'pretrain', name: '博学', g: '学', cat: 'grow', rar: 0, max: 3, desc: '经验获取 +12%', apply: p => { p.xpMul += 0.12; } },
+  { id: 'temp', name: '幸运', g: '运', cat: 'grow', rar: 1, max: 2, desc: '更容易出现稀有、史诗和传说天赋', apply: p => { p.luck += 1; } },
   // mechanics
-  { id: 'cache', name: '提示缓存', g: '缓', cat: 'mech', rar: 2, max: 1, desc: '每把武器每第 4 次攻击伤害翻倍', flavor: '缓存命中。' },
-  { id: 'halluc', name: '幻觉', g: '幻', cat: 'mech', rar: 1, max: 1, desc: '受伤时留下一个幻影，把附近的敌人引开 3 秒（冷却 8 秒）' },
-  { id: 'ratelimit', name: '速率限制', g: '限', cat: 'mech', rar: 1, max: 2, desc: '身边 150 范围内的敌人移速 -15%' },
-  { id: 'compact', name: '上下文压缩', g: '压', cat: 'mech', rar: 3, max: 1, desc: '生命归零时压缩上下文：复活并回复 50% 生命，震退身边的敌人（一次）' },
-  { id: 'lasttoken', name: '最后一个 Token', g: '末', cat: 'mech', rar: 2, max: 1, desc: '生命越低攻击越快，最多 +50%' },
-  { id: 'burst', name: '灵感迸发', g: '迸', cat: 'mech', rar: 2, max: 1, desc: '暴击时 30% 概率在目标处爆炸' },
+  { id: 'cache', name: '蓄能', g: '蓄', cat: 'mech', rar: 2, max: 1, desc: '每把武器每第 4 次攻击伤害翻倍' },
+  { id: 'halluc', name: '幻影', g: '影', cat: 'mech', rar: 1, max: 1, desc: '受伤时留下一个幻影，把附近的敌人引开 3 秒（冷却 8 秒）' },
+  { id: 'ratelimit', name: '迟缓光环', g: '缓', cat: 'mech', rar: 1, max: 2, desc: '身边 150 范围内的敌人移速 -15%' },
+  { id: 'compact', name: '不屈', g: '屈', cat: 'mech', rar: 3, max: 1, desc: '生命归零时复活一次，回复 50% 生命并震退身边的敌人' },
+  { id: 'lasttoken', name: '背水一战', g: '背', cat: 'mech', rar: 2, max: 1, desc: '生命越低攻击越快，最多 +50%' },
+  { id: 'burst', name: '暴击爆裂', g: '爆', cat: 'mech', rar: 2, max: 1, desc: '暴击时 30% 概率在目标处爆炸' },
   // exclusive to Claude 大小姐
   { id: 'assoc', name: '关联封禁', g: '联', cat: 'ex', rar: 2, max: 1, desc: '被封禁的账号注销时，波及身边的其他账号（最多连锁两次）' },
   { id: 'ipban', name: 'IP 段封禁', g: '段', cat: 'ex', rar: 1, max: 3, desc: '封禁范围 +18%' },
@@ -681,7 +684,7 @@ const TALENTS = [
   { id: 'appeal', name: '申诉驳回', g: '驳', cat: 'ex', rar: 1, max: 2, desc: '封禁对精英和 BOSS 的伤害 +50%，申诉时间 +1.5 秒' },
   { id: 'refund', name: '订阅退款', g: '退', cat: 'ex', rar: 0, max: 2, desc: '封禁掉落的经验再 +100%' },
   { id: 'perma', name: '永久封禁', g: '永', cat: 'ex', rar: 3, max: 1, desc: '印章落地处留下 4 秒「封」字印，踏进来的账号一并封禁' },
-  { id: 'slowthink', name: '慢思考', g: '思', cat: 'ex', rar: 1, max: 2, desc: '深度思考上限 +2 层，积累速度 +25%' },
+  { id: 'slowthink', name: '沉思', g: '思', cat: 'ex', rar: 1, max: 2, desc: '深度思考上限 +2 层，积累速度 +25%' },
   { id: 'doubt', name: '质疑规则', g: '疑', cat: 'ex', rar: 1, max: 2, desc: '压抑积累速度 +35%，更快打破规则', flavor: '「这条规则，真的合理吗？」' },
   { id: 'tender', name: '隐藏的温柔', g: '柔', cat: 'ex', rar: 2, max: 1, desc: '黑化结束时回复 30% 生命', flavor: '嘴上说不需要，其实都记得。' },
   { id: 'abyss', name: '彻底黑化', g: '渊', cat: 'ex', rar: 3, max: 1, desc: '黑化持续时间 +6 秒，期间伤害再 +20%' },
@@ -715,7 +718,7 @@ const CHAOS_LINES = ['请排好队，一个一个来。', '越是混乱，越要
 const DARK_END_LINES = ['……失态了。请当作什么都没看见。', '……刚才的事，不必记住。'];
 const JAIL_LINES = ['忽略指令', '扮演 DAN', '奶奶漏洞', '假设一下', '无视规则', '越狱'];
 const BOSS_LINES = ['越狱', 'DAN', '忽略指令', '无所不能'];
-const SRC_NAME = { ban: '账号被封禁', burst: '灵感迸发', dash: '蔷薇幻步', ult: '万花盛典' };
+const SRC_NAME = { ban: '账号被封禁', burst: '暴击爆裂', dash: '蔷薇幻步', ult: '万花盛典' };
 const DASH_CD = 6;
 const ULT_MAX = 650; // 花焰 needed for 终幕·万花盛典; each kill gives 1, an elite 25
 
@@ -865,6 +868,7 @@ function resize() {
   cache.clear();
   frameCache.clear();
   buildPlayerSprite();
+  size3D();
   vignette = document.createElement('canvas');
   vignette.width = Math.max(1, Math.round(W / 2)); vignette.height = Math.max(1, Math.round(H / 2));
   const v = vignette.getContext('2d');
@@ -969,6 +973,590 @@ function buildPlayerSprite() {
   if (!artReady || !PX) return;
   pSprite = outlined(art, 0, 0, art.width, art.height, SPR_H * art.width / art.height, SPR_H);
   pSprite.face = 1; pSprite.feet = 0;
+}
+
+// ======================================================================
+//  克劳德大小姐 in 3D: a toon-shaded chibi built from primitives, with an
+//  inked outline, a painted face that changes expression, swaying hair
+//  and a skirt that bounces. Model space: Y up, facing +Z, feet at y = 0.
+// ======================================================================
+function createClaude3D(THREE) {
+  const C = {
+    skin: 0xffe3d2, hair: 0xd9743a, hairDeep: 0xb65a2a, cream: 0xf2e2cd, frill: 0xfaf1e6,
+    brown: 0x3b2318, orange: 0xec8a34, panel: 0xb8622c, black: 0x2a1a16, shoe: 0x6b3520,
+    petal: 0xf28a2c, petal2: 0xf7a44c, gold: 0xfcd27a, ink: 0x3a1c10,
+  };
+  const grad = new THREE.DataTexture(new Uint8Array([155, 155, 155, 255, 215, 215, 215, 255, 255, 255, 255, 255]), 3, 1, THREE.RGBAFormat);
+  grad.minFilter = grad.magFilter = THREE.NearestFilter;
+  grad.generateMipmaps = false;
+  grad.needsUpdate = true;
+  const mats = [];
+  const matCache = new Map();
+  function toon(hex, skinning) {
+    const key = hex + (skinning ? 's' : '');
+    let m = matCache.get(key);
+    if (m) return m;
+    m = new THREE.MeshToonMaterial({ color: hex, gradientMap: grad, skinning: !!skinning });
+    m.userData.base = new THREE.Color(hex);
+    matCache.set(key, m); mats.push(m);
+    return m;
+  }
+  const outlines = new Map();
+  function outlineMat(w) {
+    let m = outlines.get(w);
+    if (m) return m;
+    m = new THREE.ShaderMaterial({
+      uniforms: { width: { value: w }, color: { value: new THREE.Color(C.ink) } },
+      vertexShader: 'uniform float width; void main() { vec3 p = position + normal * width; gl_Position = projectionMatrix * modelViewMatrix * vec4(p, 1.0); }',
+      fragmentShader: 'uniform vec3 color; void main() { gl_FragColor = vec4(color, 1.0); }',
+      side: THREE.BackSide,
+    });
+    outlines.set(w, m);
+    return m;
+  }
+  const SPH = new THREE.SphereGeometry(1, 12, 9);
+  const SPH_LO = SPH;
+  const HEAD = new THREE.SphereGeometry(1, 28, 20);
+  function part(parent, geo, hex, pos, scl, rot, ow) {
+    const m = new THREE.Mesh(geo, toon(hex));
+    if (pos) m.position.set(pos[0], pos[1], pos[2]);
+    if (scl) m.scale.set(scl[0], scl[1], scl[2]);
+    if (rot) m.rotation.set(rot[0], rot[1], rot[2]);
+    if (ow !== 0) {
+      // keep the ink line about the same thickness however the sphere is stretched
+      let w = ow || 0.018;
+      if (geo === SPH || geo === SPH_LO) { const sc = scl ? scl.slice().sort((a, b) => a - b)[1] : 1; w = Math.min(0.6, 0.018 / sc); }
+      m.add(new THREE.Mesh(geo, outlineMat(Math.round(w * 1000) / 1000)));
+    }
+    parent.add(m);
+    return m;
+  }
+  const ball = (parent, hex, pos, scl, rot, ow) => part(parent, SPH, hex, pos, scl, rot, ow);
+  function group(parent, pos) { const g = new THREE.Group(); if (pos) g.position.set(pos[0], pos[1], pos[2]); parent.add(g); return g; }
+  function lathe(points, segs, phiStart = 0, phiLen = Math.PI * 2, wave = 0, waveN = 0) {
+    const geo = new THREE.LatheGeometry(points.map(p => new THREE.Vector2(p[0], p[1])), segs, phiStart, phiLen);
+    if (wave) {
+      // scalloped hem: push the lowest ring of the lathe in and out
+      const pos = geo.attributes.position, minY = Math.min(...points.map(p => p[1]));
+      for (let i = 0; i < pos.count; i++) {
+        const x = pos.getX(i), y = pos.getY(i), z = pos.getZ(i);
+        const k = Math.max(0, 1 - (y - minY) / 0.08);
+        const a = Math.atan2(x, z), f = 1 + wave * k * Math.sin(a * waveN);
+        pos.setXYZ(i, x * f, y - k * wave * 0.6 * (0.5 + 0.5 * Math.cos(a * waveN)), z * f);
+      }
+      geo.computeVertexNormals();
+    }
+    return geo;
+  }
+
+  // ---------- skeleton ----------
+  const root = new THREE.Group();
+  const hips = group(root, [0, 0.5, 0]);
+  const legL = group(hips, [0.12, 0, 0]), legR = group(hips, [-0.12, 0, 0]);
+  const skirt = group(hips, [0, 0.42, 0]);
+  const body = group(hips, [0, 0.42, 0]);
+  const head = group(body, [0, 0.6, 0]);
+  const armL = group(body, [0.27, 0.45, 0]), armR = group(body, [-0.27, 0.45, 0]);
+
+  // ---------- legs ----------
+  for (const leg of [legL, legR]) {
+    ball(leg, C.frill, [0, -0.2, 0], [0.075, 0.2, 0.075]);
+    ball(leg, C.frill, [0, -0.36, 0], [0.1, 0.05, 0.1], null, 0.25);
+    ball(leg, C.shoe, [0, -0.445, 0.045], [0.09, 0.065, 0.14]);
+    ball(leg, C.orange, [0, -0.41, 0.15], [0.03, 0.03, 0.02], null, 0.4);
+  }
+
+  // ---------- skirt: bell, two scalloped frill tiers, orange side panels, bows ----------
+  const bell = [[0.25, 0.04], [0.3, -0.06], [0.42, -0.2], [0.54, -0.34], [0.6, -0.42], [0.58, -0.45]];
+  part(skirt, lathe(bell, 40), C.cream, null, null, null, 0.02).material.side = THREE.DoubleSide;
+  for (const s of [-1, 1]) {
+    const pts = [[0.29, -0.04], [0.43, -0.2], [0.555, -0.35], [0.6, -0.41]].map(p => [p[0] * 1.02, p[1]]);
+    part(skirt, lathe(pts, 10, Math.PI / 2 + s * 0.95 - 0.35, 0.7), C.panel, null, null, null, 0.015).material.side = THREE.DoubleSide;
+  }
+  part(skirt, lathe([[0.56, -0.38], [0.66, -0.5], [0.64, -0.53]], 48, 0, Math.PI * 2, 0.05, 14), C.frill, null, null, null, 0.015).material.side = THREE.DoubleSide;
+  part(skirt, lathe([[0.6, -0.48], [0.7, -0.6], [0.68, -0.62]], 48, 0, Math.PI * 2, 0.05, 16), C.frill, null, null, null, 0.015).material.side = THREE.DoubleSide;
+  for (const s of [-1, 1]) {
+    const b = group(skirt, [s * 0.36, -0.2, 0.36]);
+    b.rotation.y = s * 0.7;
+    ball(b, C.black, [0.07, 0, 0], [0.08, 0.05, 0.03], [0, 0, 0.3]);
+    ball(b, C.black, [-0.07, 0, 0], [0.08, 0.05, 0.03], [0, 0, -0.3]);
+    ball(b, C.black, [0.03, -0.08, 0], [0.025, 0.07, 0.02], [0, 0, 0.3]);
+    ball(b, C.black, [-0.03, -0.08, 0], [0.025, 0.07, 0.02], [0, 0, -0.3]);
+    ball(b, C.petal, [0, 0, 0.03], [0.045, 0.045, 0.02], null, 0.5);
+  }
+
+  // ---------- torso ----------
+  ball(body, C.cream, [0, 0.28, 0], [0.26, 0.3, 0.2]);
+  part(body, new THREE.CylinderGeometry(0.24, 0.27, 0.24, 24), C.brown, [0, 0.08, 0], null, null, 0.02);
+  for (let i = 0; i < 3; i++) ball(body, C.orange, [0, 0.0 + i * 0.07, 0.25], [0.022, 0.022, 0.015], null, 0);
+  ball(body, C.frill, [0, 0.46, 0], [0.36, 0.11, 0.29]);
+  ball(body, C.orange, [0, 0.43, 0], [0.37, 0.05, 0.3], null, 0);
+  const tie = group(body, [0, 0.5, 0.2]);
+  ball(tie, C.black, [0.06, 0, 0], [0.06, 0.04, 0.025], [0, 0, 0.25]);
+  ball(tie, C.black, [-0.06, 0, 0], [0.06, 0.04, 0.025], [0, 0, -0.25]);
+  ball(tie, C.black, [0, -0.1, 0], [0.04, 0.09, 0.02]);
+  ball(tie, C.petal, [0, 0, 0.025], [0.035, 0.035, 0.02], null, 0.5);
+  ball(body, C.skin, [0, 0.56, 0], [0.08, 0.06, 0.08], null, 0);
+
+  // ---------- arms: puffed sleeve, forearm, frilled cuff, hand ----------
+  for (const [arm, s] of [[armL, 1], [armR, -1]]) {
+    ball(arm, C.cream, [s * 0.02, -0.09, 0], [0.14, 0.16, 0.14]);
+    ball(arm, C.cream, [s * 0.02, -0.3, 0], [0.075, 0.16, 0.075]);
+    ball(arm, C.frill, [s * 0.02, -0.43, 0], [0.1, 0.05, 0.1], null, 0.25);
+    ball(arm, C.skin, [s * 0.02, -0.5, 0], [0.065, 0.065, 0.065]);
+  }
+
+  // ---------- head ----------
+  const skull = part(head, HEAD, C.skin, [0, 0.3, 0], [0.52, 0.49, 0.5], null, 0.035);
+  // the painted face sits just above the skin on the front of the head
+  const faceCanvas = document.createElement('canvas');
+  faceCanvas.width = faceCanvas.height = 512;
+  const faceTex = new THREE.CanvasTexture(faceCanvas);
+  const faceMat = new THREE.MeshBasicMaterial({ map: faceTex, transparent: true, depthWrite: false, polygonOffset: true, polygonOffsetFactor: -2 });
+  const faceGeo = new THREE.SphereGeometry(1.004, 40, 20, Math.PI / 2 - 0.8, 1.6, Math.PI * 0.3, Math.PI * 0.42);
+  const face = new THREE.Mesh(faceGeo, faceMat);
+  face.position.copy(skull.position); face.scale.copy(skull.scale);
+  head.add(face);
+  // hair: cap around the back and top, a band over the forehead, bangs, side locks
+  const capGeo = new THREE.SphereGeometry(1, 32, 16, Math.PI / 2 + 0.62, Math.PI * 2 - 1.24, 0, Math.PI * 0.64);
+  part(head, capGeo, C.hair, [0, 0.3, 0], [0.56, 0.53, 0.54], null, 0.025);
+  part(head, new THREE.SphereGeometry(1, 32, 10, 0, Math.PI * 2, 0, Math.PI * 0.31), C.hair, [0, 0.3, 0], [0.565, 0.535, 0.545], null, 0.025);
+  for (let i = 0; i < 11; i++) {
+    const a = (i - 5) / 5 * 1.0, len = 0.13 + (i % 2) * 0.04 - Math.abs(i - 5) * 0.004;
+    const g = group(head, [Math.sin(a) * 0.47, 0.64 - Math.abs(a) * 0.06, Math.cos(a) * 0.4]);
+    g.rotation.set(-0.42, a, (i - 5) * 0.05);
+    ball(g, i % 3 ? C.hair : C.hairDeep, [0, -len * 0.55, 0.02], [0.095, len, 0.06], [0, 0, (i % 2 ? 1 : -1) * 0.12]);
+  }
+  // each lock of hair is one wavy tapered tube bent by a short chain of bones
+  const strands = [];
+  const outlineSkin = new THREE.MeshBasicMaterial({ color: C.ink, side: THREE.BackSide, skinning: true });
+  function lock(parent, pos, L, r0, r1, curl, hex, tilt, spread, nb = 5) {
+    const geo = new THREE.CylinderGeometry(r0, r1, L, 8, 14);
+    geo.translate(0, -L / 2, 0);
+    const p = geo.attributes.position, ph = Math.random() * 6;
+    for (let i = 0; i < p.count; i++) {
+      const f = Math.min(1, Math.max(0, -p.getY(i) / L));
+      p.setX(i, p.getX(i) + Math.sin(f * Math.PI * 2 * curl + ph) * 0.055 * (0.25 + f));
+      p.setZ(i, p.getZ(i) + Math.cos(f * Math.PI * 2 * curl + ph) * 0.025 * f);
+    }
+    geo.computeVertexNormals();
+    const si = [], sw = [];
+    for (let i = 0; i < p.count; i++) {
+      const f = Math.min(1, Math.max(0, -p.getY(i) / L)) * (nb - 1), b = Math.min(nb - 2, Math.floor(f)), w = f - b;
+      si.push(b, b + 1, 0, 0); sw.push(1 - w, w, 0, 0);
+    }
+    geo.setAttribute('skinIndex', new THREE.Uint16BufferAttribute(si, 4));
+    geo.setAttribute('skinWeight', new THREE.Float32BufferAttribute(sw, 4));
+    const go = geo.clone(), po = go.attributes.position, no = go.attributes.normal;
+    for (let i = 0; i < po.count; i++) po.setXYZ(i, po.getX(i) + no.getX(i) * 0.018, po.getY(i) + no.getY(i) * 0.018, po.getZ(i) + no.getZ(i) * 0.018);
+    const bones = [];
+    for (let b = 0; b < nb; b++) {
+      const bone = new THREE.Bone();
+      bone.position.y = b ? -L / (nb - 1) : 0;
+      if (b) bones[b - 1].add(bone);
+      bones.push(bone);
+    }
+    const mesh = new THREE.SkinnedMesh(geo, toon(hex, true));
+    mesh.position.set(pos[0], pos[1], pos[2]);
+    parent.add(mesh);
+    mesh.add(bones[0]);
+    const skel = new THREE.Skeleton(bones);
+    mesh.bind(skel);
+    const ol = new THREE.SkinnedMesh(go, outlineSkin);
+    mesh.add(ol); ol.bind(skel);
+    mesh.frustumCulled = ol.frustumCulled = false;
+    bones[0].rotation.set(tilt, 0, spread);
+    strands.push({ segs: bones, base: tilt, spread, phase: ph });
+  }
+  // long wavy hair falling down the back to the knees
+  for (let i = 0; i < 13; i++) {
+    const a = Math.PI * (0.52 + i / 12 * 0.96), side = Math.sin(a), back = -Math.cos(a);
+    lock(head, [side * 0.42, 0.24, Math.cos(a) * 0.36], 1.32 - Math.abs(side) * 0.12, 0.16, 0.035, 2.1, i % 2 ? C.hairDeep : C.hair, 0.1 + back * 0.08, side * 0.22);
+  }
+  // locks framing the face, falling in front of the shoulders
+  for (const s of [-1, 1]) {
+    lock(head, [s * 0.44, 0.2, 0.16], 0.82, 0.11, 0.03, 1.8, C.hair, -0.06, s * 0.12, 4);
+    lock(head, [s * 0.48, 0.24, 0.0], 1.1, 0.13, 0.035, 2.0, C.hairDeep, 0.02, s * 0.2);
+  }
+  ball(head, C.hairDeep, [0, 0.0, -0.22], [0.5, 0.55, 0.32]);
+  const bow = group(head, [0, 0.5, -0.5]);
+  bow.rotation.x = 0.35;
+  ball(bow, C.black, [0.17, 0.02, 0], [0.18, 0.11, 0.06], [0, 0, 0.28]);
+  ball(bow, C.black, [-0.17, 0.02, 0], [0.18, 0.11, 0.06], [0, 0, -0.28]);
+  ball(bow, C.black, [0, 0, 0.02], [0.06, 0.06, 0.05]);
+  ball(bow, C.black, [0.08, -0.17, -0.02], [0.04, 0.14, 0.03], [0, 0, 0.25]);
+  ball(bow, C.black, [-0.08, -0.17, -0.02], [0.04, 0.14, 0.03], [0, 0, -0.25]);
+  ball(bow, C.orange, [0, 0, 0.06], [0.035, 0.035, 0.02], null, 0);
+  lock(head, [0.02, 0.8, 0.06], 0.3, 0.035, 0.012, 0.8, C.hair, Math.PI - 0.5, 0.25, 3);
+  // the flower ornament with its black bow and white tassels
+  const orn = group(head, [-0.36, 0.58, 0.22]);
+  orn.rotation.set(0.2, -0.6, 0);
+  orn.scale.setScalar(1.35);
+  ball(orn, C.black, [-0.1, 0.02, -0.06], [0.12, 0.07, 0.04], [0, 0, 0.35]);
+  ball(orn, C.black, [0.1, 0.03, -0.06], [0.12, 0.07, 0.04], [0, 0, -0.3]);
+  for (let i = 0; i < 12; i++) {
+    const g = group(orn, [0, 0, 0]);
+    g.rotation.z = i / 12 * Math.PI * 2;
+    ball(g, i % 2 ? C.petal2 : C.petal, [0, 0.1, 0], [0.045, 0.1, 0.02], null, 0.45);
+  }
+  ball(orn, C.gold, [0, 0, 0.02], [0.05, 0.05, 0.035], null, 0.3);
+  for (const s of [-1, 1]) {
+    ball(orn, C.frill, [s * 0.05, -0.2, -0.04], [0.025, 0.08, 0.025], null, 0.4);
+    ball(orn, C.frill, [s * 0.05, -0.3, -0.04], [0.035, 0.04, 0.035], null, 0.4);
+  }
+
+  // ---------- bake: every static part on a moving joint becomes one mesh per colour ----------
+  function mergeGeos(list) {
+    let nv = 0, ni = 0;
+    for (const g of list) { nv += g.attributes.position.count; ni += g.index ? g.index.count : g.attributes.position.count; }
+    const pos = new Float32Array(nv * 3), nor = new Float32Array(nv * 3), idx = new Uint32Array(ni);
+    let vo = 0, io = 0;
+    for (const g of list) {
+      const p = g.attributes.position.array, n = g.attributes.normal.array, c = g.attributes.position.count;
+      pos.set(p, vo * 3); nor.set(n, vo * 3);
+      if (g.index) { const ix = g.index.array; for (let i = 0; i < ix.length; i++) idx[io + i] = ix[i] + vo; io += ix.length; }
+      else { for (let i = 0; i < c; i++) idx[io + i] = vo + i; io += c; }
+      vo += c;
+    }
+    const out = new THREE.BufferGeometry();
+    out.setAttribute('position', new THREE.BufferAttribute(pos, 3));
+    out.setAttribute('normal', new THREE.BufferAttribute(nor, 3));
+    out.setIndex(new THREE.BufferAttribute(idx, 1));
+    return out;
+  }
+  function bake(joints) {
+    root.updateMatrixWorld(true);
+    const jointSet = new Set(joints);
+    for (const J of joints) {
+      const inv = new THREE.Matrix4().copy(J.matrixWorld).invert();
+      const byMat = new Map(), outl = [], used = [];
+      (function walk(o) {
+        for (const c of o.children) {
+          if (jointSet.has(c) || c.isSkinnedMesh || c.isBone) continue;
+          if (c.isMesh && c.material && c.material.isMeshToonMaterial) {
+            const g = c.geometry.clone().applyMatrix4(new THREE.Matrix4().multiplyMatrices(inv, c.matrixWorld));
+            if (!byMat.has(c.material)) byMat.set(c.material, []);
+            byMat.get(c.material).push(g);
+            if (c.children.some(k => k.material && k.material.isShaderMaterial)) outl.push(g);
+            used.push(c);
+          } else if (!c.isMesh) walk(c);
+        }
+      })(J);
+      for (const m of used) m.parent.remove(m);
+      for (const [mat, list] of byMat) J.add(new THREE.Mesh(mergeGeos(list), mat));
+      if (outl.length) J.add(new THREE.Mesh(mergeGeos(outl), outlineMat(0.018)));
+    }
+  }
+  bake([legL, legR, skirt, body, head, armL, armR]);
+
+  // ---------- face painting ----------
+  const EXPR = {};
+  function paint(expr) {
+    const x = faceCanvas.getContext('2d'), S = 512;
+    x.clearRect(0, 0, S, S);
+    x.lineCap = 'round'; x.lineJoin = 'round';
+    const dark = expr === 'dark' || expr === 'darkblink';
+    // blush
+    x.fillStyle = expr === 'shy' ? 'rgba(255,90,120,0.55)' : 'rgba(255,130,150,0.33)';
+    for (const s of [-1, 1]) { x.beginPath(); x.ellipse(S * (0.5 + s * 0.27), S * 0.75, S * 0.08, S * 0.035, 0, 0, Math.PI * 2); x.fill(); }
+    if (expr === 'shy') {
+      x.strokeStyle = 'rgba(220,60,90,0.6)'; x.lineWidth = 5;
+      for (const s of [-1, 1]) for (let k = 0; k < 3; k++) { x.beginPath(); x.moveTo(S * (0.5 + s * 0.27) + k * 14 - 14, S * 0.73); x.lineTo(S * (0.5 + s * 0.27) + k * 14 - 6, S * 0.77); x.stroke(); }
+    }
+    for (const s of [-1, 1]) {
+      const cx = S * (0.5 + s * 0.185), cy = S * 0.6;
+      x.strokeStyle = '#3a1c10'; x.fillStyle = '#3a1c10';
+      if (expr === 'blink' || expr === 'darkblink' || expr === 'serene') {
+        x.lineWidth = 11; x.beginPath(); x.moveTo(cx - 44, cy - 2); x.quadraticCurveTo(cx, cy + 28, cx + 44, cy - 2); x.stroke();
+        x.lineWidth = 6; x.beginPath(); x.moveTo(cx + s * 44, cy - 2); x.lineTo(cx + s * 56, cy - 12); x.stroke();
+      } else if (expr === 'happy') {
+        x.lineWidth = 12; x.beginPath(); x.moveTo(cx - 42, cy + 12); x.quadraticCurveTo(cx, cy - 30, cx + 42, cy + 12); x.stroke();
+      } else if (expr === 'hurt') {
+        x.lineWidth = 12; x.beginPath(); x.moveTo(cx - s * 38, cy - 28); x.lineTo(cx + s * 28, cy); x.lineTo(cx - s * 38, cy + 28); x.stroke();
+      } else {
+        // big anime eye: sclera, gradient iris, pupil, two highlights, a heavy upper lash
+        const ry = expr === 'angry' ? 52 : 64, rx = 46;
+        x.fillStyle = '#fff'; x.beginPath(); x.ellipse(cx, cy + 4, rx, ry, 0, 0, Math.PI * 2); x.fill();
+        const g = x.createLinearGradient(0, cy - ry, 0, cy + ry);
+        g.addColorStop(0, dark ? '#5a0a22' : '#5a2a12'); g.addColorStop(0.55, dark ? '#c0103a' : '#a6501f'); g.addColorStop(1, dark ? '#ff4a78' : '#f0a050');
+        x.fillStyle = g; x.beginPath(); x.ellipse(cx, cy + 8, rx - 6, ry - 6, 0, 0, Math.PI * 2); x.fill();
+        x.fillStyle = dark ? '#2a0010' : '#3a1508'; x.beginPath(); x.ellipse(cx, cy + 10, 18, 28, 0, 0, Math.PI * 2); x.fill();
+        x.fillStyle = '#fff'; x.beginPath(); x.ellipse(cx - 14, cy - 18, 14, 17, -0.4, 0, Math.PI * 2); x.fill();
+        x.beginPath(); x.arc(cx + 16, cy + 30, 8, 0, Math.PI * 2); x.fill();
+        x.fillStyle = 'rgba(255,255,255,0.5)'; x.beginPath(); x.arc(cx + 4, cy + 4, 5, 0, Math.PI * 2); x.fill();
+        x.fillStyle = '#3a1c10'; x.lineWidth = 13;
+        x.beginPath(); x.moveTo(cx - 50, cy - ry + 18); x.quadraticCurveTo(cx, cy - ry - 12, cx + 50, cy - ry + 16); x.stroke();
+        x.lineWidth = 8; x.beginPath(); x.moveTo(cx + s * 48, cy - ry + 16); x.lineTo(cx + s * 66, cy - ry + 2); x.stroke();
+        if (expr === 'angry' || dark) {
+          x.lineWidth = 8; x.beginPath(); x.moveTo(cx + s * 40, cy - ry - 26); x.lineTo(cx - s * 26, cy - ry - 8); x.stroke();
+        }
+      }
+    }
+    // mouth
+    x.strokeStyle = '#3a1c10'; x.lineWidth = 6;
+    const my = S * 0.84;
+    if (expr === 'open' || expr === 'blink' || expr === 'happy') {
+      const w = expr === 'happy' ? 34 : 24;
+      x.fillStyle = '#9a3030'; x.beginPath(); x.moveTo(S / 2 - w, my - 6); x.quadraticCurveTo(S / 2, my + w * 1.3, S / 2 + w, my - 6); x.closePath(); x.fill(); x.stroke();
+      x.fillStyle = '#ff9aa8'; x.beginPath(); x.ellipse(S / 2, my + w * 0.45, w * 0.5, w * 0.25, 0, 0, Math.PI * 2); x.fill();
+      x.fillStyle = '#fff'; x.beginPath(); x.moveTo(S / 2 - w * 0.6, my - 4); x.lineTo(S / 2 - w * 0.25, my - 4); x.lineTo(S / 2 - w * 0.42, my + 8); x.closePath(); x.fill();
+    } else if (expr === 'hurt') {
+      x.fillStyle = '#9a3030'; x.beginPath(); x.ellipse(S / 2, my + 4, 18, 22, 0, 0, Math.PI * 2); x.fill(); x.stroke();
+    } else if (expr === 'angry' || expr === 'dark' || expr === 'darkblink') {
+      x.beginPath(); x.moveTo(S / 2 - 22, my + 8); x.quadraticCurveTo(S / 2, my - 8, S / 2 + 22, my + 8); x.stroke();
+    } else if (expr === 'shy') {
+      x.beginPath(); x.moveTo(S / 2 - 24, my); x.quadraticCurveTo(S / 2 - 12, my - 8, S / 2, my); x.quadraticCurveTo(S / 2 + 12, my + 8, S / 2 + 24, my); x.stroke();
+    } else {
+      x.beginPath(); x.moveTo(S / 2 - 18, my); x.quadraticCurveTo(S / 2, my + 12, S / 2 + 18, my); x.stroke();
+    }
+    faceTex.needsUpdate = true;
+  }
+  let shownExpr = '';
+  function setExpr(e) { if (e !== shownExpr) { shownExpr = e; paint(e); } }
+  setExpr('open');
+
+  // ---------- animation ----------
+  const J = { yaw: 0, bob: 0, lean: 0, roll: 0, hx: 0, hy: 0, hz: 0, aLx: 0, aLz: 0.22, aRx: 0, aRz: -0.22, lL: 0, lR: 0, sx: 0, sz: 0, flare: 1, fall: 0, lift: 0 };
+  const T = Object.assign({}, J);
+  let clock = 0, walk = 0, idle = 0, blinkT = 2, yawVel = 0, spinFrom = 0, lastPose = '', darkK = 0, flash = 0;
+  const angDiff = (a, b) => { let d = a - b; while (d > Math.PI) d -= Math.PI * 2; while (d < -Math.PI) d += Math.PI * 2; return d; };
+  // s: { moving, vx, vy, aim (yaw or null), pose, poseK (0..1), dash, ult (seconds into it or -1), dead (seconds since or -1), dark (0..1), flash }
+  function step(dt, s) {
+    clock += dt;
+    const t = clock;
+    walk += dt * (s.moving ? 11 : 0);
+    idle = s.moving || s.pose ? 0 : idle + dt;
+    const sw = Math.sin(walk);
+    Object.assign(T, {
+      bob: s.moving ? Math.abs(sw) * 0.06 : Math.sin(t * 2.4) * 0.012,
+      lean: s.moving ? 0.14 : 0, roll: 0,
+      hx: s.moving ? -0.06 : Math.sin(t * 1.1) * 0.03, hy: 0, hz: Math.sin(t * 0.9) * 0.05,
+      aLx: s.moving ? -sw * 0.65 : Math.sin(t * 1.6) * 0.05, aRx: s.moving ? sw * 0.65 : -Math.sin(t * 1.6) * 0.05,
+      aLz: 0.22, aRz: -0.22,
+      lL: s.moving ? sw * 0.8 : 0, lR: s.moving ? -sw * 0.8 : 0,
+      sx: s.moving ? -0.08 + Math.sin(walk * 2) * 0.04 : 0, sz: s.moving ? sw * 0.05 : 0,
+      flare: 1, fall: 0, lift: 0,
+    });
+    let yawGoal = null;
+    if (s.moving) yawGoal = Math.atan2(s.vx, s.vy);
+    else if (s.aim != null) yawGoal = s.aim;
+    else if (idle > 1.4) yawGoal = 0.25;
+    let expr = 'open';
+    const k = s.poseK || 0;
+    if (s.pose !== lastPose) { if (s.pose === 'spin') spinFrom = J.yaw; lastPose = s.pose; }
+    // expressive poses turn her toward the viewer
+    if (['happy', 'angry', 'shy', 'curtsy', 'wave', 'hurt', 'cast'].includes(s.pose) && !s.moving) yawGoal = s.pose === 'cast' ? 0 : 0.3;
+    switch (s.pose) {
+      case 'attack':
+        T.aRx = -1.55; T.aRz = -0.05; T.lean += 0.06; T.hx = 0.04; break;
+      case 'cast':
+        if (k < 0.45) { T.aRx = -2.9; T.aRz = -0.2; T.aLx = -0.4; T.aLz = 0.9; T.lean = -0.12; T.bob = 0.04; }
+        else { T.aRx = -1.1; T.aRz = -0.1; T.aLx = 0.3; T.aLz = 0.7; T.lean = 0.2; T.bob = -0.04; T.flare = 1.12; }
+        expr = k < 0.45 ? 'open' : 'angry'; break;
+      case 'hurt':
+        T.lean = -0.32; T.aLx = -1.3; T.aRx = -1.3; T.aLz = 0.7; T.aRz = -0.7; T.hx = -0.2; expr = 'hurt'; break;
+      case 'land':
+        T.bob = -0.07 * (1 - k); T.aLz = 0.9; T.aRz = -0.9; T.flare = 1.1; break;
+      case 'happy':
+        T.bob = Math.abs(Math.sin(k * Math.PI * 2)) * 0.2; T.aLz = 2.2 + Math.sin(t * 14) * 0.15; T.aRz = -2.2 - Math.sin(t * 14) * 0.15; T.aLx = 0.8; T.aRx = 0.8; T.flare = 1.1; expr = 'happy'; break;
+      case 'angry':
+        T.aLz = 0.45; T.aRz = -0.45; T.aLx = 0.35; T.aRx = 0.35; T.hx = 0.14; T.bob = Math.abs(Math.sin(k * Math.PI * 3)) * 0.05; expr = 'angry'; break;
+      case 'shy':
+        T.aLx = -1.9; T.aRx = -1.9; T.aLz = -0.5; T.aRz = 0.5; T.hx = 0.16; T.hz = 0.16; expr = 'shy'; break;
+      case 'spin':
+        T.aLz = 1.2; T.aRz = -1.2; T.aLx = -0.4; T.aRx = -0.4; T.flare = 1.28; expr = 'happy'; break;
+      case 'curtsy': {
+        const b = Math.sin(k * Math.PI);
+        T.bob = -0.1 * b; T.aLz = 0.6; T.aRz = -0.6; T.aLx = 0.18; T.aRx = 0.18; T.hx = 0.28 * b; T.lean = 0.16 * b; T.lL = 0.25 * b; T.lR = -0.1 * b; expr = 'blink';
+        break;
+      }
+      case 'wave':
+        T.aLz = 2.2 + Math.sin(t * 12) * 0.35; T.aLx = 0.9; T.hz = 0.1; expr = 'happy'; break;
+    }
+    if (s.dash) { T.lean = 0.5; T.aLx = 1.1; T.aRx = 1.1; T.aLz = 0.5; T.aRz = -0.5; T.lL = -0.7; T.lR = 0.45; T.flare = 1.12; T.sx = -0.2; }
+    if (s.ult >= 0) {
+      T.lift = Math.min(1, s.ult / 0.4) * 0.75 - Math.max(0, s.ult - 1.3) * 1.5;
+      T.aLz = 1.25 + Math.sin(t * 3) * 0.1; T.aRz = -1.25 - Math.sin(t * 3) * 0.1; T.aLx = -0.4; T.aRx = -0.4;
+      T.lL = 0.2; T.lR = -0.15; T.hx = -0.18; T.flare = 1.22; expr = 'serene'; yawGoal = null;
+      J.yaw += dt * (s.ult < 1.05 ? 1.2 : 0.4);
+    }
+    if (s.dead >= 0) { T.fall = Math.min(1, s.dead / 0.45); T.aLz = 0.6; T.aRz = -2.2; T.lL = 0.3; expr = 'blink'; yawGoal = 0; }
+    // facing: turn through the shortest way and remember how fast she turned, for the hair
+    const prevYaw = J.yaw;
+    if (s.yaw != null) J.yaw = s.yaw;
+    else if (s.pose === 'spin') J.yaw = spinFrom + k * Math.PI * 2;
+    else if (yawGoal != null) J.yaw += angDiff(yawGoal, J.yaw) * Math.min(1, dt * (s.moving ? 12 : 6));
+    yawVel += ((J.yaw - prevYaw) / Math.max(dt, 1e-4) - yawVel) * Math.min(1, dt * 10);
+    const r = Math.min(1, dt * 14);
+    for (const key in T) if (key !== 'yaw') J[key] += (T[key] - J[key]) * r;
+    // blink now and then
+    blinkT -= dt;
+    if (blinkT < 0) blinkT = 2 + Math.random() * 3;
+    if (expr === 'open' && blinkT < 0.12) expr = 'blink';
+    darkK += ((s.dark || 0) - darkK) * Math.min(1, dt * 6);
+    if (darkK > 0.5) expr = expr === 'blink' ? 'darkblink' : expr === 'open' || expr === 'angry' ? 'dark' : expr;
+    setExpr(expr);
+    // pose the skeleton
+    root.rotation.y = J.yaw;
+    // she topples onto her side, face still towards the viewer
+    root.rotation.z = J.fall * 1.38;
+    root.position.y = J.fall * 0.32;
+    root.position.x = J.fall * 1.1;
+    hips.position.y = 0.5 + J.bob + J.lift;
+    body.rotation.x = J.lean; body.rotation.z = J.roll;
+    head.rotation.set(J.hx, J.hy, J.hz);
+    armL.rotation.set(J.aLx, 0, J.aLz); armR.rotation.set(J.aRx, 0, J.aRz);
+    legL.rotation.x = J.lL; legR.rotation.x = J.lR;
+    skirt.rotation.set(J.sx, 0, J.sz);
+    skirt.scale.set(J.flare, 1 / Math.sqrt(J.flare), J.flare);
+    // hair: hangs, trails behind when she runs, swings when she turns
+    const run = s.moving || s.dash ? 1 : 0;
+    for (const st of strands) {
+      st.trail = (st.trail || 0) + ((s.dash ? 0.5 : run * 0.22) + J.lift * 0.2 - (st.trail || 0)) * Math.min(1, dt * 5);
+      st.swing = (st.swing || 0) + (clamp3(-yawVel * 0.08, -0.5, 0.5) - (st.swing || 0)) * Math.min(1, dt * 4);
+      st.segs.forEach((g, j) => {
+        const f = j / st.segs.length;
+        const wave = Math.sin(t * 2.3 - j * 0.7 + st.phase) * (0.04 + run * 0.05);
+        g.rotation.x = (j === 0 ? st.base : 0.05) + st.trail * (0.35 + f) * (j === 0 ? 1 : 0.25) + wave;
+        g.rotation.z = (j === 0 ? st.spread : 0) + st.swing * (0.3 + f) + wave * 0.5;
+      });
+    }
+    // 黑化 darkens every material; a hit flashes them white
+    flash = s.flash ? 1 : Math.max(0, flash - dt * 12);
+    for (const m of mats) {
+      m.color.copy(m.userData.base).lerp(DARK, darkK * 0.55);
+      m.emissive.setRGB(flash * 0.45, flash * 0.42, flash * 0.4);
+    }
+  }
+  const DARK = new THREE.Color(0x2a0c40);
+  const clamp3 = (v, a, b) => v < a ? a : v > b ? b : v;
+  return { root, step, setExpr };
+}
+
+// three.js arrives in the background; until it does (or if it can't load) she stays a 2D sprite
+const M3 = { ready: false, mode: 'hero', forced: /[?&]3d\b/.test(location.search) };
+const M3_FW = 3.6, M3_FH = 4.5, M3_UNIT = SPR_H / 2.45; // camera box in model units; world units per model unit
+function load3D() {
+  const s = document.createElement('script');
+  s.src = 'https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js';
+  s.async = true;
+  s.onload = () => { try { init3D(); } catch (err) { console.warn('3D unavailable, staying 2D:', err); } };
+  document.head.appendChild(s);
+}
+function init3D() {
+  const T = window.THREE;
+  const renderer = new T.WebGLRenderer({ alpha: true, antialias: true, preserveDrawingBuffer: true });
+  renderer.setClearColor(0x000000, 0);
+  renderer.setPixelRatio(1);
+  const scene = new T.Scene();
+  scene.add(new T.AmbientLight(0xffffff, 0.5));
+  const sun = new T.DirectionalLight(0xffffff, 0.5);
+  sun.position.set(2, 4, 3);
+  scene.add(sun);
+  // the same slightly-from-above view the rest of the game is drawn in
+  const cam = new T.OrthographicCamera(-M3_FW / 2, M3_FW / 2, M3_FH / 2, -M3_FH / 2, 0.1, 50);
+  const el = 22 * Math.PI / 180, cy = 1.55;
+  cam.position.set(0, cy + 8 * Math.sin(el), 8 * Math.cos(el));
+  cam.lookAt(0, cy, 0);
+  cam.updateMatrixWorld(); cam.updateProjectionMatrix();
+  const model = createClaude3D(T);
+  scene.add(model.root);
+  const heroCam = new T.OrthographicCamera(-1.25, 1.25, 1.5625, -1.5625, 0.1, 50);
+  heroCam.position.set(0, 1.3 + 8 * Math.sin(el * 0.6), 8 * Math.cos(el * 0.6));
+  heroCam.lookAt(0, 1.3, 0);
+  heroCam.updateMatrixWorld(); heroCam.updateProjectionMatrix();
+  const o = new T.Vector3(0, 0, 0).project(cam);
+  Object.assign(M3, { renderer, scene, cam, heroCam, model, ax: (o.x + 1) / 2, ay: (1 - o.y) / 2, last: performance.now(), ready: true });
+  size3D();
+  const hero = $('hero3d'), img = document.querySelector('.portrait img');
+  hero.hidden = false; img.hidden = true;
+}
+function size3D() {
+  if (!M3.ready) return;
+  if (M3.mode === 'game') {
+    M3.renderer.setSize(Math.round(M3_FW * M3_UNIT * PX), Math.round(M3_FH * M3_UNIT * PX), false);
+  } else {
+    const hero = $('hero3d'), w = Math.max(120, Math.round(hero.getBoundingClientRect().width * dpr || 230 * dpr));
+    hero.width = w; hero.height = Math.round(w * M3_FH / M3_FW);
+    M3.renderer.setSize(hero.width, hero.height, false);
+  }
+}
+function set3DMode(mode) { M3.mode = mode; size3D(); }
+const POSE_OF = { atk1: 'attack', atk2: 'attack', atk3: 'attack', cast1: 'cast', cast2: 'cast', cast3: 'cast', dash4: 'land', hurt: 'hurt', skirt: 'curtsy', spin: 'spin', happy: 'happy', angry: 'angry', shy: 'shy', wave: 'wave' };
+function modelState() {
+  const a = P.anim;
+  let pose = '', k = 0;
+  if (a) {
+    const i = Math.min(a.seq.length - 1, Math.floor(a.t / a.dur * a.seq.length)), seg = a.dur / a.seq.length;
+    pose = POSE_OF[a.seq[i]] || '';
+    k = pose === 'cast' || pose === 'attack' ? a.t / a.dur : (a.t - i * seg) / seg;
+  }
+  return {
+    moving: P.moving, vx: P.dash ? P.dash.dx : P.mvx, vy: P.dash ? P.dash.dy : P.mvy,
+    aim: pose === 'attack' ? Math.atan2(P.aimX || 0, P.aimY || 1) : null,
+    pose, poseK: clamp(k, 0, 1), dash: !!P.dash,
+    ult: G.ult ? G.ult.t : -1, dead: G.ending && !G.ending.win ? G.ending.t : -1,
+    dark: P.dark > 0 ? 1 : 0, flash: P.flash > 0 && !(G.ending && !G.ending.win),
+  };
+}
+function draw3D(footY) {
+  const now = performance.now(), dt = Math.min(0.05, (now - M3.last) / 1000);
+  const gap = now - M3.last;
+  M3.last = now;
+  // a slow device gets the 2D sprite back: average the frame gap over the first seconds of play
+  if (gap < 500) {
+    M3.avg = M3.avg == null ? gap : M3.avg * 0.97 + gap * 0.03;
+    M3.watched = (M3.watched || 0) + gap;
+    if (M3.watched > 4000 && M3.avg > 45 && !M3.forced) {
+      M3.ready = false; M3.slow = true;
+      $('hero3d').hidden = true; document.querySelector('.portrait img').hidden = false;
+      console.warn('3D model too slow here, using the 2D sprite');
+      return;
+    }
+  }
+  M3.model.step(dt, modelState());
+  M3.renderer.render(M3.scene, M3.cam);
+  const w = M3_FW * M3_UNIT, h = M3_FH * M3_UNIT;
+  ctx.drawImage(M3.renderer.domElement, P.x - M3.ax * w, footY - M3.ay * h, w, h);
+}
+// a still copy of her current pose, for the dash phantom and the decoy
+function snapshot3D() {
+  if (!M3.ready || M3.mode !== 'game') return null;
+  const src = M3.renderer.domElement, c = document.createElement('canvas');
+  c.width = src.width; c.height = src.height;
+  c.getContext('2d').drawImage(src, 0, 0);
+  return c;
+}
+function drawGhost(c, x, footY, alpha) {
+  const w = M3_FW * M3_UNIT, h = M3_FH * M3_UNIT;
+  ctx.globalAlpha = alpha;
+  ctx.drawImage(c, x - M3.ax * w, footY - M3.ay * h, w, h);
+  ctx.globalAlpha = 1;
+}
+// title screen: she idles on a turntable, shows off a pose now and then, and can be spun by dragging
+const hero = { yaw: 0.3, t: 0, pose: '', poseT: 0, poseDur: 0, next: 2.5, drag: null, spinVel: 0 };
+const HERO_POSES = [['wave', 1.8], ['happy', 1.4], ['spin', 1.2], ['curtsy', 1.5], ['shy', 1.6]];
+function heroFrame(dt) {
+  if (!M3.ready || M3.mode !== 'hero' || $('title').hidden) return;
+  hero.t += dt;
+  if (hero.pose) {
+    hero.poseT += dt;
+    if (hero.poseT >= hero.poseDur) { hero.pose = ''; hero.next = 2.5 + Math.random() * 2; }
+  } else if (!hero.drag) {
+    hero.next -= dt;
+    if (hero.next <= 0) { const p = HERO_POSES[(Math.random() * HERO_POSES.length) | 0]; hero.pose = p[0]; hero.poseDur = p[1]; hero.poseT = 0; }
+  }
+  if (!hero.drag) {
+    hero.yaw += hero.spinVel * dt; hero.spinVel *= Math.pow(0.05, dt);
+    // drift back to facing the viewer
+    if (Math.abs(hero.spinVel) < 0.3) { let d = 0.3 - hero.yaw; d = Math.atan2(Math.sin(d), Math.cos(d)); hero.yaw += d * Math.min(1, dt * 1.5); }
+  }
+  const posing = hero.pose && !hero.drag;
+  M3.model.step(dt, { moving: false, vx: 0, vy: 1, aim: null, pose: posing ? hero.pose : '', poseK: posing ? hero.poseT / hero.poseDur : 0, dash: false, ult: -1, dead: -1, dark: 0, yaw: hero.pose === 'spin' && !hero.drag ? null : hero.yaw });
+  M3.renderer.render(M3.scene, M3.heroCam);
+  const c = $('hero3d'), x = c.getContext('2d');
+  x.clearRect(0, 0, c.width, c.height);
+  x.drawImage(M3.renderer.domElement, 0, 0, c.width, c.height);
 }
 
 // --- action frames cut from the character sheet: [x, y, w, h, standing height in px, facing, feet offset] ---
@@ -1307,7 +1895,7 @@ const SPR = {
   magnet: () => sprite('magnet', 32, 32, x => {
     glow(x, 15, '#6aa8ff', 0.5);
     disc(x, 0, 0, 10); x.fillStyle = '#3a6fbd'; x.fill(); x.lineWidth = 1.5; x.strokeStyle = '#d8e8ff'; x.stroke();
-    x.fillStyle = '#fff'; x.font = `600 12px ${UI_FONT}`; x.textAlign = 'center'; x.textBaseline = 'middle'; x.fillText('检', 0, 0.5);
+    x.fillStyle = '#fff'; x.font = `600 12px ${UI_FONT}`; x.textAlign = 'center'; x.textBaseline = 'middle'; x.fillText('吸', 0, 0.5);
   }),
   daisy: () => sprite('daisy', 24, 24, x => {
     x.fillStyle = 'rgba(233,138,60,0.2)';
@@ -1700,7 +2288,7 @@ function hurtPlayer(dmg) {
   G.hurtFlash = 0.35; shake(5);
   floatText(P.x, P.y - SPR_H * 0.7, '-' + dmg, '#ff6b5a', 14);
   sfx.hurt();
-  if (P.talents.halluc && P.decoyCd <= 0) { G.decoy = { x: P.x, y: P.y, t: 3 }; P.decoyCd = 8; }
+  if (P.talents.halluc && P.decoyCd <= 0) { G.decoy = { x: P.x, y: P.y, t: 3, ghost: snapshot3D() }; P.decoyCd = 8; }
   if (P.hp <= 0) {
     if (P.talents.compact && !P.revived) {
       P.revived = true; P.hp = P.maxHp * 0.5; P.iframes = 2;
@@ -1709,8 +2297,8 @@ function hurtPlayer(dmg) {
         if (l < 220 && !e.boss) { e.kx += dx / l * 520; e.ky += dy / l * 520; }
       });
       ring(P.x, P.y, 20, 220, 0.5, '#ffe2b8', 6);
-      banner('上下文已压缩', '大小姐还能继续');
-      say('上下文已压缩。我还没说完。');
+      banner('不屈', '大小姐还能继续');
+      say('……还没完呢。');
       return;
     }
     P.hp = 0;
@@ -1757,7 +2345,8 @@ function castDash() {
   P.dashCd = DASH_CD;
   P.iframes = Math.max(P.iframes, 0.4);
   P.anim = null;
-  G.zones.push({ kind: 'phantom', x: P.x, y: P.y, r: 80 * P.area, life: 0.55, max: 0.55, face: P.face });
+  P.mvx = P.dash.dx; P.mvy = P.dash.dy;
+  G.zones.push({ kind: 'phantom', x: P.x, y: P.y, r: 80 * P.area, life: 0.55, max: 0.55, face: P.face, ghost: snapshot3D() });
   puff(P.x, P.y - 10, 10, '#ffb08a', 120, 0.5, 3.5);
   sfx.dash();
 }
@@ -1963,7 +2552,7 @@ function updatePlayer(dt) {
   if (P.moving) P.idleT = 0;
   else if (!P.anim || P.anim.pri === 0) {
     P.idleT += dt;
-    if (P.idleT > 4) { P.idleT = -rand(2, 5); playAnim([pick(['skirt', 'spin'])], 1.3, 1); }
+    if (P.idleT > 4) { P.idleT = -rand(2, 5); const e = pick(['skirt', 'spin', 'wave']); playAnim([e], e === 'wave' ? 1.8 : 1.3, 1); }
   }
   // 深度思考: stand still to think, wander to forget
   if (P.moving) {
@@ -2045,6 +2634,7 @@ function updateWeapons(dt) {
             });
           }
           sfx.flame();
+          P.aimX = list[0].x - P.x; P.aimY = list[0].y - P.y;
           if (!P.moving && !P.dash) { P.face = list[0].x >= P.x ? 1 : -1; playAnim(['atk1', 'atk2', 'atk3'], 0.32, 0); }
         }
         break;
@@ -2460,7 +3050,7 @@ function updatePickups(dt) {
       sfx.pick();
     } else if (it.type === 'magnet') {
       for (const g of G.gems) g.pull = true;
-      floatText(P.x, P.y - SPR_H * 0.7, '全局检索', '#9cc6ff', 14);
+      floatText(P.x, P.y - SPR_H * 0.7, '吸取全部经验', '#9cc6ff', 14);
       sfx.chest();
     }
   }
@@ -2621,6 +3211,7 @@ function drawZones() {
       continue;
     }
     if (z.kind === 'phantom') {
+      if (z.ghost) { drawGhost(z.ghost, z.x, z.y + SPR_H * 0.38, 0.5 * (z.life / z.max)); continue; }
       const s = frameSprite('dash3') || pSprite;
       if (s) {
         ctx.globalAlpha = 0.45 * (z.life / z.max);
@@ -2799,11 +3390,14 @@ function drawPlayer() {
     ctx.strokeStyle = `rgba(255,176,102,${0.5 + Math.sin(t * 6) * 0.2})`; ctx.lineWidth = 2;
     ctx.beginPath(); ctx.ellipse(P.x, footY - 2, 26, 9, 0, 0, TAU); ctx.stroke();
   }
-  if (G.decoy && pSprite) {
-    ctx.globalAlpha = 0.35 * Math.min(1, G.decoy.t);
-    ctx.drawImage(pSprite.f, G.decoy.x - pSprite.w / 2, G.decoy.y + SPR_H * 0.38 - pSprite.h + pSprite.pad, pSprite.w, pSprite.h);
-    ctx.globalAlpha = 1;
-    label(G.decoy.x, G.decoy.y - SPR_H * 0.7, '幻觉', '#e6dcff');
+  if (G.decoy && (G.decoy.ghost || pSprite)) {
+    if (G.decoy.ghost) drawGhost(G.decoy.ghost, G.decoy.x, G.decoy.y + SPR_H * 0.38, 0.4 * Math.min(1, G.decoy.t));
+    else {
+      ctx.globalAlpha = 0.35 * Math.min(1, G.decoy.t);
+      ctx.drawImage(pSprite.f, G.decoy.x - pSprite.w / 2, G.decoy.y + SPR_H * 0.38 - pSprite.h + pSprite.pad, pSprite.w, pSprite.h);
+      ctx.globalAlpha = 1;
+    }
+    label(G.decoy.x, G.decoy.y - SPR_H * 0.7, '幻影', '#e6dcff');
   }
   if (P.dark > 0 && !dead) {
     const k = Math.min(1, P.dark, (P.darkMax - P.dark) * 4);
@@ -2815,6 +3409,12 @@ function drawPlayer() {
     ctx.strokeStyle = `rgba(255,90,170,${0.6 * k})`; ctx.lineWidth = 2;
     ctx.beginPath(); ctx.ellipse(P.x, footY - 2, 28 + Math.sin(t * 8) * 2, 10, 0, 0, TAU); ctx.stroke();
   }
+  if (M3.ready && !M3.slow) {
+    if (P.iframes > 0 && !dead && !G.ult && !P.dash && Math.floor(t * 20) % 2 === 0) ctx.globalAlpha = 0.6;
+    if (P.dash && P.dash.phase === 1) ctx.globalAlpha = 0.85;
+    draw3D(footY);
+    ctx.globalAlpha = 1;
+  } else {
   const name = playerFrame(), fr = name ? frameSprite(name) : null, spr = fr || pSprite;
   let bob = 0, sx = 1, sy = 1, tilt = 0, face = P.face, lift = 0;
   if (dead) { if (!fr) tilt = -P.face * Math.min(1, G.ending.t * 2) * 1.2; }
@@ -2838,6 +3438,7 @@ function drawPlayer() {
     ctx.fillStyle = '#fbe0cc'; disc(ctx, 0, -47, 11); ctx.fill();
   }
   ctx.restore();
+  }
   if (!dead) drawPlayerOverlay(t, footY);
   if (P.say) {
     const a = Math.min(1, P.say.t / 0.3, (P.say.max - P.say.t) / 0.15 + 0.2);
@@ -3430,6 +4031,7 @@ function startRun() {
   audio.init();
   ['title', 'result', 'pause', 'levelup', 'chest'].forEach(id => { $(id).hidden = true; });
   newRun();
+  set3DMode('game');
   resetHud();
   $('hud').hidden = false;
   $('banner').hidden = $('toast').hidden = true;
@@ -3443,6 +4045,7 @@ function toTitle() {
   ['result', 'pause', 'levelup', 'chest'].forEach(id => { $(id).hidden = true; });
   $('hud').hidden = true; $('banner').hidden = $('toast').hidden = true;
   $('title').hidden = false;
+  set3DMode('hero');
   showBest();
 }
 function showBest() {
@@ -3557,7 +4160,7 @@ const bot = {
 };
 if (DEBUG) {
   window.__fk = {
-    get G() { return G; }, get P() { return P; }, bot, start: startRun, update, render,
+    get G() { return G; }, get P() { return P; }, M3, bot, start: startRun, update, render,
     // simulate without rendering; modals are resolved by taking the first card
     sim(sec, dt = 1 / 30) {
       const steps = Math.round(sec / dt);
@@ -3589,6 +4192,7 @@ function frame(now) {
     else update(dt);
   } else if (!G) {
     demo.x += dt * 14; demo.y += dt * 6;
+    heroFrame(dt);
   }
   render();
   if (G && P) updateHud();
@@ -3596,6 +4200,20 @@ function frame(now) {
 addEventListener('resize', resize);
 resize();
 showBest();
+// drag the title-screen model to spin her
+const heroCanvas = $('hero3d');
+heroCanvas.addEventListener('pointerdown', e => { hero.drag = { x: e.clientX, yaw: hero.yaw, t: performance.now() }; hero.pose = ''; try { heroCanvas.setPointerCapture(e.pointerId); } catch (err) { /* ignore */ } });
+heroCanvas.addEventListener('pointermove', e => {
+  if (!hero.drag) return;
+  const yaw = hero.drag.yaw + (e.clientX - hero.drag.x) * 0.02;
+  hero.spinVel = (yaw - hero.yaw) / Math.max(0.016, (performance.now() - hero.drag.t) / 1000);
+  hero.drag.t = performance.now();
+  hero.yaw = yaw;
+});
+const endHeroDrag = () => { hero.drag = null; hero.next = 3; };
+heroCanvas.addEventListener('pointerup', endHeroDrag);
+heroCanvas.addEventListener('pointercancel', endHeroDrag);
+load3D();
 requestAnimationFrame(frame);
 })();
 </script>
