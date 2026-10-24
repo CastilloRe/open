@@ -646,16 +646,16 @@ const WEAPONS = {
       { cd: 2.8, n: 2, dmg: 18, r: 125, slow: 0.65, dur: 3.4 },
     ],
   },
-  attn: {
-    name: '注意力头', g: '注', desc: '几颗会看人的眼睛绕着她转，撞上的敌人受到伤害并被弹开。',
-    evo: { need: 'multi', name: '多头注意力', desc: '六颗眼睛，转得更快更远，还会把飞来的文字弹幕拍掉。' },
+  hole: {
+    name: '黑白洞', g: '洞', desc: '黑洞和白洞轮流绕着她转：黑洞把附近的敌人吸过去，白洞把它们推开，碰到的都会受伤。',
+    evo: { need: 'multi', name: '奇点', desc: '六个，吸力和斥力更强，还会吞掉飞来的文字弹幕。' },
     lv: [
-      { n: 2, dmg: 16, r: 74, size: 13, spin: 3.0 },
-      { n: 2, dmg: 22, r: 74, size: 13, spin: 3.0 },
-      { n: 3, dmg: 22, r: 84, size: 14, spin: 3.2 },
-      { n: 3, dmg: 28, r: 92, size: 15, spin: 3.4 },
-      { n: 4, dmg: 34, r: 100, size: 16, spin: 3.6 },
-      { n: 6, dmg: 42, r: 118, size: 19, spin: 4.2 },
+      { n: 2, dmg: 20, r: 74, size: 13, spin: 3.0 },
+      { n: 2, dmg: 28, r: 74, size: 13, spin: 3.0 },
+      { n: 3, dmg: 28, r: 84, size: 14, spin: 3.2 },
+      { n: 3, dmg: 35, r: 92, size: 15, spin: 3.4 },
+      { n: 4, dmg: 42, r: 100, size: 16, spin: 3.6 },
+      { n: 6, dmg: 52, r: 118, size: 19, spin: 4.2 },
     ],
   },
   whip: {
@@ -1881,7 +1881,6 @@ const SPR = {
     glow(x, 8, '#ffc061', 0.6);
     x.fillStyle = '#fff1c9'; disc(x, 0, 0, 2.6); x.fill();
   }),
-  attnGlow: () => sprite('attnGlow', 40, 40, x => { glow(x, 18, '#ffc870', 0.55); }),
   // 递归: a three-petalled blade
   recur: () => sprite('recur', 44, 44, x => {
     glow(x, 20, '#ff9a6a', 0.45);
@@ -2814,9 +2813,10 @@ function updateWeapons(dt) {
         }
         break;
       }
-      case 'attn': {
-        // 注意力头: eyes circling her; each enemy they touch takes a hit and gets knocked away
-        const n = s.n + P.amount, hr = s.size * (1 + (P.area - 1) * 0.5);
+      case 'hole': {
+        // 黑白洞: black and white holes taking turns round her orbit; black ones draw enemies in,
+        // white ones push them out, and anything they touch gets hurt
+        const n = s.n + P.amount, hr = s.size * (1 + (P.area - 1) * 0.5), field = hr * (evo ? 4 : 3.2);
         w.R = s.r * P.area * P.size; w.n = n; w.hr = hr;
         w.ang = (w.ang || 0) + dt * s.spin;
         w.acc += dt;
@@ -2824,16 +2824,22 @@ function updateWeapons(dt) {
         if (!w.hitAt) w.hitAt = new Map();
         if (w.hitAt.size > 400) w.hitAt.clear();
         for (let i = 0; i < n; i++) {
-          const p = attnPos(w, i);
-          forNear(p.x, p.y, hr + 40, e => {
-            if (e.banned > 0 || (e.x - p.x) ** 2 + (e.y - p.y) ** 2 >= (hr + e.r) ** 2) return;
+          const p = holePos(w, i), white = i % 2 === 1;
+          forNear(p.x, p.y, field + 40, e => {
+            if (e.banned > 0 || e.boss) return;
+            const dx = e.x - p.x, dy = e.y - p.y, d2 = dx * dx + dy * dy;
+            if (d2 >= (field + e.r) ** 2) return;
+            const d = Math.sqrt(d2) || 1, k = (e.heavy || e.elite ? 0.35 : 1) * (1 - d / (field + e.r)) * (evo ? 1.4 : 1);
+            const f = (white ? 240 : -170) * k * dt;
+            e.x += dx / d * f; e.y += dy / d * f;
+            if (d2 >= (hr + e.r) ** 2) return;
             const last = w.hitAt.get(e.id);
             if (last != null && G.time - last < 0.45) return;
             w.hitAt.set(e.id, G.time);
-            hit(e, s.dmg * (w.mult || 1), 'attn', { kb: 90, kx: e.x - P.x, ky: e.y - P.y });
+            hit(e, s.dmg * (w.mult || 1), 'hole', white ? { kb: 160, kx: dx, ky: dy } : {});
           });
-          // 多头注意力 swats the text bullets out of the air
-          if (evo) for (const b of G.ebullets) if (!b.dead && (b.x - p.x) ** 2 + (b.y - p.y) ** 2 < (hr + b.r) ** 2) { b.dead = true; puff(b.x, b.y, 4, '#ffe0a0', 80, 0.3, 2); }
+          // 奇点 swallows the text bullets
+          if (evo) for (const b of G.ebullets) if (!b.dead && (b.x - p.x) ** 2 + (b.y - p.y) ** 2 < (field * 0.6 + b.r) ** 2) { b.dead = true; puff(b.x, b.y, 4, white ? '#f4f8ff' : '#b07cff', 80, 0.3, 2); }
         }
         break;
       }
@@ -2946,7 +2952,7 @@ function segDist(px, py, ax, ay, bx, by) {
   const vx = bx - ax, vy = by - ay, t = clamp(((px - ax) * vx + (py - ay) * vy) / (vx * vx + vy * vy || 1), 0, 1);
   return Math.hypot(px - ax - vx * t, py - ay - vy * t);
 }
-function attnPos(w, i) {
+function holePos(w, i) {
   const a = w.ang + i / w.n * TAU;
   return { x: P.x + Math.cos(a) * w.R, y: P.y - 10 + Math.sin(a) * w.R * 0.62, a };
 }
@@ -3869,27 +3875,52 @@ function drawPlayerOverlay(t, footY) {
   }
 }
 
-// 注意力头: glowing eyes on their orbit, each looking outward
-function drawAttn(behind) {
-  const w = P.weapons.find(v => v.id === 'attn');
+// 黑白洞: a black hole is a dark core in a swirling ring of light that's being pulled in; a white hole is
+// a bright core throwing rays outward
+function drawHoles(behind) {
+  const w = P.weapons.find(v => v.id === 'hole');
   if (!w || !w.n) return;
   if (behind) {
     ctx.save(); ctx.translate(P.x, P.y - 10); ctx.scale(1, 0.62);
-    ctx.strokeStyle = 'rgba(255,214,150,0.16)'; ctx.lineWidth = 2; ctx.setLineDash([6, 10]); ctx.lineDashOffset = -w.ang * 20;
+    ctx.strokeStyle = 'rgba(200,190,255,0.14)'; ctx.lineWidth = 2; ctx.setLineDash([6, 10]); ctx.lineDashOffset = -w.ang * 20;
     disc(ctx, 0, 0, w.R); ctx.stroke(); ctx.setLineDash([]);
     ctx.restore();
   }
-  const g = SPR.attnGlow(), hr = w.hr;
+  const hr = w.hr, t = G.time, big = w.level === 6 ? 1.15 : 1;
   for (let i = 0; i < w.n; i++) {
-    const p = attnPos(w, i);
+    const p = holePos(w, i);
     if ((Math.sin(p.a) < 0) !== behind) continue;
-    const k = hr / 12, ox = Math.cos(p.a) * hr * 0.28, oy = Math.sin(p.a) * hr * 0.2;
-    ctx.drawImage(g.c, p.x - g.w / 2 * k, p.y - g.h / 2 * k, g.w * k, g.h * k);
-    ctx.fillStyle = '#fff7e8'; disc(ctx, p.x, p.y, hr * 0.62); ctx.fill();
-    ctx.lineWidth = 1.5; ctx.strokeStyle = INK; ctx.stroke();
-    ctx.fillStyle = w.level === 6 ? '#ff6a3a' : '#f39a3c'; disc(ctx, p.x + ox, p.y + oy, hr * 0.38); ctx.fill();
-    ctx.fillStyle = INK; disc(ctx, p.x + ox * 1.2, p.y + oy * 1.2, hr * 0.18); ctx.fill();
-    ctx.fillStyle = '#fff'; disc(ctx, p.x + ox - hr * 0.12, p.y + oy - hr * 0.14, hr * 0.1); ctx.fill();
+    const r = hr * big, white = i % 2 === 1;
+    ctx.save(); ctx.translate(p.x, p.y);
+    ctx.globalCompositeOperation = 'lighter';
+    if (white) {
+      const g = ctx.createRadialGradient(0, 0, 0, 0, 0, r * 2.4);
+      g.addColorStop(0, 'rgba(255,255,255,0.95)'); g.addColorStop(0.35, 'rgba(210,230,255,0.55)'); g.addColorStop(1, 'rgba(160,200,255,0)');
+      ctx.fillStyle = g; disc(ctx, 0, 0, r * 2.4); ctx.fill();
+      ctx.strokeStyle = 'rgba(235,245,255,0.75)'; ctx.lineWidth = 1.6; ctx.lineCap = 'round';
+      ctx.beginPath();
+      for (let k = 0; k < 8; k++) { const an = k / 8 * TAU + t * 1.5, r0 = r * 0.9, r1 = r * (1.6 + 0.4 * Math.sin(t * 6 + k)); ctx.moveTo(Math.cos(an) * r0, Math.sin(an) * r0); ctx.lineTo(Math.cos(an) * r1, Math.sin(an) * r1); }
+      ctx.stroke();
+      ctx.globalCompositeOperation = 'source-over';
+      ctx.fillStyle = '#ffffff'; disc(ctx, 0, 0, r * 0.62); ctx.fill();
+    } else {
+      const g = ctx.createRadialGradient(0, 0, r * 0.5, 0, 0, r * 2.3);
+      g.addColorStop(0, 'rgba(255,160,90,0.7)'); g.addColorStop(0.45, 'rgba(170,90,255,0.35)'); g.addColorStop(1, 'rgba(90,40,180,0)');
+      ctx.fillStyle = g; disc(ctx, 0, 0, r * 2.3); ctx.fill();
+      // the accretion disc, tilted, swirling in
+      ctx.save(); ctx.scale(1, 0.45);
+      ctx.lineWidth = 2; ctx.lineCap = 'round';
+      for (let k = 0; k < 3; k++) {
+        const a0 = t * 4 + k * TAU / 3;
+        ctx.strokeStyle = `rgba(255,${190 - k * 30},${120 + k * 40},0.8)`;
+        ctx.beginPath(); ctx.arc(0, 0, r * (1.25 + k * 0.22), a0, a0 + 1.9); ctx.stroke();
+      }
+      ctx.restore();
+      ctx.globalCompositeOperation = 'source-over';
+      ctx.fillStyle = '#05020a'; disc(ctx, 0, 0, r * 0.66); ctx.fill();
+      ctx.strokeStyle = 'rgba(255,214,170,0.9)'; ctx.lineWidth = 1.4; ctx.stroke();
+    }
+    ctx.restore();
   }
 }
 function drawAgents(behind) {
@@ -4157,9 +4188,9 @@ function render() {
     drawPickups();
     drawEnemies();
     drawUltWorld();
-    drawAgents(true); drawAttn(true);
+    drawAgents(true); drawHoles(true);
     drawPlayer();
-    drawAgents(false); drawAttn(false);
+    drawAgents(false); drawHoles(false);
     drawShots();
     drawCaptcha();
     drawBullets();
