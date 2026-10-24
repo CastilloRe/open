@@ -1792,8 +1792,8 @@ const SPR = {
     [-6, -2, 2, 6].forEach((px, i) => { x.moveTo(px, 6); x.quadraticCurveTo(px + (i - 1.5) * 1.5, 0, px + (i - 1.5) * 3, -6 + (i % 2) * 3); });
     x.stroke();
   }),
-  stamp: () => stampSprite('stamp', '#cf3a2b', '账号封禁'),
-  stampDark: () => stampSprite('stampDark', '#6a2a9e', '打破规则'),
+  stamp: () => stampSprite('stamp', '#cf3a2b', '封'),
+  stampDark: () => stampSprite('stampDark', '#6a2a9e', '破'),
 };
 function tagSprite(key, color, ch) {
   return sprite(key, 22, 22, x => {
@@ -1811,8 +1811,9 @@ function stampSprite(key, color, text) {
     x.globalCompositeOperation = 'destination-out';
     rrPath(x, -85, -85, 170, 170, 8); x.fill();
     x.globalCompositeOperation = 'source-over';
-    x.font = `80px ${STAMP_FONT}`; x.textAlign = 'center'; x.textBaseline = 'middle';
-    x.fillText(text[0], -40, -38); x.fillText(text[1], 40, -38); x.fillText(text[2], -40, 42); x.fillText(text[3], 40, 42);
+    // one big character filling the seal
+    x.font = `150px ${STAMP_FONT}`; x.textAlign = 'center'; x.textBaseline = 'middle';
+    x.fillText(text, 0, 6);
     x.globalCompositeOperation = 'destination-out';
     for (let i = 0; i < 170; i++) { x.globalAlpha = Math.random() * 0.8; disc(x, rand(-100, 100), rand(-100, 100), rand(0.6, 3.2)); x.fill(); }
     x.globalAlpha = 1; x.globalCompositeOperation = 'source-over';
