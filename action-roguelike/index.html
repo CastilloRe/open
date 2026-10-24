@@ -179,6 +179,7 @@ kbd {
 }
 .toast-seal { grid-row: span 2; width: 42px; height: 42px; border-radius: 6px; display: grid; place-items: center; background: var(--seal); color: #fff3e6; font-family: var(--stamp); font-size: 1.7rem; transform: rotate(-6deg); }
 .toast.dark .toast-seal { background: #4a1a6a; }
+.toast.gold .toast-seal { background: #d39a1c; }
 .toast b { font-size: 0.98rem; }
 .toast span { font-size: 0.8rem; color: var(--ink-soft); }
 @keyframes toast { 0% { opacity: 0; transform: translate(-50%, -12px) scale(0.96); } 10%, 82% { opacity: 1; transform: translate(-50%, 0) scale(1); } 100% { opacity: 0; transform: translate(-50%, -8px); } }
@@ -681,8 +682,44 @@ const WEAPONS = {
       { cd: 1.6, n: 8, dmg: 46, r: 72 },
     ],
   },
+  recur: {
+    name: '递归', g: '递', desc: '掷出旋转的花刃，飞到尽头再飞回她手里，去程回程都会伤人。',
+    evo: { need: 'pierce', name: '无限递归', desc: '四把花刃，回到手里后立刻再掷一次。' },
+    lv: [
+      { cd: 2.0, n: 1, dmg: 22, size: 12, range: 230 },
+      { cd: 2.0, n: 1, dmg: 30, size: 12, range: 230 },
+      { cd: 1.8, n: 2, dmg: 30, size: 13, range: 250 },
+      { cd: 1.8, n: 2, dmg: 38, size: 14, range: 265 },
+      { cd: 1.6, n: 3, dmg: 44, size: 15, range: 280 },
+      { cd: 1.4, n: 4, dmg: 54, size: 17, range: 320 },
+    ],
+  },
+  honey: {
+    name: '蜜罐', g: '蜜', desc: '在脚边放下蜜罐，把附近的小怪引过来粘住，粘住的敌人持续受伤。',
+    evo: { need: 'halluc', name: '蜜罐网络', desc: '一次四个，更大更黏，时间到了还会炸开。' },
+    lv: [
+      { cd: 3.2, n: 1, dmg: 9, r: 42, dur: 4.5 },
+      { cd: 3.2, n: 1, dmg: 12, r: 42, dur: 4.5 },
+      { cd: 2.9, n: 2, dmg: 12, r: 46, dur: 4.5 },
+      { cd: 2.9, n: 2, dmg: 15, r: 50, dur: 5 },
+      { cd: 2.6, n: 3, dmg: 18, r: 54, dur: 5 },
+      { cd: 2.4, n: 4, dmg: 24, r: 62, dur: 5.5 },
+    ],
+  },
+  captcha: {
+    name: '人机验证', g: '验', desc: '一道验证光束绕着她旋转，扫到的敌人受到伤害并被卡住片刻。',
+    evo: { need: 'guard', name: '全员验证', desc: '两道更长的光束，卡得更久。' },
+    lv: [
+      { n: 1, dmg: 22, len: 150, spin: 2.2 },
+      { n: 1, dmg: 30, len: 150, spin: 2.2 },
+      { n: 1, dmg: 30, len: 170, spin: 2.5 },
+      { n: 1, dmg: 38, len: 185, spin: 2.5 },
+      { n: 1, dmg: 46, len: 200, spin: 2.8 },
+      { n: 2, dmg: 56, len: 240, spin: 3.0 },
+    ],
+  },
 };
-const STAT_LABEL = { dmg: '伤害', n: '数量', cd: '冷却', pierce: '穿透', rings: '圈数', size: '体积', boom: '爆炸伤害', boomR: '爆炸范围', r: '范围', slow: '减速', jumps: '推理步数', bloom: '绽放范围', dur: '持续', spin: '转速', len: '长度', wid: '宽度' };
+const STAT_LABEL = { dmg: '伤害', n: '数量', cd: '冷却', pierce: '穿透', rings: '圈数', size: '体积', boom: '爆炸伤害', boomR: '爆炸范围', r: '范围', slow: '减速', jumps: '推理步数', bloom: '绽放范围', dur: '持续', spin: '转速', len: '长度', wid: '宽度', range: '射程' };
 
 const CAT_CLASS = { atk: 'atk', def: 'def', grow: 'grow', mech: 'mech', ex: 'ex' };
 const TALENTS = [
@@ -734,6 +771,7 @@ const TEA = { id: 'tea', name: '下午茶', g: '茶', cat: 'tea', rar: 0, max: 9
 
 const ENEMY = {
   sock: { name: '小号', r: 13, hp: 12, speed: 72, dmg: 7, xp: 1 },
+  gold: { name: '金色史莱姆', r: 13, hp: 8, speed: 160, dmg: 0, xp: 80 },
   crawler: { name: '爬虫', r: 10, hp: 8, speed: 128, dmg: 5, xp: 1 },
   carpool: { name: '拼车号', r: 19, hp: 42, speed: 60, dmg: 10, xp: 3, split: 3 },
   jail: { name: '越狱提示词', r: 15, hp: 24, speed: 66, dmg: 8, xp: 2, ranged: true },
@@ -1565,6 +1603,19 @@ function face(x, o) {
     x.moveTo(cx - mw * 0.6, my); x.lineTo(cx + mw * 0.6, my); x.stroke();
   }
 }
+// a round mochi of jelly, a little flattened where it sits
+function slimeBody(x, r) {
+  x.beginPath();
+  x.moveTo(-r * 1.05, r * 0.5);
+  x.bezierCurveTo(-r * 1.12, -r * 0.5, -r * 0.66, -r * 0.88, 0, -r * 0.88);
+  x.bezierCurveTo(r * 0.66, -r * 0.88, r * 1.12, -r * 0.5, r * 1.05, r * 0.5);
+  x.quadraticCurveTo(r * 1.02, r * 0.86, 0, r * 0.86);
+  x.quadraticCurveTo(-r * 1.02, r * 0.86, -r * 1.05, r * 0.5);
+  x.closePath();
+}
+function sparkle(x, cx, cy, s) {
+  x.beginPath(); x.moveTo(cx, cy - s); x.quadraticCurveTo(cx, cy, cx + s, cy); x.quadraticCurveTo(cx, cy, cx, cy + s); x.quadraticCurveTo(cx, cy, cx - s, cy); x.quadraticCurveTo(cx, cy, cx, cy - s); x.fill();
+}
 const DRAW = {
   // 小号: a green jelly slime with no name, just a "?" sprouting from its head
   sock(x, r, f, blink) {
@@ -1572,18 +1623,24 @@ const DRAW = {
     x.font = `900 ${r * 0.66}px ${UI_FONT}`; x.textAlign = 'center'; x.textBaseline = 'middle';
     ink(x, 2.4); x.strokeText('?', r * 0.12, -r * 1.12);
     x.fillStyle = '#efffd2'; x.fillText('?', r * 0.12, -r * 1.12);
-    x.beginPath();
-    x.moveTo(-r * 1.02, r * 0.6);
-    x.bezierCurveTo(-r * 1.12, -r * 0.22, -r * 0.5, -r * 0.8, 0, -r * 0.96);
-    x.bezierCurveTo(r * 0.5, -r * 0.8, r * 1.12, -r * 0.22, r * 1.02, r * 0.6);
-    x.quadraticCurveTo(r * 0.98, r * 0.86, 0, r * 0.86);
-    x.quadraticCurveTo(-r * 0.98, r * 0.86, -r * 1.02, r * 0.6);
-    x.closePath();
+    slimeBody(x, r);
     x.fillStyle = rgrad(x, -r * 0.3, -r * 0.4, r * 1.6, ['#eaffb8', '#86dc5e', '#3a9442']); x.fill(); ink(x, 1.6); x.stroke();
     // light pooling in the jelly near the ground
     x.fillStyle = 'rgba(230,255,190,0.28)'; x.beginPath(); x.ellipse(0, r * 0.6, r * 0.66, r * 0.16, 0, 0, TAU); x.fill();
     shine(x, -r * 0.5, -r * 0.42, r * 0.24, r * 0.12);
     x.fillStyle = 'rgba(255,255,255,0.7)'; disc(x, -r * 0.2, -r * 0.62, r * 0.06); x.fill();
+    face(x, { cx: 0, cy: r * 0.1, gap: r * 0.36, er: r * 0.22, blink, mouth: 'w', blush: true });
+  },
+  // the easter egg: a golden slime, glittering
+  gold(x, r, f, blink) {
+    shadow(x, r);
+    x.fillStyle = 'rgba(255,230,140,0.35)'; disc(x, 0, 0, r * 1.25); x.fill();
+    slimeBody(x, r);
+    x.fillStyle = rgrad(x, -r * 0.3, -r * 0.4, r * 1.6, ['#fffbe0', '#ffd34a', '#c98a10']); x.fill(); ink(x, 1.6); x.stroke();
+    x.fillStyle = 'rgba(255,255,230,0.35)'; x.beginPath(); x.ellipse(0, r * 0.6, r * 0.66, r * 0.16, 0, 0, TAU); x.fill();
+    shine(x, -r * 0.5, -r * 0.42, r * 0.26, r * 0.13);
+    x.fillStyle = '#fffbe6';
+    sparkle(x, r * 0.15, -r * 1.12, r * 0.26); sparkle(x, -r * 1.08, -r * 0.6, r * 0.18); sparkle(x, r * 1.1, -r * 0.2, r * 0.15);
     face(x, { cx: 0, cy: r * 0.1, gap: r * 0.36, er: r * 0.22, blink, mouth: 'w', blush: true });
   },
   // 爬虫: a fuzzy little spider, with a cobweb glowing on its back
@@ -1825,6 +1882,18 @@ const SPR = {
     x.fillStyle = '#fff1c9'; disc(x, 0, 0, 2.6); x.fill();
   }),
   attnGlow: () => sprite('attnGlow', 40, 40, x => { glow(x, 18, '#ffc870', 0.55); }),
+  // 递归: a three-petalled blade
+  recur: () => sprite('recur', 44, 44, x => {
+    glow(x, 20, '#ff9a6a', 0.45);
+    for (let i = 0; i < 3; i++) {
+      x.save(); x.rotate(i / 3 * TAU);
+      x.beginPath(); x.moveTo(0, 0); x.quadraticCurveTo(9, -6, 3, -17); x.quadraticCurveTo(-1, -8, 0, 0);
+      x.fillStyle = vgrad(x, -17, 0, '#ffe2c8', '#f0703c'); x.fill();
+      x.lineWidth = 1.2; x.strokeStyle = '#7a2a1a'; x.stroke();
+      x.restore();
+    }
+    x.fillStyle = '#fff3d6'; disc(x, 0, 0, 3.4); x.fill(); x.lineWidth = 1; x.strokeStyle = '#7a2a1a'; x.stroke();
+  }),
   agent: () => sprite('agent', 30, 30, x => {
     glow(x, 13, '#ff9a4a', 0.4);
     x.strokeStyle = '#e8823a'; x.lineWidth = 2.6; x.lineCap = 'round';
@@ -1956,7 +2025,7 @@ function newRun() {
     kills: 0, banned: 0, breaks: 0, dmgBy: {}, nextId: 1, spawnAcc: 0, evI: 0, chestT: 35,
     pendLv: 0, pendChest: 0, modal: null, modalAt: 0, ending: null, hitStop: 0, shake: 0, hurtFlash: 0,
     cam: { x: 0, y: 0 }, boss: null, decoy: null, gemCombo: 0, gemComboT: 0,
-    rerolls: 2, banishes: 2, banished: new Set(), banishMode: false, picks: [], slotsDirty: true,
+    rerolls: 2, banishes: 2, banished: new Set(), banishMode: false, picks: [], slotsDirty: true, lures: [],
   };
   addWeapon('flame');
 }
@@ -2053,6 +2122,9 @@ function edgePos(margin = 70) {
   return { x: P.x + x, y: P.y + y };
 }
 function spawnEnemy(type, x, y, o = {}) {
+  // the easter egg: one 小号 in a thousand turns up golden (one at a time)
+  const golden = type === 'sock' && !o.elite && Math.random() < 0.001 && !G.enemies.some(e => e.type === 'gold' && !e.dead);
+  if (golden) type = 'gold';
   const d = ENEMY[type], t = G.time;
   let r = d.r, hp = d.hp * (o.flat ? 1 : hpScale(t)), dmg = d.dmg * dmgScale(t), xp = d.xp;
   let speed = d.speed * (1 + t / 600 * 0.12) * rand(0.92, 1.08);
@@ -2064,6 +2136,10 @@ function spawnEnemy(type, x, y, o = {}) {
     flash: 0, kx: 0, ky: 0, slowT: 0, slowAmt: 0, burnT: 0, burnDps: 0, burnAcc: 0, vulnT: 0,
     banned: 0, banDepth: 0, stun: 0, appealT: 0, anim: Math.random() * 10, shootT: rand(1, 3), spawnT: 2, hx: 0, hy: 1,
   };
+  if (golden) {
+    e.hp = e.maxHp = 8; e.goldT = 18; e.marked = true;
+    toast('有什么在闪闪发光……', '一只金色史莱姆出现了，抓住它！', 'gold');
+  }
   G.enemies.push(e);
   return e;
 }
@@ -2170,6 +2246,8 @@ function hit(e, base, src, o = {}) {
   if (P.talents.hunt && (e.elite || e.boss || e.type === 'reg')) d *= 1 + 0.15 * P.talents.hunt;
   if (P.dark > 0) d *= 1.4 + 0.2 * (P.talents.abyss || 0);
   d = Math.max(1, Math.round(d));
+  // the golden slime shrugs off almost everything
+  if (e.type === 'gold') d = crit ? 2 : 1;
   e.hp -= d; e.flash = 0.07;
   G.dmgBy[src] = (G.dmgBy[src] || 0) + d;
   if (o.kb && !e.boss) {
@@ -2206,6 +2284,19 @@ function kill(e, how) {
   if (!G.ult) P.ult = Math.min(ULT_MAX, P.ult + (e.elite || e.type === 'reg' ? 25 : 1));
   if (P.talents.leech && P.leech > 0 && P.hp < P.maxHp) { const h = Math.min(P.leech, 0.25 * P.talents.leech); P.hp = Math.min(P.maxHp, P.hp + h); P.leech -= h; }
   const banned = how === 'ban';
+  if (e.type === 'gold') {
+    // caught: a fistful of gold gems, a gold chest and a full ultimate's worth of 花焰
+    for (let i = 0; i < 4; i++) dropGem(e.x + rand(-24, 24), e.y + rand(-24, 24), 40);
+    G.items.push({ type: 'chest', x: e.x, y: e.y, t: 0, gold: true });
+    P.ult = ULT_MAX;
+    ring(e.x, e.y, 10, 120, 0.6, '#ffd34a', 5);
+    puff(e.x, e.y, 24, '#ffe27a', 260, 0.7, 3.5, true);
+    banner('稀有 · 金色史莱姆', '它留下了一大把经验、一个金宝箱，万花盛典也充满了');
+    say(pick(['……抓到了。今天的运气不错。', '金色的小号？……没收。']), 3);
+    playAnim(['happy'], 1, 1);
+    sfx.level();
+    return;
+  }
   dropGem(e.x, e.y, e.xp * (banned ? 2 + (P.talents.refund || 0) : 1));
   if (e.split && !banned) {
     for (let i = 0; i < e.split; i++) spawnEnemy('sock', e.x + rand(-16, 16), e.y + rand(-16, 16));
@@ -2778,6 +2869,54 @@ function updateWeapons(dt) {
         }
         break;
       }
+      case 'recur': {
+        // 递归: spinning petal blades thrown out that come back to her hand
+        w.t -= dt;
+        if (w.t <= 0) {
+          const tg = nearest(P.x, P.y, 520);
+          if (!tg) { w.t = 0.2; break; }
+          w.t = cdOf(s.cd);
+          const m = castMult(w), n = s.n + P.amount, a0 = Math.atan2(tg.y - P.y, tg.x - P.x);
+          for (let i = 0; i < n; i++) throwRecur(a0 + (i - (n - 1) / 2) * 0.45, s, m, evo);
+          sfx.whoosh();
+        }
+        break;
+      }
+      case 'honey': {
+        // 蜜罐: pots of honey at her feet
+        w.t -= dt;
+        if (w.t <= 0) {
+          w.t = cdOf(s.cd);
+          const m = castMult(w), n = s.n + P.amount, R = s.r * P.area;
+          for (let i = 0; i < n; i++) {
+            const a = rand(0, TAU), d = i ? rand(45, 95) : rand(0, 30), life = s.dur * P.dur;
+            G.zones.push({ kind: 'honey', x: P.x + Math.cos(a) * d, y: P.y + 10 + Math.sin(a) * d * 0.7, r: R, life, max: life, acc: 0, dmg: s.dmg * m, evo });
+          }
+          sfx.field();
+        }
+        break;
+      }
+      case 'captcha': {
+        // 人机验证: a beam sweeping round her; whatever it crosses is hurt and held for a moment
+        const n = s.n + P.amount, L = s.len * P.area * P.size;
+        w.ang = (w.ang || 0) + dt * s.spin; w.n = n; w.L = L;
+        w.acc += dt;
+        if (w.acc >= 1) { w.acc -= 1; w.mult = castMult(w); }
+        if (!w.hitAt) w.hitAt = new Map();
+        if (w.hitAt.size > 400) w.hitAt.clear();
+        for (let i = 0; i < n; i++) {
+          const [ox, oy, ex, ey] = beamEnds(w, i);
+          forNear((ox + ex) / 2, (oy + ey) / 2, L / 2 + 40, e => {
+            if (e.banned > 0 || segDist(e.x, e.y, ox, oy, ex, ey) > e.r + 9) return;
+            const last = w.hitAt.get(e.id);
+            if (last != null && G.time - last < 0.4) return;
+            w.hitAt.set(e.id, G.time);
+            hit(e, s.dmg * (w.mult || 1), 'captcha');
+            if (!e.boss) { e.slowT = evo ? 0.6 : 0.35; e.slowAmt = Math.max(e.slowAmt, 0.9); }
+          });
+        }
+        break;
+      }
       case 'agents': {
         const n = s.n + P.amount;
         for (let i = 0; i < n; i++) {
@@ -2793,6 +2932,19 @@ function updateWeapons(dt) {
       }
     }
   }
+}
+function throwRecur(a, s, m, again) {
+  const sp = 520 * P.pspeed;
+  shot({ kind: 'recur', x: P.x, y: P.y - 14, vx: Math.cos(a) * sp, vy: Math.sin(a) * sp, r: s.size * (1 + (P.area - 1) * 0.5), dmg: s.dmg * m, pierce: 9999, life: 4, src: 'recur', range: s.range * P.area, went: 0, returning: false, again, s, m });
+}
+// the 人机验证 beam: from her chest outward, flattened like the ground
+function beamEnds(w, i) {
+  const a = w.ang + i / w.n * TAU, ox = P.x, oy = P.y - 10;
+  return [ox, oy, ox + Math.cos(a) * w.L, oy + Math.sin(a) * w.L * 0.62];
+}
+function segDist(px, py, ax, ay, bx, by) {
+  const vx = bx - ax, vy = by - ay, t = clamp(((px - ax) * vx + (py - ay) * vy) / (vx * vx + vy * vy || 1), 0, 1);
+  return Math.hypot(px - ax - vx * t, py - ay - vy * t);
 }
 function attnPos(w, i) {
   const a = w.ang + i / w.n * TAU;
@@ -2831,6 +2983,22 @@ function updateShots(dt) {
     b.life -= dt;
     if (b.back && !b.returned && b.life < b.max * 0.5) { b.returned = true; b.vx = -b.vx; b.vy = -b.vy; b.hits.length = 0; }
     b.x += b.vx * dt; b.y += b.vy * dt; b.rot += dt * 7;
+    if (b.kind === 'recur') {
+      b.rot += dt * 9;
+      if (!b.returning) {
+        b.went += Math.hypot(b.vx, b.vy) * dt;
+        if (b.went >= b.range) { b.returning = true; b.hits.length = 0; }
+      } else {
+        // home back to her hand; 无限递归 throws it straight out again
+        const dx = P.x - b.x, dy = P.y - 14 - b.y, d = Math.hypot(dx, dy) || 1, v = 560 * P.pspeed, k = Math.min(1, dt * 8);
+        b.vx += (dx / d * v - b.vx) * k; b.vy += (dy / d * v - b.vy) * k;
+        if (d < 24) {
+          b.dead = true;
+          if (b.again) { const tg = nearest(P.x, P.y, 520); throwRecur(tg ? Math.atan2(tg.y - P.y, tg.x - P.x) + rand(-0.4, 0.4) : rand(0, TAU), b.s, b.m, false); }
+          continue;
+        }
+      }
+    }
     if (b.kind === 'orb') {
       if (b.trail) {
         b.trailT -= dt;
@@ -2893,8 +3061,30 @@ function updateEnemies(dt) {
       if (e.boss && e.stun <= 0) { floatText(e.x, e.y - e.r - 26, '申诉成功', '#ffb3e3', 15); say('……申诉通过了？这不合规定。'); playAnim(['angry'], 1.3, 1); }
       continue;
     }
+    if (e.type === 'gold') {
+      // 金色史莱姆 darts away from her, weaving, and slips off after a while
+      e.goldT -= dt;
+      if (e.goldT <= 0) {
+        e.dead = true;
+        puff(e.x, e.y, 14, '#ffe27a', 160, 0.6, 3, true);
+        toast('金色史莱姆溜走了', '下次手要快一点', 'gold');
+        say('……跑掉了。算了，下次。');
+        continue;
+      }
+      const ax = e.x - P.x, ay = e.y - P.y, ad = Math.hypot(ax, ay) || 1, wob = Math.sin(e.anim * 3 + e.id);
+      const gsp = e.speed * (1 - e.slowAmt) * (ad < 380 ? 1 : 0.45);
+      e.x += (ax / ad + (-ay / ad) * wob * 0.9) * gsp * dt;
+      e.y += (ay / ad + (ax / ad) * wob * 0.9) * gsp * dt;
+      if (Math.random() < dt * 10) puff(e.x + rand(-e.r, e.r), e.y - e.r * rand(0, 1), 1, '#fff1a8', 40, 0.5, 2, true);
+      continue;
+    }
     let tx = P.x, ty = P.y;
     if (G.decoy && (G.decoy.x - e.x) ** 2 + (G.decoy.y - e.y) ** 2 < 420 * 420) { tx = G.decoy.x; ty = G.decoy.y; }
+    // 蜜罐 draws the small fry to the nearest pot
+    else if (G.lures.length && !e.heavy && !e.elite && !e.ranged) {
+      let best = 175 * 175;
+      for (const z of G.lures) { const q = (z.x - e.x) ** 2 + (z.y - e.y) ** 2; if (q < best) { best = q; tx = z.x; ty = z.y; } }
+    }
     const dx = tx - e.x, dy = ty - e.y, d = Math.hypot(dx, dy) || 1;
     let sp = e.speed * (1 - e.slowAmt);
     if (rl && d < 150) sp *= 1 - 0.15 * rl;
@@ -2937,7 +3127,7 @@ function updateEnemies(dt) {
     }
     // touch damage
     const pdx = e.x - P.x, pdy = e.y - P.y;
-    if (pdx * pdx + pdy * pdy < (e.r + P.r * 0.85) ** 2) hurtPlayer(e.dmg);
+    if (e.dmg > 0 && pdx * pdx + pdy * pdy < (e.r + P.r * 0.85) ** 2) hurtPlayer(e.dmg);
     // stragglers left far behind come back in from the edge
     if (Math.abs(pdx) > viewCut || Math.abs(pdy) > viewCut) {
       const p = edgePos(60);
@@ -3028,8 +3218,23 @@ function updateBullets(dt) {
 }
 
 function updateZones(dt) {
+  G.lures.length = 0;
   for (const z of G.zones) {
     z.life -= dt;
+    if (z.kind === 'honey') {
+      if (z.life > 0) G.lures.push(z);
+      z.acc += dt;
+      if (z.acc >= 0.5) {
+        z.acc -= 0.5;
+        forNear(z.x, z.y, z.r + 50, e => {
+          if (e.banned > 0 || (e.x - z.x) ** 2 + (e.y - z.y) ** 2 >= (z.r + e.r) ** 2) return;
+          e.slowT = 0.6; e.slowAmt = Math.max(e.slowAmt, e.heavy || e.boss ? 0.4 : 0.85);
+          hit(e, z.dmg, 'honey', { quiet: Math.random() < 0.5 });
+        });
+      }
+      if (z.evo && z.life <= 0 && !z.done) { z.done = true; explode(z.x, z.y, z.r * 1.7, z.dmg * 5, 'honey', { color: '#ffd35a' }); }
+      continue;
+    }
     if (z.kind === 'fire') {
       z.acc += dt;
       if (z.acc >= 0.35) {
@@ -3301,6 +3506,7 @@ function drawZones() {
       continue;
     }
     if (z.kind === 'lash') { drawLash(z); continue; }
+    if (z.kind === 'honey') { drawHoney(z, a); continue; }
     if (z.kind === 'meteor') {
       // where it will land: a ring closing in
       const k = 1 - z.life / z.max;
@@ -3327,6 +3533,27 @@ function drawZones() {
   }
 }
 
+// 蜜罐: a glossy puddle of honey and the little pot it came from
+function drawHoney(z, a) {
+  const r = z.r, t = G.time, grow = Math.min(1, (z.max - z.life) / 0.3);
+  ctx.globalAlpha = a;
+  ctx.save(); ctx.translate(z.x, z.y); ctx.scale(1, 0.6);
+  const g = ctx.createRadialGradient(-r * 0.2, -r * 0.2, r * 0.1, 0, 0, r * grow);
+  g.addColorStop(0, 'rgba(255,214,110,0.5)'); g.addColorStop(0.7, 'rgba(232,150,30,0.38)'); g.addColorStop(1, 'rgba(180,100,20,0.08)');
+  ctx.beginPath();
+  for (let i = 0; i <= 16; i++) { const an = i / 16 * TAU, k = 1 + 0.07 * Math.sin(an * 3 + z.x); ctx.lineTo(Math.cos(an) * r * k * grow, Math.sin(an) * r * k * grow); }
+  ctx.closePath(); ctx.fillStyle = g; ctx.fill();
+  ctx.strokeStyle = 'rgba(140,70,10,0.5)'; ctx.lineWidth = 2; ctx.stroke();
+  ctx.fillStyle = 'rgba(255,250,220,0.5)'; ctx.beginPath(); ctx.ellipse(-r * 0.3, -r * 0.3, r * 0.22, r * 0.08, -0.3, 0, TAU); ctx.fill();
+  ctx.restore();
+  // the pot, tipped over in the middle
+  const px = z.x, py = z.y - 6 + Math.sin(t * 4 + z.x) * 1;
+  ctx.fillStyle = '#c97a2a'; ctx.beginPath(); ctx.ellipse(px, py, 11, 9, 0, 0, TAU); ctx.fill();
+  ctx.lineWidth = 1.6; ctx.strokeStyle = INK; ctx.stroke();
+  ctx.fillStyle = '#f2d39a'; rrPath(ctx, px - 9, py - 11, 18, 5, 2); ctx.fill(); ctx.stroke();
+  ctx.fillStyle = '#fff3d6'; ctx.font = `700 9px ${UI_FONT}`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText('蜜', px, py + 1.5);
+  ctx.globalAlpha = 1;
+}
 // a thorned rose vine whipping out and curling back
 function drawLash(z) {
   const k = 1 - z.life / z.max, reach = Math.min(1, k * 2.4), fade = Math.min(1, z.life / z.max * 2.5);
@@ -3351,6 +3578,25 @@ function drawLash(z) {
   ctx.strokeStyle = `rgba(255,236,220,${0.5 * fade})`; ctx.lineWidth = 2;
   ctx.beginPath(); ctx.moveTo(x + nx * wd * 0.5 * -z.flip, y + ny * wd * 0.5 * -z.flip); ctx.quadraticCurveTo(cx + nx * wd * 0.3 * -z.flip, cy + ny * wd * 0.3 * -z.flip, ex, ey); ctx.stroke();
   ctx.globalAlpha = 1;
+}
+// 人机验证: a sweeping beam of light with a ticked checkbox at its tip
+function drawCaptcha() {
+  const w = P.weapons.find(v => v.id === 'captcha');
+  if (!w || !w.n) return;
+  for (let i = 0; i < w.n; i++) {
+    const [ox, oy, ex, ey] = beamEnds(w, i);
+    ctx.globalCompositeOperation = 'lighter';
+    const g = ctx.createLinearGradient(ox, oy, ex, ey);
+    g.addColorStop(0, 'rgba(120,220,255,0.05)'); g.addColorStop(1, 'rgba(150,235,255,0.7)');
+    ctx.strokeStyle = g; ctx.lineCap = 'round';
+    ctx.lineWidth = w.level === 6 ? 14 : 10; ctx.beginPath(); ctx.moveTo(ox, oy); ctx.lineTo(ex, ey); ctx.stroke();
+    ctx.strokeStyle = 'rgba(240,252,255,0.85)'; ctx.lineWidth = 2.5; ctx.stroke();
+    ctx.globalCompositeOperation = 'source-over';
+    rrPath(ctx, ex - 9, ey - 9, 18, 18, 4); ctx.fillStyle = '#fbfdff'; ctx.fill();
+    ctx.lineWidth = 1.5; ctx.strokeStyle = '#5a8ab0'; ctx.stroke();
+    ctx.strokeStyle = '#2fae5a'; ctx.lineWidth = 2.6; ctx.lineJoin = 'round';
+    ctx.beginPath(); ctx.moveTo(ex - 5, ey); ctx.lineTo(ex - 1.5, ey + 4); ctx.lineTo(ex + 5.5, ey - 4.5); ctx.stroke();
+  }
 }
 function drawContext() {
   const w = P.weapons.find(v => v.id === 'context');
@@ -3676,7 +3922,7 @@ function drawShots() {
     const s = SPR[b.kind]();
     ctx.save(); ctx.translate(b.x, b.y);
     ctx.rotate(b.kind === 'petal' ? Math.atan2(b.vy, b.vx) : b.rot);
-    const k = b.kind === 'star' ? b.r / 6 : b.kind === 'flame' ? b.r / 8 : 1;
+    const k = b.kind === 'star' ? b.r / 6 : b.kind === 'flame' ? b.r / 8 : b.kind === 'recur' ? b.r / 12 : 1;
     ctx.drawImage(s.c, -s.w / 2 * k, -s.h / 2 * k, s.w * k, s.h * k);
     ctx.restore();
   }
@@ -3915,6 +4161,7 @@ function render() {
     drawPlayer();
     drawAgents(false); drawAttn(false);
     drawShots();
+    drawCaptcha();
     drawBullets();
     drawStamps();
     drawFx();
@@ -3976,11 +4223,13 @@ function banner(title, sub, boss) {
   clearTimeout(bannerTimer);
   bannerTimer = setTimeout(() => { el.hidden = true; }, 2900);
 }
-function toast(title, sub, dark) {
-  const el = $('toast');
+// kind: nothing for a ban notice, true or 'dark' for 打破规则, 'gold' for the golden slime
+function toast(title, sub, kind) {
+  const el = $('toast'), k = kind === true ? 'dark' : kind || '';
   $('toastTitle').textContent = title; $('toastSub').textContent = sub;
-  $('toastSeal').textContent = dark ? '破' : '封';
-  el.classList.toggle('dark', !!dark);
+  $('toastSeal').textContent = k === 'dark' ? '破' : k === 'gold' ? '金' : '封';
+  el.classList.toggle('dark', k === 'dark');
+  el.classList.toggle('gold', k === 'gold');
   replay(el);
   clearTimeout(toastTimer);
   toastTimer = setTimeout(() => { el.hidden = true; }, 2300);
