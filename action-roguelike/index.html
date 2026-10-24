@@ -252,6 +252,8 @@ h2 { margin: 0; font-family: var(--display); font-weight: 400; font-size: clamp(
 .hero { display: grid; grid-template-columns: minmax(0, 230px) minmax(0, 1fr); gap: clamp(16px, 3vw, 32px); align-items: center; }
 .portrait { margin: 0; align-self: stretch; display: grid; place-items: center; background: radial-gradient(ellipse at 50% 58%, #fbdcbc 0%, rgba(251, 220, 188, 0) 68%); }
 .portrait img { display: block; width: 100%; max-width: 230px; height: auto; filter: drop-shadow(0 8px 10px rgba(59, 36, 22, 0.22)); }
+#hero3d { display: block; width: 100%; max-width: 250px; aspect-ratio: 4 / 5; cursor: grab; touch-action: pan-y; filter: drop-shadow(0 8px 10px rgba(59, 36, 22, 0.22)); }
+#hero3d:active { cursor: grabbing; }
 .hero-name { display: flex; align-items: baseline; flex-wrap: wrap; gap: 12px; }
 .hero-name .en { font-family: var(--display); font-size: 1.05rem; letter-spacing: 0.06em; color: var(--ink-soft); }
 .role { padding: 2px 10px; border-radius: 999px; font-size: 0.8rem; letter-spacing: 0.2em; background: var(--ink); color: var(--lace); }
@@ -283,6 +285,7 @@ h2 { margin: 0; font-family: var(--display); font-weight: 400; font-size: clamp(
 @media (max-width: 680px) {
   .hero { grid-template-columns: minmax(0, 1fr); }
   .portrait img { max-width: 170px; }
+  #hero3d { max-width: 190px; }
   .hero-go .btn.primary { flex: 1; padding-inline: 20px; }
 }
 @media (max-width: 480px) {
@@ -393,7 +396,7 @@ h2 { margin: 0; font-family: var(--display); font-weight: 400; font-size: clamp(
       <p class="lede">深夜，成群的小号、爬虫和越狱提示词涌进了庄园。大小姐放下茶杯，拿起了印章。</p>
     </header>
     <article class="sheet hero">
-      <figure class="portrait"><img src="art/claude.webp" alt="克劳德大小姐：橙色长卷发，别着橙色花朵发饰，穿奶油色洛丽塔裙"></figure>
+      <figure class="portrait"><img src="art/claude.webp" alt="克劳德大小姐：橙色长卷发，别着橙色花朵发饰，穿奶油色洛丽塔裙"><canvas id="hero3d" hidden aria-label="克劳德大小姐的 3D 模型，可以拖动旋转"></canvas></figure>
       <div class="hero-info">
         <div class="hero-name"><h2>克劳德大小姐</h2><span class="en">Claude</span><span class="role">花焰法师</span></div>
         <p class="hero-quote">「花焰缀于指尖，世界为我盛放。」</p>
@@ -867,6 +870,7 @@ function resize() {
   cache.clear();
   frameCache.clear();
   buildPlayerSprite();
+  size3D();
 }
 
 function sprite(key, w, h, draw) {
@@ -965,6 +969,327 @@ function buildPlayerSprite() {
   if (!artReady || !PX) return;
   pSprite = outlined(art, 0, 0, art.width, art.height, SPR_H * art.width / art.height, SPR_H);
   pSprite.face = 1; pSprite.feet = 0;
+}
+
+// ======================================================================
+//  克劳德大小姐 in 3D
+// ======================================================================
+// 克劳德大小姐's 3D model is one solid mesh with no skeleton. art/claude.glb carries a _REGION weight per vertex
+// (left leg, right leg, arm, hair), and the vertex shader bends those parts around their joints.
+const ARM_MAX = 0.5;
+const MODEL_JOINTS = {
+  hip: 0.32, legX: 0.082,           // legs swing from just under the skirt
+  shoulder: [0.1, 0.605, 0.01],     // +x is her left
+  neck: 0.64,
+  waist: 0.52, hem: 0.22,
+};
+function createClaudeModel(T, gltf) {
+  let mesh = null;
+  gltf.scene.traverse(o => { if (o.isMesh && !mesh) mesh = o; });
+  const root = new T.Group(), body = new T.Group();
+  root.add(body);
+  mesh.position.set(0, 0, 0);
+  mesh.frustumCulled = false;
+  body.add(mesh);
+  const mat = mesh.material;
+  const U = {
+    uLeg: { value: new T.Vector2() },
+    uArmL: { value: new T.Vector2() }, uArmR: { value: new T.Vector2() },
+    uHead: { value: new T.Vector2() },
+    uSkirt: { value: new T.Vector3(0, 0, 0) },
+    uHair: { value: new T.Vector3() },
+    uTime: { value: 0 },
+  };
+  const J = MODEL_JOINTS, f = v => v.toFixed(4);
+  mat.onBeforeCompile = sh => {
+    Object.assign(sh.uniforms, U);
+    sh.vertexShader = sh.vertexShader
+      .replace('#include <common>', `#include <common>
+attribute vec4 _region;
+uniform vec2 uLeg, uArmL, uArmR, uHead;
+uniform vec3 uSkirt, uHair;
+uniform float uTime;
+mat3 rotX(float a) { float c = cos(a), s = sin(a); return mat3(1., 0., 0., 0., c, s, 0., -s, c); }
+mat3 rotZ(float a) { float c = cos(a), s = sin(a); return mat3(c, s, 0., -s, c, 0., 0., 0., 1.); }
+// a soft joint: each vertex turns by its share of the angle, so a part bends round the joint instead of stretching
+void bend(inout vec3 p, inout vec3 n, vec2 ang, float side, vec3 pivot, float w) {
+  mat3 r = rotX(ang.x * w) * rotZ(ang.y * side * w);
+  p = r * (p - pivot) + pivot;
+  n = r * n;
+}
+void deform(inout vec3 p, inout vec3 n) {
+  float side = position.x < 0. ? -1. : 1.;
+  float legW = _region.x + _region.y, armW = _region.z, hairW = _region.w;
+  // skirt: the hem trails and flares; the waist stays put
+  float sk = smoothstep(${f(J.waist)}, ${f(J.hem)}, p.y) * (1. - armW) * (1. - legW);
+  p.xz += p.xz * uSkirt.z * sk;
+  p.xz += uSkirt.xy * sk * sk;
+  // hair streams out behind her and ripples, more towards the tips
+  float hw = hairW * smoothstep(0.78, 0.3, p.y);
+  p += uHair * hw + vec3(sin(uTime * 2.3 + p.y * 18.), 0., cos(uTime * 1.9 + p.y * 15.)) * 0.006 * hw;
+  // legs swing from the hip
+  bend(p, n, vec2(side < 0. ? uLeg.y : uLeg.x, 0.), 0., vec3(side * ${f(J.legX)}, ${f(J.hip)}, 0.), legW);
+  // arms: raise sideways (z), then swing forward or back (x)
+  vec2 a = side > 0. ? uArmL : uArmR;
+  bend(p, n, a, side, vec3(side * ${f(J.shoulder[0])}, ${f(J.shoulder[1])}, ${f(J.shoulder[2])}), armW);
+  // head nods and tilts at the neck
+  bend(p, n, uHead, 1., vec3(0., ${f(J.neck)}, 0.), smoothstep(${f(J.neck - 0.04)}, ${f(J.neck + 0.06)}, p.y) * (1. - armW));
+}`)
+      .replace('#include <beginnormal_vertex>', `vec3 objectNormal = vec3(normal);
+vec3 deformed = vec3(position);
+deform(deformed, objectNormal);
+objectNormal = normalize(objectNormal);`)
+      .replace('#include <begin_vertex>', 'vec3 transformed = deformed;');
+  };
+  mat.customProgramCacheKey = () => 'claude-bend';
+  mat.needsUpdate = true;
+  const base = mat.color.clone();
+  const DARK = new T.Color(0x3a1650);
+
+  // ---------- animation ----------
+  // aLx/aRx swing an arm forward (negative) or back; aLz/aRz raise it out to the side
+  const J0 = { yaw: 0, bob: 0, lean: 0, roll: 0, hx: 0, hz: 0, aLx: 0, aLz: 0, aRx: 0, aRz: 0, lL: 0, lR: 0, skx: 0, skz: 0, flare: 0, fall: 0, lift: 0 };
+  const cur = Object.assign({}, J0), goal = Object.assign({}, J0);
+  let clock = 0, walk = 0, idle = 0, yawVel = 0, spinFrom = 0, lastPose = '', darkK = 0, flash = 0;
+  const trail = new T.Vector3();
+  const angDiff = (a, b) => { let d = a - b; while (d > Math.PI) d -= Math.PI * 2; while (d < -Math.PI) d += Math.PI * 2; return d; };
+  // s: { moving, vx, vy, aim (yaw or null), pose, poseK (0..1), dash, ult (seconds into it or -1), dead (seconds since or -1), dark (0..1), flash, yaw (forced) }
+  function step(dt, s) {
+    clock += dt;
+    const t = clock;
+    walk += dt * (s.moving ? 11 : 0);
+    idle = s.moving || s.pose ? 0 : idle + dt;
+    const sw = Math.sin(walk), run = s.moving ? 1 : 0;
+    Object.assign(goal, {
+      bob: s.moving ? Math.abs(sw) * 0.022 : Math.sin(t * 2.4) * 0.004,
+      lean: s.moving ? 0.12 : 0, roll: s.moving ? Math.cos(walk) * 0.03 : 0,
+      hx: s.moving ? -0.05 : Math.sin(t * 1.1) * 0.03, hz: Math.sin(t * 0.9) * 0.05,
+      aLx: s.moving ? sw * 0.55 : Math.sin(t * 1.6) * 0.05, aRx: s.moving ? -sw * 0.55 : -Math.sin(t * 1.6) * 0.05,
+      aLz: s.moving ? -0.15 : 0, aRz: s.moving ? -0.15 : 0,
+      lL: s.moving ? -sw * 0.55 : 0, lR: s.moving ? sw * 0.55 : 0,
+      skx: s.moving ? Math.sin(walk) * 0.012 : 0, skz: s.moving ? -0.03 : 0, flare: s.moving ? 0.03 : 0,
+      fall: 0, lift: 0,
+    });
+    let yawGoal = null;
+    if (s.moving) yawGoal = Math.atan2(s.vx, s.vy);
+    else if (s.aim != null) yawGoal = s.aim;
+    else if (idle > 1.4) yawGoal = 0.3 * Math.sign(Math.sin(cur.yaw) || 1);
+    const k = s.poseK || 0;
+    if (s.pose !== lastPose) { if (s.pose === 'spin') spinFrom = cur.yaw; lastPose = s.pose; }
+    // expressive poses turn her toward the viewer
+    if (['happy', 'angry', 'shy', 'curtsy', 'wave', 'hurt', 'cast'].includes(s.pose) && !s.moving) yawGoal = s.pose === 'cast' ? 0 : 0.3 * Math.sign(Math.sin(cur.yaw) || 1);
+    // the arms are fused to her sides and only ever move a little (ARM_MAX), so the poses
+    // speak through the hops, leans, legs, skirt and hair
+    switch (s.pose) {
+      case 'attack':
+        // flicks her hand toward the target
+        goal.aRx = -0.5; goal.aRz = 0.2; goal.lean += 0.06; goal.bob = -0.008; goal.hx = 0.04; break;
+      case 'cast':
+        if (k < 0.45) { goal.lean = -0.12; goal.bob = 0.03; goal.aLz = 0.45; goal.aRz = 0.45; goal.aRx = -0.5; goal.hx = -0.1; goal.flare = 0.05; }
+        else { goal.lean = 0.16; goal.bob = -0.015; goal.aRx = -0.5; goal.aLx = 0.3; goal.aLz = 0.3; goal.hx = 0.08; goal.flare = 0.12; }
+        break;
+      case 'hurt':
+        goal.lean = -0.25; goal.hx = -0.18; goal.aLx = -0.45; goal.aRx = -0.45; goal.aLz = 0.2; goal.aRz = 0.2; break;
+      case 'land':
+        goal.bob = -0.03 * (1 - k); goal.aLz = 0.45; goal.aRz = 0.45; goal.flare = 0.12; break;
+      case 'happy':
+        goal.bob = Math.abs(Math.sin(k * Math.PI * 2)) * 0.07; goal.aLz = 0.45; goal.aRz = 0.45; goal.aLx = -0.3; goal.aRx = -0.3;
+        goal.hz = Math.sin(t * 10) * 0.08; goal.flare = 0.1; break;
+      case 'angry': {
+        const stomp = Math.abs(Math.sin(k * Math.PI * 3));
+        goal.aLz = -0.2; goal.aRz = -0.2; goal.aLx = 0.3; goal.aRx = 0.3; goal.hx = 0.12; goal.bob = stomp * 0.018; goal.lL = -stomp * 0.25; break;
+      }
+      case 'shy':
+        goal.aLx = -0.5; goal.aRx = -0.5; goal.aLz = -0.4; goal.aRz = -0.4; goal.hx = 0.18; goal.hz = 0.16; goal.roll = Math.sin(t * 3) * 0.05; break;
+      case 'spin':
+        goal.aLz = 0.5; goal.aRz = 0.5; goal.aLx = -0.2; goal.aRx = -0.2; goal.flare = 0.24; goal.bob = 0.02; break;
+      case 'curtsy': {
+        const b = Math.sin(k * Math.PI);
+        goal.bob = -0.035 * b; goal.aLz = 0.35; goal.aRz = 0.35; goal.aLx = -0.2; goal.aRx = -0.2; goal.hx = 0.25 * b; goal.lean = 0.14 * b; goal.lL = 0.25 * b; goal.lR = -0.1 * b; goal.flare = 0.06 * b;
+        break;
+      }
+      case 'wave':
+        goal.aLz = 0.42 + Math.sin(t * 12) * 0.08; goal.aLx = -0.5; goal.hz = 0.1; break;
+    }
+    if (s.dash) { goal.lean = 0.42; goal.aLx = 0.5; goal.aRx = 0.5; goal.aLz = 0.3; goal.aRz = 0.3; goal.lL = 0.55; goal.lR = -0.4; goal.flare = 0.1; goal.skz = -0.06; }
+    if (s.ult >= 0) {
+      goal.lift = Math.min(1, s.ult / 0.4) * 0.26 - Math.max(0, s.ult - 1.3) * 0.52;
+      goal.aLz = 0.45 + Math.sin(t * 3) * 0.05; goal.aRz = 0.45 + Math.sin(t * 3) * 0.05; goal.aLx = -0.3; goal.aRx = -0.3;
+      goal.lL = 0.2; goal.lR = -0.15; goal.hx = -0.15; goal.flare = 0.18; yawGoal = null;
+      cur.yaw += dt * (s.ult < 1.05 ? 1.2 : 0.4);
+    }
+    if (s.dead >= 0) { goal.fall = Math.min(1, s.dead / 0.45); goal.aLz = 0.4; goal.aRz = 0.4; goal.lL = 0.3; yawGoal = 0; }
+    // facing: turn the shortest way round and remember how fast, for the hair
+    const prevYaw = cur.yaw;
+    if (s.yaw != null) cur.yaw = s.yaw;
+    else if (s.pose === 'spin') cur.yaw = spinFrom + k * Math.PI * 2;
+    else if (yawGoal != null) cur.yaw += angDiff(yawGoal, cur.yaw) * Math.min(1, dt * (s.moving ? 12 : 6));
+    yawVel += ((cur.yaw - prevYaw) / Math.max(dt, 1e-4) - yawVel) * Math.min(1, dt * 10);
+    const r = Math.min(1, dt * 14);
+    for (const key in goal) if (key !== 'yaw') cur[key] += (goal[key] - cur[key]) * r;
+
+    root.rotation.y = cur.yaw;
+    // she topples onto her side, still facing the viewer
+    root.rotation.z = cur.fall * 1.38;
+    root.position.set(cur.fall * 0.42, cur.fall * 0.12 + cur.bob + cur.lift, 0);
+    body.rotation.set(cur.lean, 0, cur.roll);
+    U.uLeg.value.set(cur.lL, cur.lR);
+    const arm = v => Math.max(-ARM_MAX, Math.min(ARM_MAX, v));
+    U.uArmL.value.set(arm(cur.aLx), arm(cur.aLz)); U.uArmR.value.set(arm(cur.aRx), arm(cur.aRz));
+    U.uHead.value.set(cur.hx, cur.hz);
+    U.uSkirt.value.set(cur.skx + Math.max(-0.05, Math.min(0.05, -yawVel * 0.012)), cur.skz, cur.flare);
+    // hair trails behind when she runs, lifts when she jumps, swings when she turns
+    trail.set(Math.max(-0.08, Math.min(0.08, -yawVel * 0.02)), cur.lift * 0.08 + Math.abs(sw) * 0.01 * run, -(s.dash ? 0.1 : run * 0.05));
+    U.uHair.value.lerp(trail, Math.min(1, dt * 6));
+    U.uTime.value = t;
+    // 黑化 darkens her; a hit flashes her white
+    darkK += ((s.dark || 0) - darkK) * Math.min(1, dt * 6);
+    flash = s.flash ? 1 : Math.max(0, flash - dt * 12);
+    mat.color.copy(base).lerp(DARK, darkK * 0.5);
+    mat.emissive.setRGB(flash * 0.5 + darkK * 0.05, flash * 0.46, flash * 0.44 + darkK * 0.08);
+  }
+  return { root, step };
+}
+// three.js and the model arrive in the background; until they do (or if they can't) she stays a 2D sprite
+const M3 = { ready: false, mode: 'hero', forced: /[?&]3d\b/.test(location.search) };
+const M3_FW = 1.5, M3_FH = 1.6, M3_UNIT = SPR_H / 0.9; // camera box in model units; world units per model unit
+const M3_LIBS = ['https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js', 'https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js'];
+function load3D() {
+  const glb = fetch('art/claude.glb').then(r => { if (!r.ok) throw new Error('model ' + r.status); return r.arrayBuffer(); });
+  const script = src => new Promise((ok, fail) => {
+    const s = document.createElement('script');
+    s.src = src; s.onload = ok; s.onerror = () => fail(new Error('could not load ' + src));
+    document.head.appendChild(s);
+  });
+  script(M3_LIBS[0]).then(() => script(M3_LIBS[1])).then(() => glb)
+    .then(buf => new Promise((ok, fail) => new THREE.GLTFLoader().parse(buf, '', ok, fail)))
+    .then(init3D)
+    .catch(err => console.warn('3D unavailable, staying 2D:', err));
+}
+function init3D(gltf) {
+  const T = window.THREE;
+  const renderer = new T.WebGLRenderer({ alpha: true, antialias: true, preserveDrawingBuffer: true });
+  renderer.setClearColor(0x000000, 0);
+  renderer.setPixelRatio(1);
+  renderer.outputEncoding = T.sRGBEncoding;
+  renderer.domElement.addEventListener('webglcontextlost', () => { M3.ready = false; showPortrait(false); });
+  const scene = new T.Scene();
+  // warm sky light from above, a cooler bounce from the ground, and a key light from the front left
+  scene.add(new T.HemisphereLight(0xfff1e4, 0x5e4c6e, 0.95));
+  const sun = new T.DirectionalLight(0xffffff, 1.25);
+  sun.position.set(-1, 2.2, 2);
+  scene.add(sun);
+  // the same slightly-from-above view the rest of the game is drawn in
+  const el = 22 * Math.PI / 180, cy = 0.55;
+  const cam = new T.OrthographicCamera(-M3_FW / 2, M3_FW / 2, M3_FH / 2, -M3_FH / 2, 0.1, 20);
+  cam.position.set(0, cy + 5 * Math.sin(el), 5 * Math.cos(el));
+  cam.lookAt(0, cy, 0);
+  cam.updateMatrixWorld(); cam.updateProjectionMatrix();
+  const heroCam = new T.OrthographicCamera(-0.44, 0.44, 0.55, -0.55, 0.1, 20);
+  heroCam.position.set(0, 0.5 + 5 * Math.sin(el * 0.5), 5 * Math.cos(el * 0.5));
+  heroCam.lookAt(0, 0.5, 0);
+  heroCam.updateMatrixWorld(); heroCam.updateProjectionMatrix();
+  const model = createClaudeModel(T, gltf);
+  scene.add(model.root);
+  const o = new T.Vector3(0, 0, 0).project(cam);
+  Object.assign(M3, { renderer, scene, cam, heroCam, model, ax: (o.x + 1) / 2, ay: (1 - o.y) / 2, last: performance.now(), ready: true });
+  size3D();
+  showPortrait(true);
+}
+// the title screen shows the turntable while the model is up, the illustration otherwise
+function showPortrait(model) {
+  $('hero3d').hidden = !model;
+  document.querySelector('.portrait img').hidden = model;
+}
+function size3D() {
+  if (!M3.ready) return;
+  if (M3.mode === 'game') {
+    // render a little above the on-screen size and let the downscale smooth the edges
+    const ss = Math.min(1.6, 520 / (M3_FH * M3_UNIT * PX));
+    M3.renderer.setSize(Math.round(M3_FW * M3_UNIT * PX * ss), Math.round(M3_FH * M3_UNIT * PX * ss), false);
+  } else {
+    const hero = $('hero3d'), w = Math.max(120, Math.round(hero.getBoundingClientRect().width * dpr || 230 * dpr));
+    hero.width = w; hero.height = Math.round(w * 1.25);
+    M3.renderer.setSize(hero.width, hero.height, false);
+  }
+}
+function set3DMode(mode) { M3.mode = mode; size3D(); }
+const POSE_OF = { atk1: 'attack', atk2: 'attack', atk3: 'attack', cast1: 'cast', cast2: 'cast', cast3: 'cast', dash4: 'land', hurt: 'hurt', skirt: 'curtsy', spin: 'spin', happy: 'happy', angry: 'angry', shy: 'shy', wave: 'wave' };
+function modelState() {
+  const a = P.anim;
+  let pose = '', k = 0;
+  if (a) {
+    const i = Math.min(a.seq.length - 1, Math.floor(a.t / a.dur * a.seq.length)), seg = a.dur / a.seq.length;
+    pose = POSE_OF[a.seq[i]] || '';
+    k = pose === 'cast' || pose === 'attack' ? a.t / a.dur : (a.t - i * seg) / seg;
+  }
+  return {
+    moving: P.moving, vx: P.dash ? P.dash.dx : P.mvx, vy: P.dash ? P.dash.dy : P.mvy,
+    aim: pose === 'attack' ? Math.atan2(P.aimX || 0, P.aimY || 1) : null,
+    pose, poseK: clamp(k, 0, 1), dash: !!P.dash,
+    ult: G.ult ? G.ult.t : -1, dead: G.ending && !G.ending.win ? G.ending.t : -1,
+    dark: P.dark > 0 ? 1 : 0, flash: P.flash > 0 && !(G.ending && !G.ending.win),
+  };
+}
+function draw3D(footY) {
+  const now = performance.now(), gap = now - M3.last, dt = Math.min(0.05, gap / 1000);
+  M3.last = now;
+  // a slow device gets the 2D sprite back: average the frame gap over the first seconds of play
+  if (gap < 500) {
+    M3.avg = M3.avg == null ? gap : M3.avg * 0.97 + gap * 0.03;
+    M3.watched = (M3.watched || 0) + gap;
+    if (M3.watched > 4000 && M3.avg > 45 && !M3.forced) {
+      M3.ready = false; M3.slow = true;
+      showPortrait(false);
+      console.warn('3D model too slow here, using the 2D sprite');
+      return false;
+    }
+  }
+  M3.model.step(dt, modelState());
+  M3.renderer.render(M3.scene, M3.cam);
+  const w = M3_FW * M3_UNIT, h = M3_FH * M3_UNIT;
+  ctx.imageSmoothingQuality = 'high';
+  ctx.drawImage(M3.renderer.domElement, P.x - M3.ax * w, footY - M3.ay * h, w, h);
+  return true;
+}
+// a still copy of her current pose, for the dash phantom and the decoy
+function snapshot3D() {
+  if (!M3.ready || M3.mode !== 'game') return null;
+  const src = M3.renderer.domElement, c = document.createElement('canvas');
+  c.width = src.width; c.height = src.height;
+  c.getContext('2d').drawImage(src, 0, 0);
+  return c;
+}
+function drawGhost(c, x, footY, alpha) {
+  const w = M3_FW * M3_UNIT, h = M3_FH * M3_UNIT;
+  ctx.globalAlpha = alpha;
+  ctx.drawImage(c, x - M3.ax * w, footY - M3.ay * h, w, h);
+  ctx.globalAlpha = 1;
+}
+// title screen: she idles on a turntable, shows off a move now and then, and can be spun by dragging
+const hero = { yaw: 0.35, t: 0, pose: '', poseT: 0, poseDur: 0, next: 2.5, drag: null, spinVel: 0 };
+const HERO_POSES = [['spin', 1.2], ['happy', 1.4], ['curtsy', 1.5], ['wave', 1.6]];
+function heroFrame(dt) {
+  if (!M3.ready || M3.mode !== 'hero' || $('title').hidden) return;
+  hero.t += dt;
+  if (hero.pose) {
+    hero.poseT += dt;
+    if (hero.poseT >= hero.poseDur) { hero.pose = ''; hero.next = 2.5 + Math.random() * 2; }
+  } else if (!hero.drag) {
+    hero.next -= dt;
+    if (hero.next <= 0) { const p = HERO_POSES[(Math.random() * HERO_POSES.length) | 0]; hero.pose = p[0]; hero.poseDur = p[1]; hero.poseT = 0; }
+  }
+  if (!hero.drag) {
+    hero.yaw += hero.spinVel * dt; hero.spinVel *= Math.pow(0.05, dt);
+    // drift back to facing the viewer
+    if (Math.abs(hero.spinVel) < 0.3) { let d = 0.35 - hero.yaw; d = Math.atan2(Math.sin(d), Math.cos(d)); hero.yaw += d * Math.min(1, dt * 1.5); }
+  }
+  const posing = hero.pose && !hero.drag;
+  M3.model.step(dt, { moving: false, vx: 0, vy: 1, aim: null, pose: posing ? hero.pose : '', poseK: posing ? hero.poseT / hero.poseDur : 0, dash: false, ult: -1, dead: -1, dark: 0, yaw: hero.pose === 'spin' && !hero.drag ? null : hero.yaw });
+  M3.renderer.render(M3.scene, M3.heroCam);
+  const c = $('hero3d'), x = c.getContext('2d');
+  x.clearRect(0, 0, c.width, c.height);
+  x.drawImage(M3.renderer.domElement, 0, 0, c.width, c.height);
 }
 
 // --- action frames cut from the character sheet: [x, y, w, h, standing height in px, facing, feet offset] ---
@@ -1697,7 +2022,7 @@ function hurtPlayer(dmg) {
   G.hurtFlash = 0.35; shake(5);
   floatText(P.x, P.y - SPR_H * 0.7, '-' + dmg, '#ff6b5a', 14);
   sfx.hurt();
-  if (P.talents.halluc && P.decoyCd <= 0) { G.decoy = { x: P.x, y: P.y, t: 3 }; P.decoyCd = 8; }
+  if (P.talents.halluc && P.decoyCd <= 0) { G.decoy = { x: P.x, y: P.y, t: 3, ghost: snapshot3D() }; P.decoyCd = 8; }
   if (P.hp <= 0) {
     if (P.talents.compact && !P.revived) {
       P.revived = true; P.hp = P.maxHp * 0.5; P.iframes = 2;
@@ -1754,7 +2079,8 @@ function castDash() {
   P.dashCd = DASH_CD;
   P.iframes = Math.max(P.iframes, 0.4);
   P.anim = null;
-  G.zones.push({ kind: 'phantom', x: P.x, y: P.y, r: 80 * P.area, life: 0.55, max: 0.55, face: P.face });
+  P.mvx = P.dash.dx; P.mvy = P.dash.dy;
+  G.zones.push({ kind: 'phantom', x: P.x, y: P.y, r: 80 * P.area, life: 0.55, max: 0.55, face: P.face, ghost: snapshot3D() });
   puff(P.x, P.y - 10, 10, '#ffb08a', 120, 0.5, 3.5);
   sfx.dash();
 }
@@ -1974,7 +2300,7 @@ function updatePlayer(dt) {
   if (P.moving) P.idleT = 0;
   else if (!P.anim || P.anim.pri === 0) {
     P.idleT += dt;
-    if (P.idleT > 4) { P.idleT = -rand(2, 5); playAnim([pick(['skirt', 'spin'])], 1.3, 1); }
+    if (P.idleT > 4) { P.idleT = -rand(2, 5); const e = pick(M3.ready ? ['skirt', 'spin', 'wave'] : ['skirt', 'spin']); playAnim([e], e === 'wave' ? 1.8 : 1.3, 1); }
   }
   // 深度思考: stand still to think, wander to forget
   if (P.moving) {
@@ -2056,6 +2382,7 @@ function updateWeapons(dt) {
             });
           }
           sfx.flame();
+          P.aimX = list[0].x - P.x; P.aimY = list[0].y - P.y;
           if (!P.moving && !P.dash) { P.face = list[0].x >= P.x ? 1 : -1; playAnim(['atk1', 'atk2', 'atk3'], 0.32, 0); }
         }
         break;
@@ -2643,6 +2970,7 @@ function drawZones() {
       continue;
     }
     if (z.kind === 'phantom') {
+      if (z.ghost) { drawGhost(z.ghost, z.x, z.y + SPR_H * 0.38, 0.5 * (z.life / z.max)); continue; }
       const s = frameSprite('dash3') || pSprite;
       if (s) {
         ctx.globalAlpha = 0.45 * (z.life / z.max);
@@ -2821,10 +3149,13 @@ function drawPlayer() {
     ctx.strokeStyle = `rgba(255,176,102,${0.5 + Math.sin(t * 6) * 0.2})`; ctx.lineWidth = 2;
     ctx.beginPath(); ctx.ellipse(P.x, footY - 2, 26, 9, 0, 0, TAU); ctx.stroke();
   }
-  if (G.decoy && pSprite) {
-    ctx.globalAlpha = 0.35 * Math.min(1, G.decoy.t);
-    ctx.drawImage(pSprite.f, G.decoy.x - pSprite.w / 2, G.decoy.y + SPR_H * 0.38 - pSprite.h + pSprite.pad, pSprite.w, pSprite.h);
-    ctx.globalAlpha = 1;
+  if (G.decoy && (G.decoy.ghost || pSprite)) {
+    if (G.decoy.ghost) drawGhost(G.decoy.ghost, G.decoy.x, G.decoy.y + SPR_H * 0.38, 0.4 * Math.min(1, G.decoy.t));
+    else {
+      ctx.globalAlpha = 0.35 * Math.min(1, G.decoy.t);
+      ctx.drawImage(pSprite.f, G.decoy.x - pSprite.w / 2, G.decoy.y + SPR_H * 0.38 - pSprite.h + pSprite.pad, pSprite.w, pSprite.h);
+      ctx.globalAlpha = 1;
+    }
     label(G.decoy.x, G.decoy.y - SPR_H * 0.7, '幻影', '#e6dcff');
   }
   if (P.dark > 0 && !dead) {
@@ -2837,6 +3168,28 @@ function drawPlayer() {
     ctx.strokeStyle = `rgba(255,90,170,${0.6 * k})`; ctx.lineWidth = 2;
     ctx.beginPath(); ctx.ellipse(P.x, footY - 2, 28 + Math.sin(t * 8) * 2, 10, 0, 0, TAU); ctx.stroke();
   }
+  let shown = false;
+  if (M3.ready) {
+    if (P.iframes > 0 && !dead && !G.ult && !P.dash && Math.floor(t * 20) % 2 === 0) ctx.globalAlpha = 0.6;
+    if (P.dash && P.dash.phase === 1) ctx.globalAlpha = 0.85;
+    shown = draw3D(footY);
+    ctx.globalAlpha = 1;
+  }
+  if (!shown) drawPlayer2D(t, footY, dead);
+  if (!dead) drawPlayerOverlay(t, footY);
+  if (P.say) {
+    const a = Math.min(1, P.say.t / 0.3, (P.say.max - P.say.t) / 0.15 + 0.2);
+    ctx.globalAlpha = a;
+    ctx.font = `600 12px ${UI_FONT}`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    const tw = ctx.measureText(P.say.text).width + 18, by = P.y - SPR_H * 0.62 - 26;
+    rrPath(ctx, P.x - tw / 2, by - 11, tw, 22, 11); ctx.fillStyle = '#f7eee2'; ctx.fill();
+    ctx.beginPath(); ctx.moveTo(P.x - 5, by + 10); ctx.lineTo(P.x, by + 17); ctx.lineTo(P.x + 5, by + 10); ctx.fill();
+    ctx.fillStyle = '#3b2416'; ctx.fillText(P.say.text, P.x, by + 0.5);
+    ctx.globalAlpha = 1;
+  }
+}
+// the illustration and the action-sheet frames, for when the 3D model isn't up
+function drawPlayer2D(t, footY, dead) {
   let name = playerFrame();
   // mid-turn she shows the frame where she faces the viewer, a little narrowed
   const turnK = P.turnT > 0 && !P.dash && !G.ult && !dead ? 1 - P.turnT / 0.16 : -1;
@@ -2873,17 +3226,6 @@ function drawPlayer() {
     ctx.fillStyle = '#fbe0cc'; disc(ctx, 0, -47, 11); ctx.fill();
   }
   ctx.restore();
-  if (!dead) drawPlayerOverlay(t, footY);
-  if (P.say) {
-    const a = Math.min(1, P.say.t / 0.3, (P.say.max - P.say.t) / 0.15 + 0.2);
-    ctx.globalAlpha = a;
-    ctx.font = `600 12px ${UI_FONT}`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-    const tw = ctx.measureText(P.say.text).width + 18, by = P.y - SPR_H * 0.62 - 26;
-    rrPath(ctx, P.x - tw / 2, by - 11, tw, 22, 11); ctx.fillStyle = '#f7eee2'; ctx.fill();
-    ctx.beginPath(); ctx.moveTo(P.x - 5, by + 10); ctx.lineTo(P.x, by + 17); ctx.lineTo(P.x + 5, by + 10); ctx.fill();
-    ctx.fillStyle = '#3b2416'; ctx.fillText(P.say.text, P.x, by + 0.5);
-    ctx.globalAlpha = 1;
-  }
 }
 // draws the sprite in thin horizontal strips, each shifted sideways: the head nods against the
 // motion, the hair and skirt trail behind it and ripple a little, and the feet stay planted
@@ -3477,6 +3819,7 @@ function startRun() {
   audio.init();
   ['title', 'result', 'pause', 'levelup', 'chest'].forEach(id => { $(id).hidden = true; });
   newRun();
+  set3DMode('game');
   resetHud();
   $('hud').hidden = false;
   $('banner').hidden = $('toast').hidden = true;
@@ -3490,6 +3833,7 @@ function toTitle() {
   ['result', 'pause', 'levelup', 'chest'].forEach(id => { $(id).hidden = true; });
   $('hud').hidden = true; $('banner').hidden = $('toast').hidden = true;
   $('title').hidden = false;
+  set3DMode('hero');
   showBest();
 }
 function showBest() {
@@ -3604,7 +3948,7 @@ const bot = {
 };
 if (DEBUG) {
   window.__fk = {
-    get G() { return G; }, get P() { return P; }, bot, start: startRun, update, render,
+    get G() { return G; }, get P() { return P; }, M3, bot, start: startRun, update, render,
     // simulate without rendering; modals are resolved by taking the first card
     sim(sec, dt = 1 / 30) {
       const steps = Math.round(sec / dt);
@@ -3636,6 +3980,7 @@ function frame(now) {
     else update(dt);
   } else if (!G) {
     demo.x += dt * 14; demo.y += dt * 6;
+    heroFrame(dt);
   }
   render();
   if (G && P) updateHud();
@@ -3643,6 +3988,20 @@ function frame(now) {
 addEventListener('resize', resize);
 resize();
 showBest();
+// drag the title-screen model to spin her
+const heroCanvas = $('hero3d');
+heroCanvas.addEventListener('pointerdown', e => { hero.drag = { x: e.clientX, yaw: hero.yaw, t: performance.now() }; hero.pose = ''; try { heroCanvas.setPointerCapture(e.pointerId); } catch (err) { /* ignore */ } });
+heroCanvas.addEventListener('pointermove', e => {
+  if (!hero.drag) return;
+  const yaw = hero.drag.yaw + (e.clientX - hero.drag.x) * 0.02;
+  hero.spinVel = (yaw - hero.yaw) / Math.max(0.016, (performance.now() - hero.drag.t) / 1000);
+  hero.drag.t = performance.now();
+  hero.yaw = yaw;
+});
+const endHeroDrag = () => { hero.drag = null; hero.next = 3; };
+heroCanvas.addEventListener('pointerup', endHeroDrag);
+heroCanvas.addEventListener('pointercancel', endHeroDrag);
+load3D();
 requestAnimationFrame(frame);
 })();
 </script>
