@@ -1208,7 +1208,10 @@ function createClaudeModel(T, gltf) {
   gltf.scene.traverse(o => { if (o.isMesh && !mesh) mesh = o; });
   const root = new T.Group(), body = new T.Group();
   root.add(body);
-  mesh.position.set(0, 0, 0);
+  // the compressed model stores positions as 16-bit integers and undoes that with its node's
+  // scale and offset; the shader works in model units, so it takes that step itself
+  const qs = mesh.scale.x, qo = mesh.position.clone();
+  mesh.position.set(0, 0, 0); mesh.scale.set(1, 1, 1);
   mesh.frustumCulled = false;
   body.add(mesh);
   const mat = mesh.material;
@@ -1219,6 +1222,7 @@ function createClaudeModel(T, gltf) {
     uSkirt: { value: new T.Vector3(0, 0, 0) },
     uHair: { value: new T.Vector3() },
     uTime: { value: 0 },
+    uQ: { value: new T.Vector4(qo.x, qo.y, qo.z, qs) },
     uFace: { value: null },
   };
   const J = MODEL_JOINTS, f = v => v.toFixed(4);
@@ -1250,6 +1254,7 @@ varying vec3 vRest, vRestN;
 uniform vec2 uLeg, uArmL, uArmR, uHead;
 uniform vec3 uSkirt, uHair;
 uniform float uTime;
+uniform vec4 uQ;
 mat3 rotX(float a) { float c = cos(a), s = sin(a); return mat3(1., 0., 0., 0., c, s, 0., -s, c); }
 mat3 rotZ(float a) { float c = cos(a), s = sin(a); return mat3(c, s, 0., -s, c, 0., 0., 0., 1.); }
 // a soft joint: each vertex turns by its share of the angle, so a part bends round the joint instead of stretching
@@ -1277,8 +1282,8 @@ void deform(inout vec3 p, inout vec3 n) {
   bend(p, n, uHead, 1., vec3(0., ${f(J.neck)}, 0.), smoothstep(${f(J.neck - 0.04)}, ${f(J.neck + 0.06)}, p.y) * (1. - armW));
 }`)
       .replace('#include <beginnormal_vertex>', `vec3 objectNormal = vec3(normal);
-vec3 deformed = vec3(position);
-vRest = position; vRestN = normal;
+vec3 deformed = position * uQ.w + uQ.xyz;
+vRest = deformed; vRestN = normal;
 deform(deformed, objectNormal);
 objectNormal = normalize(objectNormal);`)
       .replace('#include <begin_vertex>', 'vec3 transformed = deformed;');
@@ -1417,7 +1422,7 @@ const M3 = { ready: false, failed: false, waiting: false };
 const M3_FW = 1.5, M3_FH = 1.6, M3_UNIT = SPR_H / 0.9; // camera box in model units; world units per model unit
 const M3_MODEL = 'art/claude.glb';
 // served with the game rather than from a CDN, which some networks can't reach
-const M3_LIBS = ['vendor/three-r128.min.js', 'vendor/GLTFLoader-r128.js'];
+const M3_LIBS = ['vendor/three-r128.min.js', 'vendor/GLTFLoader-r128.js', 'vendor/meshopt-decoder.js'];
 // a line under the title-screen portrait if the model is slow to arrive, and why if it can't
 function m3Note(text) { const n = $('m3note'); n.textContent = text || ''; n.hidden = !text; }
 function load3D() {
@@ -1429,9 +1434,10 @@ function load3D() {
     s.src = src; s.onload = ok; s.onerror = () => fail(new Error('could not load ' + src));
     document.head.appendChild(s);
   }));
-  const load = script(M3_LIBS[0]).then(() => script(M3_LIBS[1])).then(() => file)
+  const load = script(M3_LIBS[0]).then(() => script(M3_LIBS[1])).then(() => script(M3_LIBS[2])).then(() => file)
     .then(buf => step('模型解析失败', new Promise((ok, fail) => {
       const loader = new THREE.GLTFLoader();
+      loader.setMeshoptDecoder(window.MeshoptDecoder);
       // textures through plain <img> loading: Safari's createImageBitmap mishandles the options GLTFLoader passes
       loader.register(parser => { parser.textureLoader = new THREE.TextureLoader(parser.options.manager); return { name: 'img_textures' }; });
       loader.parse(buf, 'art/', ok, fail);
