@@ -8288,15 +8288,20 @@ function drawPlayerOverlay(t, footY) {
 
 // 黑白洞: a black hole is a dark core in a swirling ring of light that's being pulled in; a white hole is
 // a bright core throwing rays outward
-// where a rifle floats: the rifles fan out on the side she's shooting toward, turning with it, so none fires across
-// her; the ones fanned up above her are drawn behind her. The muzzle and the ejection port follow aim and recoil
+// where a rifle floats: the rifles stand in two rows beside her, on the side she's shooting toward, tilted a little
+// up or down with the aim but never in front of or above her, so none fires across her or hides her: a front row
+// (three at Lv 5) and, closer to her and set between them, a back row drawn behind her. They change sides only once
+// the target is clearly on the other side
 function gunPose(w, i) {
   const gun = w.guns[i], n = wStats(w).n, k = P.size * (n >= 4 ? 0.85 : 1);
-  const th = w.fan + (i - (n - 1) / 2) * Math.min(0.6, 2.4 / n);
-  let x = P.x + Math.cos(th) * 42 * P.size, y = P.y - 24 * P.size + Math.sin(th) * 26 * P.size;
+  const front = Math.ceil(n / 2), row = i < front ? 0 : 1, m = row ? n - front : front, j = row ? i - front : i;
+  const lat = ((j - (m - 1) / 2) * 24 + (row && m === front ? 12 : 0)) * P.size, fwd = (row ? 26 : 48) * P.size;
+  if (!w.side || Math.cos(w.fan) * w.side < -0.25) w.side = Math.cos(w.fan) >= 0 ? 1 : -1;
+  const fy = clamp(Math.sin(w.fan), -0.55, 0.55), fx = w.side * Math.sqrt(1 - fy * fy);
+  let x = P.x + fx * fwd - fy * lat * w.side, y = P.y - 24 * P.size + fy * fwd * 0.62 + Math.abs(fx) * lat;
   x -= Math.cos(gun.aim) * gun.kick * 4;
   y += Math.sin(G.time * 3 + i) * 2 - Math.sin(gun.aim) * gun.kick * 4;
-  return { x, y, a: gun.aim, k, behind: Math.sin(th) < -0.25 };
+  return { x, y, a: gun.aim, k, behind: row === 1 || fy < -0.3 };
 }
 function gunMuzzle(w, i) {
   const p = gunPose(w, i), c = Math.cos(p.a), s = Math.sin(p.a);
