@@ -1153,16 +1153,17 @@ objectNormal = normalize(objectNormal);`)
 // three.js and the model arrive in the background; until they do (or if they can't) she stays a 2D sprite
 const M3 = { ready: false, mode: 'hero', forced: /[?&]3d\b/.test(location.search) };
 const M3_FW = 1.5, M3_FH = 1.6, M3_UNIT = SPR_H / 0.9; // camera box in model units; world units per model unit
+const M3_MODEL = 'art/claude.glb';
 const M3_LIBS = ['https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js', 'https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js'];
 function load3D() {
-  const glb = fetch('art/claude.glb').then(r => { if (!r.ok) throw new Error('model ' + r.status); return r.arrayBuffer(); });
+  const file = fetch(M3_MODEL).then(r => { if (!r.ok) throw new Error('model ' + r.status); return r.arrayBuffer(); });
   const script = src => new Promise((ok, fail) => {
     const s = document.createElement('script');
     s.src = src; s.onload = ok; s.onerror = () => fail(new Error('could not load ' + src));
     document.head.appendChild(s);
   });
-  script(M3_LIBS[0]).then(() => script(M3_LIBS[1])).then(() => glb)
-    .then(buf => new Promise((ok, fail) => new THREE.GLTFLoader().parse(buf, '', ok, fail)))
+  script(M3_LIBS[0]).then(() => script(M3_LIBS[1])).then(() => file)
+    .then(buf => new Promise((ok, fail) => new THREE.GLTFLoader().parse(buf, 'art/', ok, fail)))
     .then(init3D)
     .catch(err => console.warn('3D unavailable, staying 2D:', err));
 }
