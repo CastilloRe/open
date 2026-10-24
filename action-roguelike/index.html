@@ -990,6 +990,20 @@ function frameSprite(name) {
   return s;
 }
 
+// --- the 终幕·万花盛典 art from the sheet: a cut-in and glowing flowers meant for additive blending ---
+const ULT_ART = {cutin:[0,0,478,246],flowerA:[480,0,174,152],flowerB:[656,0,116,122],burst1:[774,0,167,84],burst2:[0,248,168,84]};
+const ultArt = new Image();
+let ultReady = false;
+ultArt.onload = () => { ultReady = true; };
+ultArt.src = 'art/claude-ult.webp';
+function drawUltPiece(name, x, y, w, rot, alpha) {
+  const r = ULT_ART[name], h = w * r[3] / r[2];
+  ctx.save(); ctx.translate(x, y); if (rot) ctx.rotate(rot);
+  ctx.globalAlpha = clamp(alpha, 0, 1);
+  ctx.drawImage(ultArt, r[0], r[1], r[2], r[3], -w / 2, -h / 2, w, h);
+  ctx.restore();
+}
+
 // --- enemies ---
 function shadow(x, r, k = 1) {
   x.fillStyle = 'rgba(0,0,0,0.32)';
@@ -1004,80 +1018,204 @@ function avatar(x, cx, cy, r, bg, fg) {
   x.beginPath(); x.ellipse(cx, cy + r * 0.78, r * 0.7, r * 0.52, 0, 0, TAU); x.fill();
   x.restore();
 }
-const DRAW = {
-  sock(x, r) {
-    shadow(x, r);
-    avatar(x, 0, 0, r, '#9aa2ab', '#dfe3e8');
-    x.lineWidth = 1.6; x.strokeStyle = '#3d424a'; disc(x, 0, 0, r); x.stroke();
-    x.fillStyle = '#d23b2b';
-    disc(x, -r * 0.13, -r * 0.22, r * 0.075); x.fill();
-    disc(x, r * 0.13, -r * 0.22, r * 0.075); x.fill();
-  },
-  crawler(x, r, f) {
-    shadow(x, r, 0.9);
-    x.strokeStyle = '#cfd5de'; x.lineWidth = 1.5; x.lineCap = 'round';
-    for (const s of [-1, 1]) {
-      for (let i = -1; i <= 1; i++) {
-        const sw = (f ? 1 : -1) * (i === 0 ? -1 : 1) * 0.36 * r;
-        x.beginPath(); x.moveTo(s * r * 0.4, i * r * 0.42);
-        x.quadraticCurveTo(s * r * 1.05, i * r * 0.4 - r * 0.3, s * r * 1.2, i * r * 0.55 + sw);
-        x.stroke();
+// Q 版 mobs: soft shading, a dark ink outline like hers, big glossy eyes, blush, and a blink frame
+const INK = '#2b2238';
+function vgrad(x, y0, y1, c0, c1) { const g = x.createLinearGradient(0, y0, 0, y1); g.addColorStop(0, c0); g.addColorStop(1, c1); return g; }
+function shine(x, cx, cy, rx, ry) { x.fillStyle = 'rgba(255,255,255,0.55)'; x.beginPath(); x.ellipse(cx, cy, rx, ry, -0.5, 0, TAU); x.fill(); }
+function ink(x, w) { x.lineWidth = w; x.strokeStyle = INK; x.lineCap = 'round'; x.lineJoin = 'round'; }
+// o: { cx, cy, gap, er, blink, lid (colour for sly half-closed eyes), brows, mouth, blush }
+function face(x, o) {
+  const { cx, cy, gap, er } = o;
+  for (const s of [-1, 1]) {
+    const ex = cx + s * gap;
+    if (o.blink) {
+      ink(x, Math.max(1, er * 0.38));
+      x.beginPath(); x.moveTo(ex - er * 0.85, cy); x.quadraticCurveTo(ex, cy + er * 0.75, ex + er * 0.85, cy); x.stroke();
+    } else {
+      x.fillStyle = INK; x.beginPath(); x.ellipse(ex, cy, er * 0.8, er, 0, 0, TAU); x.fill();
+      x.fillStyle = '#fff'; disc(x, ex - er * 0.25, cy - er * 0.38, er * 0.36); x.fill();
+      disc(x, ex + er * 0.28, cy + er * 0.42, er * 0.15); x.fill();
+      if (o.lid) {
+        x.fillStyle = o.lid; x.beginPath(); x.ellipse(ex, cy - er * 0.1, er * 0.98, er * 0.72, 0, Math.PI, TAU); x.fill();
+        ink(x, Math.max(1, er * 0.32)); x.beginPath(); x.moveTo(ex - er * 0.95, cy - er * 0.1); x.lineTo(ex + er * 0.95, cy - er * 0.1); x.stroke();
       }
     }
-    x.fillStyle = '#3f4652'; x.beginPath(); x.ellipse(0, 0, r * 0.62, r * 0.82, 0, 0, TAU); x.fill(); x.stroke();
-    x.fillStyle = '#2b3039'; x.beginPath(); x.ellipse(0, r * 0.3, r * 0.4, r * 0.35, 0, 0, TAU); x.fill();
-    x.fillStyle = '#ff4747'; disc(x, 0, -r * 0.38, r * 0.22); x.fill();
-    x.fillStyle = '#ffd0d0'; disc(x, -r * 0.06, -r * 0.44, r * 0.07); x.fill();
-  },
-  carpool(x, r) {
+    if (o.brows) {
+      ink(x, Math.max(1, er * 0.32));
+      x.beginPath(); x.moveTo(ex + s * er * 1.0, cy - er * 1.6); x.lineTo(ex - s * er * 0.65, cy - er * 1.15); x.stroke();
+    }
+  }
+  if (o.blush) {
+    x.fillStyle = 'rgba(255,120,150,0.45)';
+    for (const s of [-1, 1]) { x.beginPath(); x.ellipse(cx + s * gap * 1.5, cy + er * 1.05, er * 0.55, er * 0.32, 0, 0, TAU); x.fill(); }
+  }
+  const my = cy + er * 1.45, mw = er * 0.65;
+  ink(x, Math.max(1, er * 0.3));
+  x.beginPath();
+  if (o.mouth === 'w') {
+    x.moveTo(cx - mw, my - mw * 0.25); x.quadraticCurveTo(cx - mw / 2, my + mw * 0.75, cx, my);
+    x.quadraticCurveTo(cx + mw / 2, my + mw * 0.75, cx + mw, my - mw * 0.25); x.stroke();
+  } else if (o.mouth === 'grin') {
+    x.moveTo(cx - mw * 1.1, my - mw * 0.2); x.quadraticCurveTo(cx, my + mw * 0.95, cx + mw * 1.1, my - mw * 0.45); x.stroke();
+    x.fillStyle = '#fff'; x.beginPath(); x.moveTo(cx + mw * 0.25, my + mw * 0.32); x.lineTo(cx + mw * 0.55, my + mw * 0.2); x.lineTo(cx + mw * 0.42, my + mw * 0.62); x.closePath(); x.fill();
+  } else if (o.mouth === 'o') {
+    x.fillStyle = '#6b2a3a'; x.ellipse(cx, my, mw * 0.4, mw * 0.5, 0, 0, TAU); x.fill(); x.stroke();
+  } else {
+    x.moveTo(cx - mw * 0.6, my); x.lineTo(cx + mw * 0.6, my); x.stroke();
+  }
+}
+const DRAW = {
+  // 小号: an anonymous grey mochi with a "?" sprout
+  sock(x, r, f, blink) {
     shadow(x, r);
-    rrPath(x, -r, -r, r * 2, r * 2, r * 0.32);
-    x.fillStyle = '#6f7782'; x.fill(); x.lineWidth = 1.8; x.strokeStyle = '#353a42'; x.stroke();
-    for (let i = 0; i < 4; i++) avatar(x, (i % 2 ? 1 : -1) * r * 0.47, (i < 2 ? -1 : 1) * r * 0.47, r * 0.44, '#aab1ba', '#e6e9ed');
-    x.fillStyle = '#e5483a'; disc(x, r * 0.88, -r * 0.88, r * 0.34); x.fill();
-    x.fillStyle = '#fff'; x.font = `700 ${r * 0.44}px ${UI_FONT}`; x.textAlign = 'center'; x.textBaseline = 'middle';
-    x.fillText('4', r * 0.88, -r * 0.86);
+    ink(x, 1.4);
+    x.beginPath(); x.moveTo(0, -r * 0.84); x.quadraticCurveTo(r * 0.36, -r * 1.06, r * 0.14, -r * 1.24); x.stroke();
+    x.fillStyle = '#cdbdff'; disc(x, r * 0.13, -r * 1.27, r * 0.14); x.fill(); x.stroke();
+    x.beginPath();
+    x.moveTo(-r, r * 0.45);
+    x.bezierCurveTo(-r * 1.06, -r * 0.5, -r * 0.55, -r * 0.94, 0, -r * 0.94);
+    x.bezierCurveTo(r * 0.55, -r * 0.94, r * 1.06, -r * 0.5, r, r * 0.45);
+    x.quadraticCurveTo(r * 0.92, r * 0.84, 0, r * 0.84);
+    x.quadraticCurveTo(-r * 0.92, r * 0.84, -r, r * 0.45);
+    x.closePath();
+    x.fillStyle = vgrad(x, -r, r, '#e6e8f2', '#a2a7bd'); x.fill(); ink(x, 1.6); x.stroke();
+    shine(x, -r * 0.46, -r * 0.5, r * 0.22, r * 0.12);
+    face(x, { cx: 0, cy: r * 0.02, gap: r * 0.36, er: r * 0.21, blink, mouth: 'w', blush: true });
   },
-  jail(x, r) {
-    shadow(x, r);
-    x.fillStyle = '#6a3d91'; x.strokeStyle = '#e7ccff'; x.lineWidth = 1.6;
-    x.beginPath(); x.moveTo(-r * 0.5, r * 0.5); x.lineTo(-r * 0.78, r * 1.0); x.lineTo(-r * 0.05, r * 0.55); x.closePath(); x.fill(); x.stroke();
-    rrPath(x, -r * 1.15, -r * 0.92, r * 2.3, r * 1.55, r * 0.5); x.fill(); x.stroke();
-    x.fillStyle = '#fff'; x.font = `700 ${r * 0.66}px ${UI_FONT}`; x.textAlign = 'center'; x.textBaseline = 'middle';
-    x.fillText('越狱', 0, -r * 0.14);
-  },
-  heavy(x, r, f) {
-    shadow(x, r);
-    rrPath(x, -r * 0.82, -r * 1.0, r * 1.64, r * 1.9, r * 0.18);
-    x.fillStyle = '#4a5262'; x.fill(); x.lineWidth = 1.8; x.strokeStyle = '#b4bdcc'; x.stroke();
-    for (let i = 0; i < 4; i++) {
-      const y = -r * 0.78 + i * r * 0.43;
-      rrPath(x, -r * 0.62, y, r * 1.24, r * 0.27, r * 0.06); x.fillStyle = '#272c35'; x.fill();
-      x.fillStyle = '#3a414d';
-      for (let k = 0; k < 4; k++) x.fillRect(-r * 0.5 + k * r * 0.14, y + r * 0.08, r * 0.07, r * 0.11);
-      x.fillStyle = (i + f) % 2 ? '#5dff9d' : '#ff6464'; disc(x, r * 0.44, y + r * 0.135, r * 0.06); x.fill();
-      x.fillStyle = '#5dff9d'; disc(x, r * 0.28, y + r * 0.135, r * 0.05); x.fill();
+  // 爬虫: a little dome bot on six stubby legs, one big camera eye
+  crawler(x, r, f, blink) {
+    shadow(x, r, 0.95);
+    for (const pass of [0, 1]) {
+      if (pass) { x.lineWidth = 1.1; x.strokeStyle = '#8a90a8'; } else ink(x, 2.6);
+      for (const s of [-1, 1]) {
+        for (let i = 0; i < 3; i++) {
+          const up = (i + f) % 2 ? -r * 0.2 : r * 0.05;
+          x.beginPath(); x.moveTo(s * r * 0.5, r * (0.05 + i * 0.2));
+          x.quadraticCurveTo(s * r * 1.05, r * (-0.1 + i * 0.2) + up, s * r * 1.18, r * (0.5 + i * 0.13) + up);
+          x.stroke();
+        }
+      }
+    }
+    ink(x, 1.3);
+    x.beginPath(); x.moveTo(0, -r * 0.72); x.lineTo(r * 0.18, -r * 1.12); x.stroke();
+    x.fillStyle = f ? '#ff8aa6' : '#ff4f7a'; disc(x, r * 0.2, -r * 1.16, r * 0.15); x.fill(); x.stroke();
+    x.beginPath(); x.ellipse(0, 0, r * 0.86, r * 0.78, 0, 0, TAU);
+    x.fillStyle = vgrad(x, -r, r, '#7a809a', '#3e4257'); x.fill(); ink(x, 1.5); x.stroke();
+    shine(x, -r * 0.38, -r * 0.42, r * 0.24, r * 0.12);
+    x.fillStyle = '#fff'; disc(x, 0, r * 0.02, r * 0.42); x.fill(); ink(x, 1); x.stroke();
+    if (blink) { ink(x, 1.4); x.beginPath(); x.moveTo(-r * 0.3, r * 0.04); x.quadraticCurveTo(0, r * 0.26, r * 0.3, r * 0.04); x.stroke(); }
+    else {
+      x.fillStyle = '#ff5d7a'; disc(x, 0, r * 0.04, r * 0.27); x.fill();
+      x.fillStyle = INK; disc(x, 0, r * 0.05, r * 0.13); x.fill();
+      x.fillStyle = '#fff'; disc(x, -r * 0.1, -r * 0.08, r * 0.09); x.fill();
     }
   },
-  reg(x, r, f) {
+  // 拼车号: a little yellow bus, four anonymous passengers in the windows
+  carpool(x, r, f, blink) {
+    shadow(x, r, 1.08);
+    x.fillStyle = INK; disc(x, -r * 0.56, r * 0.6, r * 0.25); x.fill(); disc(x, r * 0.56, r * 0.6, r * 0.25); x.fill();
+    x.fillStyle = '#c3c8d8'; disc(x, -r * 0.56, r * 0.6, r * 0.1); x.fill(); disc(x, r * 0.56, r * 0.6, r * 0.1); x.fill();
+    rrPath(x, -r * 1.08, -r * 0.74, r * 2.16, r * 1.32, r * 0.42);
+    x.fillStyle = vgrad(x, -r, r * 0.6, '#ffe2a8', '#f0a95e'); x.fill(); ink(x, 1.7); x.stroke();
+    rrPath(x, -r * 0.9, -r * 0.56, r * 1.8, r * 0.56, r * 0.2); x.fillStyle = '#3b3550'; x.fill();
+    for (let i = 0; i < 4; i++) {
+      const hx = -r * 0.66 + i * r * 0.44, hy = -r * 0.2 + ((i + f) % 2 ? -r * 0.03 : 0);
+      x.fillStyle = '#dfe2ec'; disc(x, hx, hy, r * 0.17); x.fill(); ink(x, 1); x.stroke();
+      if (blink) { x.beginPath(); x.moveTo(hx - r * 0.09, hy - r * 0.02); x.lineTo(hx - r * 0.03, hy - r * 0.02); x.moveTo(hx + r * 0.03, hy - r * 0.02); x.lineTo(hx + r * 0.09, hy - r * 0.02); x.stroke(); }
+      else { x.fillStyle = INK; disc(x, hx - r * 0.06, hy - r * 0.02, r * 0.035); x.fill(); disc(x, hx + r * 0.06, hy - r * 0.02, r * 0.035); x.fill(); }
+    }
+    x.fillStyle = 'rgba(255,255,255,0.4)'; x.fillRect(-r * 0.95, r * 0.14, r * 1.9, r * 0.08);
+    x.fillStyle = '#fff3b0'; disc(x, r * 0.92, r * 0.2, r * 0.12); x.fill(); ink(x, 1); x.stroke();
+    shine(x, -r * 0.7, -r * 0.62, r * 0.25, r * 0.07);
+    x.fillStyle = '#e5483a'; disc(x, r * 0.9, -r * 0.8, r * 0.3); x.fill(); ink(x, 1.1); x.stroke();
+    x.fillStyle = '#fff'; x.font = `700 ${r * 0.42}px ${UI_FONT}`; x.textAlign = 'center'; x.textBaseline = 'middle';
+    x.fillText('4', r * 0.9, -r * 0.78);
+  },
+  // 越狱提示词: a purple speech bubble with devil horns and a sly grin
+  jail(x, r, f, blink) {
+    shadow(x, r);
+    for (const s of [-1, 1]) {
+      x.beginPath(); x.moveTo(s * r * 0.42, -r * 0.72);
+      x.quadraticCurveTo(s * r * 0.78, -r * 1.0, s * r * 0.66, -r * 1.3);
+      x.quadraticCurveTo(s * r * 0.4, -r * 1.02, s * r * 0.16, -r * 0.8);
+      x.closePath(); x.fillStyle = '#ff7aa8'; x.fill(); ink(x, 1.3); x.stroke();
+    }
+    const body = vgrad(x, -r, r * 0.7, '#c4a0ff', '#7048c0');
+    x.beginPath(); x.moveTo(-r * 0.5, r * 0.45); x.quadraticCurveTo(-r * 0.82, r * 0.95, -r * 1.05, r * 1.0); x.quadraticCurveTo(-r * 0.55, r * 0.9, -r * 0.05, r * 0.5); x.closePath();
+    x.fillStyle = body; x.fill(); ink(x, 1.5); x.stroke();
+    rrPath(x, -r * 1.12, -r * 0.88, r * 2.24, r * 1.46, r * 0.56); x.fillStyle = body; x.fill(); x.stroke();
+    x.beginPath(); x.ellipse(-r * 0.3, r * 0.5, r * 0.3, r * 0.1, 0, 0, TAU); x.fillStyle = '#7a52c8'; x.fill();
+    shine(x, -r * 0.62, -r * 0.52, r * 0.26, r * 0.12);
+    face(x, { cx: 0, cy: -r * 0.14, gap: r * 0.4, er: r * 0.21, blink, lid: blink ? null : '#a681f2', mouth: 'grin', blush: true });
+    x.fillStyle = '#ffe36b'; x.font = `900 ${r * 0.5}px ${UI_FONT}`; x.textAlign = 'center'; x.textBaseline = 'middle';
+    x.fillText('!', r * 0.82, -r * 0.5);
+  },
+  // 机房 IP: a chunky server-rack golem with green LED eyes
+  heavy(x, r, f, blink) {
+    shadow(x, r);
+    x.fillStyle = '#2f3442';
+    rrPath(x, -r * 0.62, r * 0.7, r * 0.44, r * 0.26, r * 0.1); x.fill();
+    rrPath(x, r * 0.18, r * 0.7, r * 0.44, r * 0.26, r * 0.1); x.fill();
+    for (const s of [-1, 1]) {
+      rrPath(x, s > 0 ? r * 0.78 : -r * 1.04, -r * 0.08 + (f && s > 0 ? -r * 0.06 : 0), r * 0.26, r * 0.56, r * 0.13);
+      x.fillStyle = '#566078'; x.fill(); ink(x, 1.4); x.stroke();
+    }
+    rrPath(x, -r * 0.82, -r * 1.0, r * 1.64, r * 1.82, r * 0.3);
+    x.fillStyle = vgrad(x, -r, r, '#8a94ac', '#4a5268'); x.fill(); ink(x, 1.8); x.stroke();
+    rrPath(x, -r * 0.62, -r * 0.82, r * 1.24, r * 0.66, r * 0.18); x.fillStyle = '#1e222c'; x.fill();
+    if (blink) {
+      x.strokeStyle = '#7dffb0'; x.lineWidth = 2; x.lineCap = 'round';
+      x.beginPath(); x.moveTo(-r * 0.42, -r * 0.5); x.lineTo(-r * 0.18, -r * 0.5); x.moveTo(r * 0.18, -r * 0.5); x.lineTo(r * 0.42, -r * 0.5); x.stroke();
+    } else {
+      x.fillStyle = 'rgba(125,255,176,0.35)'; disc(x, -r * 0.3, -r * 0.52, r * 0.22); x.fill(); disc(x, r * 0.3, -r * 0.52, r * 0.22); x.fill();
+      x.fillStyle = '#7dffb0';
+      rrPath(x, -r * 0.42, -r * 0.66, r * 0.24, r * 0.3, r * 0.1); x.fill();
+      rrPath(x, r * 0.18, -r * 0.66, r * 0.24, r * 0.3, r * 0.1); x.fill();
+      x.fillStyle = '#fff'; disc(x, -r * 0.35, -r * 0.6, r * 0.05); x.fill(); disc(x, r * 0.25, -r * 0.6, r * 0.05); x.fill();
+    }
+    x.strokeStyle = '#7dffb0'; x.lineWidth = 1.5; x.beginPath(); x.moveTo(-r * 0.12, -r * 0.3); x.quadraticCurveTo(0, -r * 0.22, r * 0.12, -r * 0.3); x.stroke();
+    for (let i = 0; i < 2; i++) {
+      const y = -r * 0.04 + i * r * 0.36;
+      rrPath(x, -r * 0.6, y, r * 1.2, r * 0.24, r * 0.06); x.fillStyle = '#2a2f3b'; x.fill();
+      x.fillStyle = (i + f) % 2 ? '#7dffb0' : '#ffb04a'; disc(x, r * 0.42, y + r * 0.12, r * 0.05); x.fill();
+      x.fillStyle = '#3a414d'; for (let k = 0; k < 4; k++) x.fillRect(-r * 0.5 + k * r * 0.14, y + r * 0.07, r * 0.07, r * 0.1);
+    }
+    shine(x, -r * 0.55, -r * 0.88, r * 0.2, r * 0.07);
+  },
+  // 注册机: a smiling ID-card machine that keeps printing new accounts
+  reg(x, r, f, blink) {
     shadow(x, r, 1.1);
-    rrPath(x, -r, -r * 0.75, r * 2, r * 1.6, r * 0.22);
-    x.fillStyle = '#3d4658'; x.fill(); x.lineWidth = 2.2; x.strokeStyle = '#e8b04a'; x.stroke();
-    x.fillStyle = '#1c2029'; x.fillRect(-r * 0.6, -r * 0.82, r * 1.2, r * 0.14);
-    const cy = -r * (f ? 1.22 : 1.06);
-    rrPath(x, -r * 0.42, cy, r * 0.84, r * 0.5, r * 0.06); x.fillStyle = '#f3f5f8'; x.fill();
-    avatar(x, -r * 0.2, cy + r * 0.25, r * 0.15, '#9aa2ab', '#dfe3e8');
-    x.fillStyle = '#9aa2ab'; x.fillRect(0, cy + r * 0.16, r * 0.32, r * 0.05); x.fillRect(0, cy + r * 0.28, r * 0.24, r * 0.05);
-    rrPath(x, -r * 0.7, -r * 0.42, r * 1.4, r * 0.62, r * 0.1); x.fillStyle = '#10261a'; x.fill();
-    x.fillStyle = '#62ff9a'; x.font = `700 ${r * 0.34}px ${UI_FONT}`; x.textAlign = 'center'; x.textBaseline = 'middle';
-    x.fillText(f ? '+1  +1' : '+1', 0, -r * 0.1);
-    x.fillStyle = '#f2d9a6'; x.font = `${r * 0.3}px ${UI_FONT}`; x.fillText('注册机', 0, r * 0.5);
+    const cy = -r * (f ? 1.26 : 1.08);
+    rrPath(x, -r * 0.36, cy, r * 0.72, r * 0.46, r * 0.06); x.fillStyle = '#fff8ee'; x.fill(); ink(x, 1); x.stroke();
+    x.fillStyle = '#b9bdcc'; disc(x, -r * 0.18, cy + r * 0.22, r * 0.11); x.fill();
+    x.fillStyle = '#c9ccd8'; x.fillRect(-r * 0.02, cy + r * 0.13, r * 0.28, r * 0.05); x.fillRect(-r * 0.02, cy + r * 0.25, r * 0.2, r * 0.05);
+    x.fillStyle = INK;
+    rrPath(x, -r * 0.6, r * 0.66, r * 0.34, r * 0.22, r * 0.08); x.fill();
+    rrPath(x, r * 0.26, r * 0.66, r * 0.34, r * 0.22, r * 0.08); x.fill();
+    rrPath(x, -r * 0.96, -r * 0.84, r * 1.92, r * 1.62, r * 0.32);
+    x.fillStyle = vgrad(x, -r, r, '#9aa9d2', '#4f5c84'); x.fill(); ink(x, 2); x.stroke();
+    rrPath(x, -r * 0.86, -r * 0.74, r * 1.72, r * 1.42, r * 0.26); x.lineWidth = 1.4; x.strokeStyle = '#f0c060'; x.stroke();
+    x.fillStyle = INK; rrPath(x, -r * 0.48, -r * 0.88, r * 0.96, r * 0.12, r * 0.05); x.fill();
+    rrPath(x, -r * 0.64, -r * 0.54, r * 1.28, r * 0.78, r * 0.18); x.fillStyle = '#143224'; x.fill(); x.lineWidth = 1.2; x.strokeStyle = '#f0c060'; x.stroke();
+    x.strokeStyle = '#7dffb0'; x.lineWidth = 2; x.lineCap = 'round';
+    x.beginPath();
+    for (const s of [-1, 1]) {
+      const ex = s * r * 0.26, ey = -r * 0.2;
+      if (blink) { x.moveTo(ex - r * 0.1, ey); x.lineTo(ex + r * 0.1, ey); }
+      else { x.moveTo(ex - r * 0.11, ey + r * 0.04); x.quadraticCurveTo(ex, ey - r * 0.12, ex + r * 0.11, ey + r * 0.04); }
+    }
+    x.moveTo(-r * 0.12, r * 0.0); x.quadraticCurveTo(-r * 0.06, r * 0.08, 0, r * 0.0); x.quadraticCurveTo(r * 0.06, r * 0.08, r * 0.12, r * 0.0);
+    x.stroke();
+    if (f) { x.fillStyle = '#7dffb0'; x.font = `700 ${r * 0.2}px ${UI_FONT}`; x.textAlign = 'center'; x.textBaseline = 'middle'; x.fillText('+1', r * 0.44, -r * 0.42); }
+    x.fillStyle = '#f2d9a6'; x.font = `600 ${r * 0.24}px ${UI_FONT}`; x.textAlign = 'center'; x.textBaseline = 'middle';
+    x.fillText('注册机', 0, r * 0.48);
+    shine(x, -r * 0.66, -r * 0.7, r * 0.22, r * 0.07);
   },
 };
-function enemySprite(e, frame, kind) {
-  const key = 'e' + e.type + e.r + '-' + frame;
-  const size = e.r * 2.7 + 10;
-  const base = sprite(key, size, size, x => DRAW[e.type](x, e.r, frame));
+function enemySprite(e, frame, kind, blink) {
+  const key = 'e' + e.type + e.r + '-' + frame + (blink ? 'b' : '');
+  const size = e.r * 2.8 + 12;
+  const base = sprite(key, size, size, x => DRAW[e.type](x, e.r, frame, blink));
   if (kind === 'n') return base;
   return variant(base, key + kind, kind === 'f' ? 'flash' : 'ban');
 }
@@ -1628,9 +1766,9 @@ function castUlt() {
   if (!G || G.modal || G.ending || G.ult) return;
   if (P.ult < ULT_MAX) { sfx.deny(); nudge('ultBtn'); return; }
   P.ult = 0; P.dash = null; P.anim = null;
-  G.ult = { t: 0, next: 0, fired: false };
+  G.ult = { t: 0, next: 0, fired: false, firedAt: 0, flowers: [] };
+  $('banner').hidden = $('toast').hidden = true;
   say('终幕。让漫天花焰，为我起舞。', 2.6);
-  banner('终幕 · 万花盛典', '大小姐的真正力量');
   sfx.ultRise();
 }
 function updateUlt(dt) {
@@ -1639,13 +1777,13 @@ function updateUlt(dt) {
   if (u.t > 0.3 && u.t < 1.05) {
     u.next -= dt;
     while (u.next <= 0) {
-      u.next += 0.035;
-      G.blooms.push({ x: G.cam.x + rand(-viewW / 2, viewW / 2), y: G.cam.y + rand(-viewH / 2, viewH / 2), size: rand(50, 130), life: 1, max: 1, rot: rand(0, TAU), grow: true });
+      u.next += 0.045;
+      u.flowers.push({ x: G.cam.x + rand(-viewW / 2, viewW / 2), y: G.cam.y + rand(-viewH / 2, viewH / 2), size: rand(90, 220), rot: rand(0, TAU), spin: rand(-0.6, 0.6), born: u.t, kind: Math.random() < 0.7 ? 'flowerA' : 'flowerB' });
     }
   }
   if (!u.fired && u.t >= 1.05) {
-    u.fired = true;
-    G.hitStop = 0.12; G.flashT = 0.5; shake(22);
+    u.fired = true; u.firedAt = u.t;
+    G.hitStop = 0.12; G.flashT = 0.35; shake(22);
     sfx.stamp(); sfx.ultBoom();
     const base = 70 + 9 * P.level;
     for (const e of G.enemies) {
@@ -1658,9 +1796,8 @@ function updateUlt(dt) {
       if (!e.dead && e.hp <= 0) kill(e, 'ult');
     }
     for (const b of G.ebullets) if (inView(b.x, b.y, 40)) b.dead = true;
-    for (let i = 0; i < 26; i++) bloom(G.cam.x + rand(-viewW / 2, viewW / 2), G.cam.y + rand(-viewH / 2, viewH / 2), rand(120, 240), 0.7);
   }
-  if (u.t >= 1.7) { G.ult = null; P.iframes = Math.max(P.iframes, 0.8); playAnim(['happy'], 1, 1); }
+  if (u.t >= 1.9) { G.ult = null; P.iframes = Math.max(P.iframes, 0.8); playAnim(['happy'], 1, 1); }
 }
 function nudge(id) { const b = $(id); b.classList.remove('deny'); void b.offsetWidth; b.classList.add('deny'); }
 function flameBloom(x, y, R, dmg, burn) {
@@ -2551,21 +2688,21 @@ function drawEnemies() {
     if (e.dead || !inView(e.x, e.y, e.r * 2 + 20)) continue;
     if (e.boss) { drawBoss(e); continue; }
     const banned = e.banned > 0;
-    const frame = e.type === 'crawler' ? ((e.anim * 10) | 0) % 2 : e.type === 'heavy' || e.type === 'reg' ? ((e.anim * 2) | 0) % 2 : 0;
-    const s = enemySprite(e, banned ? 0 : frame, banned ? 'b' : e.flash > 0 ? 'f' : 'n');
+    const frame = e.type === 'crawler' ? ((e.anim * 10) | 0) % 2 : e.type === 'heavy' || e.type === 'reg' || e.type === 'carpool' ? ((e.anim * 3) | 0) % 2 : 0;
+    // each mob blinks on its own rhythm; banned ones keep their eyes shut
+    const blink = banned || (e.anim + e.id * 0.37) % 3.1 < 0.14;
+    const s = enemySprite(e, banned ? 0 : frame, banned ? 'b' : e.flash > 0 ? 'f' : 'n', blink);
     const x = e.x + (banned ? rand(-1.3, 1.3) : 0);
-    const y = e.y + (banned || e.stun > 0 ? 0 : Math.sin(e.anim * 9) * 1.2);
+    // a soft squash-and-stretch hop, feet kept on the ground
+    const still = banned || e.stun > 0;
+    const hop = still ? 0 : Math.sin(e.anim * (e.heavy ? 6 : 10) + e.id);
+    const sy = 1 + hop * (e.heavy ? 0.03 : 0.06), sx = 1 - hop * (e.heavy ? 0.025 : 0.05);
     if (e.elite || e.type === 'reg') {
       ctx.strokeStyle = `rgba(240,180,60,${0.45 + Math.sin(e.anim * 5) * 0.2})`; ctx.lineWidth = 2.5;
       ctx.beginPath(); ctx.ellipse(e.x, e.y + e.r * 0.92, e.r * 1.15, e.r * 0.42, 0, 0, TAU); ctx.stroke();
     }
-    if (e.type === 'crawler' && !banned) {
-      ctx.save(); ctx.translate(x, y); ctx.rotate(Math.atan2(e.hy, e.hx) + Math.PI / 2);
-      ctx.drawImage(s.c, -s.w / 2, -s.h / 2, s.w, s.h);
-      ctx.restore();
-    } else {
-      blit(s, x, y);
-    }
+    const dw = s.w * sx, dh = s.h * sy;
+    ctx.drawImage(s.c, x - dw / 2, e.y + s.h / 2 - dh, dw, dh);
     if (banned) blit(e.erase ? SPR.breaktag() : SPR.bantag(), e.x, e.y - e.r - 10);
     if (e.elite || e.type === 'reg') {
       if (!banned) blit(SPR.crown(), e.x, e.y - e.r - 12);
@@ -2681,7 +2818,7 @@ function drawPlayer() {
   const name = playerFrame(), fr = name ? frameSprite(name) : null, spr = fr || pSprite;
   let bob = 0, sx = 1, sy = 1, tilt = 0, face = P.face, lift = 0;
   if (dead) { if (!fr) tilt = -P.face * Math.min(1, G.ending.t * 2) * 1.2; }
-  else if (G.ult) { lift = Math.min(1, G.ult.t / 0.35) * 16 - Math.max(0, G.ult.t - 1.1) * 26; bob = Math.sin(t * 5) * 1.5; }
+  else if (G.ult) { lift = Math.min(1, G.ult.t / 0.4) * 24 - Math.max(0, G.ult.t - 1.3) * 48; bob = Math.sin(t * 5) * 1.5; }
   else if (P.dash) { sx = 1.1; sy = 0.95; }
   else if (P.moving) { bob = -Math.abs(Math.sin(P.walkT * 11)) * 3.2; tilt = P.face * 0.05; }
   else { const b = Math.sin(t * 2.6); sy = 1 + b * 0.014; sx = 1 - b * 0.008; }
@@ -2858,6 +2995,54 @@ function drawFx() {
   ctx.globalAlpha = 1;
 }
 
+// the field darkens, the sheet's glowing flowers open everywhere, then 万花绽放 and 爆炸效果 burst from her
+function drawUltWorld() {
+  const u = G.ult;
+  if (!u) return;
+  const veil = u.t < 0.3 ? u.t / 0.3 : u.t > 1.5 ? Math.max(0, 1 - (u.t - 1.5) / 0.4) : 1;
+  ctx.fillStyle = `rgba(18,8,4,${0.62 * veil})`;
+  ctx.fillRect(G.cam.x - viewW / 2 - 60, G.cam.y - viewH / 2 - 60, viewW + 120, viewH + 120);
+  if (!ultReady) return;
+  ctx.globalCompositeOperation = 'lighter';
+  const since = u.fired ? u.t - u.firedAt : 0;
+  for (const f of u.flowers) {
+    const age = u.t - f.born, grow = Math.min(1, age / 0.35);
+    const fade = u.fired ? Math.max(0, 1 - since / 0.5) : 1;
+    drawUltPiece(f.kind, f.x, f.y, f.size * (0.4 + 0.6 * grow) * (1 + since * 0.8), f.rot + age * f.spin, grow * fade);
+  }
+  if (u.fired) {
+    const S = Math.max(viewW, viewH);
+    for (let k = 0; k < 2; k++) {
+      drawUltPiece('burst1', P.x, P.y - 20, S * (0.45 + since * 0.9), 0, 1 - since / 0.7);
+      if (since > 0.1) drawUltPiece('burst2', P.x, P.y - 20, S * (0.4 + (since - 0.1) * 1.2), 0, 1 - (since - 0.1) / 0.7);
+    }
+  }
+  ctx.globalCompositeOperation = 'source-over';
+  ctx.globalAlpha = 1;
+}
+// the sheet's 终幕 illustration slides across as a cut-in
+function drawCutin() {
+  const u = G.ult;
+  if (!u || !ultReady || u.t < 0.12 || u.t > 1.32) return;
+  const r = ULT_ART.cutin;
+  const h = Math.min(H * 0.27, 230), w = h * r[2] / r[3];
+  const cy = Math.max(H * 0.32, 160);
+  const ease = k => 1 - Math.pow(1 - k, 3);
+  const inK = clamp((u.t - 0.12) / 0.22, 0, 1), outK = clamp((u.t - 1.05) / 0.27, 0, 1);
+  const x = W / 2 + (1 - ease(inK)) * (W / 2 + w) - ease(outK) * (W / 2 + w);
+  const a = Math.min(1, inK * 2) * (1 - outK);
+  ctx.globalAlpha = a * 0.85;
+  ctx.fillStyle = '#140804'; ctx.fillRect(0, cy - h / 2, W, h);
+  ctx.fillStyle = '#f0b060'; ctx.fillRect(0, cy - h / 2 - 2, W, 2); ctx.fillRect(0, cy + h / 2, W, 2);
+  ctx.globalAlpha = a;
+  ctx.drawImage(ultArt, r[0], r[1], r[2], r[3], x - w / 2, cy - h / 2, w, h);
+  ctx.font = `${Math.round(h * 0.16)}px "ZCOOL XiaoWei", "Songti SC", serif`;
+  ctx.textAlign = 'center'; ctx.textBaseline = 'alphabetic'; ctx.lineJoin = 'round';
+  ctx.lineWidth = 5; ctx.strokeStyle = 'rgba(20,8,4,0.85)'; ctx.fillStyle = '#fff3e0';
+  ctx.strokeText('终幕 · 万花盛典', x, cy + h / 2 - h * 0.08);
+  ctx.fillText('终幕 · 万花盛典', x, cy + h / 2 - h * 0.08);
+  ctx.globalAlpha = 1;
+}
 function drawScreen() {
   ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
   if (vignette) ctx.drawImage(vignette, 0, 0, W, H);
@@ -2870,10 +3055,7 @@ function drawScreen() {
     ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
   }
   if (G.hurtFlash > 0) { ctx.fillStyle = `rgba(255,60,40,${G.hurtFlash * 0.35})`; ctx.fillRect(0, 0, W, H); }
-  if (G.ult) {
-    const a = Math.min(0.35, G.ult.t * 0.5);
-    ctx.fillStyle = `rgba(255,150,70,${a * 0.5})`; ctx.fillRect(0, 0, W, H);
-  }
+  drawCutin();
   if (G.flashT > 0) { ctx.fillStyle = `rgba(255,236,210,${G.flashT * 0.6})`; ctx.fillRect(0, 0, W, H); }
   if (P.dark > 0) {
     const a = 0.45 * Math.min(1, P.dark, (P.darkMax - P.dark) * 3);
@@ -2883,8 +3065,10 @@ function drawScreen() {
   }
   // edge arrows towards chests and elites that are off screen
   const top = 110;
-  for (const it of G.items) if (it.type === 'chest') edgeArrow(it.x, it.y, '#f0b43c', top);
-  for (const e of G.enemies) if (!e.dead && (e.marked || e.boss)) edgeArrow(e.x, e.y, e.boss ? '#ff4fb3' : '#ffd27a', top);
+  if (!G.ult) {
+    for (const it of G.items) if (it.type === 'chest') edgeArrow(it.x, it.y, '#f0b43c', top);
+    for (const e of G.enemies) if (!e.dead && (e.marked || e.boss)) edgeArrow(e.x, e.y, e.boss ? '#ff4fb3' : '#ffd27a', top);
+  }
   if (joy) {
     ctx.strokeStyle = 'rgba(247,238,226,0.3)'; ctx.lineWidth = 2;
     disc(ctx, joy.ox, joy.oy, JOY_R); ctx.stroke();
@@ -2918,6 +3102,7 @@ function render() {
     drawContext();
     drawPickups();
     drawEnemies();
+    drawUltWorld();
     drawAgents(true);
     drawPlayer();
     drawAgents(false);
@@ -2925,7 +3110,6 @@ function render() {
     drawBullets();
     drawStamps();
     drawFx();
-    if (G.ult) drawPlayer();
   }
   drawScreen();
 }
