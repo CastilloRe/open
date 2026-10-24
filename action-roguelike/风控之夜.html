@@ -4935,12 +4935,17 @@ const sfx = audio.sfx;
 // ======================================================================
 const canvas = $('stage'), ctx = canvas.getContext('2d');
 let W = 0, H = 0, dpr = 1, zoom = 1, viewW = 0, viewH = 0, PX = 1;
+// the canvas matches the screen's own pixel density (up to 3) so nothing is upscaled and blurred;
+// a phone that can't hold 40 fps at that drops to 2 for the rest of the session
+let dprCap = 3;
+const pace = { n: 0, slow: 0 };
 const cache = new Map();
 
 function resize() {
   W = window.innerWidth; H = window.innerHeight;
-  dpr = Math.min(2, window.devicePixelRatio || 1);
+  dpr = Math.min(dprCap, window.devicePixelRatio || 1);
   canvas.width = Math.round(W * dpr); canvas.height = Math.round(H * dpr);
+  ctx.imageSmoothingQuality = 'high'; // resizing the canvas resets this
   zoom = clamp(Math.sqrt(W * H / (1000 * 700)), 0.6, 1.3);
   viewW = W / zoom; viewH = H / zoom; PX = zoom * dpr;
   cache.clear();
@@ -5479,8 +5484,9 @@ function requestStart() {
 }
 function size3D() {
   if (!M3.ready) return;
-  // render a little above the on-screen size (she's bigger with 巨大化) and let the downscale smooth the edges
-  const k = PX * (P ? P.size : 1), ss = Math.min(1.6, 520 / (M3_FH * M3_UNIT * k));
+  // render at up to twice the on-screen size (she's bigger with 巨大化) on top of the GPU's own antialiasing,
+  // and let the downscale smooth her outline and hair
+  const k = PX * (P ? P.size : 1), ss = Math.min(2, 900 / (M3_FH * M3_UNIT * k));
   M3.renderer.setSize(Math.round(M3_FW * M3_UNIT * k * ss), Math.round(M3_FH * M3_UNIT * k * ss), false);
 }
 const POSE_OF = { atk1: 'attack', atk2: 'attack', atk3: 'attack', cast1: 'cast', cast2: 'cast', cast3: 'cast', dash4: 'land', hurt: 'hurt', skirt: 'curtsy', spin: 'spin', happy: 'happy', angry: 'angry', shy: 'shy', wave: 'wave' };
@@ -7547,7 +7553,7 @@ function groundPattern(key, size, paint) {
   let s = cache.get(k);
   if (s) return s;
   const scalable = typeof CanvasPattern !== 'undefined' && CanvasPattern.prototype.setTransform;
-  const n = Math.round(size * (scalable ? Math.min(PX, 3) : 1)), c = document.createElement('canvas');
+  const n = Math.round(size * (scalable ? Math.min(PX, 4) : 1)), c = document.createElement('canvas');
   c.width = c.height = n;
   const x = c.getContext('2d');
   x.scale(n / size, n / size);
@@ -7667,8 +7673,6 @@ const SMALL_DECOR = ['daisy', 'petals', 'tuft', 'daisy', 'tuft'];
 function drawGround(cx, cy) {
   const L = cx - viewW / 2 - 60, R = cx + viewW / 2 + 60, T = cy - viewH / 2 - 60, B = cy + viewH / 2 + 80;
   const t = G ? G.time : performance.now() / 1000;
-  // the tiles are painted at screen resolution, so sampling them unsmoothed looks the same and costs far less
-  ctx.imageSmoothingEnabled = false;
   ctx.fillStyle = groundPattern('lawn', LAWN, paintLawn);
   ctx.fillRect(L, T, R - L, B - T);
   // gravel walks, edged with dark stone, crossing at round plazas
@@ -7679,7 +7683,6 @@ function drawGround(cx, cy) {
   ctx.fillStyle = gravel;
   for (const wx of cols) ctx.fillRect(wx - WALK_W, T, WALK_W * 2, B - T);
   for (const wy of rows) ctx.fillRect(L, wy - WALK_H, R - L, WALK_H * 2);
-  ctx.imageSmoothingEnabled = true;
   ctx.strokeStyle = '#4a443d'; ctx.lineWidth = 4; ctx.setLineDash([10, 3]);
   ctx.beginPath();
   for (const wx of cols) for (const sd of [-1, 1]) { ctx.moveTo(wx + sd * WALK_W, T); ctx.lineTo(wx + sd * WALK_W, B); }
@@ -7687,7 +7690,7 @@ function drawGround(cx, cy) {
   ctx.stroke();
   for (const wx of cols) for (const wy of rows) {
     ctx.beginPath(); ctx.ellipse(wx, wy, PLAZA, PLAZA * 0.66, 0, 0, TAU);
-    ctx.imageSmoothingEnabled = false; ctx.fillStyle = gravel; ctx.fill(); ctx.imageSmoothingEnabled = true; ctx.stroke();
+    ctx.fillStyle = gravel; ctx.fill(); ctx.stroke();
     blit(GARDEN.emblem(), wx, wy);
   }
   ctx.setLineDash([]);
@@ -8370,7 +8373,7 @@ function cutin3D(w, h) {
     r.setClearColor(0x000000, 0); r.setPixelRatio(1); r.outputEncoding = T.sRGBEncoding;
     M3.cut = r; M3.cutCam = new T.OrthographicCamera(-1, 1, 1, -1, 0.1, 20);
   }
-  const pw = Math.round(w * dpr), ph = Math.round(h * dpr), cam = M3.cutCam, root = M3.model.root;
+  const ss = Math.min(1.5, 2400 / (w * dpr)), pw = Math.round(w * dpr * ss), ph = Math.round(h * dpr * ss), cam = M3.cutCam, root = M3.model.root;
   if (M3.cut.domElement.width !== pw || M3.cut.domElement.height !== ph) M3.cut.setSize(pw, ph, false);
   const half = 0.26, cy = root.position.y + 0.74;
   cam.top = half; cam.bottom = -half; cam.left = -half * w / h; cam.right = half * w / h;
@@ -8957,6 +8960,10 @@ function frame(now) {
   let dt = Math.min(0.05, (now - lastT) / 1000);
   lastT = now;
   if (G && !G.modal) {
+    if (dpr > 2 && !G.ending) {
+      pace.n++; if (dt >= 1 / 40) pace.slow++;
+      if (pace.n >= 180) { if (pace.slow > 90) { dprCap = 2; resize(); } pace.n = pace.slow = 0; }
+    }
     if (G.hitStop > 0) { G.hitStop -= dt; dt *= 0.15; }
     if (G.ending) updateEnding(dt);
     else if (dt > 1 / 40) { update(dt / 2); if (G && !G.modal && !G.ending) update(dt / 2); }
