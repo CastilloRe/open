@@ -45,6 +45,8 @@ body {
 }
 [hidden] { display: none !important; }
 canvas#stage { position: fixed; inset: 0; display: block; width: 100%; height: 100%; touch-action: none; }
+/* the darkened edges of the night, composited by the browser instead of redrawn every frame */
+.vignette { position: fixed; inset: 0; z-index: 1; pointer-events: none; background: radial-gradient(farthest-corner at 50% 50%, rgba(10, 6, 4, 0) 38%, rgba(10, 6, 4, 0.72) 100%); }
 button { font: inherit; color: inherit; cursor: pointer; appearance: none; background: none; border: 0; padding: 0; }
 button:focus-visible { outline: 2px solid var(--amber); outline-offset: 3px; }
 button:disabled { cursor: default; opacity: 0.4; }
@@ -250,8 +252,6 @@ h2 { margin: 0; font-family: var(--display); font-weight: 400; font-size: clamp(
 .hero { display: grid; grid-template-columns: minmax(0, 230px) minmax(0, 1fr); gap: clamp(16px, 3vw, 32px); align-items: center; }
 .portrait { margin: 0; align-self: stretch; display: grid; place-items: center; background: radial-gradient(ellipse at 50% 58%, #fbdcbc 0%, rgba(251, 220, 188, 0) 68%); }
 .portrait img { display: block; width: 100%; max-width: 230px; height: auto; filter: drop-shadow(0 8px 10px rgba(59, 36, 22, 0.22)); }
-#hero3d { display: block; width: 100%; max-width: 250px; aspect-ratio: 3.6 / 4.5; cursor: grab; touch-action: pan-y; }
-#hero3d:active { cursor: grabbing; }
 .hero-name { display: flex; align-items: baseline; flex-wrap: wrap; gap: 12px; }
 .hero-name .en { font-family: var(--display); font-size: 1.05rem; letter-spacing: 0.06em; color: var(--ink-soft); }
 .role { padding: 2px 10px; border-radius: 999px; font-size: 0.8rem; letter-spacing: 0.2em; background: var(--ink); color: var(--lace); }
@@ -283,7 +283,6 @@ h2 { margin: 0; font-family: var(--display); font-weight: 400; font-size: clamp(
 @media (max-width: 680px) {
   .hero { grid-template-columns: minmax(0, 1fr); }
   .portrait img { max-width: 170px; }
-  #hero3d { max-width: 190px; }
   .hero-go .btn.primary { flex: 1; padding-inline: 20px; }
 }
 @media (max-width: 480px) {
@@ -362,6 +361,7 @@ h2 { margin: 0; font-family: var(--display); font-weight: 400; font-size: clamp(
 </head>
 <body>
 <canvas id="stage"></canvas>
+<div class="vignette" aria-hidden="true"></div>
 
 <div id="hud" class="hud" hidden>
   <div class="hud-top">
@@ -393,7 +393,7 @@ h2 { margin: 0; font-family: var(--display); font-weight: 400; font-size: clamp(
       <p class="lede">深夜，成群的小号、爬虫和越狱提示词涌进了庄园。大小姐放下茶杯，拿起了印章。</p>
     </header>
     <article class="sheet hero">
-      <figure class="portrait"><img src="art/claude.webp" alt="克劳德大小姐：橙色长卷发，别着橙色花朵发饰，穿奶油色洛丽塔裙"><canvas id="hero3d" hidden aria-label="克劳德大小姐的 3D 模型，可以拖动旋转"></canvas></figure>
+      <figure class="portrait"><img src="art/claude.webp" alt="克劳德大小姐：橙色长卷发，别着橙色花朵发饰，穿奶油色洛丽塔裙"></figure>
       <div class="hero-info">
         <div class="hero-name"><h2>克劳德大小姐</h2><span class="en">Claude</span><span class="role">花焰法师</span></div>
         <p class="hero-quote">「花焰缀于指尖，世界为我盛放。」</p>
@@ -857,7 +857,6 @@ const sfx = audio.sfx;
 const canvas = $('stage'), ctx = canvas.getContext('2d');
 let W = 0, H = 0, dpr = 1, zoom = 1, viewW = 0, viewH = 0, PX = 1;
 const cache = new Map();
-let vignette = null;
 
 function resize() {
   W = window.innerWidth; H = window.innerHeight;
@@ -868,13 +867,6 @@ function resize() {
   cache.clear();
   frameCache.clear();
   buildPlayerSprite();
-  size3D();
-  vignette = document.createElement('canvas');
-  vignette.width = Math.max(1, Math.round(W / 2)); vignette.height = Math.max(1, Math.round(H / 2));
-  const v = vignette.getContext('2d');
-  const g = v.createRadialGradient(vignette.width / 2, vignette.height / 2, Math.min(vignette.width, vignette.height) * 0.3, vignette.width / 2, vignette.height / 2, Math.hypot(vignette.width, vignette.height) / 2);
-  g.addColorStop(0, 'rgba(10,6,4,0)'); g.addColorStop(1, 'rgba(10,6,4,0.72)');
-  v.fillStyle = g; v.fillRect(0, 0, vignette.width, vignette.height);
 }
 
 function sprite(key, w, h, draw) {
@@ -973,710 +965,6 @@ function buildPlayerSprite() {
   if (!artReady || !PX) return;
   pSprite = outlined(art, 0, 0, art.width, art.height, SPR_H * art.width / art.height, SPR_H);
   pSprite.face = 1; pSprite.feet = 0;
-}
-
-// ======================================================================
-//  克劳德大小姐 in 3D: a toon-shaded chibi with flat, pointed hair clumps
-//  that end in ringlets, an inked outline, and a painted anime face.
-//  Model space: Y up, facing +Z, feet at y = 0.
-// ======================================================================
-function createClaude3D(THREE) {
-  const V = (x, y, z) => new THREE.Vector3(x, y, z);
-  const C = {
-    skin: 0xffe4d4, hair: 0xd8723a, hairLight: 0xe8884a, hairDeep: 0xa8502a, shine: 0xf8b884,
-    cream: 0xf6e8d6, frill: 0xfffaf2, brown: 0x4a2a1a, orange: 0xec8a34, panel: 0xc0662e,
-    black: 0x2a1a16, shoe: 0x6b3520, petal: 0xf28a2c, petal2: 0xf9a650, gold: 0xfcd27a, ink: 0x3a1c10,
-  };
-  // two-tone ramp: a hard terminator; the warm ambient light colours the shadow side
-  const grad = new THREE.DataTexture(new Uint8Array([70, 70, 70, 255, 255, 255, 255, 255]), 2, 1, THREE.RGBAFormat);
-  grad.minFilter = grad.magFilter = THREE.NearestFilter;
-  grad.generateMipmaps = false;
-  grad.needsUpdate = true;
-  const mats = [];
-  const matCache = new Map();
-  function toon(hex, skinning) {
-    const key = hex + (skinning ? 's' : '');
-    let m = matCache.get(key);
-    if (m) return m;
-    m = new THREE.MeshToonMaterial({ color: hex, gradientMap: grad, skinning: !!skinning });
-    m.userData.base = new THREE.Color(hex);
-    matCache.set(key, m); mats.push(m);
-    return m;
-  }
-  const OUT = 0.016;
-  const INK_BACK = new THREE.MeshBasicMaterial({ color: C.ink, side: THREE.BackSide });
-  const SPH = new THREE.SphereGeometry(1, 14, 10);
-  const HEAD = new THREE.SphereGeometry(1, 32, 22);
-  // parts carry their outline width; bake() turns it into one ink hull per joint
-  function part(parent, geo, hex, pos, scl, rot, ow) {
-    const m = new THREE.Mesh(geo, toon(hex));
-    if (pos) m.position.set(pos[0], pos[1], pos[2]);
-    if (scl) m.scale.set(scl[0], scl[1], scl[2]);
-    if (rot) m.rotation.set(rot[0], rot[1], rot[2]);
-    if (ow !== 0) {
-      // keep the ink line about the same thickness however the sphere is stretched
-      let w = ow || OUT;
-      if (geo === SPH || geo === HEAD) { const sc = scl ? scl.slice().sort((a, b) => a - b)[1] : 1; w = Math.min(0.6, OUT / sc); }
-      m.userData.outline = w;
-    }
-    parent.add(m);
-    return m;
-  }
-  const ball = (parent, hex, pos, scl, rot, ow) => part(parent, SPH, hex, pos, scl, rot, ow);
-  function group(parent, pos) { const g = new THREE.Group(); if (pos) g.position.set(pos[0], pos[1], pos[2]); parent.add(g); return g; }
-  // a surface of revolution; wave scallops the lowest edge like lace
-  function lathe(points, segs, phiStart = 0, phiLen = Math.PI * 2, wave = 0, waveN = 0) {
-    const geo = new THREE.LatheGeometry(points.map(p => new THREE.Vector2(p[0], p[1])), segs, phiStart, phiLen);
-    if (wave) {
-      const pos = geo.attributes.position, minY = Math.min(...points.map(p => p[1])), maxY = Math.max(...points.map(p => p[1]));
-      const band = Math.min(0.08, (maxY - minY) * 0.6);
-      for (let i = 0; i < pos.count; i++) {
-        const x = pos.getX(i), y = pos.getY(i), z = pos.getZ(i);
-        const k = Math.max(0, 1 - (y - minY) / band);
-        const a = Math.atan2(x, z), c = Math.abs(Math.sin(a * waveN / 2));
-        const f = 1 + wave * k * 0.4 * c;
-        pos.setXYZ(i, x * f, y - k * wave * c, z * f);
-      }
-      geo.computeVertexNormals();
-    }
-    return geo;
-  }
-  // a hair clump: a flat, tapered, lens-shaped blade swept along a path.
-  // outs[i] points away from the head, so the clump lies flat against it.
-  function sweep(pts, outs, wid, thk, segs = 8) {
-    const n = pts.length, pos = [], ts = [], idx = [];
-    const T = V(0, 0, 0), S = V(0, 0, 0), O = V(0, 0, 0);
-    for (let i = 0; i < n; i++) {
-      T.subVectors(pts[Math.min(n - 1, i + 1)], pts[Math.max(0, i - 1)]).normalize();
-      S.crossVectors(outs[i], T).normalize();
-      O.crossVectors(T, S).normalize();
-      const f = i / (n - 1), w = wid(f) / 2, h = thk(f) / 2;
-      for (let k = 0; k < segs; k++) {
-        const a = k / segs * Math.PI * 2, cw = Math.cos(a), sw = Math.sin(a);
-        // sharpen the two edges so the clump reads as a blade of hair, not a tube
-        const ow = Math.sign(cw) * Math.pow(Math.abs(cw), 0.8) * w, oh = sw * h * (0.55 + 0.45 * Math.abs(sw));
-        pos.push(pts[i].x + S.x * ow + O.x * oh, pts[i].y + S.y * ow + O.y * oh, pts[i].z + S.z * ow + O.z * oh);
-        ts.push(f);
-      }
-    }
-    for (let i = 0; i < n - 1; i++) {
-      for (let k = 0; k < segs; k++) {
-        const a = i * segs + k, b = i * segs + (k + 1) % segs, c = a + segs, d = b + segs;
-        idx.push(a, b, c, b, d, c);
-      }
-    }
-    const geo = new THREE.BufferGeometry();
-    geo.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3));
-    geo.setIndex(idx);
-    geo.computeVertexNormals();
-    geo.userData.t = ts;
-    return geo;
-  }
-
-  // ---------- skeleton ----------
-  const root = new THREE.Group();
-  const hips = group(root, [0, 0.5, 0]);
-  const legL = group(hips, [0.12, 0, 0]), legR = group(hips, [-0.12, 0, 0]);
-  const skirt = group(hips, [0, 0.42, 0]);
-  const body = group(hips, [0, 0.42, 0]);
-  const head = group(body, [0, 0.6, 0]);
-  const armL = group(body, [0.27, 0.45, 0]), armR = group(body, [-0.27, 0.45, 0]);
-
-  // ---------- legs: white socks with a frilled top, brown Mary Janes ----------
-  for (const leg of [legL, legR]) {
-    part(leg, lathe([[0.0, -0.02], [0.068, -0.06], [0.075, -0.2], [0.065, -0.36], [0.06, -0.42]], 14), C.frill);
-    part(leg, lathe([[0.06, -0.3], [0.1, -0.35], [0.1, -0.37]], 18, 0, Math.PI * 2, 0.06, 8), C.frill, null, null, null, 0.01).material.side = THREE.DoubleSide;
-    ball(leg, C.shoe, [0, -0.445, 0.04], [0.085, 0.06, 0.13]);
-    ball(leg, C.shoe, [0, -0.47, 0.04], [0.088, 0.03, 0.135], null, 0);
-    part(leg, new THREE.TorusGeometry(0.068, 0.012, 6, 16), C.shoe, [0, -0.415, 0.02], null, [Math.PI / 2 - 0.25, 0, 0], 0);
-    ball(leg, C.orange, [0, -0.42, 0.14], [0.026, 0.026, 0.016], null, 0);
-  }
-
-  // ---------- skirt: bell, side panels, two lace tiers, bows ----------
-  const bell = [[0.25, 0.04], [0.3, -0.06], [0.42, -0.2], [0.54, -0.34], [0.6, -0.42], [0.58, -0.45]];
-  part(skirt, lathe(bell, 44), C.cream).material.side = THREE.DoubleSide;
-  for (const s of [-1, 1]) {
-    const pts = [[0.29, -0.04], [0.43, -0.2], [0.555, -0.35], [0.6, -0.41]].map(p => [p[0] * 1.015, p[1]]);
-    part(skirt, lathe(pts, 10, Math.PI / 2 + s * 0.95 - 0.35, 0.7), C.panel, null, null, null, 0.012).material.side = THREE.DoubleSide;
-  }
-  part(skirt, lathe([[0.56, -0.37], [0.66, -0.5], [0.65, -0.53]], 96, 0, Math.PI * 2, 0.05, 14), C.frill, null, null, null, 0.012).material.side = THREE.DoubleSide;
-  part(skirt, lathe([[0.6, -0.47], [0.71, -0.6], [0.7, -0.63]], 96, 0, Math.PI * 2, 0.05, 16), C.cream, null, null, null, 0.012).material.side = THREE.DoubleSide;
-  part(skirt, new THREE.TorusGeometry(0.565, 0.012, 6, 48), C.orange, [0, -0.38, 0], null, [Math.PI / 2, 0, 0], 0);
-  function bowAt(parent, pos, ry, scale, hex = C.black, center = C.petal) {
-    const b = group(parent, pos);
-    b.rotation.y = ry; b.scale.setScalar(scale);
-    ball(b, hex, [0.07, 0.005, 0], [0.075, 0.048, 0.03], [0, 0, 0.3]);
-    ball(b, hex, [-0.07, 0.005, 0], [0.075, 0.048, 0.03], [0, 0, -0.3]);
-    ball(b, hex, [0.035, -0.08, 0], [0.022, 0.07, 0.018], [0, 0, 0.35]);
-    ball(b, hex, [-0.035, -0.08, 0], [0.022, 0.07, 0.018], [0, 0, -0.35]);
-    for (let i = 0; i < 6; i++) { const g = group(b, [0, 0, 0.03]); g.rotation.z = i / 6 * Math.PI * 2; ball(g, i % 2 ? C.petal2 : center, [0, 0.03, 0], [0.018, 0.032, 0.01], null, 0); }
-    ball(b, C.gold, [0, 0, 0.035], [0.016, 0.016, 0.012], null, 0);
-    return b;
-  }
-  for (const s of [-1, 1]) bowAt(skirt, [s * 0.37, -0.2, 0.36], s * 0.75, 1);
-
-  // ---------- torso: blouse, corset with flowers, lace collar, ribbon tie ----------
-  part(body, lathe([[0.0, 0.6], [0.1, 0.585], [0.2, 0.53], [0.25, 0.42], [0.245, 0.28], [0.225, 0.15]], 28), C.cream);
-  part(body, lathe([[0.232, 0.22], [0.228, 0.12], [0.245, 0.02], [0.275, -0.05], [0.0, -0.05]], 28), C.brown);
-  for (let i = 0; i < 4; i++) ball(body, C.gold, [0, 0.0 + i * 0.055, 0.245], [0.014, 0.014, 0.01], null, 0);
-  for (const s of [-1, 1]) {
-    const fl = group(body, [s * 0.12, 0.06, 0.21]);
-    fl.rotation.y = s * 0.45;
-    for (let i = 0; i < 6; i++) { const g = group(fl, [0, 0, 0]); g.rotation.z = i / 6 * Math.PI * 2; ball(g, i % 2 ? C.petal2 : C.petal, [0, 0.025, 0], [0.016, 0.028, 0.01], null, 0); }
-    ball(fl, C.gold, [0, 0, 0.01], [0.012, 0.012, 0.01], null, 0);
-  }
-  part(body, lathe([[0.12, 0.575], [0.31, 0.47], [0.385, 0.385], [0.39, 0.37]], 40), C.orange, null, null, null, 0.01).material.side = THREE.DoubleSide;
-  part(body, lathe([[0.1, 0.6], [0.24, 0.55], [0.35, 0.45], [0.37, 0.42]], 72, 0, Math.PI * 2, 0.05, 12), C.frill, null, null, null, 0.01).material.side = THREE.DoubleSide;
-  const tie = group(body, [0, 0.52, 0.17]);
-  tie.rotation.x = -0.35;
-  bowAt(tie, [0, 0, 0], 0, 1.05);
-  ball(tie, C.black, [0, -0.16, -0.01], [0.035, 0.08, 0.015]);
-  ball(body, C.skin, [0, 0.6, 0], [0.07, 0.06, 0.07], null, 0);
-
-  // ---------- arms: puffed sleeve, ribbon, slim sleeve, lace cuff, hand ----------
-  for (const [arm, s] of [[armL, 1], [armR, -1]]) {
-    const a = group(arm, [s * 0.02, 0, 0]);
-    part(a, lathe([[0.0, 0.03], [0.1, 0.0], [0.15, -0.09], [0.14, -0.19], [0.085, -0.26], [0.0, -0.27]], 18), C.cream);
-    part(a, new THREE.TorusGeometry(0.08, 0.016, 6, 18), C.orange, [0, -0.25, 0], null, [Math.PI / 2, 0, 0], 0);
-    part(a, lathe([[0.075, -0.24], [0.068, -0.33], [0.072, -0.38]], 14), C.cream);
-    part(a, lathe([[0.06, -0.36], [0.105, -0.42], [0.105, -0.44]], 20, 0, Math.PI * 2, 0.06, 8), C.frill, null, null, null, 0.01).material.side = THREE.DoubleSide;
-    ball(a, C.skin, [0, -0.485, 0.005], [0.058, 0.066, 0.05]);
-    ball(a, C.skin, [s * -0.03, -0.47, 0.03], [0.02, 0.03, 0.02], null, 0);
-  }
-
-  // ---------- head ----------
-  const HC = V(0, 0.3, 0);
-  // a chibi head: full cheeks, a softly pointed chin, a flatter face
-  function chibi(geo, grow) {
-    const p = geo.attributes.position;
-    for (let i = 0; i < p.count; i++) {
-      let x = p.getX(i), y = p.getY(i), z = p.getZ(i);
-      if (y < 0) { const k = -y; x *= 1 - 0.12 * k * k; z *= 1 - 0.05 * k * k; y *= 1 + 0.06 * k * Math.max(0, z); }
-      if (z > 0) z *= 1 - 0.06 * z;
-      p.setXYZ(i, x * grow, y, z * grow);
-    }
-    geo.computeVertexNormals();
-    return geo;
-  }
-  const skull = part(head, chibi(HEAD.clone(), 1), C.skin, [HC.x, HC.y, HC.z], [0.52, 0.49, 0.5], null, 0.032);
-  // the painted face sits just above the skin on the front of the head
-  const faceCanvas = document.createElement('canvas');
-  faceCanvas.width = faceCanvas.height = 512;
-  const faceTex = new THREE.CanvasTexture(faceCanvas);
-  faceTex.anisotropy = 4;
-  const faceMat = new THREE.MeshBasicMaterial({ map: faceTex, transparent: true, depthWrite: false, polygonOffset: true, polygonOffsetFactor: -2 });
-  const face = new THREE.Mesh(chibi(new THREE.SphereGeometry(1.004, 40, 24, Math.PI / 2 - 0.8, 1.6, Math.PI * 0.3, Math.PI * 0.42), 1.003), faceMat);
-  face.position.copy(skull.position); face.scale.copy(skull.scale);
-  head.add(face);
-
-  // ---------- hair ----------
-  // points on (and a little outside) the scalp: polar angle th from the crown, azimuth a from the front
-  const RAD = V(0.565, 0.54, 0.55);
-  const dirOf = (th, a) => V(Math.sin(th) * Math.sin(a), Math.cos(th), Math.sin(th) * Math.cos(a));
-  const onScalp = (th, a, lift = 1) => { const d = dirOf(th, a); return V(HC.x + d.x * RAD.x * lift, HC.y + d.y * RAD.y * lift, HC.z + d.z * RAD.z * lift); };
-  // the cap: everything but an opening for the face, whose top edge the bangs cover
-  part(head, new THREE.SphereGeometry(1, 36, 18, Math.PI / 2 + 0.62, Math.PI * 2 - 1.24, 0, Math.PI * 0.66), C.hair, [HC.x, HC.y + 0.01, HC.z - 0.005], [RAD.x, RAD.y, RAD.z], null, 0.03);
-  part(head, new THREE.SphereGeometry(1, 36, 10, 0, Math.PI * 2, 0, Math.PI * 0.32), C.hair, [HC.x, HC.y + 0.01, HC.z - 0.005], [RAD.x, RAD.y, RAD.z], null, 0.03);
-  // the anime "angel ring" highlight across the top
-  {
-    const pts = [], outs = [];
-    for (let i = 0; i <= 40; i++) { const a = 0.55 + i / 40 * (Math.PI * 2 - 1.1); pts.push(onScalp(0.68 + 0.05 * Math.sin(a * 7), a, 1.012)); outs.push(dirOf(0.68, a)); }
-    part(head, sweep(pts, outs, f => 0.045 * Math.pow(Math.sin(Math.PI * f), 0.3), () => 0.006, 6), C.shine, null, null, null, 0);
-  }
-  // bangs: pointed blades from the crown over the forehead
-  for (let i = 0; i < 11; i++) {
-    const u = (i - 5) / 5, a0 = u * 1.08, end = 1.36 + 0.22 * u * u + (i % 2 ? 0.05 : 0);
-    const pts = [], outs = [];
-    for (let j = 0; j <= 12; j++) {
-      const s = j / 12, th = 0.3 + s * (end - 0.3), a = a0 * (1 - 0.1 * s * s) + (i % 2 ? 0.04 : -0.04) * s * s;
-      pts.push(onScalp(th, a, 1.03 + 0.07 * s * s));
-      outs.push(dirOf(th, a));
-    }
-    part(head, sweep(pts, outs, f => (0.25 - 0.04 * Math.abs(u)) * (1 - Math.pow(f, 1.7)), f => 0.07 * (1 - f) + 0.012), i % 3 === 1 ? C.hairLight : C.hair, null, null, null, 0.012);
-  }
-  // the ahoge
-  {
-    const pts = [], outs = [];
-    for (let j = 0; j <= 10; j++) {
-      const s = j / 10;
-      pts.push(V(0.02 + 0.1 * s * s, 0.83 + 0.13 * Math.sin(s * 2.6), 0.05 + 0.04 * s - 0.08 * s * s));
-      outs.push(V(0, 0, 1));
-    }
-    part(head, sweep(pts, outs, f => 0.075 * (1 - f * f), f => 0.03 * (1 - f) + 0.008, 6), C.hair, null, null, null, 0.01);
-  }
-  // long locks are skinned to a short chain of bones so they can trail and swing
-  const strands = [];
-  const outlineSkin = new THREE.MeshBasicMaterial({ color: C.ink, side: THREE.BackSide, skinning: true });
-  function lock(pts, outs, wid, thk, hex, boneAt) {
-    const geo = sweep(pts, outs, wid, thk, 8);
-    const t = geo.userData.t, si = [], sw = [];
-    const at = f => { const x = f * (pts.length - 1), i = Math.min(pts.length - 2, Math.floor(x)); return pts[i].clone().lerp(pts[i + 1], x - i); };
-    for (const f of t) {
-      let b = 0;
-      while (b < boneAt.length - 2 && f > boneAt[b + 1]) b++;
-      const w = Math.min(1, Math.max(0, (f - boneAt[b]) / (boneAt[b + 1] - boneAt[b])));
-      si.push(b, b + 1, 0, 0); sw.push(1 - w, w, 0, 0);
-    }
-    geo.setAttribute('skinIndex', new THREE.Uint16BufferAttribute(si, 4));
-    geo.setAttribute('skinWeight', new THREE.Float32BufferAttribute(sw, 4));
-    const go = geo.clone(), po = go.attributes.position, no = go.attributes.normal;
-    for (let i = 0; i < po.count; i++) po.setXYZ(i, po.getX(i) + no.getX(i) * 0.013, po.getY(i) + no.getY(i) * 0.013, po.getZ(i) + no.getZ(i) * 0.013);
-    const bones = [];
-    let prev = V(0, 0, 0);
-    for (let b = 0; b < boneAt.length; b++) {
-      const bone = new THREE.Bone(), p = at(boneAt[b]);
-      bone.position.copy(p).sub(prev); prev = p;
-      if (b) bones[b - 1].add(bone);
-      bones.push(bone);
-    }
-    const mesh = new THREE.SkinnedMesh(geo, toon(hex, true));
-    head.add(mesh);
-    mesh.add(bones[0]);
-    const skel = new THREE.Skeleton(bones);
-    mesh.bind(skel);
-    const ol = new THREE.SkinnedMesh(go, outlineSkin);
-    mesh.add(ol); ol.bind(skel);
-    mesh.frustumCulled = ol.frustumCulled = false;
-    // the first bone sits on the scalp and never moves
-    strands.push({ segs: bones.slice(1), phase: Math.random() * 6 });
-  }
-  // a wavy lock from the scalp down to y = yEnd, flaring outwards, ending in a ringlet
-  function hangingLock(a, th0, thNape, yEnd, flare, width, hex, opts = {}) {
-    const pts = [], outs = [], nHead = 7, nHang = 26, ph = opts.phase != null ? opts.phase : Math.random() * 6;
-    for (let j = 0; j < nHead; j++) {
-      const th = th0 + j / (nHead - 1) * (thNape - th0);
-      pts.push(onScalp(th, a, 1.04)); outs.push(dirOf(th, a));
-    }
-    const top = pts[pts.length - 1], dir = V(Math.sin(a), 0, Math.cos(a)), side = V(Math.cos(a), 0, -Math.sin(a));
-    const rTop = Math.hypot(top.x, top.z);
-    for (let j = 1; j <= nHang; j++) {
-      const u = j / nHang;
-      const y = top.y + (yEnd - top.y) * u;
-      let r = rTop + flare * Math.pow(u, 0.8) + (opts.inward || 0) * u, lat = 0.045 * Math.sin(u * Math.PI * 3 + ph) * Math.min(1, u * 3);
-      r += 0.02 * Math.cos(u * Math.PI * 3 + ph);
-      // the last stretch winds into a ringlet
-      if (u > 0.74) { const k = (u - 0.74) / 0.26, phi = k * Math.PI * 2 * 1.5; lat += Math.sin(phi) * 0.065 * Math.min(1, k * 3); r += (Math.cos(phi) - 1) * 0.045 * Math.min(1, k * 3); }
-      const p = dir.clone().multiplyScalar(r).add(side.clone().multiplyScalar(lat));
-      p.y = y; p.z += opts.dz || 0;
-      pts.push(p); outs.push(dir.clone());
-    }
-    const n = pts.length - 1, fNape = (nHead - 1) / n;
-    const wid = f => width * (f < fNape ? 0.7 + 0.3 * f / fNape : 1 - 0.2 * (f - fNape)) * (f > 0.88 ? (1 - f) / 0.12 : 1);
-    lock(pts, outs, wid, f => 0.075 * (1 - 0.5 * f) + 0.01, hex,
-      [0, fNape, fNape + (1 - fNape) * 0.3, fNape + (1 - fNape) * 0.58, fNape + (1 - fNape) * 0.82, 1]);
-  }
-  // the darker inner layer behind the long hair
-  part(head, lathe([[0.5, 0.22], [0.54, 0.0], [0.56, -0.4], [0.6, -0.8], [0.62, -0.88]], 40, Math.PI - 1.85, 3.7, 0.08, 14), C.hairDeep, null, null, null, 0.012).material.side = THREE.DoubleSide;
-  // long hair around the back and sides, down to the knees
-  for (let i = 0; i < 13; i++) {
-    const a = Math.PI * (0.4 + i / 12 * 1.2);
-    hangingLock(a, 0.35, 1.72, -1.0 + 0.06 * Math.abs(Math.cos(a)) + [0, -0.08, 0.05, -0.12, 0.02][i % 5], 0.15, 0.3, i % 2 ? C.hairLight : C.hair);
-  }
-  // locks framing the face, falling in front of the shoulders
-  for (const s of [-1, 1]) {
-    hangingLock(s * 1.22, 0.85, 1.62, -0.62, 0.0, 0.2, C.hair, { dz: 0.05, inward: -0.05, phase: s > 0 ? 0 : 2 });
-    hangingLock(s * 1.48, 0.8, 1.66, -0.85, 0.06, 0.24, C.hairLight, { phase: s > 0 ? 1 : 3 });
-  }
-  // the flower ornament on her right, with tassels
-  const orn = group(head, [-0.37, 0.6, 0.24]);
-  orn.rotation.set(0.15, -0.55, 0.1);
-  orn.scale.setScalar(1.3);
-  for (let i = 0; i < 14; i++) { const g = group(orn, [0, 0, -0.01]); g.rotation.z = i / 14 * Math.PI * 2; ball(g, i % 2 ? C.petal2 : C.petal, [0, 0.1, 0], [0.04, 0.1, 0.02], null, 0.4); }
-  for (let i = 0; i < 10; i++) { const g = group(orn, [0, 0, 0.012]); g.rotation.z = (i + 0.5) / 10 * Math.PI * 2; ball(g, C.petal2, [0, 0.06, 0], [0.028, 0.06, 0.015], null, 0); }
-  ball(orn, C.gold, [0, 0, 0.03], [0.045, 0.045, 0.03], null, 0.3);
-  ball(orn, C.black, [0.09, 0.05, -0.05], [0.1, 0.06, 0.035], [0, 0, -0.4]);
-  for (const s of [-1, 1]) {
-    ball(orn, C.frill, [s * 0.04, -0.17, -0.03], [0.02, 0.06, 0.02], null, 0.4);
-    ball(orn, C.frill, [s * 0.04, -0.25, -0.03], [0.03, 0.05, 0.03], null, 0.35);
-  }
-  // the big black bow on the back of the head
-  const bow = group(head, [0, 0.52, -0.53]);
-  bow.rotation.x = 0.35;
-  bow.scale.setScalar(2.5);
-  bowAt(bow, [0, 0, 0], Math.PI, 1, C.black, C.petal);
-
-  // ---------- bake: every static part on a moving joint becomes one mesh per colour, plus one ink hull ----------
-  function mergeGeos(list) {
-    let nv = 0, ni = 0;
-    for (const g of list) { nv += g.attributes.position.count; ni += g.index ? g.index.count : g.attributes.position.count; }
-    const pos = new Float32Array(nv * 3), nor = new Float32Array(nv * 3), idx = new Uint32Array(ni);
-    let vo = 0, io = 0;
-    for (const g of list) {
-      const p = g.attributes.position.array, n = g.attributes.normal.array, c = g.attributes.position.count;
-      pos.set(p, vo * 3); nor.set(n, vo * 3);
-      if (g.index) { const ix = g.index.array; for (let i = 0; i < ix.length; i++) idx[io + i] = ix[i] + vo; io += ix.length; }
-      else { for (let i = 0; i < c; i++) idx[io + i] = vo + i; io += c; }
-      vo += c;
-    }
-    const out = new THREE.BufferGeometry();
-    out.setAttribute('position', new THREE.BufferAttribute(pos, 3));
-    out.setAttribute('normal', new THREE.BufferAttribute(nor, 3));
-    out.setIndex(new THREE.BufferAttribute(idx, 1));
-    return out;
-  }
-  function bake(joints) {
-    root.updateMatrixWorld(true);
-    const jointSet = new Set(joints);
-    for (const Jn of joints) {
-      const inv = new THREE.Matrix4().copy(Jn.matrixWorld).invert();
-      const byMat = new Map(), hull = [], used = [];
-      (function walk(o) {
-        for (const c of o.children) {
-          if (jointSet.has(c) || c.isSkinnedMesh || c.isBone) continue;
-          if (c.isMesh && c.material && c.material.isMeshToonMaterial) {
-            const m = new THREE.Matrix4().multiplyMatrices(inv, c.matrixWorld);
-            if (!byMat.has(c.material)) byMat.set(c.material, []);
-            byMat.get(c.material).push(c.geometry.clone().applyMatrix4(m));
-            if (c.userData.outline) {
-              // push the copy out along its normals in the part's own space, so stretched spheres keep an even line
-              const og = c.geometry.clone(), p = og.attributes.position, nrm = og.attributes.normal, w = c.userData.outline;
-              for (let i = 0; i < p.count; i++) p.setXYZ(i, p.getX(i) + nrm.getX(i) * w, p.getY(i) + nrm.getY(i) * w, p.getZ(i) + nrm.getZ(i) * w);
-              hull.push(og.applyMatrix4(m));
-            }
-            used.push(c);
-          } else if (!c.isMesh) walk(c);
-        }
-      })(Jn);
-      for (const m of used) m.parent.remove(m);
-      for (const [mat, list] of byMat) Jn.add(new THREE.Mesh(mergeGeos(list), mat));
-      if (hull.length) Jn.add(new THREE.Mesh(mergeGeos(hull), INK_BACK));
-    }
-  }
-  bake([legL, legR, skirt, body, head, armL, armR]);
-
-  // ---------- face painting ----------
-  function paint(expr) {
-    const x = faceCanvas.getContext('2d'), S = 512;
-    x.clearRect(0, 0, S, S);
-    x.lineCap = 'round'; x.lineJoin = 'round';
-    const dark = expr === 'dark' || expr === 'darkblink';
-    const INKC = '#3a1c10';
-    // soft blush with a few hatch strokes
-    for (const s of [-1, 1]) {
-      const bx = S * (0.5 + s * 0.29), by = S * 0.78;
-      const g = x.createRadialGradient(bx, by, 0, bx, by, 50);
-      g.addColorStop(0, expr === 'shy' ? 'rgba(255,90,120,0.7)' : 'rgba(255,130,150,0.45)'); g.addColorStop(1, 'rgba(255,130,150,0)');
-      x.fillStyle = g; x.beginPath(); x.ellipse(bx, by, 52, 26, 0, 0, Math.PI * 2); x.fill();
-      x.strokeStyle = expr === 'shy' ? 'rgba(220,60,90,0.7)' : 'rgba(230,100,120,0.45)'; x.lineWidth = 4;
-      for (let k = 0; k < 3; k++) { x.beginPath(); x.moveTo(bx - 18 + k * 14, by + 8); x.lineTo(bx - 10 + k * 14, by - 8); x.stroke(); }
-    }
-    for (const s of [-1, 1]) {
-      const cx = S * (0.5 + s * 0.205), cy = S * 0.615, rx = 57, ry = 83;
-      x.strokeStyle = INKC; x.fillStyle = INKC;
-      // a thin brow, mostly under the bangs
-      x.lineWidth = 5;
-      x.beginPath();
-      if (expr === 'angry' || dark) { x.moveTo(cx + s * 44, cy - ry - 34); x.lineTo(cx - s * 30, cy - ry - 14); }
-      else if (expr === 'shy' || expr === 'hurt') { x.moveTo(cx + s * 40, cy - ry - 18); x.quadraticCurveTo(cx, cy - ry - 36, cx - s * 34, cy - ry - 30); }
-      else { x.moveTo(cx + s * 42, cy - ry - 22); x.quadraticCurveTo(cx, cy - ry - 38, cx - s * 36, cy - ry - 28); }
-      x.stroke();
-      if (expr === 'blink' || expr === 'darkblink' || expr === 'serene') {
-        x.lineWidth = 12; x.beginPath(); x.moveTo(cx - 54, cy + 4); x.quadraticCurveTo(cx, cy + 34, cx + 54, cy + 4); x.stroke();
-        x.lineWidth = 7; x.beginPath(); x.moveTo(cx + s * 52, cy + 4); x.lineTo(cx + s * 70, cy - 8); x.stroke();
-        if (expr === 'serene') { x.lineWidth = 4; for (let k = -1; k <= 1; k++) { x.beginPath(); x.moveTo(cx + k * 22, cy + 22); x.lineTo(cx + k * 26, cy + 34); x.stroke(); } }
-      } else if (expr === 'happy') {
-        x.lineWidth = 13; x.beginPath(); x.moveTo(cx - 50, cy + 18); x.quadraticCurveTo(cx, cy - 36, cx + 50, cy + 18); x.stroke();
-      } else if (expr === 'hurt') {
-        x.lineWidth = 13; x.beginPath(); x.moveTo(cx - s * 44, cy - 34); x.lineTo(cx + s * 32, cy); x.lineTo(cx - s * 44, cy + 34); x.stroke();
-      } else {
-        // an anime eye: white, a gradient iris clipped to it, pupil, glow, highlights, a heavy upper lash
-        const ryy = expr === 'angry' ? ry * 0.82 : ry;
-        x.save();
-        x.beginPath(); x.ellipse(cx, cy + 6, rx, ryy, 0, 0, Math.PI * 2); x.fillStyle = '#fff'; x.fill(); x.clip();
-        const g = x.createLinearGradient(0, cy - ryy, 0, cy + ryy);
-        g.addColorStop(0, dark ? '#3a0016' : '#4a1c0a'); g.addColorStop(0.45, dark ? '#a00c34' : '#9a4418'); g.addColorStop(1, dark ? '#ff5a86' : '#f6b25a');
-        x.fillStyle = g; x.beginPath(); x.ellipse(cx, cy + 12, rx * 0.84, ryy * 0.92, 0, 0, Math.PI * 2); x.fill();
-        x.lineWidth = 5; x.strokeStyle = dark ? '#3a0016' : '#5a240c'; x.stroke();
-        x.fillStyle = dark ? '#22000c' : '#2e1006'; x.beginPath(); x.ellipse(cx, cy + 16, rx * 0.36, ryy * 0.44, 0, 0, Math.PI * 2); x.fill();
-        x.fillStyle = dark ? 'rgba(255,140,170,0.6)' : 'rgba(255,224,150,0.7)'; x.beginPath(); x.ellipse(cx, cy + ryy * 0.62, rx * 0.5, ryy * 0.2, 0, 0, Math.PI * 2); x.fill();
-        x.fillStyle = 'rgba(40,10,0,0.28)'; x.fillRect(cx - rx, cy - ryy, rx * 2, ryy * 0.5);
-        x.restore();
-        x.fillStyle = '#fff';
-        x.beginPath(); x.ellipse(cx - rx * 0.32, cy - ryy * 0.28, rx * 0.28, ryy * 0.24, -0.5, 0, Math.PI * 2); x.fill();
-        x.beginPath(); x.arc(cx + rx * 0.34, cy + ryy * 0.38, rx * 0.13, 0, Math.PI * 2); x.fill();
-        x.beginPath(); x.arc(cx + rx * 0.05, cy + ryy * 0.05, rx * 0.06, 0, Math.PI * 2); x.fill();
-        // upper lash line with a flick at the outer corner
-        x.fillStyle = INKC; x.strokeStyle = INKC;
-        x.beginPath();
-        x.moveTo(cx - s * rx * 1.05, cy - ryy * 0.45);
-        x.quadraticCurveTo(cx - s * rx * 0.2, cy - ryy * 1.18, cx + s * rx * 1.02, cy - ryy * 0.62);
-        x.lineTo(cx + s * rx * 1.32, cy - ryy * 0.8);
-        x.lineTo(cx + s * rx * 1.12, cy - ryy * 0.38);
-        x.quadraticCurveTo(cx - s * rx * 0.1, cy - ryy * 0.98, cx - s * rx * 1.05, cy - ryy * 0.45);
-        x.fill();
-        x.lineWidth = 5; x.beginPath(); x.moveTo(cx + s * rx * 0.25, cy + ryy * 1.02); x.quadraticCurveTo(cx + s * rx * 0.7, cy + ryy * 0.95, cx + s * rx * 0.92, cy + ryy * 0.62); x.stroke();
-      }
-    }
-    // a hint of a nose
-    x.fillStyle = 'rgba(200,120,100,0.5)'; x.beginPath(); x.ellipse(S / 2, S * 0.755, 5, 3, 0, 0, Math.PI * 2); x.fill();
-    // mouth
-    x.strokeStyle = INKC; x.lineWidth = 6;
-    const my = S * 0.845;
-    if (expr === 'open' || expr === 'blink' || expr === 'happy') {
-      const w = expr === 'happy' ? 32 : 24;
-      x.fillStyle = '#a23a3a'; x.beginPath(); x.moveTo(S / 2 - w, my - 6); x.quadraticCurveTo(S / 2, my + w * 1.35, S / 2 + w, my - 6); x.closePath(); x.fill(); x.stroke();
-      x.fillStyle = '#ff9aa8'; x.beginPath(); x.ellipse(S / 2, my + w * 0.5, w * 0.5, w * 0.24, 0, 0, Math.PI * 2); x.fill();
-      x.fillStyle = '#fff'; x.beginPath(); x.moveTo(S / 2 - w * 0.62, my - 4); x.lineTo(S / 2 - w * 0.3, my - 4); x.lineTo(S / 2 - w * 0.46, my + 9); x.closePath(); x.fill();
-    } else if (expr === 'hurt') {
-      x.fillStyle = '#a23a3a'; x.beginPath(); x.ellipse(S / 2, my + 4, 18, 22, 0, 0, Math.PI * 2); x.fill(); x.stroke();
-    } else if (expr === 'angry' || expr === 'dark' || expr === 'darkblink') {
-      x.beginPath(); x.moveTo(S / 2 - 22, my + 8); x.quadraticCurveTo(S / 2, my - 8, S / 2 + 22, my + 8); x.stroke();
-    } else if (expr === 'shy') {
-      x.beginPath(); x.moveTo(S / 2 - 24, my); x.quadraticCurveTo(S / 2 - 12, my - 8, S / 2, my); x.quadraticCurveTo(S / 2 + 12, my + 8, S / 2 + 24, my); x.stroke();
-    } else {
-      x.beginPath(); x.moveTo(S / 2 - 18, my); x.quadraticCurveTo(S / 2, my + 12, S / 2 + 18, my); x.stroke();
-    }
-    faceTex.needsUpdate = true;
-  }
-  let shownExpr = '';
-  function setExpr(e) { if (e !== shownExpr) { shownExpr = e; paint(e); } }
-  setExpr('open');
-
-  // ---------- animation ----------
-  const J = { yaw: 0, bob: 0, lean: 0, roll: 0, hx: 0, hy: 0, hz: 0, aLx: 0, aLz: 0.22, aRx: 0, aRz: -0.22, lL: 0, lR: 0, sx: 0, sz: 0, flare: 1, fall: 0, lift: 0 };
-  const T = Object.assign({}, J);
-  let clock = 0, walk = 0, idle = 0, blinkT = 2, yawVel = 0, spinFrom = 0, lastPose = '', darkK = 0, flash = 0;
-  const angDiff = (a, b) => { let d = a - b; while (d > Math.PI) d -= Math.PI * 2; while (d < -Math.PI) d += Math.PI * 2; return d; };
-  // s: { moving, vx, vy, aim (yaw or null), pose, poseK (0..1), dash, ult (seconds into it or -1), dead (seconds since or -1), dark (0..1), flash, yaw (forced) }
-  function step(dt, s) {
-    clock += dt;
-    const t = clock;
-    walk += dt * (s.moving ? 11 : 0);
-    idle = s.moving || s.pose ? 0 : idle + dt;
-    const sw = Math.sin(walk);
-    Object.assign(T, {
-      bob: s.moving ? Math.abs(sw) * 0.06 : Math.sin(t * 2.4) * 0.012,
-      lean: s.moving ? 0.14 : 0, roll: 0,
-      hx: s.moving ? -0.06 : Math.sin(t * 1.1) * 0.03, hy: 0, hz: Math.sin(t * 0.9) * 0.05,
-      aLx: s.moving ? -sw * 0.65 : Math.sin(t * 1.6) * 0.05, aRx: s.moving ? sw * 0.65 : -Math.sin(t * 1.6) * 0.05,
-      aLz: 0.22, aRz: -0.22,
-      lL: s.moving ? sw * 0.8 : 0, lR: s.moving ? -sw * 0.8 : 0,
-      sx: s.moving ? -0.08 + Math.sin(walk * 2) * 0.04 : 0, sz: s.moving ? sw * 0.05 : 0,
-      flare: 1, fall: 0, lift: 0,
-    });
-    let yawGoal = null;
-    if (s.moving) yawGoal = Math.atan2(s.vx, s.vy);
-    else if (s.aim != null) yawGoal = s.aim;
-    else if (idle > 1.4) yawGoal = 0.25;
-    let expr = 'open';
-    const k = s.poseK || 0;
-    if (s.pose !== lastPose) { if (s.pose === 'spin') spinFrom = J.yaw; lastPose = s.pose; }
-    // expressive poses turn her toward the viewer
-    if (['happy', 'angry', 'shy', 'curtsy', 'wave', 'hurt', 'cast'].includes(s.pose) && !s.moving) yawGoal = s.pose === 'cast' ? 0 : 0.3;
-    switch (s.pose) {
-      case 'attack':
-        T.aRx = -1.55; T.aRz = -0.05; T.lean += 0.06; T.hx = 0.04; break;
-      case 'cast':
-        if (k < 0.45) { T.aRx = -2.9; T.aRz = -0.2; T.aLx = -0.4; T.aLz = 0.9; T.lean = -0.12; T.bob = 0.04; }
-        else { T.aRx = -1.1; T.aRz = -0.1; T.aLx = 0.3; T.aLz = 0.7; T.lean = 0.2; T.bob = -0.04; T.flare = 1.12; }
-        expr = k < 0.45 ? 'open' : 'angry'; break;
-      case 'hurt':
-        T.lean = -0.32; T.aLx = -1.3; T.aRx = -1.3; T.aLz = 0.7; T.aRz = -0.7; T.hx = -0.2; expr = 'hurt'; break;
-      case 'land':
-        T.bob = -0.07 * (1 - k); T.aLz = 0.9; T.aRz = -0.9; T.flare = 1.1; break;
-      case 'happy':
-        T.bob = Math.abs(Math.sin(k * Math.PI * 2)) * 0.2; T.aLz = 2.2 + Math.sin(t * 14) * 0.15; T.aRz = -2.2 - Math.sin(t * 14) * 0.15; T.aLx = 0.8; T.aRx = 0.8; T.flare = 1.1; expr = 'happy'; break;
-      case 'angry':
-        T.aLz = 0.45; T.aRz = -0.45; T.aLx = 0.35; T.aRx = 0.35; T.hx = 0.14; T.bob = Math.abs(Math.sin(k * Math.PI * 3)) * 0.05; expr = 'angry'; break;
-      case 'shy':
-        T.aLx = -1.9; T.aRx = -1.9; T.aLz = -0.5; T.aRz = 0.5; T.hx = 0.16; T.hz = 0.16; expr = 'shy'; break;
-      case 'spin':
-        T.aLz = 1.2; T.aRz = -1.2; T.aLx = -0.4; T.aRx = -0.4; T.flare = 1.28; expr = 'happy'; break;
-      case 'curtsy': {
-        const b = Math.sin(k * Math.PI);
-        T.bob = -0.1 * b; T.aLz = 0.6; T.aRz = -0.6; T.aLx = 0.18; T.aRx = 0.18; T.hx = 0.28 * b; T.lean = 0.16 * b; T.lL = 0.25 * b; T.lR = -0.1 * b; expr = 'blink';
-        break;
-      }
-      case 'wave':
-        T.aLz = 2.2 + Math.sin(t * 12) * 0.35; T.aLx = 0.9; T.hz = 0.1; expr = 'happy'; break;
-    }
-    if (s.dash) { T.lean = 0.5; T.aLx = 1.1; T.aRx = 1.1; T.aLz = 0.5; T.aRz = -0.5; T.lL = -0.7; T.lR = 0.45; T.flare = 1.12; T.sx = -0.2; }
-    if (s.ult >= 0) {
-      T.lift = Math.min(1, s.ult / 0.4) * 0.75 - Math.max(0, s.ult - 1.3) * 1.5;
-      T.aLz = 1.25 + Math.sin(t * 3) * 0.1; T.aRz = -1.25 - Math.sin(t * 3) * 0.1; T.aLx = -0.4; T.aRx = -0.4;
-      T.lL = 0.2; T.lR = -0.15; T.hx = -0.18; T.flare = 1.22; expr = 'serene'; yawGoal = null;
-      J.yaw += dt * (s.ult < 1.05 ? 1.2 : 0.4);
-    }
-    if (s.dead >= 0) { T.fall = Math.min(1, s.dead / 0.45); T.aLz = 0.6; T.aRz = -2.2; T.lL = 0.3; expr = 'blink'; yawGoal = 0; }
-    // facing: turn through the shortest way and remember how fast she turned, for the hair
-    const prevYaw = J.yaw;
-    if (s.yaw != null) J.yaw = s.yaw;
-    else if (s.pose === 'spin') J.yaw = spinFrom + k * Math.PI * 2;
-    else if (yawGoal != null) J.yaw += angDiff(yawGoal, J.yaw) * Math.min(1, dt * (s.moving ? 12 : 6));
-    yawVel += ((J.yaw - prevYaw) / Math.max(dt, 1e-4) - yawVel) * Math.min(1, dt * 10);
-    const r = Math.min(1, dt * 14);
-    for (const key in T) if (key !== 'yaw') J[key] += (T[key] - J[key]) * r;
-    // blink now and then
-    blinkT -= dt;
-    if (blinkT < 0) blinkT = 2 + Math.random() * 3;
-    if (expr === 'open' && blinkT < 0.12) expr = 'blink';
-    darkK += ((s.dark || 0) - darkK) * Math.min(1, dt * 6);
-    if (darkK > 0.5) expr = expr === 'blink' ? 'darkblink' : expr === 'open' || expr === 'angry' ? 'dark' : expr;
-    setExpr(expr);
-    // pose the skeleton
-    root.rotation.y = J.yaw;
-    // she topples onto her side, face still towards the viewer
-    root.rotation.z = J.fall * 1.38;
-    root.position.y = J.fall * 0.32;
-    root.position.x = J.fall * 1.1;
-    hips.position.y = 0.5 + J.bob + J.lift;
-    body.rotation.x = J.lean; body.rotation.z = J.roll;
-    head.rotation.set(J.hx, J.hy, J.hz);
-    armL.rotation.set(J.aLx, 0, J.aLz); armR.rotation.set(J.aRx, 0, J.aRz);
-    legL.rotation.x = J.lL; legR.rotation.x = J.lR;
-    skirt.rotation.set(J.sx, 0, J.sz);
-    skirt.scale.set(J.flare, 1 / Math.sqrt(J.flare), J.flare);
-    // hair: hangs, trails behind when she runs, lifts when she jumps, swings when she turns
-    const run = s.moving || s.dash ? 1 : 0;
-    for (const st of strands) {
-      st.trail = (st.trail || 0) + ((s.dash ? 0.45 : run * 0.2) + J.lift * 0.15 + J.bob * 0.6 - (st.trail || 0)) * Math.min(1, dt * 5);
-      st.swing = (st.swing || 0) + (clamp3(-yawVel * 0.07, -0.45, 0.45) - (st.swing || 0)) * Math.min(1, dt * 4);
-      st.segs.forEach((g, j) => {
-        const f = j / st.segs.length;
-        const wave = Math.sin(t * 2.3 - j * 0.7 + st.phase) * (0.025 + run * 0.04);
-        g.rotation.x = st.trail * (j === 0 ? 0.6 : 0.18 * (1 + f)) + wave;
-        g.rotation.z = st.swing * (j === 0 ? 0.5 : 0.25 + f * 0.3) + wave * 0.5;
-      });
-    }
-    // 黑化 darkens every material; a hit flashes them white
-    flash = s.flash ? 1 : Math.max(0, flash - dt * 12);
-    for (const m of mats) {
-      m.color.copy(m.userData.base).lerp(DARK, darkK * 0.55);
-      m.emissive.setRGB(flash * 0.45, flash * 0.42, flash * 0.4);
-    }
-  }
-  const DARK = new THREE.Color(0x2a0c40);
-  const clamp3 = (v, a, b) => v < a ? a : v > b ? b : v;
-  return { root, step, setExpr };
-}
-// three.js arrives in the background; until it does (or if it can't load) she stays a 2D sprite
-const M3 = { ready: false, mode: 'hero', forced: /[?&]3d\b/.test(location.search) };
-const M3_FW = 3.6, M3_FH = 4.5, M3_UNIT = SPR_H / 2.45; // camera box in model units; world units per model unit
-function load3D() {
-  const s = document.createElement('script');
-  s.src = 'https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js';
-  s.async = true;
-  s.onload = () => { try { init3D(); } catch (err) { console.warn('3D unavailable, staying 2D:', err); } };
-  document.head.appendChild(s);
-}
-function init3D() {
-  const T = window.THREE;
-  const renderer = new T.WebGLRenderer({ alpha: true, antialias: true, preserveDrawingBuffer: true });
-  renderer.setClearColor(0x000000, 0);
-  renderer.setPixelRatio(1);
-  const scene = new T.Scene();
-  // a warm ambient light tints the shadow side, like an anime colour script
-  scene.add(new T.AmbientLight(0xffe2d4, 0.62));
-  const sun = new T.DirectionalLight(0xffffff, 0.42);
-  sun.position.set(2, 4, 3);
-  scene.add(sun);
-  // the same slightly-from-above view the rest of the game is drawn in
-  const cam = new T.OrthographicCamera(-M3_FW / 2, M3_FW / 2, M3_FH / 2, -M3_FH / 2, 0.1, 50);
-  const el = 22 * Math.PI / 180, cy = 1.55;
-  cam.position.set(0, cy + 8 * Math.sin(el), 8 * Math.cos(el));
-  cam.lookAt(0, cy, 0);
-  cam.updateMatrixWorld(); cam.updateProjectionMatrix();
-  const model = createClaude3D(T);
-  scene.add(model.root);
-  const heroCam = new T.OrthographicCamera(-1.3, 1.3, 1.625, -1.625, 0.1, 50);
-  heroCam.position.set(0, 1.32 + 8 * Math.sin(el * 0.6), 8 * Math.cos(el * 0.6));
-  heroCam.lookAt(0, 1.32, 0);
-  heroCam.updateMatrixWorld(); heroCam.updateProjectionMatrix();
-  const o = new T.Vector3(0, 0, 0).project(cam);
-  Object.assign(M3, { renderer, scene, cam, heroCam, model, ax: (o.x + 1) / 2, ay: (1 - o.y) / 2, last: performance.now(), ready: true });
-  size3D();
-  const hero = $('hero3d'), img = document.querySelector('.portrait img');
-  hero.hidden = false; img.hidden = true;
-}
-function size3D() {
-  if (!M3.ready) return;
-  if (M3.mode === 'game') {
-    // render at twice the on-screen size and let the downscale smooth the ink lines
-    const ss = Math.min(2, 560 / (M3_FH * M3_UNIT * PX));
-    M3.renderer.setSize(Math.round(M3_FW * M3_UNIT * PX * ss), Math.round(M3_FH * M3_UNIT * PX * ss), false);
-  } else {
-    const hero = $('hero3d'), w = Math.max(120, Math.round(hero.getBoundingClientRect().width * dpr || 230 * dpr));
-    hero.width = w; hero.height = Math.round(w * M3_FH / M3_FW);
-    M3.renderer.setSize(hero.width, hero.height, false);
-  }
-}
-function set3DMode(mode) { M3.mode = mode; size3D(); }
-const POSE_OF = { atk1: 'attack', atk2: 'attack', atk3: 'attack', cast1: 'cast', cast2: 'cast', cast3: 'cast', dash4: 'land', hurt: 'hurt', skirt: 'curtsy', spin: 'spin', happy: 'happy', angry: 'angry', shy: 'shy', wave: 'wave' };
-function modelState() {
-  const a = P.anim;
-  let pose = '', k = 0;
-  if (a) {
-    const i = Math.min(a.seq.length - 1, Math.floor(a.t / a.dur * a.seq.length)), seg = a.dur / a.seq.length;
-    pose = POSE_OF[a.seq[i]] || '';
-    k = pose === 'cast' || pose === 'attack' ? a.t / a.dur : (a.t - i * seg) / seg;
-  }
-  return {
-    moving: P.moving, vx: P.dash ? P.dash.dx : P.mvx, vy: P.dash ? P.dash.dy : P.mvy,
-    aim: pose === 'attack' ? Math.atan2(P.aimX || 0, P.aimY || 1) : null,
-    pose, poseK: clamp(k, 0, 1), dash: !!P.dash,
-    ult: G.ult ? G.ult.t : -1, dead: G.ending && !G.ending.win ? G.ending.t : -1,
-    dark: P.dark > 0 ? 1 : 0, flash: P.flash > 0 && !(G.ending && !G.ending.win),
-  };
-}
-function draw3D(footY) {
-  const now = performance.now(), dt = Math.min(0.05, (now - M3.last) / 1000);
-  const gap = now - M3.last;
-  M3.last = now;
-  // a slow device gets the 2D sprite back: average the frame gap over the first seconds of play
-  if (gap < 500) {
-    M3.avg = M3.avg == null ? gap : M3.avg * 0.97 + gap * 0.03;
-    M3.watched = (M3.watched || 0) + gap;
-    if (M3.watched > 4000 && M3.avg > 45 && !M3.forced) {
-      M3.ready = false; M3.slow = true;
-      $('hero3d').hidden = true; document.querySelector('.portrait img').hidden = false;
-      console.warn('3D model too slow here, using the 2D sprite');
-      return;
-    }
-  }
-  M3.model.step(dt, modelState());
-  M3.renderer.render(M3.scene, M3.cam);
-  const w = M3_FW * M3_UNIT, h = M3_FH * M3_UNIT;
-  ctx.imageSmoothingQuality = 'high';
-  ctx.drawImage(M3.renderer.domElement, P.x - M3.ax * w, footY - M3.ay * h, w, h);
-}
-// a still copy of her current pose, for the dash phantom and the decoy
-function snapshot3D() {
-  if (!M3.ready || M3.mode !== 'game') return null;
-  const src = M3.renderer.domElement, c = document.createElement('canvas');
-  c.width = src.width; c.height = src.height;
-  c.getContext('2d').drawImage(src, 0, 0);
-  return c;
-}
-function drawGhost(c, x, footY, alpha) {
-  const w = M3_FW * M3_UNIT, h = M3_FH * M3_UNIT;
-  ctx.globalAlpha = alpha;
-  ctx.drawImage(c, x - M3.ax * w, footY - M3.ay * h, w, h);
-  ctx.globalAlpha = 1;
-}
-// title screen: she idles on a turntable, shows off a pose now and then, and can be spun by dragging
-const hero = { yaw: 0.3, t: 0, pose: '', poseT: 0, poseDur: 0, next: 2.5, drag: null, spinVel: 0 };
-const HERO_POSES = [['wave', 1.8], ['happy', 1.4], ['spin', 1.2], ['curtsy', 1.5], ['shy', 1.6]];
-function heroFrame(dt) {
-  if (!M3.ready || M3.mode !== 'hero' || $('title').hidden) return;
-  hero.t += dt;
-  if (hero.pose) {
-    hero.poseT += dt;
-    if (hero.poseT >= hero.poseDur) { hero.pose = ''; hero.next = 2.5 + Math.random() * 2; }
-  } else if (!hero.drag) {
-    hero.next -= dt;
-    if (hero.next <= 0) { const p = HERO_POSES[(Math.random() * HERO_POSES.length) | 0]; hero.pose = p[0]; hero.poseDur = p[1]; hero.poseT = 0; }
-  }
-  if (!hero.drag) {
-    hero.yaw += hero.spinVel * dt; hero.spinVel *= Math.pow(0.05, dt);
-    // drift back to facing the viewer
-    if (Math.abs(hero.spinVel) < 0.3) { let d = 0.3 - hero.yaw; d = Math.atan2(Math.sin(d), Math.cos(d)); hero.yaw += d * Math.min(1, dt * 1.5); }
-  }
-  const posing = hero.pose && !hero.drag;
-  M3.model.step(dt, { moving: false, vx: 0, vy: 1, aim: null, pose: posing ? hero.pose : '', poseK: posing ? hero.poseT / hero.poseDur : 0, dash: false, ult: -1, dead: -1, dark: 0, yaw: hero.pose === 'spin' && !hero.drag ? null : hero.yaw });
-  M3.renderer.render(M3.scene, M3.heroCam);
-  const c = $('hero3d'), x = c.getContext('2d');
-  x.clearRect(0, 0, c.width, c.height);
-  x.drawImage(M3.renderer.domElement, 0, 0, c.width, c.height);
 }
 
 // --- action frames cut from the character sheet: [x, y, w, h, standing height in px, facing, feet offset] ---
@@ -2099,6 +1387,7 @@ function newRun() {
     shield: 0, shieldT: 0, decoyCd: 0, revived: false, say: null, lowLineT: 0, chaosT: 20,
     rep: 0, repReady: false, dark: 0, darkMax: 1,
     anim: null, idleT: 0, mvx: 0, mvy: 1, dash: null, dashCd: 0, ult: 0,
+    sway: 0, swayV: 0, lastFace: 1, turnT: 0, squash: 0,
   };
   G = {
     time: 0, enemies: [], shots: [], ebullets: [], gems: [], items: [], zones: [], beams: [], stamps: [],
@@ -2325,7 +1614,7 @@ function hit(e, base, src, o = {}) {
     const l = Math.hypot(o.kx, o.ky) || 1, k = e.heavy || e.elite ? 0.25 : 1;
     e.kx += o.kx / l * o.kb * k; e.ky += o.ky / l * o.kb * k;
   }
-  dmgText(e.x + rand(-6, 6), e.y - e.r - 4, d, crit, o.burn);
+  if (!o.quiet) dmgText(e.x + rand(-6, 6), e.y - e.r - 4, d, crit, o.burn, e);
   sfx.hit();
   if (crit && P.talents.burst && !o.noBurst && Math.random() < 0.3) {
     const x = e.x, y = e.y;
@@ -2408,7 +1697,7 @@ function hurtPlayer(dmg) {
   G.hurtFlash = 0.35; shake(5);
   floatText(P.x, P.y - SPR_H * 0.7, '-' + dmg, '#ff6b5a', 14);
   sfx.hurt();
-  if (P.talents.halluc && P.decoyCd <= 0) { G.decoy = { x: P.x, y: P.y, t: 3, ghost: snapshot3D() }; P.decoyCd = 8; }
+  if (P.talents.halluc && P.decoyCd <= 0) { G.decoy = { x: P.x, y: P.y, t: 3 }; P.decoyCd = 8; }
   if (P.hp <= 0) {
     if (P.talents.compact && !P.revived) {
       P.revived = true; P.hp = P.maxHp * 0.5; P.iframes = 2;
@@ -2465,8 +1754,7 @@ function castDash() {
   P.dashCd = DASH_CD;
   P.iframes = Math.max(P.iframes, 0.4);
   P.anim = null;
-  P.mvx = P.dash.dx; P.mvy = P.dash.dy;
-  G.zones.push({ kind: 'phantom', x: P.x, y: P.y, r: 80 * P.area, life: 0.55, max: 0.55, face: P.face, ghost: snapshot3D() });
+  G.zones.push({ kind: 'phantom', x: P.x, y: P.y, r: 80 * P.area, life: 0.55, max: 0.55, face: P.face });
   puff(P.x, P.y - 10, 10, '#ffb08a', 120, 0.5, 3.5);
   sfx.dash();
 }
@@ -2495,15 +1783,20 @@ function updateUlt(dt) {
     G.hitStop = 0.12; G.flashT = 0.35; shake(22);
     sfx.stamp(); sfx.ultBoom();
     const base = 70 + 9 * P.level;
+    // only the big targets get their own number; everyone else adds to one total
+    let total = 0, n = 0;
     for (const e of G.enemies) {
       if (e.dead || !inView(e.x, e.y, 60)) continue;
+      const big = e.boss || e.elite || e.type === 'reg';
       if (e.boss) {
         const d = Math.round(e.maxHp * 0.04);
-        e.hp -= d; G.dmgBy.ult = (G.dmgBy.ult || 0) + d;
+        e.hp -= d; G.dmgBy.ult = (G.dmgBy.ult || 0) + d; total += d;
       }
-      hit(e, e.elite || e.type === 'reg' ? base * 2.5 : base, 'ult', { noBurst: true, kb: 220, kx: e.x - P.x, ky: e.y - P.y });
+      total += hit(e, big && !e.boss ? base * 2.5 : base, 'ult', { noBurst: true, quiet: !big, kb: 220, kx: e.x - P.x, ky: e.y - P.y });
+      n++;
       if (!e.dead && e.hp <= 0) kill(e, 'ult');
     }
+    if (n) floatText(P.x, P.y - SPR_H * 0.95, `万花盛典  ${n} 个目标 · ${total.toLocaleString('zh-CN')}`, '#ffd27a', 20).life = 1.6;
     for (const b of G.ebullets) if (inView(b.x, b.y, 40)) b.dead = true;
   }
   if (u.t >= 1.9) { G.ult = null; P.iframes = Math.max(P.iframes, 0.8); playAnim(['happy'], 1, 1); }
@@ -2645,6 +1938,7 @@ function inputVector() {
 
 function updatePlayer(dt) {
   let [mx, my, l] = inputVector();
+  const x0 = P.x;
   if (P.dash) {
     // 蔷薇幻步: a short wind-up, then she scatters into petals and reappears further on
     const d = P.dash;
@@ -2654,7 +1948,7 @@ function updatePlayer(dt) {
       P.x += d.dx * 900 * dt; P.y += d.dy * 900 * dt;
       puff(P.x + rand(-12, 12), P.y + rand(-30, 20), 2, Math.random() < 0.5 ? '#ff9a6a' : '#ffd0b0', 60, 0.5, 3.5, false);
       if (d.t >= 0.19) {
-        P.dash = null;
+        P.dash = null; P.squash = 1;
         playAnim(['dash4'], 0.32, 3);
         ring(P.x, P.y + SPR_H * 0.36, 8, 46, 0.35, '#ffb07a', 3);
       }
@@ -2666,13 +1960,21 @@ function updatePlayer(dt) {
   }
   if (l > 0.1 && !P.dash) { P.mvx = mx / Math.max(l, 1e-6); P.mvy = my / Math.max(l, 1e-6); }
   P.moving = l > 0.1;
+  // hair and skirt hang on a spring: they lag behind her movement and overshoot when she stops
+  const vx = (P.x - x0) / Math.max(dt, 1e-4);
+  P.swayV += ((-vx * 0.03 - P.sway) * 140 - P.swayV * 9) * dt;
+  P.sway = clamp(P.sway + P.swayV * dt, -14, 14);
+  // turning round passes through facing the viewer instead of flipping like a sheet of paper
+  if (P.face !== P.lastFace) { P.lastFace = P.face; P.turnT = 0.16; P.swayV += P.face * 60; }
+  P.turnT = Math.max(0, P.turnT - dt);
+  P.squash = Math.max(0, P.squash - dt * 4);
   P.dashCd = Math.max(0, P.dashCd - dt);
   if (P.anim) { P.anim.t += dt; if (P.anim.t >= P.anim.dur) P.anim = null; }
   // standing about: she straightens her skirt or twirls now and then
   if (P.moving) P.idleT = 0;
   else if (!P.anim || P.anim.pri === 0) {
     P.idleT += dt;
-    if (P.idleT > 4) { P.idleT = -rand(2, 5); const e = pick(['skirt', 'spin', 'wave']); playAnim([e], e === 'wave' ? 1.8 : 1.3, 1); }
+    if (P.idleT > 4) { P.idleT = -rand(2, 5); playAnim([pick(['skirt', 'spin'])], 1.3, 1); }
   }
   // 深度思考: stand still to think, wander to forget
   if (P.moving) {
@@ -2754,7 +2056,6 @@ function updateWeapons(dt) {
             });
           }
           sfx.flame();
-          P.aimX = list[0].x - P.x; P.aimY = list[0].y - P.y;
           if (!P.moving && !P.dash) { P.face = list[0].x >= P.x ? 1 : -1; playAnim(['atk1', 'atk2', 'atk3'], 0.32, 0); }
         }
         break;
@@ -3185,17 +2486,28 @@ function puff(x, y, n, color, spd, life, size, add) {
 }
 function ring(x, y, r0, r1, life, color, width) { G.rings.push({ x, y, r0, r1, life, max: life, color, width }); }
 function floatText(x, y, text, color, size) {
-  if (G.texts.length > 70) G.texts.shift();
-  G.texts.push({ x, y, text, color, size, life: 0.9, max: 0.9, vy: -40 });
+  if (G.texts.length > 70) G.texts.shift().life = 0;
+  const t = { x, y, text, color, size, life: 0.9, max: 0.9, vy: -40, pop: 0 };
+  G.texts.push(t);
+  return t;
 }
-function dmgText(x, y, d, crit, burn) {
+// hits on the same enemy in quick succession add up into one number that pops, instead of a stack of them
+function dmgText(x, y, d, crit, burn, e) {
+  const prev = e && e.txt;
+  if (prev && prev.life > prev.max - 0.4) {
+    prev.val += d; prev.text = String(prev.val); prev.pop = 1;
+    if (crit && !prev.crit) { prev.crit = true; prev.color = '#ffb347'; prev.size = 16; }
+    return;
+  }
   if (!crit && G.texts.length > 50) return;
-  floatText(x, y, String(d), crit ? '#ffb347' : burn ? '#ff9a5a' : '#fff4e8', crit ? 16 : burn ? 10 : 12);
+  const t = floatText(x, y, String(d), crit ? '#ffb347' : burn ? '#ff9a5a' : '#fff4e8', crit ? 16 : burn ? 10 : 12);
+  t.val = d; t.crit = crit;
+  if (e) e.txt = t;
 }
 function updateFx(dt) {
   for (const p of G.parts) { p.life -= dt; p.x += p.vx * dt; p.y += p.vy * dt; p.vx *= 1 - dt * 3; p.vy *= 1 - dt * 3; }
   for (const r of G.rings) r.life -= dt;
-  for (const t of G.texts) { t.life -= dt; t.y += t.vy * dt; t.vy *= 1 - dt * 2; }
+  for (const t of G.texts) { t.life -= dt; t.y += t.vy * dt; t.vy *= 1 - dt * 2; t.pop = Math.max(0, t.pop - dt * 6); }
   for (const b of G.beams) b.life -= dt;
   for (const s of G.stamps) s.t += dt;
   for (const b of G.blooms) b.life -= dt;
@@ -3331,7 +2643,6 @@ function drawZones() {
       continue;
     }
     if (z.kind === 'phantom') {
-      if (z.ghost) { drawGhost(z.ghost, z.x, z.y + SPR_H * 0.38, 0.5 * (z.life / z.max)); continue; }
       const s = frameSprite('dash3') || pSprite;
       if (s) {
         ctx.globalAlpha = 0.45 * (z.life / z.max);
@@ -3510,13 +2821,10 @@ function drawPlayer() {
     ctx.strokeStyle = `rgba(255,176,102,${0.5 + Math.sin(t * 6) * 0.2})`; ctx.lineWidth = 2;
     ctx.beginPath(); ctx.ellipse(P.x, footY - 2, 26, 9, 0, 0, TAU); ctx.stroke();
   }
-  if (G.decoy && (G.decoy.ghost || pSprite)) {
-    if (G.decoy.ghost) drawGhost(G.decoy.ghost, G.decoy.x, G.decoy.y + SPR_H * 0.38, 0.4 * Math.min(1, G.decoy.t));
-    else {
-      ctx.globalAlpha = 0.35 * Math.min(1, G.decoy.t);
-      ctx.drawImage(pSprite.f, G.decoy.x - pSprite.w / 2, G.decoy.y + SPR_H * 0.38 - pSprite.h + pSprite.pad, pSprite.w, pSprite.h);
-      ctx.globalAlpha = 1;
-    }
+  if (G.decoy && pSprite) {
+    ctx.globalAlpha = 0.35 * Math.min(1, G.decoy.t);
+    ctx.drawImage(pSprite.f, G.decoy.x - pSprite.w / 2, G.decoy.y + SPR_H * 0.38 - pSprite.h + pSprite.pad, pSprite.w, pSprite.h);
+    ctx.globalAlpha = 1;
     label(G.decoy.x, G.decoy.y - SPR_H * 0.7, '幻影', '#e6dcff');
   }
   if (P.dark > 0 && !dead) {
@@ -3529,19 +2837,23 @@ function drawPlayer() {
     ctx.strokeStyle = `rgba(255,90,170,${0.6 * k})`; ctx.lineWidth = 2;
     ctx.beginPath(); ctx.ellipse(P.x, footY - 2, 28 + Math.sin(t * 8) * 2, 10, 0, 0, TAU); ctx.stroke();
   }
-  if (M3.ready && !M3.slow) {
-    if (P.iframes > 0 && !dead && !G.ult && !P.dash && Math.floor(t * 20) % 2 === 0) ctx.globalAlpha = 0.6;
-    if (P.dash && P.dash.phase === 1) ctx.globalAlpha = 0.85;
-    draw3D(footY);
-    ctx.globalAlpha = 1;
-  } else {
-  const name = playerFrame(), fr = name ? frameSprite(name) : null, spr = fr || pSprite;
+  let name = playerFrame();
+  // mid-turn she shows the frame where she faces the viewer, a little narrowed
+  const turnK = P.turnT > 0 && !P.dash && !G.ult && !dead ? 1 - P.turnT / 0.16 : -1;
+  if (turnK >= 0 && turnK > 0.2 && turnK < 0.8 && (!P.anim || P.anim.pri < 2)) name = 'spin';
+  const fr = name ? frameSprite(name) : null, spr = fr || pSprite;
   let bob = 0, sx = 1, sy = 1, tilt = 0, face = P.face, lift = 0;
   if (dead) { if (!fr) tilt = -P.face * Math.min(1, G.ending.t * 2) * 1.2; }
   else if (G.ult) { lift = Math.min(1, G.ult.t / 0.4) * 24 - Math.max(0, G.ult.t - 1.3) * 48; bob = Math.sin(t * 5) * 1.5; }
   else if (P.dash) { sx = 1.1; sy = 0.95; }
-  else if (P.moving) { bob = -Math.abs(Math.sin(P.walkT * 11)) * 3.2; tilt = P.face * 0.05; }
-  else { const b = Math.sin(t * 2.6); sy = 1 + b * 0.014; sx = 1 - b * 0.008; }
+  else if (P.moving) {
+    // a springy step: stretch on the way up, squash as each foot lands
+    const ph = Math.sin(P.walkT * 11), up = Math.abs(ph);
+    bob = -up * 3.6; tilt = P.face * 0.05 + ph * 0.025;
+    sy = 1 + (up - 0.5) * 0.06; sx = 1 - (up - 0.5) * 0.04;
+  } else { const b = Math.sin(t * 2.6); sy = 1 + b * 0.018; sx = 1 - b * 0.01; }
+  if (P.squash > 0) { const q = Math.sin(P.squash * Math.PI) * 0.12; sy *= 1 - q; sx *= 1 + q; }
+  if (turnK >= 0) sx *= 0.82 + 0.18 * Math.abs(turnK * 2 - 1);
   // 转圈 turns her round halfway through
   if (P.anim && P.anim.seq[0] === 'spin' && P.anim.t > P.anim.dur * 0.5) face = -face;
   ctx.save();
@@ -3550,7 +2862,10 @@ function drawPlayer() {
   if (P.dash && P.dash.phase === 1) ctx.globalAlpha = 0.8;
   if (dead) ctx.globalAlpha = Math.min(1, 0.4 + G.ending.t);
   if (spr) {
-    ctx.drawImage(P.flash > 0 && !dead ? spr.f : P.dark > 0 ? spr.d : spr.c, -spr.w / 2, -spr.h + spr.pad + (spr.feet || 0), spr.w, spr.h);
+    const img = P.flash > 0 && !dead ? spr.f : P.dark > 0 ? spr.d : spr.c;
+    const top = -spr.h + spr.pad + (spr.feet || 0);
+    if (dead || G.ult) ctx.drawImage(img, -spr.w / 2, top, spr.w, spr.h);
+    else drawSwaying(img, spr, top, t, face * (spr.face || 1) * sx);
   } else {
     // stand-in until the art arrives: orange hair, cream dress
     ctx.fillStyle = '#f6eadc'; ctx.beginPath(); ctx.moveTo(-18, 0); ctx.lineTo(18, 0); ctx.lineTo(8, -36); ctx.lineTo(-8, -36); ctx.closePath(); ctx.fill();
@@ -3558,7 +2873,6 @@ function drawPlayer() {
     ctx.fillStyle = '#fbe0cc'; disc(ctx, 0, -47, 11); ctx.fill();
   }
   ctx.restore();
-  }
   if (!dead) drawPlayerOverlay(t, footY);
   if (P.say) {
     const a = Math.min(1, P.say.t / 0.3, (P.say.max - P.say.t) / 0.15 + 0.2);
@@ -3569,6 +2883,22 @@ function drawPlayer() {
     ctx.beginPath(); ctx.moveTo(P.x - 5, by + 10); ctx.lineTo(P.x, by + 17); ctx.lineTo(P.x + 5, by + 10); ctx.fill();
     ctx.fillStyle = '#3b2416'; ctx.fillText(P.say.text, P.x, by + 0.5);
     ctx.globalAlpha = 1;
+  }
+}
+// draws the sprite in thin horizontal strips, each shifted sideways: the head nods against the
+// motion, the hair and skirt trail behind it and ripple a little, and the feet stay planted
+const SWAY_STRIPS = 22;
+function drawSwaying(img, spr, top, t, xScale) {
+  const H = img.height, W = img.width, k = 1 / (xScale || 1);
+  const ripple = P.moving ? 0.9 : 0.55;
+  for (let i = 0; i < SWAY_STRIPS; i++) {
+    const v = (i + 0.5) / SWAY_STRIPS;
+    const below = clamp((v - 0.3) / 0.55, 0, 1), feet = clamp((v - 0.9) / 0.1, 0, 1);
+    const w = below * below * (3 - 2 * below) * (1 - 0.75 * feet);
+    const nod = v < 0.3 ? -0.18 * (0.3 - v) / 0.3 : 0;
+    const dx = P.sway * (w + nod) + Math.sin(t * 2.2 + v * 5) * ripple * w * w;
+    const sy0 = Math.floor(i * H / SWAY_STRIPS), sy1 = Math.min(H, Math.ceil((i + 1) * H / SWAY_STRIPS) + 1);
+    ctx.drawImage(img, 0, sy0, W, sy1 - sy0, -spr.w / 2 + dx * k, top + sy0 / H * spr.h, spr.w, (sy1 - sy0) / H * spr.h);
   }
 }
 function drawPlayerOverlay(t, footY) {
@@ -3708,7 +3038,7 @@ function drawFx() {
   ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.lineJoin = 'round';
   for (const t of G.texts) {
     ctx.globalAlpha = clamp(t.life / t.max * 2, 0, 1);
-    ctx.font = `800 ${t.size}px ${UI_FONT}`;
+    ctx.font = `800 ${Math.round(t.size * (1 + 0.35 * t.pop))}px ${UI_FONT}`;
     ctx.lineWidth = 3; ctx.strokeStyle = 'rgba(20,10,5,0.85)';
     ctx.strokeText(t.text, t.x, t.y);
     ctx.fillStyle = t.color; ctx.fillText(t.text, t.x, t.y);
@@ -3766,7 +3096,6 @@ function drawCutin() {
 }
 function drawScreen() {
   ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-  if (vignette) ctx.drawImage(vignette, 0, 0, W, H);
   if (!G) return;
   const low = P.hp / P.maxHp;
   if (low < 0.3 && !G.ending) {
@@ -3810,9 +3139,6 @@ function edgeArrow(wx, wy, color, top) {
 }
 
 function render() {
-  ctx.setTransform(1, 0, 0, 1, 0, 0);
-  ctx.fillStyle = '#1b130d';
-  ctx.fillRect(0, 0, canvas.width, canvas.height);
   const cam = G ? G.cam : demo;
   const sh = G ? G.shake : 0;
   const ox = sh ? rand(-sh, sh) : 0, oy = sh ? rand(-sh, sh) : 0;
@@ -4151,7 +3477,6 @@ function startRun() {
   audio.init();
   ['title', 'result', 'pause', 'levelup', 'chest'].forEach(id => { $(id).hidden = true; });
   newRun();
-  set3DMode('game');
   resetHud();
   $('hud').hidden = false;
   $('banner').hidden = $('toast').hidden = true;
@@ -4165,7 +3490,6 @@ function toTitle() {
   ['result', 'pause', 'levelup', 'chest'].forEach(id => { $(id).hidden = true; });
   $('hud').hidden = true; $('banner').hidden = $('toast').hidden = true;
   $('title').hidden = false;
-  set3DMode('hero');
   showBest();
 }
 function showBest() {
@@ -4280,7 +3604,7 @@ const bot = {
 };
 if (DEBUG) {
   window.__fk = {
-    get G() { return G; }, get P() { return P; }, M3, bot, start: startRun, update, render,
+    get G() { return G; }, get P() { return P; }, bot, start: startRun, update, render,
     // simulate without rendering; modals are resolved by taking the first card
     sim(sec, dt = 1 / 30) {
       const steps = Math.round(sec / dt);
@@ -4312,7 +3636,6 @@ function frame(now) {
     else update(dt);
   } else if (!G) {
     demo.x += dt * 14; demo.y += dt * 6;
-    heroFrame(dt);
   }
   render();
   if (G && P) updateHud();
@@ -4320,20 +3643,6 @@ function frame(now) {
 addEventListener('resize', resize);
 resize();
 showBest();
-// drag the title-screen model to spin her
-const heroCanvas = $('hero3d');
-heroCanvas.addEventListener('pointerdown', e => { hero.drag = { x: e.clientX, yaw: hero.yaw, t: performance.now() }; hero.pose = ''; try { heroCanvas.setPointerCapture(e.pointerId); } catch (err) { /* ignore */ } });
-heroCanvas.addEventListener('pointermove', e => {
-  if (!hero.drag) return;
-  const yaw = hero.drag.yaw + (e.clientX - hero.drag.x) * 0.02;
-  hero.spinVel = (yaw - hero.yaw) / Math.max(0.016, (performance.now() - hero.drag.t) / 1000);
-  hero.drag.t = performance.now();
-  hero.yaw = yaw;
-});
-const endHeroDrag = () => { hero.drag = null; hero.next = 3; };
-heroCanvas.addEventListener('pointerup', endHeroDrag);
-heroCanvas.addEventListener('pointercancel', endHeroDrag);
-load3D();
 requestAnimationFrame(frame);
 })();
 </script>
