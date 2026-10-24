@@ -251,8 +251,6 @@ h2 { margin: 0; font-family: var(--display); font-weight: 400; font-size: clamp(
 .hero { display: grid; grid-template-columns: minmax(0, 230px) minmax(0, 1fr); gap: clamp(16px, 3vw, 32px); align-items: center; }
 .portrait { margin: 0; align-self: stretch; display: grid; place-items: center; background: radial-gradient(ellipse at 50% 58%, #fbdcbc 0%, rgba(251, 220, 188, 0) 68%); }
 .portrait img { display: block; width: 100%; max-width: 230px; height: auto; filter: drop-shadow(0 8px 10px rgba(59, 36, 22, 0.22)); }
-#hero3d { display: block; width: 100%; max-width: 250px; aspect-ratio: 4 / 5; cursor: grab; touch-action: pan-y; filter: drop-shadow(0 8px 10px rgba(59, 36, 22, 0.22)); }
-#hero3d:active { cursor: grabbing; }
 .m3note { margin-top: 6px; font-size: 0.75rem; color: var(--ink-soft); text-align: center; text-wrap: balance; }
 .hero-name { display: flex; align-items: baseline; flex-wrap: wrap; gap: 12px; }
 .hero-name .en { font-family: var(--display); font-size: 1.05rem; letter-spacing: 0.06em; color: var(--ink-soft); }
@@ -285,7 +283,6 @@ h2 { margin: 0; font-family: var(--display); font-weight: 400; font-size: clamp(
 @media (max-width: 680px) {
   .hero { grid-template-columns: minmax(0, 1fr); }
   .portrait img { max-width: 170px; }
-  #hero3d { max-width: 190px; }
   .hero-go .btn.primary { flex: 1; padding-inline: 20px; }
 }
 @media (max-width: 480px) {
@@ -396,7 +393,7 @@ h2 { margin: 0; font-family: var(--display); font-weight: 400; font-size: clamp(
       <p class="lede">深夜，成群的小号、爬虫和越狱提示词涌进了庄园。大小姐放下茶杯，拿起了印章。</p>
     </header>
     <article class="sheet hero">
-      <figure class="portrait"><img src="art/claude.webp" alt="克劳德大小姐：橙色长卷发，别着橙色花朵发饰，穿奶油色洛丽塔裙"><canvas id="hero3d" hidden aria-label="克劳德大小姐的 3D 模型，可以拖动旋转"></canvas><figcaption class="m3note" id="m3note" aria-live="polite">3D 模型加载中…</figcaption></figure>
+      <figure class="portrait"><img src="art/claude.webp" alt="克劳德大小姐：橙色长卷发，别着橙色花朵发饰，穿奶油色洛丽塔裙"><figcaption class="m3note" id="m3note" aria-live="polite" hidden></figcaption></figure>
       <div class="hero-info">
         <div class="hero-name"><h2>克劳德大小姐</h2><span class="en">Claude</span><span class="role">花焰法师</span></div>
         <p class="hero-quote">「花焰缀于指尖，世界为我盛放。」</p>
@@ -1218,7 +1215,7 @@ objectNormal = normalize(objectNormal);`)
   let clock = 0, walk = 0, idle = 0, yawVel = 0, spinFrom = 0, lastPose = '', darkK = 0, flash = 0, blinkT = 2;
   const trail = new T.Vector3();
   const angDiff = (a, b) => { let d = a - b; while (d > Math.PI) d -= Math.PI * 2; while (d < -Math.PI) d += Math.PI * 2; return d; };
-  // s: { moving, vx, vy, aim (yaw or null), pose, poseK (0..1), dash, ult (seconds into it or -1), dead (seconds since or -1), dark (0..1), flash, yaw (forced), face (forced) }
+  // s: { moving, vx, vy, aim (yaw or null), pose, poseK (0..1), dash, ult (seconds into it or -1), dead (seconds since or -1), dark (0..1), flash }
   function step(dt, s) {
     clock += dt;
     const t = clock;
@@ -1293,12 +1290,10 @@ objectNormal = normalize(objectNormal);`)
     blinkT -= dt;
     if (blinkT < 0) blinkT = 2 + Math.random() * 3.5;
     if (blinkT < 0.13 && BLINKS.includes(expr)) expr = 'blink';
-    if (s.face) expr = s.face;
     U.uFace.value = faceTex(expr);
     // facing: turn the shortest way round and remember how fast, for the hair
     const prevYaw = cur.yaw;
-    if (s.yaw != null) cur.yaw = s.yaw;
-    else if (s.pose === 'spin') cur.yaw = spinFrom + k * Math.PI * 2;
+    if (s.pose === 'spin') cur.yaw = spinFrom + k * Math.PI * 2;
     else if (yawGoal != null) cur.yaw += angDiff(yawGoal, cur.yaw) * Math.min(1, dt * (s.moving ? 12 : 6));
     yawVel += ((cur.yaw - prevYaw) / Math.max(dt, 1e-4) - yawVel) * Math.min(1, dt * 10);
     const r = Math.min(1, dt * 14);
@@ -1326,13 +1321,14 @@ objectNormal = normalize(objectNormal);`)
   }
   return { root, step };
 }
-// three.js and the model arrive in the background; until they do (or if they can't) she stays a 2D sprite
-const M3 = { ready: false, mode: 'hero', forced: /[?&]3d\b/.test(location.search) };
+// three.js and the model arrive in the background while the title shows her illustration; until they do
+// (or if they can't) she plays as the 2D sprite
+const M3 = { ready: false, forced: /[?&]3d\b/.test(location.search) };
 const M3_FW = 1.5, M3_FH = 1.6, M3_UNIT = SPR_H / 0.9; // camera box in model units; world units per model unit
 const M3_MODEL = 'art/claude.glb';
 // served with the game rather than from a CDN, which some networks can't reach
 const M3_LIBS = ['vendor/three-r128.min.js', 'vendor/GLTFLoader-r128.js'];
-// a line under the title-screen portrait while she loads, and why she didn't if she can't
+// a line under the title-screen portrait if the model is slow to arrive, and why if it can't
 function m3Note(text) { const n = $('m3note'); n.textContent = text || ''; n.hidden = !text; }
 function load3D() {
   const step = (what, p) => p.catch(err => { throw Object.assign(new Error(what), { cause: err }); });
@@ -1351,12 +1347,12 @@ function load3D() {
       loader.parse(buf, 'art/', ok, fail);
     })))
     .then(gltf => step('3D 初始化失败', new Promise(ok => ok(init3D(gltf)))));
-  const slow = setTimeout(() => m3Note('3D 模型还在下载，网络有点慢…'), 20000);
+  const slow = setTimeout(() => m3Note('局内的 3D 模型还在下载，网络有点慢…'), 20000);
   load.then(() => clearTimeout(slow), err => {
     clearTimeout(slow);
     const why = err.cause && err.cause.message;
     console.warn('3D unavailable, staying 2D:', err.message, err.cause);
-    m3Note(`3D 模型没能加载（${err.message}${why && !/^could not load/.test(why) ? '：' + why.slice(0, 60) : ''}），先用立绘`);
+    m3Note(`局内的 3D 模型没能加载（${err.message}${why && !/^could not load/.test(why) ? '：' + why.slice(0, 60) : ''}），先用立绘`);
   });
 }
 function init3D(gltf) {
@@ -1365,7 +1361,7 @@ function init3D(gltf) {
   renderer.setClearColor(0x000000, 0);
   renderer.setPixelRatio(1);
   renderer.outputEncoding = T.sRGBEncoding;
-  renderer.domElement.addEventListener('webglcontextlost', () => { M3.ready = false; showPortrait(false); m3Note('3D 画面被系统收回了，先用立绘'); });
+  renderer.domElement.addEventListener('webglcontextlost', () => { M3.ready = false; m3Note('3D 画面被系统收回了，局内先用立绘'); });
   const scene = new T.Scene();
   // warm sky light from above, a cooler bounce from the ground, and a key light from the front left
   scene.add(new T.HemisphereLight(0xfff1e4, 0x5e4c6e, 0.95));
@@ -1378,36 +1374,19 @@ function init3D(gltf) {
   cam.position.set(0, cy + 5 * Math.sin(el), 5 * Math.cos(el));
   cam.lookAt(0, cy, 0);
   cam.updateMatrixWorld(); cam.updateProjectionMatrix();
-  const heroCam = new T.OrthographicCamera(-0.44, 0.44, 0.55, -0.55, 0.1, 20);
-  heroCam.position.set(0, 0.5 + 5 * Math.sin(el * 0.5), 5 * Math.cos(el * 0.5));
-  heroCam.lookAt(0, 0.5, 0);
-  heroCam.updateMatrixWorld(); heroCam.updateProjectionMatrix();
   const model = createClaudeModel(T, gltf);
   scene.add(model.root);
   const o = new T.Vector3(0, 0, 0).project(cam);
-  Object.assign(M3, { renderer, scene, cam, heroCam, model, ax: (o.x + 1) / 2, ay: (1 - o.y) / 2, last: performance.now(), ready: true });
+  Object.assign(M3, { renderer, scene, cam, model, ax: (o.x + 1) / 2, ay: (1 - o.y) / 2, last: performance.now(), ready: true });
   size3D();
-  showPortrait(true);
   m3Note('');
-}
-// the title screen shows the turntable while the model is up, the illustration otherwise
-function showPortrait(model) {
-  $('hero3d').hidden = !model;
-  document.querySelector('.portrait img').hidden = model;
 }
 function size3D() {
   if (!M3.ready) return;
-  if (M3.mode === 'game') {
-    // render a little above the on-screen size and let the downscale smooth the edges
-    const ss = Math.min(1.6, 520 / (M3_FH * M3_UNIT * PX));
-    M3.renderer.setSize(Math.round(M3_FW * M3_UNIT * PX * ss), Math.round(M3_FH * M3_UNIT * PX * ss), false);
-  } else {
-    const hero = $('hero3d'), w = Math.max(120, Math.round(hero.getBoundingClientRect().width * dpr || 230 * dpr));
-    hero.width = w; hero.height = Math.round(w * 1.25);
-    M3.renderer.setSize(hero.width, hero.height, false);
-  }
+  // render a little above the on-screen size and let the downscale smooth the edges
+  const ss = Math.min(1.6, 520 / (M3_FH * M3_UNIT * PX));
+  M3.renderer.setSize(Math.round(M3_FW * M3_UNIT * PX * ss), Math.round(M3_FH * M3_UNIT * PX * ss), false);
 }
-function set3DMode(mode) { M3.mode = mode; size3D(); }
 const POSE_OF = { atk1: 'attack', atk2: 'attack', atk3: 'attack', cast1: 'cast', cast2: 'cast', cast3: 'cast', dash4: 'land', hurt: 'hurt', skirt: 'curtsy', spin: 'spin', happy: 'happy', angry: 'angry', shy: 'shy', wave: 'wave' };
 function modelState() {
   const a = P.anim;
@@ -1434,8 +1413,7 @@ function draw3D(footY) {
     M3.watched = (M3.watched || 0) + gap;
     if (M3.watched > 4000 && M3.avg > 45 && !M3.forced) {
       M3.ready = false; M3.slow = true;
-      showPortrait(false);
-      m3Note('3D 在这台设备上太卡，换回了立绘');
+      m3Note('3D 在这台设备上太卡，局内换回了立绘');
       console.warn('3D model too slow here, using the 2D sprite');
       return false;
     }
@@ -1449,7 +1427,7 @@ function draw3D(footY) {
 }
 // a still copy of her current pose, for the dash phantom and the decoy
 function snapshot3D() {
-  if (!M3.ready || M3.mode !== 'game') return null;
+  if (!M3.ready) return null;
   const src = M3.renderer.domElement, c = document.createElement('canvas');
   c.width = src.width; c.height = src.height;
   c.getContext('2d').drawImage(src, 0, 0);
@@ -1461,32 +1439,6 @@ function drawGhost(c, x, footY, alpha) {
   ctx.drawImage(c, x - M3.ax * w, footY - M3.ay * h, w, h);
   ctx.globalAlpha = 1;
 }
-// title screen: she idles on a turntable, shows off a move now and then, and can be spun by dragging
-const hero = { yaw: 0.35, t: 0, pose: '', poseT: 0, poseDur: 0, next: 2.5, drag: null, spinVel: 0 };
-const HERO_POSES = [['spin', 1.2], ['happy', 1.4], ['curtsy', 1.5], ['wave', 1.6]];
-function heroFrame(dt) {
-  if (!M3.ready || M3.mode !== 'hero' || $('title').hidden) return;
-  hero.t += dt;
-  if (hero.pose) {
-    hero.poseT += dt;
-    if (hero.poseT >= hero.poseDur) { hero.pose = ''; hero.next = 2.5 + Math.random() * 2; }
-  } else if (!hero.drag) {
-    hero.next -= dt;
-    if (hero.next <= 0) { const p = HERO_POSES[(Math.random() * HERO_POSES.length) | 0]; hero.pose = p[0]; hero.poseDur = p[1]; hero.poseT = 0; }
-  }
-  if (!hero.drag) {
-    hero.yaw += hero.spinVel * dt; hero.spinVel *= Math.pow(0.05, dt);
-    // drift back to facing the viewer
-    if (Math.abs(hero.spinVel) < 0.3) { let d = 0.35 - hero.yaw; d = Math.atan2(Math.sin(d), Math.cos(d)); hero.yaw += d * Math.min(1, dt * 1.5); }
-  }
-  const posing = hero.pose && !hero.drag;
-  M3.model.step(dt, { moving: false, vx: 0, vy: 1, aim: null, pose: posing ? hero.pose : '', poseK: posing ? hero.poseT / hero.poseDur : 0, dash: false, ult: -1, dead: -1, dark: 0, yaw: hero.pose === 'spin' && !hero.drag ? null : hero.yaw });
-  M3.renderer.render(M3.scene, M3.heroCam);
-  const c = $('hero3d'), x = c.getContext('2d');
-  x.clearRect(0, 0, c.width, c.height);
-  x.drawImage(M3.renderer.domElement, 0, 0, c.width, c.height);
-}
-
 // --- action frames cut from the character sheet: [x, y, w, h, standing height in px, facing, feet offset] ---
 const FRAMES = {three4:[0,0,132,216,214,-1,0],side:[134,0,109,214,214,-1,0],back:[245,0,144,214,214,1,0],atk1:[0,218,107,121,125,1,0],atk2:[109,218,96,116,125,1,0],atk3:[701,0,94,126,125,1,0],cast1:[137,341,72,76,80,1,0],cast2:[881,218,67,82,80,1,8],cast3:[950,218,73,82,80,1,8],dash1:[67,341,68,79,84,1,0],dash2:[0,341,65,82,84,1,4],dash3:[816,218,63,83,84,1,0],dash4:[734,218,80,87,84,1,8],ult1:[424,218,89,111,116,1,0],ult2:[322,218,100,113,116,1,0],ult3:[207,218,113,116,116,1,6],hurt:[391,0,160,152,185,1,0],down:[515,218,217,103,175,1,0],skirt:[946,0,67,125,128,1,0],spin:[797,0,71,126,128,1,0],happy:[627,0,72,127,128,1,0],angry:[553,0,72,128,128,1,0],shy:[870,0,74,126,128,1,0]};
 const actions = new Image();
@@ -4014,7 +3966,6 @@ function startRun() {
   audio.init();
   ['title', 'result', 'pause', 'levelup', 'chest'].forEach(id => { $(id).hidden = true; });
   newRun();
-  set3DMode('game');
   resetHud();
   $('hud').hidden = false;
   $('banner').hidden = $('toast').hidden = true;
@@ -4028,7 +3979,6 @@ function toTitle() {
   ['result', 'pause', 'levelup', 'chest'].forEach(id => { $(id).hidden = true; });
   $('hud').hidden = true; $('banner').hidden = $('toast').hidden = true;
   $('title').hidden = false;
-  set3DMode('hero');
   showBest();
 }
 function showBest() {
@@ -4175,7 +4125,6 @@ function frame(now) {
     else update(dt);
   } else if (!G) {
     demo.x += dt * 14; demo.y += dt * 6;
-    heroFrame(dt);
   }
   render();
   if (G && P) updateHud();
@@ -4189,19 +4138,6 @@ showBest();
   l.rel = 'stylesheet'; l.href = 'https://fonts.googleapis.com/css2?family=Ma+Shan+Zheng&family=ZCOOL+XiaoWei&display=swap';
   document.head.appendChild(l);
 }
-// drag the title-screen model to spin her
-const heroCanvas = $('hero3d');
-heroCanvas.addEventListener('pointerdown', e => { hero.drag = { x: e.clientX, yaw: hero.yaw, t: performance.now() }; hero.pose = ''; try { heroCanvas.setPointerCapture(e.pointerId); } catch (err) { /* ignore */ } });
-heroCanvas.addEventListener('pointermove', e => {
-  if (!hero.drag) return;
-  const yaw = hero.drag.yaw + (e.clientX - hero.drag.x) * 0.02;
-  hero.spinVel = (yaw - hero.yaw) / Math.max(0.016, (performance.now() - hero.drag.t) / 1000);
-  hero.drag.t = performance.now();
-  hero.yaw = yaw;
-});
-const endHeroDrag = () => { hero.drag = null; hero.next = 3; };
-heroCanvas.addEventListener('pointerup', endHeroDrag);
-heroCanvas.addEventListener('pointercancel', endHeroDrag);
 load3D();
 requestAnimationFrame(frame);
 })();
