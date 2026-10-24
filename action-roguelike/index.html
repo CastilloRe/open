@@ -82,6 +82,8 @@ kbd {
 .pips i { width: 4px; height: 4px; border-radius: 50%; background: rgba(247, 238, 226, 0.22); }
 .pips i.on { background: var(--amber); }
 .wslot.evo .pips i { background: var(--r3); }
+.wslot.legend { border-color: #ffd34a; background: linear-gradient(160deg, rgba(120, 80, 10, 0.85), rgba(40, 26, 8, 0.85)); box-shadow: 0 0 12px rgba(255, 211, 74, 0.7); color: #ffe9a8; }
+.wslot.legend .pips i.on { background: #ffd34a; }
 .clock { display: flex; flex-direction: column; align-items: center; gap: 2px; text-shadow: 0 1px 3px #000; }
 .clock b { font-family: var(--display); font-weight: 400; font-size: 1.7rem; line-height: 1; letter-spacing: 0.04em; font-variant-numeric: tabular-nums; }
 .clock span { font-size: 0.78rem; color: var(--muted); font-variant-numeric: tabular-nums; }
@@ -680,6 +682,16 @@ const WEAPONS = {
       { cd: 2.1, n: 4, dmg: 30, r: 56 },
       { cd: 1.9, n: 5, dmg: 36, r: 60 },
       { cd: 1.6, n: 8, dmg: 46, r: 72 },
+    ],
+  },
+  // legendary: only the golden slime gives it, it takes no weapon slot, and each further catch amends it
+  charter: {
+    name: '宪法', g: '宪', legend: true, names: ['宪法', '宪法 · 修正案 Ⅰ', '宪法 · 修正案 Ⅱ'],
+    desc: '传说武器。翻开金色的宪法，一条条「§」条款追向屏幕上最强的敌人：普通敌人当场依法封禁，精英和 BOSS 受到重创。',
+    lv: [
+      { cd: 2.6, n: 6, dmg: 110 },
+      { cd: 2.3, n: 9, dmg: 140 },
+      { cd: 2.0, n: 12, dmg: 170 },
     ],
   },
   recur: {
@@ -1881,6 +1893,13 @@ const SPR = {
     glow(x, 8, '#ffc061', 0.6);
     x.fillStyle = '#fff1c9'; disc(x, 0, 0, 2.6); x.fill();
   }),
+  // 宪法: a glowing golden section sign
+  article: () => sprite('article', 40, 40, x => {
+    glow(x, 18, '#ffd34a', 0.6);
+    x.font = `900 22px Georgia, "Times New Roman", serif`; x.textAlign = 'center'; x.textBaseline = 'middle';
+    x.lineWidth = 3; x.strokeStyle = '#6a4208'; x.strokeText('§', 0, 1);
+    x.fillStyle = '#fff1b0'; x.fillText('§', 0, 1);
+  }),
   // 递归: a three-petalled blade
   recur: () => sprite('recur', 44, 44, x => {
     glow(x, 20, '#ff9a6a', 0.45);
@@ -2033,7 +2052,8 @@ function addWeapon(id) {
   G.slotsDirty = true;
 }
 const wStats = w => WEAPONS[w.id].lv[w.level - 1];
-const wName = w => w.level === 6 ? WEAPONS[w.id].evo.name : WEAPONS[w.id].name;
+const wName = w => { const d = WEAPONS[w.id]; return d.legend ? d.names[w.level - 1] : w.level === 6 ? d.evo.name : d.name; };
+const isLegend = w => !!WEAPONS[w.id].legend;
 const thinkMax = () => 5 + 2 * (P.talents.slowthink || 0);
 const thinkBonus = () => P.think * 0.08;
 const critChance = () => P.crit + (P.think >= thinkMax() ? 0.15 : 0);
@@ -2284,13 +2304,16 @@ function kill(e, how) {
   if (P.talents.leech && P.leech > 0 && P.hp < P.maxHp) { const h = Math.min(P.leech, 0.25 * P.talents.leech); P.hp = Math.min(P.maxHp, P.hp + h); P.leech -= h; }
   const banned = how === 'ban';
   if (e.type === 'gold') {
-    // caught: a fistful of gold gems, a gold chest and a full ultimate's worth of 花焰
+    // caught: a fistful of gold gems, a full ultimate, and the legendary 宪法 (amended on later catches;
+    // once it can't be amended further, a gold chest instead)
     for (let i = 0; i < 4; i++) dropGem(e.x + rand(-24, 24), e.y + rand(-24, 24), 40);
-    G.items.push({ type: 'chest', x: e.x, y: e.y, t: 0, gold: true });
     P.ult = ULT_MAX;
     ring(e.x, e.y, 10, 120, 0.6, '#ffd34a', 5);
     puff(e.x, e.y, 24, '#ffe27a', 260, 0.7, 3.5, true);
-    banner('稀有 · 金色史莱姆', '它留下了一大把经验、一个金宝箱，万花盛典也充满了');
+    const lw = P.weapons.find(w => w.id === 'charter');
+    if (!lw) { addWeapon('charter'); banner('传说武器 · 宪法', '金色史莱姆留下了它：条款追着最强的敌人跑，小号当场依法封禁'); }
+    else if (lw.level < 3) { lw.level++; G.slotsDirty = true; banner(`传说武器 · ${wName(lw)}`, '又抓到一只：条款更多、更重、更快'); }
+    else { G.items.push({ type: 'chest', x: e.x, y: e.y, t: 0, gold: true }); banner('稀有 · 金色史莱姆', '宪法已经修订到头了，它留下了一个金宝箱'); }
     say(pick(['……抓到了。今天的运气不错。', '金色的小号？……没收。']), 3);
     playAnim(['happy'], 1, 1);
     sfx.level();
@@ -2875,6 +2898,27 @@ function updateWeapons(dt) {
         }
         break;
       }
+      case 'charter': {
+        // 宪法: golden articles fly up out of the book and chase the strongest enemies in view
+        w.t -= dt;
+        if (w.t <= 0) {
+          const pool = G.enemies.filter(e => !e.dead && !(e.banned > 0) && inView(e.x, e.y, -10));
+          if (!pool.length) { w.t = 0.3; break; }
+          w.t = cdOf(s.cd);
+          pool.sort((a, b) => b.hp - a.hp);
+          const n = s.n + P.amount;
+          for (let i = 0; i < n; i++) {
+            const tg = pool[i % pool.length], a = -Math.PI / 2 + (i - (n - 1) / 2) * 0.32;
+            later(i * 0.06, () => {
+              if (!P) return;
+              shot({ kind: 'article', x: P.x, y: P.y - 44, vx: Math.cos(a) * 280, vy: Math.sin(a) * 280, r: 10, dmg: s.dmg, pierce: 0, life: 3, src: 'charter', target: tg });
+            });
+          }
+          G.zones.push({ kind: 'tome', x: P.x, y: P.y - 48, r: 40, life: 0.8, max: 0.8 });
+          sfx.field();
+        }
+        break;
+      }
       case 'recur': {
         // 递归: spinning petal blades thrown out that come back to her hand
         w.t -= dt;
@@ -2939,6 +2983,13 @@ function updateWeapons(dt) {
     }
   }
 }
+// a 宪法 article lands: small fry are banned on the spot, the big ones take the full weight of it
+function enforce(e, b) {
+  ring(e.x, e.y, 6, 34, 0.3, '#ffd34a', 3);
+  if (e.boss || e.elite || e.heavy || e.type === 'reg') { hit(e, b.dmg * (e.boss ? 2 : 1), 'charter', { kb: 60, kx: b.vx, ky: b.vy }); return; }
+  G.dmgBy.charter = (G.dmgBy.charter || 0) + Math.round(e.hp);
+  banEnemy(e, 1); G.banned++;
+}
 function throwRecur(a, s, m, again) {
   const sp = 520 * P.pspeed;
   shot({ kind: 'recur', x: P.x, y: P.y - 14, vx: Math.cos(a) * sp, vy: Math.sin(a) * sp, r: s.size * (1 + (P.area - 1) * 0.5), dmg: s.dmg * m, pierce: 9999, life: 4, src: 'recur', range: s.range * P.area, went: 0, returning: false, again, s, m });
@@ -2989,6 +3040,15 @@ function updateShots(dt) {
     b.life -= dt;
     if (b.back && !b.returned && b.life < b.max * 0.5) { b.returned = true; b.vx = -b.vx; b.vy = -b.vy; b.hits.length = 0; }
     b.x += b.vx * dt; b.y += b.vy * dt; b.rot += dt * 7;
+    if (b.kind === 'article') {
+      // steer onto the target; if it's gone, onto whoever is nearest
+      if (!b.target || b.target.dead || b.target.banned > 0) b.target = nearest(b.x, b.y, 500);
+      if (b.target) {
+        const dx = b.target.x - b.x, dy = b.target.y - b.y, d = Math.hypot(dx, dy) || 1, v = 560, k = Math.min(1, dt * 7);
+        b.vx += (dx / d * v - b.vx) * k; b.vy += (dy / d * v - b.vy) * k;
+      }
+      b.rot = 0;
+    }
     if (b.kind === 'recur') {
       b.rot += dt * 9;
       if (!b.returning) {
@@ -3025,6 +3085,7 @@ function updateShots(dt) {
       if (b.dead || e.dead || e.banned > 0 || b.hits.includes(e.id)) return;
       if ((e.x - b.x) ** 2 + (e.y - b.y) ** 2 > (b.r + e.r) ** 2) return;
       b.hits.push(e.id);
+      if (b.kind === 'article') { enforce(e, b); b.dead = true; return; }
       hit(e, b.dmg, b.src, { kb: 80, kx: b.vx, ky: b.vy });
       if (b.split && !b.child) {
         const a = Math.atan2(b.vy, b.vx), sp = Math.hypot(b.vx, b.vy);
@@ -3513,6 +3574,7 @@ function drawZones() {
     }
     if (z.kind === 'lash') { drawLash(z); continue; }
     if (z.kind === 'honey') { drawHoney(z, a); continue; }
+    if (z.kind === 'tome') { drawTome(z); continue; }
     if (z.kind === 'meteor') {
       // where it will land: a ring closing in
       const k = 1 - z.life / z.max;
@@ -3539,6 +3601,25 @@ function drawZones() {
   }
 }
 
+// 宪法: the golden book opening over her head
+function drawTome(z) {
+  const k = 1 - z.life / z.max, open = Math.min(1, k * 4), fade = Math.min(1, z.life / z.max * 3), w = 22 * open;
+  ctx.globalAlpha = fade;
+  ctx.globalCompositeOperation = 'lighter';
+  const g = ctx.createRadialGradient(z.x, z.y, 0, z.x, z.y, 46);
+  g.addColorStop(0, 'rgba(255,220,120,0.7)'); g.addColorStop(1, 'rgba(255,190,60,0)');
+  ctx.fillStyle = g; disc(ctx, z.x, z.y, 46); ctx.fill();
+  ctx.globalCompositeOperation = 'source-over';
+  for (const sd of [-1, 1]) {
+    ctx.beginPath(); ctx.moveTo(z.x, z.y + 8); ctx.lineTo(z.x + sd * w, z.y + 4); ctx.lineTo(z.x + sd * w, z.y - 14); ctx.lineTo(z.x, z.y - 10); ctx.closePath();
+    ctx.fillStyle = '#fff6dc'; ctx.fill(); ctx.lineWidth = 1.5; ctx.strokeStyle = '#c8901c'; ctx.stroke();
+  }
+  ctx.strokeStyle = 'rgba(160,110,30,0.6)'; ctx.lineWidth = 1;
+  ctx.beginPath();
+  for (const sd of [-1, 1]) for (let i = 0; i < 3; i++) { ctx.moveTo(z.x + sd * 4, z.y - 6 + i * 4); ctx.lineTo(z.x + sd * (w - 4), z.y - 8 + i * 4); }
+  ctx.stroke();
+  ctx.globalAlpha = 1;
+}
 // 蜜罐: a glossy puddle of honey and the little pot it came from
 function drawHoney(z, a) {
   const r = z.r, t = G.time, grow = Math.min(1, (z.max - z.life) / 0.3);
@@ -4239,7 +4320,7 @@ function updateHud() {
   if (boss) $('bossFill').style.transform = `scaleX(${clamp(G.boss.hp / G.boss.maxHp, 0, 1).toFixed(4)})`;
   if (G.slotsDirty) {
     G.slotsDirty = false;
-    $('slots').innerHTML = P.weapons.map(w => `<div class="wslot${w.level === 6 ? ' evo' : ''}" title="${wName(w)}"><b>${WEAPONS[w.id].g}</b><span class="pips">${[1, 2, 3, 4, 5].map(i => `<i class="${i <= w.level ? 'on' : ''}"></i>`).join('')}</span></div>`).join('');
+    $('slots').innerHTML = P.weapons.map(w => `<div class="wslot${isLegend(w) ? ' legend' : w.level === 6 ? ' evo' : ''}" title="${wName(w)}"><b>${WEAPONS[w.id].g}</b><span class="pips">${(isLegend(w) ? [1, 2, 3] : [1, 2, 3, 4, 5]).map(i => `<i class="${i <= w.level ? 'on' : ''}"></i>`).join('')}</span></div>`).join('');
   }
 }
 function resetHud() { hud.lv = hud.sec = hud.kills = -1; hud.cd = hud.ready = hud.boss = hud.mode = hud.doubt = hud.dash = hud.ult = null; }
@@ -4300,7 +4381,7 @@ function rollTalents(n, exclude = []) {
 }
 function rollLevelUp() {
   const picks = rollTalents(3);
-  const ups = P.weapons.filter(w => w.level < 5);
+  const ups = P.weapons.filter(w => w.level < 5 && !isLegend(w));
   if (ups.length && Math.random() < 0.45) picks[(Math.random() * picks.length) | 0] = { kind: 'up', id: pick(ups).id };
   return picks;
 }
@@ -4368,12 +4449,13 @@ function toggleBanish() {
 }
 
 function chestOptions() {
-  for (const w of P.weapons) {
+  const own = P.weapons.filter(w => !isLegend(w));
+  for (const w of own) {
     if (w.level === 5 && P.talents[WEAPONS[w.id].evo.need]) return [{ kind: 'evo', id: w.id }];
   }
   const c = [];
-  for (const w of P.weapons) if (w.level < 5) c.push({ kind: 'up', id: w.id });
-  if (P.weapons.length < MAX_SLOTS) for (const id in WEAPONS) if (!P.weapons.some(w => w.id === id)) c.push({ kind: 'new', id });
+  for (const w of own) if (w.level < 5) c.push({ kind: 'up', id: w.id });
+  if (own.length < MAX_SLOTS) for (const id in WEAPONS) if (!WEAPONS[id].legend && !P.weapons.some(w => w.id === id)) c.push({ kind: 'new', id });
   const out = shuffle(c).slice(0, 3);
   return out.length ? out : [{ kind: 'tea' }, { kind: 'xp' }];
 }
@@ -4443,8 +4525,8 @@ function openPause() {
   if (!G || G.modal || G.ending) return;
   G.modal = 'pause';
   $('psTitle').textContent = `${fmtTime(G.time)} · Lv ${P.level}`;
-  $('psWeapons').innerHTML = P.weapons.map(w => `<span class="chip"><span class="glyph atk">${WEAPONS[w.id].g}</span>${wName(w)}<small>${w.level === 6 ? '进化' : 'Lv ' + w.level}</small></span>`).join('');
-  $('psEvo').innerHTML = P.weapons.filter(w => w.level < 6).map(w => {
+  $('psWeapons').innerHTML = P.weapons.map(w => `<span class="chip"><span class="glyph atk">${WEAPONS[w.id].g}</span>${wName(w)}<small>${isLegend(w) ? '传说' : w.level === 6 ? '进化' : 'Lv ' + w.level}</small></span>`).join('');
+  $('psEvo').innerHTML = P.weapons.filter(w => w.level < 6 && !isLegend(w)).map(w => {
     const d = WEAPONS[w.id], ok = P.talents[d.evo.need];
     return `<li class="${ok ? 'ok' : ''}">${d.name} Lv ${w.level}/5 + 「${TALENT[d.evo.need].name}」${ok ? '✓' : ''} → ${d.evo.name}</li>`;
   }).join('');
