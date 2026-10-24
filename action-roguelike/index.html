@@ -658,15 +658,15 @@ const WEAPONS = {
     ],
   },
   whip: {
-    name: '荆棘鞭', g: '鞭', desc: '一道带刺的蔷薇藤向身侧横扫，再扫另一侧，把敌人抽飞。',
-    evo: { need: 'giant', name: '蔷薇风暴', desc: '前后左右四面一起抽，藤蔓更长更粗。' },
+    name: '荆棘鞭', g: '鞭', desc: '每次向四周抽出 5 道带刺的蔷薇藤，把敌人抽飞。',
+    evo: { need: 'giant', name: '蔷薇风暴', desc: '一次抽出 8 道，藤蔓更长更粗。' },
     lv: [
-      { cd: 1.4, n: 1, dmg: 30, len: 170, wid: 56 },
-      { cd: 1.4, n: 1, dmg: 40, len: 170, wid: 56 },
-      { cd: 1.25, n: 2, dmg: 40, len: 185, wid: 60 },
-      { cd: 1.25, n: 2, dmg: 50, len: 200, wid: 64 },
-      { cd: 1.1, n: 2, dmg: 62, len: 215, wid: 70 },
-      { cd: 0.95, n: 4, dmg: 74, len: 245, wid: 80 },
+      { cd: 1.6, n: 5, dmg: 24, len: 150, wid: 48 },
+      { cd: 1.6, n: 5, dmg: 32, len: 150, wid: 48 },
+      { cd: 1.45, n: 5, dmg: 32, len: 165, wid: 52 },
+      { cd: 1.45, n: 5, dmg: 40, len: 180, wid: 56 },
+      { cd: 1.3, n: 5, dmg: 48, len: 195, wid: 60 },
+      { cd: 1.1, n: 8, dmg: 58, len: 230, wid: 70 },
     ],
   },
   sample: {
@@ -2747,16 +2747,19 @@ function updateWeapons(dt) {
         break;
       }
       case 'whip': {
-        // 荆棘鞭: one side, then the other; evolved, all four ways at once
+        // 荆棘鞭: vines lash out evenly all round her, one after another like a whirl;
+        // each attack turns half a step so the next one covers the gaps
         w.t -= dt;
         if (w.t <= 0) {
           w.t = cdOf(s.cd);
           const m = castMult(w), n = s.n + P.amount;
-          const dirs = evo ? [[P.face, 0], [-P.face, 0], [0, -1], [0, 1]] : [[P.face, 0], [-P.face, 0]];
+          w.turn = ((w.turn || 0) + 0.5) % 1;
+          const a0 = Math.atan2(P.mvy, P.mvx) + w.turn * TAU / n;
           for (let i = 0; i < n; i++) {
-            const [dx, dy] = dirs[i % dirs.length];
-            later(evo ? 0 : i * 0.13, () => lash(dx, dy, s, m));
+            const a = a0 + i / n * TAU;
+            later(i * 0.035, () => lash(Math.cos(a), Math.sin(a), s, m));
           }
+          sfx.whoosh();
         }
         break;
       }
@@ -2795,17 +2798,17 @@ function attnPos(w, i) {
   const a = w.ang + i / w.n * TAU;
   return { x: P.x + Math.cos(a) * w.R, y: P.y - 10 + Math.sin(a) * w.R * 0.62, a };
 }
-// one stroke of 荆棘鞭: a band reaching out from her along (dx, dy); up and down reach less, it's foreshortened
+// one stroke of 荆棘鞭: a band reaching out from her along the unit vector (dx, dy);
+// up and down reach less, the ground is foreshortened
 function lash(dx, dy, s, m) {
   if (!G || !P) return;
-  const L = s.len * P.area * P.size * (dy ? 0.7 : 1), wd = s.wid * P.area, ox = P.x, oy = P.y - 6;
+  const L = s.len * P.area * P.size * (1 - 0.3 * Math.abs(dy)), wd = s.wid * P.area, ox = P.x, oy = P.y - 6;
   forNear(ox + dx * L / 2, oy + dy * L / 2, L / 2 + wd + 30, e => {
     if (e.banned > 0) return;
     const along = (e.x - ox) * dx + (e.y - oy) * dy, across = Math.abs((e.x - ox) * dy - (e.y - oy) * dx);
-    if (along > -12 && along < L + e.r && across < wd / 2 + e.r) hit(e, s.dmg * m, 'whip', { kb: 150, kx: dx || rand(-0.2, 0.2), ky: dy || rand(-0.2, 0.2) });
+    if (along > -12 && along < L + e.r && across < wd / 2 + e.r) hit(e, s.dmg * m, 'whip', { kb: 150, kx: dx, ky: dy });
   });
   G.zones.push({ kind: 'lash', x: ox, y: oy, dx, dy, len: L, wd, r: L, life: 0.24, max: 0.24, flip: Math.random() < 0.5 ? 1 : -1 });
-  sfx.whoosh();
 }
 function chainFrom(start, s, m, evo, used) {
   const pts = [P.x, P.y - 24];
