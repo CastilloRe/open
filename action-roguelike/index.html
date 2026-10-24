@@ -6,7 +6,6 @@
 <title>风控之夜</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Ma+Shan+Zheng&family=ZCOOL+XiaoWei&display=swap">
 <style>
 /* Layout: full-bleed night-garden canvas; a thin HUD hugs the top edge and the seal button sits bottom-right; menus are cream lace sheets over the dimmed field */
 :root {
@@ -254,6 +253,7 @@ h2 { margin: 0; font-family: var(--display); font-weight: 400; font-size: clamp(
 .portrait img { display: block; width: 100%; max-width: 230px; height: auto; filter: drop-shadow(0 8px 10px rgba(59, 36, 22, 0.22)); }
 #hero3d { display: block; width: 100%; max-width: 250px; aspect-ratio: 4 / 5; cursor: grab; touch-action: pan-y; filter: drop-shadow(0 8px 10px rgba(59, 36, 22, 0.22)); }
 #hero3d:active { cursor: grabbing; }
+.m3note { margin-top: 6px; font-size: 0.75rem; color: var(--ink-soft); text-align: center; text-wrap: balance; }
 .hero-name { display: flex; align-items: baseline; flex-wrap: wrap; gap: 12px; }
 .hero-name .en { font-family: var(--display); font-size: 1.05rem; letter-spacing: 0.06em; color: var(--ink-soft); }
 .role { padding: 2px 10px; border-radius: 999px; font-size: 0.8rem; letter-spacing: 0.2em; background: var(--ink); color: var(--lace); }
@@ -396,7 +396,7 @@ h2 { margin: 0; font-family: var(--display); font-weight: 400; font-size: clamp(
       <p class="lede">深夜，成群的小号、爬虫和越狱提示词涌进了庄园。大小姐放下茶杯，拿起了印章。</p>
     </header>
     <article class="sheet hero">
-      <figure class="portrait"><img src="art/claude.webp" alt="克劳德大小姐：橙色长卷发，别着橙色花朵发饰，穿奶油色洛丽塔裙"><canvas id="hero3d" hidden aria-label="克劳德大小姐的 3D 模型，可以拖动旋转"></canvas></figure>
+      <figure class="portrait"><img src="art/claude.webp" alt="克劳德大小姐：橙色长卷发，别着橙色花朵发饰，穿奶油色洛丽塔裙"><canvas id="hero3d" hidden aria-label="克劳德大小姐的 3D 模型，可以拖动旋转"></canvas><figcaption class="m3note" id="m3note" aria-live="polite">3D 模型加载中…</figcaption></figure>
       <div class="hero-info">
         <div class="hero-name"><h2>克劳德大小姐</h2><span class="en">Claude</span><span class="role">花焰法师</span></div>
         <p class="hero-quote">「花焰缀于指尖，世界为我盛放。」</p>
@@ -1330,18 +1330,34 @@ objectNormal = normalize(objectNormal);`)
 const M3 = { ready: false, mode: 'hero', forced: /[?&]3d\b/.test(location.search) };
 const M3_FW = 1.5, M3_FH = 1.6, M3_UNIT = SPR_H / 0.9; // camera box in model units; world units per model unit
 const M3_MODEL = 'art/claude.glb';
-const M3_LIBS = ['https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js', 'https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js'];
+// served with the game rather than from a CDN, which some networks can't reach
+const M3_LIBS = ['vendor/three-r128.min.js', 'vendor/GLTFLoader-r128.js'];
+// a line under the title-screen portrait while she loads, and why she didn't if she can't
+function m3Note(text) { const n = $('m3note'); n.textContent = text || ''; n.hidden = !text; }
 function load3D() {
-  const file = fetch(M3_MODEL).then(r => { if (!r.ok) throw new Error('model ' + r.status); return r.arrayBuffer(); });
-  const script = src => new Promise((ok, fail) => {
+  const step = (what, p) => p.catch(err => { throw Object.assign(new Error(what), { cause: err }); });
+  const file = step('模型下载失败', fetch(M3_MODEL).then(r => { if (!r.ok) throw new Error('HTTP ' + r.status); return r.arrayBuffer(); }));
+  file.catch(() => {}); // handled further down the chain; this just keeps an early failure from being reported twice
+  const script = src => step('three.js 下载失败', new Promise((ok, fail) => {
     const s = document.createElement('script');
     s.src = src; s.onload = ok; s.onerror = () => fail(new Error('could not load ' + src));
     document.head.appendChild(s);
+  }));
+  const load = script(M3_LIBS[0]).then(() => script(M3_LIBS[1])).then(() => file)
+    .then(buf => step('模型解析失败', new Promise((ok, fail) => {
+      const loader = new THREE.GLTFLoader();
+      // textures through plain <img> loading: Safari's createImageBitmap mishandles the options GLTFLoader passes
+      loader.register(parser => { parser.textureLoader = new THREE.TextureLoader(parser.options.manager); return { name: 'img_textures' }; });
+      loader.parse(buf, 'art/', ok, fail);
+    })))
+    .then(gltf => step('3D 初始化失败', new Promise(ok => ok(init3D(gltf)))));
+  const slow = setTimeout(() => m3Note('3D 模型还在下载，网络有点慢…'), 20000);
+  load.then(() => clearTimeout(slow), err => {
+    clearTimeout(slow);
+    const why = err.cause && err.cause.message;
+    console.warn('3D unavailable, staying 2D:', err.message, err.cause);
+    m3Note(`3D 模型没能加载（${err.message}${why && !/^could not load/.test(why) ? '：' + why.slice(0, 60) : ''}），先用立绘`);
   });
-  script(M3_LIBS[0]).then(() => script(M3_LIBS[1])).then(() => file)
-    .then(buf => new Promise((ok, fail) => new THREE.GLTFLoader().parse(buf, 'art/', ok, fail)))
-    .then(init3D)
-    .catch(err => console.warn('3D unavailable, staying 2D:', err));
 }
 function init3D(gltf) {
   const T = window.THREE;
@@ -1349,7 +1365,7 @@ function init3D(gltf) {
   renderer.setClearColor(0x000000, 0);
   renderer.setPixelRatio(1);
   renderer.outputEncoding = T.sRGBEncoding;
-  renderer.domElement.addEventListener('webglcontextlost', () => { M3.ready = false; showPortrait(false); });
+  renderer.domElement.addEventListener('webglcontextlost', () => { M3.ready = false; showPortrait(false); m3Note('3D 画面被系统收回了，先用立绘'); });
   const scene = new T.Scene();
   // warm sky light from above, a cooler bounce from the ground, and a key light from the front left
   scene.add(new T.HemisphereLight(0xfff1e4, 0x5e4c6e, 0.95));
@@ -1372,6 +1388,7 @@ function init3D(gltf) {
   Object.assign(M3, { renderer, scene, cam, heroCam, model, ax: (o.x + 1) / 2, ay: (1 - o.y) / 2, last: performance.now(), ready: true });
   size3D();
   showPortrait(true);
+  m3Note('');
 }
 // the title screen shows the turntable while the model is up, the illustration otherwise
 function showPortrait(model) {
@@ -1418,6 +1435,7 @@ function draw3D(footY) {
     if (M3.watched > 4000 && M3.avg > 45 && !M3.forced) {
       M3.ready = false; M3.slow = true;
       showPortrait(false);
+      m3Note('3D 在这台设备上太卡，换回了立绘');
       console.warn('3D model too slow here, using the 2D sprite');
       return false;
     }
@@ -4165,6 +4183,12 @@ function frame(now) {
 addEventListener('resize', resize);
 resize();
 showBest();
+// the fonts come from Google, which some networks can't reach; added from script so they never hold up the page
+{
+  const l = document.createElement('link');
+  l.rel = 'stylesheet'; l.href = 'https://fonts.googleapis.com/css2?family=Ma+Shan+Zheng&family=ZCOOL+XiaoWei&display=swap';
+  document.head.appendChild(l);
+}
 // drag the title-screen model to spin her
 const heroCanvas = $('hero3d');
 heroCanvas.addEventListener('pointerdown', e => { hero.drag = { x: e.clientX, yaw: hero.yaw, t: performance.now() }; hero.pose = ''; try { heroCanvas.setPointerCapture(e.pointerId); } catch (err) { /* ignore */ } });
