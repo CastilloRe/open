@@ -9,6 +9,7 @@
 //   node bake-model.mjs simple.glb baked.glb [regions.glb]             # regions.glb paints the weights as colours
 //   npx gltf-transform webp baked.glb webp.glb --slots baseColorTexture --quality 84
 //   npx gltf-transform meshopt webp.glb ../art/claude.glb --level high # 16-bit positions + meshopt: 2.35 MB → 0.78 MB
+//   node hair-weights.mjs ../art/claude.glb ../art/claude.glb           # hair weights traced across seams, faded in
 import { NodeIO, Accessor } from '@gltf-transform/core';
 import sharp from 'sharp';
 

@@ -1284,9 +1284,11 @@ void deform(inout vec3 p, inout vec3 n) {
   float sk = smoothstep(${f(J.waist)}, ${f(J.hem)}, p.y) * (1. - armW) * (1. - legW);
   p.xz += p.xz * uSkirt.z * sk;
   p.xz += uSkirt.xy * sk * sk;
-  // hair streams out behind her and ripples, more towards the tips
-  float hw = hairW * smoothstep(0.78, 0.3, p.y);
-  p += uHair * hw + vec3(sin(uTime * 2.3 + p.y * 18.), 0., cos(uTime * 1.9 + p.y * 15.)) * 0.006 * hw;
+  // hair streams out behind her and sways in a slow breeze with a quicker ripple on top, more towards the tips
+  float hw = hairW * smoothstep(0.8, 0.34, p.y);
+  vec3 breeze = vec3(sin(uTime * 1.4 + p.y * 5.) * 0.014 + sin(uTime * 2.6 + p.y * 16.) * 0.005, 0.,
+    cos(uTime * 1.1 + p.y * 4.) * 0.012 + cos(uTime * 2.1 + p.y * 14.) * 0.005);
+  p += (uHair + breeze) * hw;
   // legs swing from the hip
   bend(p, n, vec2(side < 0. ? uLeg.y : uLeg.x, 0.), 0., vec3(side * ${f(J.legX)}, ${f(J.hip)}, 0.), legW);
   // arms: raise sideways (z), then swing forward or back (x)
@@ -1322,7 +1324,7 @@ objectNormal = normalize(objectNormal);`)
   const J0 = { yaw: 0, bob: 0, lean: 0, roll: 0, hx: 0, hz: 0, aLx: 0, aLz: 0, aRx: 0, aRz: 0, lL: 0, lR: 0, skx: 0, skz: 0, flare: 0, fall: 0, lift: 0 };
   const cur = Object.assign({}, J0), goal = Object.assign({}, J0);
   let clock = 0, walk = 0, idle = 0, yawVel = 0, spinFrom = 0, lastPose = '', darkK = 0, flash = 0, blinkT = 2;
-  const trail = new T.Vector3();
+  const trail = new T.Vector3(), hairV = new T.Vector3(), pull = new T.Vector3();
   const angDiff = (a, b) => { let d = a - b; while (d > Math.PI) d -= Math.PI * 2; while (d < -Math.PI) d += Math.PI * 2; return d; };
   // s: { moving, vx, vy, aim (yaw or null), pose, poseK (0..1), dash, ult (seconds into it or -1), dead (seconds since or -1), dark (0..1), flash }
   function step(dt, s) {
@@ -1418,9 +1420,11 @@ objectNormal = normalize(objectNormal);`)
     U.uArmL.value.set(arm(cur.aLx), arm(cur.aLz)); U.uArmR.value.set(arm(cur.aRx), arm(cur.aRz));
     U.uHead.value.set(cur.hx, cur.hz);
     U.uSkirt.value.set(cur.skx + Math.max(-0.05, Math.min(0.05, -yawVel * 0.012)), cur.skz, cur.flare);
-    // hair trails behind when she runs, lifts when she jumps, swings when she turns
-    trail.set(Math.max(-0.08, Math.min(0.08, -yawVel * 0.02)), cur.lift * 0.08 + Math.abs(sw) * 0.01 * run, -(s.dash ? 0.1 : run * 0.05));
-    U.uHair.value.lerp(trail, Math.min(1, dt * 6));
+    // hair trails behind when she runs, bounces a beat after each step, lifts when she jumps and swings out
+    // when she turns; it hangs on a spring, so it overshoots and settles when she stops
+    trail.set(Math.max(-0.14, Math.min(0.14, -yawVel * 0.035)), cur.lift * 0.1 + run * Math.abs(Math.sin(walk - 0.6)) * 0.03, -(s.dash ? 0.16 : run * 0.09));
+    hairV.add(pull.copy(trail).sub(U.uHair.value).multiplyScalar(dt * 70)).multiplyScalar(Math.max(0, 1 - dt * 8));
+    U.uHair.value.addScaledVector(hairV, dt);
     U.uTime.value = t;
     // 黑化 darkens her; a hit flashes her white
     darkK += ((s.dark || 0) - darkK) * Math.min(1, dt * 6);
