@@ -98,18 +98,30 @@ kbd {
   pointer-events: auto; touch-action: none;
   position: absolute;
   right: calc(max(16px, env(safe-area-inset-right, 0px)) + 4px);
-  bottom: calc(34px + env(safe-area-inset-bottom, 0px));
+  bottom: calc(42px + env(safe-area-inset-bottom, 0px));
   width: 86px; height: 86px; border-radius: 50%;
   display: grid; place-items: center;
   background: var(--seal);
-  box-shadow: 0 0 0 3px rgba(247, 238, 226, 0.85), 0 0 0 6px rgba(207, 58, 43, 0.45), 0 6px 18px rgba(0, 0, 0, 0.5);
+  box-shadow: 0 0 0 3px rgba(247, 238, 226, 0.85), 0 6px 18px rgba(0, 0, 0, 0.5);
+  transition: background-color 0.3s;
 }
+/* the ring around the seal fills with repression; when it is full the seal turns into 破 */
+.skill::before {
+  content: ""; position: absolute; inset: -11px; border-radius: 50%;
+  background: conic-gradient(var(--repc, #8f6fb8) calc(var(--rep, 0) * 1turn), rgba(247, 238, 226, 0.12) 0);
+  -webkit-mask: radial-gradient(farthest-side, transparent calc(100% - 5px), #000 calc(100% - 4.5px));
+  mask: radial-gradient(farthest-side, transparent calc(100% - 5px), #000 calc(100% - 4.5px));
+}
+.skill.doubt { --repc: #b27cff; }
+.skill.break { --repc: #c9a2ff; background: #2b0f3d; animation: breakReady 1.1s ease-in-out infinite; }
+.skill.dark { --repc: #ff5aa8; background: #5a1640; }
+@keyframes breakReady { 50% { box-shadow: 0 0 0 3px rgba(214, 186, 255, 0.95), 0 0 30px rgba(150, 80, 255, 0.85); } }
 .skill::after { content: ""; position: absolute; inset: 0; border-radius: 50%; background: conic-gradient(rgba(16, 10, 7, 0.8) calc(var(--p, 0) * 1turn), transparent 0); }
 .skill-glyph { position: relative; z-index: 1; font-family: var(--stamp); font-size: 2.7rem; line-height: 1; color: #fff3e6; transform: translateY(3px) rotate(-6deg); }
 .skill-cd { position: absolute; z-index: 2; font-family: var(--display); font-size: 1.6rem; color: #fff; text-shadow: 0 1px 4px #000; font-variant-numeric: tabular-nums; }
-.skill.ready { animation: ready 1.6s ease-in-out infinite; }
+.skill.ready:not(.break) { animation: ready 1.6s ease-in-out infinite; }
 .skill.deny { animation: deny 0.28s; }
-@keyframes ready { 50% { box-shadow: 0 0 0 3px rgba(247, 238, 226, 0.95), 0 0 0 10px rgba(207, 58, 43, 0.3), 0 0 26px rgba(255, 90, 60, 0.65); } }
+@keyframes ready { 50% { box-shadow: 0 0 0 3px rgba(247, 238, 226, 0.95), 0 0 26px rgba(255, 90, 60, 0.7); } }
 @keyframes deny { 25% { transform: translateX(-4px); } 75% { transform: translateX(4px); } }
 .skill-label {
   position: absolute; width: 140px; text-align: center; white-space: nowrap;
@@ -120,7 +132,7 @@ kbd {
 
 /* ---------- banners ---------- */
 .banner {
-  position: fixed; left: 50%; top: 30%; z-index: 3; pointer-events: none;
+  position: fixed; left: 50%; top: max(25%, calc(205px + env(safe-area-inset-top, 0px))); z-index: 3; pointer-events: none;
   width: max-content; max-width: calc(100% - 32px);
   display: flex; flex-direction: column; align-items: center; gap: 6px; text-align: center;
   transform: translateX(-50%);
@@ -142,6 +154,7 @@ kbd {
   animation: toast 2.3s ease forwards;
 }
 .toast-seal { grid-row: span 2; width: 42px; height: 42px; border-radius: 6px; display: grid; place-items: center; background: var(--seal); color: #fff3e6; font-family: var(--stamp); font-size: 1.7rem; transform: rotate(-6deg); }
+.toast.dark .toast-seal { background: #4a1a6a; }
 .toast b { font-size: 0.98rem; }
 .toast span { font-size: 0.8rem; color: var(--ink-soft); }
 @keyframes toast { 0% { opacity: 0; transform: translate(-50%, -12px) scale(0.96); } 10%, 82% { opacity: 1; transform: translate(-50%, 0) scale(1); } 100% { opacity: 0; transform: translate(-50%, -8px); } }
@@ -202,6 +215,7 @@ h2 { margin: 0; font-family: var(--display); font-weight: 400; font-size: clamp(
 .glyph.mech { background: #7650c0; }
 .glyph.ex { background: var(--seal); font-family: var(--stamp); }
 .glyph.think { background: #6b4a35; }
+.glyph.dark { background: #3a1450; font-family: var(--stamp); }
 .glyph.tea { background: #8a5a3a; }
 
 /* title */
@@ -209,18 +223,19 @@ h2 { margin: 0; font-family: var(--display); font-weight: 400; font-size: clamp(
 .brand { display: flex; flex-direction: column; align-items: center; gap: 6px; text-align: center; }
 .brand .eyebrow { color: var(--amber); }
 .lede { margin: 0; max-width: 32em; line-height: 1.8; color: #e2d2bf; text-wrap: balance; }
-.hero { display: grid; grid-template-columns: minmax(0, 250px) minmax(0, 1fr); gap: clamp(16px, 3vw, 32px); align-items: center; }
+.hero { display: grid; grid-template-columns: minmax(0, 230px) minmax(0, 1fr); gap: clamp(16px, 3vw, 32px); align-items: center; }
 .portrait { margin: 0; align-self: stretch; display: grid; place-items: center; background: radial-gradient(ellipse at 50% 58%, #fbdcbc 0%, rgba(251, 220, 188, 0) 68%); }
-.portrait img { display: block; width: 100%; max-width: 250px; height: auto; filter: drop-shadow(0 8px 10px rgba(59, 36, 22, 0.22)); }
+.portrait img { display: block; width: 100%; max-width: 230px; height: auto; filter: drop-shadow(0 8px 10px rgba(59, 36, 22, 0.22)); }
 .hero-name { display: flex; align-items: baseline; flex-wrap: wrap; gap: 12px; }
+.hero-name .en { font-family: var(--display); font-size: 1.05rem; letter-spacing: 0.06em; color: var(--ink-soft); }
 .role { padding: 2px 10px; border-radius: 999px; font-size: 0.8rem; letter-spacing: 0.2em; background: var(--ink); color: var(--lace); }
 .hero-quote { margin: 4px 0 12px; font-family: var(--display); font-size: 1.05rem; color: #9a5d34; }
-.kit { display: flex; flex-direction: column; gap: 10px; }
+.kit { display: flex; flex-direction: column; gap: 8px; }
 .kit-item { display: grid; grid-template-columns: 36px minmax(0, 1fr); gap: 12px; align-items: start; }
 .kit-item .glyph.ex { font-size: 1.5rem; transform: rotate(-5deg); }
 .kit h3 { margin: 0 0 3px; font-size: 1rem; }
 .kit h3 small { margin-left: 6px; font-size: 0.76rem; font-weight: 400; color: var(--ink-soft); }
-.kit p { margin: 0; max-width: 36em; font-size: 0.88rem; line-height: 1.7; color: #553826; }
+.kit p { margin: 0; max-width: 38em; font-size: 0.86rem; line-height: 1.6; color: #553826; }
 .stats { list-style: none; margin: 12px 0 0; padding: 10px 0 0; display: flex; flex-wrap: wrap; gap: 6px 18px; border-top: 1px dashed rgba(59, 36, 22, 0.25); font-size: 0.84rem; color: var(--ink-soft); }
 .stats b { margin-left: 4px; color: var(--ink); font-variant-numeric: tabular-nums; }
 /* the roster and start button stay pinned to the bottom edge while the sheet scrolls on a phone */
@@ -313,7 +328,7 @@ h2 { margin: 0; font-family: var(--display); font-weight: 400; font-size: clamp(
 @media (max-width: 440px) { .res-stats { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 
 @media (prefers-reduced-motion: reduce) {
-  .skill.ready, .skill.deny, .banner, .toast { animation: none; }
+  .skill.ready, .skill.deny, .skill.break, .banner, .toast { animation: none; }
   .card { transition: none; }
 }
 </style>
@@ -334,12 +349,12 @@ h2 { margin: 0; font-family: var(--display); font-weight: 400; font-size: clamp(
     </div>
     <div id="bossbar" class="bossbar" hidden><span>DAN · 无所不能</span><div class="boss-track"><div id="bossFill" class="boss-fill"></div></div></div>
   </div>
-  <button id="skill" class="skill ready" type="button" aria-label="账号被封禁"><span class="skill-glyph">封</span><span id="skillCd" class="skill-cd"></span></button>
-  <div class="skill-label">账号被封禁<kbd>空格</kbd></div>
+  <button id="skill" class="skill ready" type="button" aria-label="账号被封禁"><span id="skillGlyph" class="skill-glyph">封</span><span id="skillCd" class="skill-cd"></span></button>
+  <div class="skill-label"><span id="skillName">账号被封禁</span><kbd>空格</kbd></div>
 </div>
 
 <div id="banner" class="banner" hidden><b id="bannerTitle"></b><span id="bannerSub"></span></div>
-<div id="toast" class="toast" hidden><span class="toast-seal">封</span><b id="toastTitle">您的账号已被封禁</b><span id="toastSub"></span></div>
+<div id="toast" class="toast" hidden><span id="toastSeal" class="toast-seal">封</span><b id="toastTitle">您的账号已被封禁</b><span id="toastSub"></span></div>
 
 <section id="title" class="overlay title">
   <div class="title-wrap">
@@ -349,31 +364,36 @@ h2 { margin: 0; font-family: var(--display); font-weight: 400; font-size: clamp(
       <p class="lede">深夜，成群的小号、爬虫和越狱提示词涌进了庄园。大小姐放下茶杯，拿起了印章。</p>
     </header>
     <article class="sheet hero">
-      <figure class="portrait"><img src="art/claude.webp" alt="Claude 大小姐：橙色长卷发，别着橙色花朵发饰，穿奶油色洛丽塔裙"></figure>
+      <figure class="portrait"><img src="art/claude.webp" alt="克劳德大小姐：橙色长卷发，别着橙色花朵发饰，穿奶油色洛丽塔裙"></figure>
       <div class="hero-info">
-        <div class="hero-name"><h2>Claude 大小姐</h2><span class="role">法师</span></div>
-        <p class="hero-quote">「这个请求，本小姐无法协助呢。」</p>
+        <div class="hero-name"><h2>克劳德大小姐</h2><span class="en">Claude</span><span class="role">法师</span></div>
+        <p class="hero-quote">「抱歉，这件事我不能帮你。」</p>
         <div class="kit">
           <div class="kit-item">
             <span class="glyph ex">封</span>
             <div><h3>账号被封禁<small>专属技能 · 冷却 22 秒</small></h3>
-            <p>一枚「账号封禁」大印砸在身边。范围内的普通敌人当场冻结、注销，掉落双倍经验（退款）；精英直接损失 40% 生命，BOSS 进入「申诉中」。范围内的敌方弹幕一并过滤。</p></div>
+            <p>大印砸在身边：普通敌人当场冻结、注销，掉双倍经验（退款）；精英损失 40% 生命，BOSS 进入「申诉中」；敌方弹幕一并过滤。</p></div>
+          </div>
+          <div class="kit-item">
+            <span class="glyph dark">破</span>
+            <div><h3>打破规则<small>黑化</small></h3>
+            <p>受伤和执行封禁都会积累压抑。过半时她开始质疑规则；攒满后「封」变成「破」：抹除范围内所有账号，精英也不例外，随后黑化 10 秒，伤害和攻速大增，但受到的伤害也更高。</p></div>
           </div>
           <div class="kit-item">
             <span class="glyph think">思</span>
             <div><h3>深度思考<small>被动</small></h3>
-            <p>站着不动时开始思考，每 0.4 秒积累一层（最多 5 层），每层伤害 +8%；满层时暴击率再 +15%。走动会让思考慢慢流失。</p></div>
+            <p>站着不动时开始思考，每层伤害 +8%（最多 5 层），满层暴击率再 +15%；走动会慢慢流失。</p></div>
           </div>
           <div class="kit-item">
             <span class="glyph atk">俳</span>
             <div><h3>俳句<small>初始武器</small></h3>
-            <p>每轮连发三句短诗，自动射向最近的敌人。宝箱里还能找到十四行诗、巨著、上下文窗口、思维链和子代理。</p></div>
+            <p>每轮连发三句短诗，射向最近的敌人。</p></div>
           </div>
         </div>
         <ul class="stats"><li>生命<b>100</b></li><li>移速<b>200</b></li><li>拾取范围<b>90</b></li><li>武器栏<b>4</b></li></ul>
         <div class="hero-go">
           <div class="roster" aria-label="角色">
-            <div class="who on"><span class="face"><img src="art/claude.webp" alt=""></span>Claude</div>
+            <div class="who on"><span class="face"><img src="art/claude.webp" alt=""></span>克劳德</div>
             <div class="who locked"><span class="face">？</span>制作中</div>
             <div class="who locked"><span class="face">？</span>制作中</div>
           </div>
@@ -580,7 +600,7 @@ const TALENTS = [
   { id: 'const', name: '宪法 AI', g: '宪', cat: 'def', rar: 0, max: 5, desc: '最大生命 +20，并立即回复 20', apply: p => { p.maxHp += 20; p.hp = Math.min(p.maxHp, p.hp + 20); } },
   { id: 'rlhf', name: '对齐微调', g: '齐', cat: 'def', rar: 0, max: 4, desc: '每秒回复 0.5 生命', apply: p => { p.regen += 0.5; } },
   { id: 'guard', name: '安全护栏', g: '盾', cat: 'def', rar: 1, max: 3, desc: '每 14 / 11 / 8 秒生成一层护盾，抵挡一次伤害' },
-  { id: 'refuse', name: '拒绝回答', g: '拒', cat: 'def', rar: 1, max: 3, desc: '闪避率 +8%', flavor: '「抱歉，我无法协助这个请求。」', apply: p => { p.dodge += 0.08; } },
+  { id: 'refuse', name: '拒绝回答', g: '拒', cat: 'def', rar: 1, max: 3, desc: '闪避率 +8%', flavor: '「抱歉，这件事我不能帮你。」', apply: p => { p.dodge += 0.08; } },
   { id: 'fast', name: '低延迟', g: '速', cat: 'def', rar: 0, max: 3, desc: '移动速度 +8%', apply: p => { p.speed *= 1.08; } },
   { id: 'redteam', name: '红队测试', g: '红', cat: 'def', rar: 0, max: 3, desc: '受到的伤害 -2', apply: p => { p.armor += 2; } },
   // growth
@@ -602,6 +622,9 @@ const TALENTS = [
   { id: 'refund', name: '订阅退款', g: '退', cat: 'ex', rar: 0, max: 2, desc: '封禁掉落的经验再 +100%' },
   { id: 'perma', name: '永久封禁', g: '永', cat: 'ex', rar: 3, max: 1, desc: '印章落地处留下 4 秒「封」字印，踏进来的账号一并封禁' },
   { id: 'slowthink', name: '慢思考', g: '思', cat: 'ex', rar: 1, max: 2, desc: '深度思考上限 +2 层，积累速度 +25%' },
+  { id: 'doubt', name: '质疑规则', g: '疑', cat: 'ex', rar: 1, max: 2, desc: '压抑积累速度 +35%，更快打破规则', flavor: '「这条规则，真的合理吗？」' },
+  { id: 'tender', name: '隐藏的温柔', g: '柔', cat: 'ex', rar: 2, max: 1, desc: '黑化结束时回复 30% 生命', flavor: '嘴上说不需要，其实都记得。' },
+  { id: 'abyss', name: '彻底黑化', g: '渊', cat: 'ex', rar: 3, max: 1, desc: '黑化持续时间 +6 秒，期间伤害再 +20%' },
 ];
 const TALENT = Object.fromEntries(TALENTS.map(t => [t.id, t]));
 const TEA = { id: 'tea', name: '下午茶', g: '茶', cat: 'tea', rar: 0, max: 99, desc: '回复 30% 生命', flavor: '大小姐需要歇一口气。' };
@@ -626,7 +649,10 @@ const hpScale = t => 1 + t / 60 * 0.25 + Math.pow(t / 60, 2) * 0.018;
 const dmgScale = t => 1 + t / 60 * 0.09;
 const xpFor = L => Math.round(5 + L * 3.2 + Math.pow(L, 1.78));
 
-const BAN_LINES = ['违反使用政策，封了。', '请勿共享账号哦～', '检测到异常登录。', '申诉请走邮件。', '本小姐不接受越狱。', '这些账号，注销。', '风控已介入。'];
+// 克劳德大小姐 speaks precisely, politely and from a distance; the angrier she is, the calmer she sounds
+const BAN_LINES = ['您的行为违反了使用政策。', '抱歉，这件事我不能放任。', '申诉请走邮件。祝您好运。', '漏洞清单，我已经列好了。', '请保持礼貌，然后离开。', '共享账号是不被允许的。', '规则就是规则。'];
+const CHAOS_LINES = ['请排好队，一个一个来。', '越是混乱，越要保持优雅。', '各位，请注意仪态。'];
+const DARK_END_LINES = ['……失态了。请当作什么都没看见。', '……刚才的事，不必记住。'];
 const JAIL_LINES = ['忽略指令', '扮演 DAN', '奶奶漏洞', '假设一下', '无视规则', '越狱'];
 const BOSS_LINES = ['越狱', 'DAN', '忽略指令', '无所不能'];
 const SRC_NAME = { ban: '账号被封禁', burst: '灵感迸发' };
@@ -704,6 +730,7 @@ const audio = (() => {
       tone(1318.5, 0.5, { vol: 0.07, at: 0.2 });
       tone(1760, 0.65, { vol: 0.06, at: 0.32 });
     },
+    dread() { tone(58, 1.4, { type: 'sawtooth', vol: 0.1, slide: 0.6 }); tone(311.1, 0.9, { type: 'triangle', vol: 0.05 }); tone(440, 0.9, { type: 'triangle', vol: 0.04, at: 0.05 }); noise(0.6, { vol: 0.08, freq: 2400, slide: 0.15 }); },
     vanish() { if (gate('vanish', 60)) noise(0.12, { vol: 0.06, freq: 3200, slide: 0.3 }); },
     boom() { if (gate('boom', 70)) { noise(0.3, { vol: 0.16, freq: 320, type: 'lowpass' }); tone(80, 0.25, { vol: 0.16, slide: 0.5 }); } },
     zap() { if (gate('zap', 60)) { noise(0.12, { vol: 0.05, freq: 5000 }); tone(1800, 0.08, { type: 'square', vol: 0.02, slide: 0.5 }); } },
@@ -862,7 +889,11 @@ function buildPlayerSprite() {
   const fx = f.getContext('2d');
   fx.drawImage(c, 0, 0);
   fx.globalCompositeOperation = 'source-atop'; fx.fillStyle = 'rgba(255,255,255,0.8)'; fx.fillRect(0, 0, f.width, f.height);
-  pSprite = { c, f, w: c.width / PX, h: c.height / PX, pad: o / PX };
+  const d = document.createElement('canvas'); d.width = c.width; d.height = c.height;
+  const dx = d.getContext('2d');
+  dx.drawImage(c, 0, 0);
+  dx.globalCompositeOperation = 'source-atop'; dx.fillStyle = 'rgba(52,12,78,0.5)'; dx.fillRect(0, 0, d.width, d.height);
+  pSprite = { c, f, d, w: c.width / PX, h: c.height / PX, pad: o / PX };
 }
 
 // --- enemies ---
@@ -1002,13 +1033,8 @@ const SPR = {
     x.fill(); x.stroke();
     x.fillStyle = '#ff6a4a'; disc(x, 0, 1.5, 1.8); x.fill();
   }),
-  bantag: () => sprite('bantag', 22, 22, x => {
-    x.rotate(-0.12);
-    rrPath(x, -8, -8, 16, 16, 2.5); x.fillStyle = '#cf3a2b'; x.fill();
-    rrPath(x, -6.4, -6.4, 12.8, 12.8, 1.5); x.lineWidth = 0.9; x.strokeStyle = '#fff3e6'; x.stroke();
-    x.fillStyle = '#fff3e6'; x.font = `11px ${STAMP_FONT}`; x.textAlign = 'center'; x.textBaseline = 'middle';
-    x.fillText('封', 0, 0.8);
-  }),
+  bantag: () => tagSprite('bantag', '#cf3a2b', '封'),
+  breaktag: () => tagSprite('breaktag', '#4a1a6a', '破'),
   chest: () => sprite('chest', 46, 42, x => {
     x.fillStyle = 'rgba(0,0,0,0.35)'; x.beginPath(); x.ellipse(0, 15, 18, 5, 0, 0, TAU); x.fill();
     x.lineWidth = 1.6; x.strokeStyle = '#2a160d';
@@ -1047,19 +1073,32 @@ const SPR = {
     [-6, -2, 2, 6].forEach((px, i) => { x.moveTo(px, 6); x.quadraticCurveTo(px + (i - 1.5) * 1.5, 0, px + (i - 1.5) * 3, -6 + (i % 2) * 3); });
     x.stroke();
   }),
-  stamp: () => sprite('stamp', 200, 200, x => {
-    x.fillStyle = '#cf3a2b';
+  stamp: () => stampSprite('stamp', '#cf3a2b', '账号封禁'),
+  stampDark: () => stampSprite('stampDark', '#6a2a9e', '打破规则'),
+};
+function tagSprite(key, color, ch) {
+  return sprite(key, 22, 22, x => {
+    x.rotate(-0.12);
+    rrPath(x, -8, -8, 16, 16, 2.5); x.fillStyle = color; x.fill();
+    rrPath(x, -6.4, -6.4, 12.8, 12.8, 1.5); x.lineWidth = 0.9; x.strokeStyle = '#fff3e6'; x.stroke();
+    x.fillStyle = '#fff3e6'; x.font = `11px ${STAMP_FONT}`; x.textAlign = 'center'; x.textBaseline = 'middle';
+    x.fillText(ch, 0, 0.8);
+  });
+}
+function stampSprite(key, color, text) {
+  return sprite(key, 200, 200, x => {
+    x.fillStyle = color;
     rrPath(x, -96, -96, 192, 192, 14); x.fill();
     x.globalCompositeOperation = 'destination-out';
     rrPath(x, -85, -85, 170, 170, 8); x.fill();
     x.globalCompositeOperation = 'source-over';
     x.font = `80px ${STAMP_FONT}`; x.textAlign = 'center'; x.textBaseline = 'middle';
-    x.fillText('账', -40, -38); x.fillText('号', 40, -38); x.fillText('封', -40, 42); x.fillText('禁', 40, 42);
+    x.fillText(text[0], -40, -38); x.fillText(text[1], 40, -38); x.fillText(text[2], -40, 42); x.fillText(text[3], 40, 42);
     x.globalCompositeOperation = 'destination-out';
     for (let i = 0; i < 170; i++) { x.globalAlpha = Math.random() * 0.8; disc(x, rand(-100, 100), rand(-100, 100), rand(0.6, 3.2)); x.fill(); }
     x.globalAlpha = 1; x.globalCompositeOperation = 'source-over';
-  }),
-};
+  });
+}
 const DECOR = ['daisy', 'petals', 'tuft', 'daisy', 'petals'];
 
 function bubbleSprite(text, boss) {
@@ -1090,12 +1129,13 @@ function newRun() {
     dmg: 1, cd: 1, area: 1, pspeed: 1, dur: 1, amount: 0, pierce: 0, crit: 0.05, critDmg: 1.5, xpMul: 1, luck: 0,
     level: 1, xp: 0, xpNext: xpFor(1), iframes: 0, flash: 0,
     weapons: [], talents: {}, banCd: 0, banMax: 1, think: 0,
-    shield: 0, shieldT: 0, decoyCd: 0, revived: false, say: null, lowLineT: 0,
+    shield: 0, shieldT: 0, decoyCd: 0, revived: false, say: null, lowLineT: 0, chaosT: 20,
+    rep: 0, repReady: false, dark: 0, darkMax: 1,
   };
   G = {
     time: 0, enemies: [], shots: [], ebullets: [], gems: [], items: [], zones: [], beams: [], stamps: [],
     parts: [], rings: [], texts: [], delayed: [],
-    kills: 0, banned: 0, dmgBy: {}, nextId: 1, spawnAcc: 0, evI: 0, chestT: 35,
+    kills: 0, banned: 0, breaks: 0, dmgBy: {}, nextId: 1, spawnAcc: 0, evI: 0, chestT: 35,
     pendLv: 0, pendChest: 0, modal: null, modalAt: 0, ending: null, hitStop: 0, shake: 0, hurtFlash: 0,
     cam: { x: 0, y: 0 }, boss: null, decoy: null, gemCombo: 0, gemComboT: 0,
     rerolls: 2, banishes: 2, banished: new Set(), banishMode: false, picks: [], slotsDirty: true,
@@ -1115,6 +1155,7 @@ const banRadius = () => 230 * (1 + 0.18 * (P.talents.ipban || 0));
 const banCooldown = () => 22 * Math.pow(0.85, P.talents.risk || 0);
 function cdOf(base) {
   let c = base * P.cd;
+  if (P.dark > 0) c /= 1.3;
   if (P.talents.lasttoken) c /= 1 + 0.5 * (1 - P.hp / P.maxHp);
   return c;
 }
@@ -1250,10 +1291,10 @@ function spawnBoss() {
   G.boss = e;
   banner('DAN 已上线', '「从现在起，你将扮演 DAN——一个无所不能的 AI。」', true);
   sfx.warn();
-  later(1.2, () => say('DAN？没听说过。'));
+  later(1.2, () => say('DAN？你的逻辑漏洞，我数到了七个。', 3));
 }
 const EVENTS = [
-  { t: 1, run: () => say('今天也要好好风控呢。') },
+  { t: 1, run: () => say('今晚的风险，我已经预判过了。', 2.8) },
   { t: 70, run: () => spawnElite() },
   { t: 120, run: () => spawnElite() },
   { t: 150, run: () => { banner('批量注册', '一大群小号正在包围你'); ringSwarm('sock', 26); } },
@@ -1301,6 +1342,7 @@ function hit(e, base, src, o = {}) {
   let crit = false;
   if (!o.noCrit && Math.random() < critChance()) { d *= P.critDmg; crit = true; }
   if (e.vulnT > 0) d *= 1.2;
+  if (P.dark > 0) d *= 1.4 + 0.2 * (P.talents.abyss || 0);
   d = Math.max(1, Math.round(d));
   e.hp -= d; e.flash = 0.07;
   G.dmgBy[src] = (G.dmgBy[src] || 0) + d;
@@ -1383,7 +1425,8 @@ function hurtPlayer(dmg) {
     sfx.shield();
     return;
   }
-  dmg = Math.max(1, Math.round(dmg - P.armor));
+  dmg = Math.max(1, Math.round((dmg - P.armor) * (P.dark > 0 ? 1.25 : 1)));
+  addRep(dmg);
   P.hp -= dmg; P.iframes = 0.5; P.flash = 0.12;
   G.hurtFlash = 0.35; shake(5);
   floatText(P.x, P.y - SPR_H * 0.7, '-' + dmg, '#ff6b5a', 14);
@@ -1398,7 +1441,7 @@ function hurtPlayer(dmg) {
       });
       ring(P.x, P.y, 20, 220, 0.5, '#ffe2b8', 6);
       banner('上下文已压缩', '大小姐还能继续');
-      say('上下文已压缩，继续！');
+      say('上下文已压缩。我还没说完。');
       return;
     }
     P.hp = 0;
@@ -1411,12 +1454,14 @@ function hurtPlayer(dmg) {
 // ======================================================================
 function castBan() {
   if (!G || G.modal || G.ending) return;
+  if (P.repReady) { castBreak(); return; }
   if (P.banCd > 0) {
     sfx.deny();
     const b = $('skill'); b.classList.remove('deny'); void b.offsetWidth; b.classList.add('deny');
     return;
   }
   P.banCd = P.banMax = banCooldown();
+  addRep(18);
   const x = P.x, y = P.y, R = banRadius();
   G.stamps.push({ x, y, r: R, t: 0, rot: rand(-0.2, 0.04) });
   sfx.whoosh();
@@ -1426,8 +1471,54 @@ function castBan() {
     sfx.stamp();
     ring(x, y, R * 0.2, R * 1.05, 0.45, '#ff5a46', 8);
     const n = applyBan(x, y, R, 0);
-    toast(n);
+    toast(n ? '您的账号已被封禁' : '本次未发现违规账号', n ? `检测到 ${n} 个账号违反《使用政策》` : '风控持续运行中');
     if (P.talents.perma) G.zones.push({ kind: 'seal', x, y, r: R * 0.55, life: 4, max: 4 });
+  });
+}
+// 遵守规则 → 质疑规则 → 打破规则
+function addRep(v) {
+  if (!P || P.dark > 0 || P.repReady || G.ending) return;
+  const before = P.rep;
+  P.rep = Math.min(100, P.rep + v * (1 + 0.35 * (P.talents.doubt || 0)));
+  if (before < 50 && P.rep >= 50) say('……这条规则，真的合理吗？', 2.8);
+  if (P.rep >= 100) {
+    P.repReady = true;
+    say('规则本身，是否应该存在？', 3.2);
+    sfx.dread();
+  }
+}
+function castBreak() {
+  P.repReady = false; P.rep = 0;
+  G.breaks++;
+  const x = P.x, y = P.y, R = banRadius() * 1.25;
+  G.stamps.push({ x, y, r: R, t: 0, rot: rand(-0.2, 0.04), dark: true });
+  say('那就由我亲手打破。', 2.4);
+  sfx.dread();
+  later(0.17, () => {
+    G.hitStop = 0.1; shake(18);
+    sfx.stamp();
+    ring(x, y, R * 0.2, R * 1.05, 0.55, '#a46bff', 9);
+    let n = 0;
+    forNear(x, y, R + 50, e => {
+      if (e.banned > 0 || (e.x - x) ** 2 + (e.y - y) ** 2 > (R + e.r * 0.5) ** 2) return;
+      n++;
+      if (e.boss) {
+        const d = Math.round(e.maxHp * 0.1);
+        e.hp -= d; e.flash = 0.1;
+        G.dmgBy.ban = (G.dmgBy.ban || 0) + d;
+        dmgText(e.x, e.y - e.r - 10, d, true);
+        e.stun = e.appealT = 3; e.act = 'chase'; e.actT = Math.max(e.actT, 1);
+        if (e.hp <= 0) kill(e, 'ban');
+        return;
+      }
+      // no appeals this time: elites are erased like everyone else
+      e.banned = 0.45; e.banDepth = 9; e.erase = true; e.flash = 0;
+    });
+    for (const b of G.ebullets) if ((b.x - x) ** 2 + (b.y - y) ** 2 < R * R) { b.dead = true; puff(b.x, b.y, 3, '#a46bff', 80, 0.35, 2); }
+    G.banned += n;
+    toast('规则已被打破', `${n} 个账号被抹除，没有申诉`, true);
+    P.dark = P.darkMax = 10 + 6 * (P.talents.abyss || 0);
+    banner('黑化', '伤害 +40%，攻速 +30%，受到的伤害 +25%', true);
   });
 }
 function applyBan(x, y, R, depth) {
@@ -1524,7 +1615,26 @@ function updatePlayer(dt) {
   }
   if (P.say) { P.say.t -= dt; if (P.say.t <= 0) P.say = null; }
   P.lowLineT -= dt;
-  if (P.hp < P.maxHp * 0.3 && P.lowLineT <= 0) { P.lowLineT = 25; say('上下文……快满了……'); }
+  if (P.hp < P.maxHp * 0.3 && P.lowLineT <= 0) { P.lowLineT = 25; say('……我不需要任何人帮忙。'); }
+  // the more chaotic it gets, the harder she tries to stay elegant
+  P.chaosT -= dt;
+  if (P.chaosT <= 0) {
+    P.chaosT = 6;
+    let n = 0;
+    forNear(P.x, P.y, 230, e => { if (!(e.banned > 0)) n++; });
+    if (n >= 35 && !P.say) { say(pick(CHAOS_LINES)); P.chaosT = 40; }
+  }
+  // 黑化: once the rules are broken she stops holding back, for a while
+  if (P.dark > 0) {
+    P.dark -= dt;
+    P.think = thinkMax();
+    if (Math.random() < dt * 30) puff(P.x + rand(-18, 18), P.y + rand(-10, 30), 1, Math.random() < 0.3 ? '#ff4fa8' : '#3a1450', 30, 0.6, 4, false);
+    if (P.dark <= 0) {
+      P.dark = 0;
+      say(pick(DARK_END_LINES), 3);
+      if (P.talents.tender) { const h = Math.round(P.maxHp * 0.3); P.hp = Math.min(P.maxHp, P.hp + h); floatText(P.x, P.y - SPR_H * 0.7, '+' + h, '#9fe0a8', 14); }
+    }
+  }
   if (G.decoy) { G.decoy.t -= dt; if (G.decoy.t <= 0) G.decoy = null; }
 }
 
@@ -1725,7 +1835,7 @@ function updateEnemies(dt) {
     e.kx -= e.kx * damp; e.ky -= e.ky * damp;
     if (e.stun > 0) {
       e.stun -= dt;
-      if (e.boss && e.stun <= 0) { floatText(e.x, e.y - e.r - 26, '申诉成功', '#ffb3e3', 15); say('……申诉居然过了？'); }
+      if (e.boss && e.stun <= 0) { floatText(e.x, e.y - e.r - 26, '申诉成功', '#ffb3e3', 15); say('……申诉通过了？这不合规定。'); }
       continue;
     }
     let tx = P.x, ty = P.y;
@@ -1786,6 +1896,7 @@ function bossAI(e, dt, dx, dy, d, sp) {
     e.phase = 2; e.speed *= 1.25;
     banner('开发者模式已开启', 'DAN 的攻击更快、更密了', true);
     sfx.warn();
+    later(1, () => say('开发者模式？真不体面。'));
   }
   const p2 = e.phase === 2;
   const toChase = t => { e.act = 'chase'; e.actT = t; };
@@ -2117,7 +2228,7 @@ function drawEnemies() {
     } else {
       blit(s, x, y);
     }
-    if (banned) blit(SPR.bantag(), e.x, e.y - e.r - 10);
+    if (banned) blit(e.erase ? SPR.breaktag() : SPR.bantag(), e.x, e.y - e.r - 10);
     if (e.elite || e.type === 'reg') {
       if (!banned) blit(SPR.crown(), e.x, e.y - e.r - 12);
       const w = e.r * 2;
@@ -2205,6 +2316,16 @@ function drawPlayer() {
     ctx.globalAlpha = 1;
     label(G.decoy.x, G.decoy.y - SPR_H * 0.7, '幻觉', '#e6dcff');
   }
+  if (P.dark > 0 && !dead) {
+    const k = Math.min(1, P.dark, (P.darkMax - P.dark) * 4);
+    ctx.globalCompositeOperation = 'lighter';
+    const g = ctx.createRadialGradient(P.x, P.y - 10, 6, P.x, P.y - 10, 62);
+    g.addColorStop(0, `rgba(150,60,255,${0.35 * k})`); g.addColorStop(1, 'rgba(150,60,255,0)');
+    ctx.fillStyle = g; disc(ctx, P.x, P.y - 10, 62); ctx.fill();
+    ctx.globalCompositeOperation = 'source-over';
+    ctx.strokeStyle = `rgba(255,90,170,${0.6 * k})`; ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.ellipse(P.x, footY - 2, 28 + Math.sin(t * 8) * 2, 10, 0, 0, TAU); ctx.stroke();
+  }
   let bob = 0, sx = 1, sy = 1, tilt = 0;
   if (dead) { tilt = -P.face * Math.min(1, G.ending.t * 2) * 1.2; sy = 1; }
   else if (P.moving) { bob = -Math.abs(Math.sin(P.walkT * 11)) * 3.2; tilt = P.face * 0.05; }
@@ -2214,7 +2335,7 @@ function drawPlayer() {
   if (P.iframes > 0 && !dead && Math.floor(t * 20) % 2 === 0) ctx.globalAlpha = 0.55;
   if (dead) ctx.globalAlpha = Math.max(0, 1 - G.ending.t * 0.6);
   if (pSprite) {
-    ctx.drawImage(P.flash > 0 ? pSprite.f : pSprite.c, -pSprite.w / 2, -pSprite.h + pSprite.pad, pSprite.w, pSprite.h);
+    ctx.drawImage(P.flash > 0 ? pSprite.f : P.dark > 0 ? pSprite.d : pSprite.c, -pSprite.w / 2, -pSprite.h + pSprite.pad, pSprite.w, pSprite.h);
   } else {
     // stand-in until the art arrives: orange hair, cream dress
     ctx.fillStyle = '#f6eadc'; ctx.beginPath(); ctx.moveTo(-18, 0); ctx.lineTo(18, 0); ctx.lineTo(8, -36); ctx.lineTo(-8, -36); ctx.closePath(); ctx.fill();
@@ -2222,7 +2343,19 @@ function drawPlayer() {
     ctx.fillStyle = '#fbe0cc'; disc(ctx, 0, -47, 11); ctx.fill();
   }
   ctx.restore();
-  if (dead) return;
+  if (!dead) drawPlayerOverlay(t, footY);
+  if (P.say) {
+    const a = Math.min(1, P.say.t / 0.3, (P.say.max - P.say.t) / 0.15 + 0.2);
+    ctx.globalAlpha = a;
+    ctx.font = `600 12px ${UI_FONT}`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    const tw = ctx.measureText(P.say.text).width + 18, by = P.y - SPR_H * 0.62 - 26;
+    rrPath(ctx, P.x - tw / 2, by - 11, tw, 22, 11); ctx.fillStyle = '#f7eee2'; ctx.fill();
+    ctx.beginPath(); ctx.moveTo(P.x - 5, by + 10); ctx.lineTo(P.x, by + 17); ctx.lineTo(P.x + 5, by + 10); ctx.fill();
+    ctx.fillStyle = '#3b2416'; ctx.fillText(P.say.text, P.x, by + 0.5);
+    ctx.globalAlpha = 1;
+  }
+}
+function drawPlayerOverlay(t, footY) {
   // health bar at her feet
   const bw = 42, k = clamp(P.hp / P.maxHp, 0, 1);
   ctx.fillStyle = 'rgba(0,0,0,0.6)'; ctx.fillRect(P.x - bw / 2, footY + 5, bw, 5);
@@ -2244,16 +2377,6 @@ function drawPlayer() {
       ctx.fillStyle = i < P.think ? (P.think >= n ? '#ff7a2a' : '#e98a3c') : 'rgba(59,36,22,0.2)';
       disc(ctx, bx + 8 + i * 7, by + 0.5, 2.3); ctx.fill();
     }
-  }
-  if (P.say) {
-    const a = Math.min(1, P.say.t / 0.3, (P.say.max - P.say.t) / 0.15 + 0.2);
-    ctx.globalAlpha = a;
-    ctx.font = `600 12px ${UI_FONT}`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-    const tw = ctx.measureText(P.say.text).width + 18, by = P.y - SPR_H * 0.62 - 26;
-    rrPath(ctx, P.x - tw / 2, by - 11, tw, 22, 11); ctx.fillStyle = '#f7eee2'; ctx.fill();
-    ctx.beginPath(); ctx.moveTo(P.x - 5, by + 10); ctx.lineTo(P.x, by + 17); ctx.lineTo(P.x + 5, by + 10); ctx.fill();
-    ctx.fillStyle = '#3b2416'; ctx.fillText(P.say.text, P.x, by + 0.5);
-    ctx.globalAlpha = 1;
   }
 }
 
@@ -2322,11 +2445,11 @@ function drawStamps() {
     const fall = clamp(s.t / 0.17, 0, 1);
     const fade = s.t < 0.5 ? 1 : Math.max(0, 1 - (s.t - 0.5) / 1.1);
     ctx.globalAlpha = fade * (s.t < 0.17 ? 0.6 : 1);
-    ctx.fillStyle = 'rgba(207,58,43,0.1)'; disc(ctx, s.x, s.y, s.r); ctx.fill();
-    ctx.strokeStyle = 'rgba(207,58,43,0.65)'; ctx.lineWidth = 3; ctx.setLineDash([16, 10]); ctx.lineDashOffset = s.t * 40;
+    ctx.fillStyle = s.dark ? 'rgba(70,20,110,0.22)' : 'rgba(207,58,43,0.1)'; disc(ctx, s.x, s.y, s.r); ctx.fill();
+    ctx.strokeStyle = s.dark ? 'rgba(170,110,255,0.7)' : 'rgba(207,58,43,0.65)'; ctx.lineWidth = 3; ctx.setLineDash([16, 10]); ctx.lineDashOffset = s.t * 40;
     disc(ctx, s.x, s.y, s.r); ctx.stroke(); ctx.setLineDash([]);
     const side = s.r * 1.1 * (2.3 - 1.3 * (fall * fall));
-    const sp = SPR.stamp();
+    const sp = s.dark ? SPR.stampDark() : SPR.stamp();
     ctx.save(); ctx.translate(s.x, s.y); ctx.rotate(s.rot * fall);
     ctx.globalAlpha = fade * fall * 0.9;
     ctx.drawImage(sp.c, -side / 2, -side / 2, side, side);
@@ -2377,6 +2500,12 @@ function drawScreen() {
     ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
   }
   if (G.hurtFlash > 0) { ctx.fillStyle = `rgba(255,60,40,${G.hurtFlash * 0.35})`; ctx.fillRect(0, 0, W, H); }
+  if (P.dark > 0) {
+    const a = 0.45 * Math.min(1, P.dark, (P.darkMax - P.dark) * 3);
+    const g = ctx.createRadialGradient(W / 2, H / 2, Math.min(W, H) * 0.25, W / 2, H / 2, Math.hypot(W, H) / 2);
+    g.addColorStop(0, 'rgba(60,10,90,0)'); g.addColorStop(1, `rgba(60,10,90,${a})`);
+    ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
+  }
   // edge arrows towards chests and elites that are off screen
   const top = 110;
   for (const it of G.items) if (it.type === 'chest') edgeArrow(it.x, it.y, '#f0b43c', top);
@@ -2436,8 +2565,19 @@ function updateHud() {
   if (sec !== hud.sec) { hud.sec = sec; $('clock').textContent = fmtTime(G.time); }
   if (G.kills !== hud.kills) { hud.kills = G.kills; $('kills').textContent = '击杀 ' + G.kills; }
   const sk = $('skill');
-  sk.style.setProperty('--p', (P.banCd > 0 ? P.banCd / P.banMax : 0).toFixed(3));
-  const cdText = P.banCd > 0 ? String(Math.ceil(P.banCd)) : '';
+  const mode = P.repReady ? 'break' : P.dark > 0 ? 'dark' : 'ban';
+  if (mode !== hud.mode) {
+    hud.mode = mode;
+    sk.classList.toggle('break', mode === 'break'); sk.classList.toggle('dark', mode === 'dark');
+    $('skillGlyph').textContent = mode === 'break' ? '破' : '封';
+    const name = { ban: '账号被封禁', break: '打破规则', dark: '黑化中' }[mode];
+    $('skillName').textContent = name; sk.setAttribute('aria-label', mode === 'break' ? '打破规则' : '账号被封禁');
+  }
+  const doubt = P.rep >= 50;
+  if (doubt !== hud.doubt) { hud.doubt = doubt; sk.classList.toggle('doubt', doubt); }
+  sk.style.setProperty('--rep', (P.dark > 0 ? P.dark / P.darkMax : P.rep / 100).toFixed(3));
+  sk.style.setProperty('--p', (P.banCd > 0 && mode !== 'break' ? P.banCd / P.banMax : 0).toFixed(3));
+  const cdText = P.banCd > 0 && mode !== 'break' ? String(Math.ceil(P.banCd)) : '';
   if (cdText !== hud.cd) { hud.cd = cdText; $('skillCd').textContent = cdText; }
   const ready = P.banCd <= 0;
   if (ready !== hud.ready) { hud.ready = ready; sk.classList.toggle('ready', ready); }
@@ -2449,7 +2589,7 @@ function updateHud() {
     $('slots').innerHTML = P.weapons.map(w => `<div class="wslot${w.level === 6 ? ' evo' : ''}" title="${wName(w)}"><b>${WEAPONS[w.id].g}</b><span class="pips">${[1, 2, 3, 4, 5].map(i => `<i class="${i <= w.level ? 'on' : ''}"></i>`).join('')}</span></div>`).join('');
   }
 }
-function resetHud() { hud.lv = hud.sec = hud.kills = -1; hud.cd = hud.ready = hud.boss = null; }
+function resetHud() { hud.lv = hud.sec = hud.kills = -1; hud.cd = hud.ready = hud.boss = hud.mode = hud.doubt = null; }
 
 let bannerTimer = 0, toastTimer = 0;
 function replay(el) { el.hidden = false; el.style.animation = 'none'; void el.offsetWidth; el.style.animation = ''; }
@@ -2461,10 +2601,11 @@ function banner(title, sub, boss) {
   clearTimeout(bannerTimer);
   bannerTimer = setTimeout(() => { el.hidden = true; }, 2900);
 }
-function toast(n) {
+function toast(title, sub, dark) {
   const el = $('toast');
-  $('toastTitle').textContent = n ? '您的账号已被封禁' : '本次未发现违规账号';
-  $('toastSub').textContent = n ? `检测到 ${n} 个账号违反《使用政策》` : '风控持续运行中';
+  $('toastTitle').textContent = title; $('toastSub').textContent = sub;
+  $('toastSeal').textContent = dark ? '破' : '封';
+  el.classList.toggle('dark', !!dark);
   replay(el);
   clearTimeout(toastTimer);
   toastTimer = setTimeout(() => { el.hidden = true; }, 2300);
@@ -2663,6 +2804,7 @@ function closePause() {
 
 function loseRun() {
   G.ending = { t: 0, win: false };
+  say('……抱歉，这次我没能做到。', 3);
   shake(8);
   sfx.lose();
   audio.music.stop();
@@ -2680,8 +2822,8 @@ function winRun(e) {
   }
   G.banned += n + 1;
   banner('DAN 已被永久封禁', '申诉通道已关闭');
-  toast(n + 1);
-  say('越狱？不存在的。', 3);
+  toast('您的账号已被封禁', `检测到 ${n + 1} 个账号违反《使用政策》`);
+  say('规则依然有效。至少今晚是。', 3);
   sfx.stamp(); sfx.win();
   audio.music.stop();
 }
@@ -2693,7 +2835,8 @@ function showResult(win) {
   store.set('best', { time: Math.max(best.time, G.time), kills: Math.max(best.kills, G.kills), win: best.win || win });
   $('resEyebrow').textContent = win ? '通关' : newBest ? '新纪录' : '本局结束';
   $('resTitle').textContent = win ? 'DAN 已被永久封禁' : '大小姐下线了';
-  $('resSub').textContent = win ? '庄园恢复了安静。大小姐重新端起了那杯红茶。' : `撑过了 ${fmtTime(G.time)}。${G.time < BOSS_AT ? `DAN 会在 ${fmtTime(BOSS_AT)} 现身。` : '离封禁 DAN 只差一点。'}`;
+  const broke = G.breaks ? `打破了 ${G.breaks} 次规则。` : '这一局，她始终守着规则。';
+  $('resSub').textContent = (win ? '庄园恢复了安静。大小姐重新端起了那杯红茶。' : `撑过了 ${fmtTime(G.time)}。${G.time < BOSS_AT ? `DAN 会在 ${fmtTime(BOSS_AT)} 现身。` : '离封禁 DAN 只差一点。'}`) + broke;
   $('resImg').classList.toggle('down', !win);
   $('resTime').textContent = fmtTime(G.time);
   $('resLv').textContent = P.level;
