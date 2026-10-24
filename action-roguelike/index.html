@@ -983,6 +983,139 @@ const MODEL_JOINTS = {
   neck: 0.64,
   waist: 0.52, hem: 0.22,
 };
+// ---------- face ----------
+// The face is baked into a texture cut into hundreds of small islands, so expressions can't be painted
+// onto it. Instead a square of her face (object space, seen from the front) gets a painted overlay:
+// lids, closed eyes and mouths. art/claude-face.webp is that square as bare skin, with the eyes and
+// the mouth filled in from the skin around them (transparent where hair crosses it); covering part of an
+// eye with it closes the lid. The eye and mouth spots were measured on the model.
+const FACE = {
+  x0: -0.115, y0: 0.64, size: 0.21, plate: 'art/claude-face.webp',
+  eyes: [
+    { cx: -0.0695, cy: 0.759, hw: 0.029, top: 0.784, bot: 0.736, out: -1 }, // her right
+    { cx: 0.0375, cy: 0.769, hw: 0.026, top: 0.794, bot: 0.745, out: 1 },   // her left
+  ],
+  mouth: { x: -0.0065, y: 0.715, hw: 0.014, hh: 0.0095 },
+  lash: '#3b1d12', lip: '#8f3d2c', blush: 'rgba(255,120,140,0.42)',
+};
+function paintFace(expr, plate) {
+  const N = 512, K = N / FACE.size, c = document.createElement('canvas');
+  c.width = c.height = N;
+  const x = c.getContext('2d');
+  const X = v => (v - FACE.x0) * K, Y = v => (FACE.y0 + FACE.size - v) * K, L = v => v * K;
+  x.lineCap = 'round'; x.lineJoin = 'round';
+  // lays bare skin over a shape, its edge feathered so the patch doesn't show
+  const mask = document.createElement('canvas'), mk = mask.getContext('2d');
+  mask.width = mask.height = N;
+  const skin = path => {
+    mk.clearRect(0, 0, N, N);
+    mk.fillStyle = mk.shadowColor = '#fff'; mk.shadowBlur = L(0.004);
+    mk.fill(path);
+    mk.shadowBlur = 0;
+    mk.globalCompositeOperation = 'source-in';
+    mk.drawImage(plate, 0, 0, N, N);
+    mk.globalCompositeOperation = 'source-over';
+    x.drawImage(mask, 0, 0);
+  };
+  // covers an eye with bare skin from `cut` (0 = the middle, 1 = the top lash) upwards; below 0 it closes the eye
+  const cover = (e, cut) => {
+    const lid = e.cy + (e.top - e.cy) * cut, p = new Path2D();
+    p.moveTo(X(e.cx + e.out * (e.hw + 0.012)), Y(lid));
+    // a lid that's barely down follows the eye's arch; a closed one wraps under it
+    p.quadraticCurveTo(X(e.cx), Y(cut > 0 ? lid + (e.top - lid) * 0.25 : e.bot - 0.03), X(e.cx - e.out * (e.hw + 0.006)), Y(lid));
+    p.lineTo(X(e.cx - e.out * (e.hw + 0.006)), Y(e.top + 0.012));
+    p.lineTo(X(e.cx + e.out * (e.hw + 0.016)), Y(e.top + 0.012));
+    p.closePath(); skin(p);
+  };
+  // a lid line across the eye at `cut`, tipped by `slant` (inner corner lower when positive), with a flick at the outer corner
+  const lidLine = (e, cut, slant = 0, w = 0.0042) => {
+    const lid = e.cy + (e.top - e.cy) * cut, o = e.cx + e.out * (e.hw + 0.004), i = e.cx - e.out * (e.hw + 0.002);
+    x.strokeStyle = FACE.lash; x.lineWidth = L(w);
+    x.beginPath();
+    x.moveTo(X(o), Y(lid + slant * -0.004));
+    x.quadraticCurveTo(X(e.cx), Y(lid + 0.004), X(i), Y(lid - slant * 0.008));
+    x.stroke();
+    x.lineWidth = L(w * 0.8);
+    x.beginPath(); x.moveTo(X(o), Y(lid + slant * -0.004)); x.lineTo(X(o + e.out * 0.008), Y(lid + 0.006)); x.stroke();
+    // a soft shadow the lid casts on the eye
+    x.strokeStyle = 'rgba(80,30,20,0.28)'; x.lineWidth = L(w * 1.2);
+    x.beginPath(); x.moveTo(X(o - e.out * 0.006), Y(lid - 0.0045)); x.quadraticCurveTo(X(e.cx), Y(lid - 0.0015), X(i + e.out * 0.004), Y(lid - 0.004 - slant * 0.008)); x.stroke();
+  };
+  // a closed eye: up = 1 curves like a smile (^), -1 hangs down (a sleepy line)
+  const closed = (e, up) => {
+    cover(e, -0.6);
+    const y = e.cy - (e.top - e.cy) * 0.15;
+    x.strokeStyle = FACE.lash; x.lineWidth = L(0.0042);
+    x.beginPath();
+    x.moveTo(X(e.cx + e.out * (e.hw + 0.002)), Y(y - up * 0.002));
+    x.quadraticCurveTo(X(e.cx), Y(y + up * 0.011), X(e.cx - e.out * e.hw), Y(y - up * 0.003));
+    x.stroke();
+    x.lineWidth = L(0.003);
+    x.beginPath(); x.moveTo(X(e.cx + e.out * (e.hw + 0.002)), Y(y - up * 0.002)); x.lineTo(X(e.cx + e.out * (e.hw + 0.009)), Y(y + 0.004)); x.stroke();
+  };
+  const squeeze = e => {
+    cover(e, -0.6);
+    x.strokeStyle = FACE.lash; x.lineWidth = L(0.004);
+    const s = -e.out, cx = e.cx, cy = e.cy - 0.002;
+    x.beginPath(); x.moveTo(X(cx - s * 0.016), Y(cy + 0.011)); x.lineTo(X(cx + s * 0.012), Y(cy)); x.lineTo(X(cx - s * 0.016), Y(cy - 0.011)); x.stroke();
+  };
+  const m = FACE.mouth;
+  const shut = () => {
+    const p = new Path2D(); p.ellipse(X(m.x), Y(m.y), L(m.hw + 0.006), L(m.hh + 0.006), 0, 0, Math.PI * 2); skin(p);
+  };
+  // a closed mouth from left to right: lift raises the corners (a smile), tilt raises her left corner (a smirk)
+  const lips = (w, lift, tilt = 0) => {
+    x.strokeStyle = FACE.lip; x.lineWidth = L(0.0026);
+    x.beginPath();
+    x.moveTo(X(m.x - w), Y(m.y + lift - tilt));
+    x.quadraticCurveTo(X(m.x), Y(m.y - lift * 1.2), X(m.x + w), Y(m.y + lift + tilt));
+    x.stroke();
+  };
+  const blush = () => {
+    for (const e of FACE.eyes) {
+      const bx = e.cx + e.out * 0.006, by = e.bot - 0.012;
+      const g = x.createRadialGradient(X(bx), Y(by), 0, X(bx), Y(by), L(0.02));
+      g.addColorStop(0, FACE.blush); g.addColorStop(1, 'rgba(255,120,140,0)');
+      x.fillStyle = g; x.beginPath(); x.ellipse(X(bx), Y(by), L(0.022), L(0.012), 0, 0, Math.PI * 2); x.fill();
+      x.strokeStyle = 'rgba(220,80,100,0.5)'; x.lineWidth = L(0.0014);
+      for (let k = -1; k <= 1; k++) { x.beginPath(); x.moveTo(X(bx + k * 0.006 - 0.002), Y(by - 0.003)); x.lineTo(X(bx + k * 0.006 + 0.002), Y(by + 0.003)); x.stroke(); }
+    }
+  };
+  const eyes = f => FACE.eyes.forEach(f);
+  switch (expr) {
+    case 'calm':      // her usual face: lids half down, a small closed smile with a hint of a smirk
+      eyes(e => { cover(e, 0.42); lidLine(e, 0.42); }); shut(); lips(0.008, 0.0018, 0.0012); break;
+    case 'blink':
+      eyes(e => closed(e, -1)); shut(); lips(0.008, 0.0018, 0.0012); break;
+    case 'focus':     // casting: eyes narrowed and level, mouth set
+      eyes(e => { cover(e, 0.12); lidLine(e, 0.12, 0.4); }); shut(); lips(0.007, -0.0004); break;
+    case 'angry':
+      eyes(e => { cover(e, 0.05); lidLine(e, 0.05, 1.2, 0.0048); }); shut(); lips(0.0065, -0.0022); break;
+    case 'happy':     // eyes shut in a smile, her own open mouth
+      eyes(e => closed(e, 1)); blush(); break;
+    case 'smile':     // eyes open and soft, her own open mouth
+      eyes(e => { cover(e, 0.62); lidLine(e, 0.62); }); break;
+    case 'serene':    // the ultimate: eyes closed, a faint smile
+      eyes(e => closed(e, -1)); shut(); lips(0.007, 0.0022); break;
+    case 'hurt':
+      eyes(squeeze); break;
+    case 'shy':
+      eyes(e => { cover(e, 0.2); lidLine(e, 0.2, -0.3); }); blush(); shut();
+      x.strokeStyle = FACE.lip; x.lineWidth = L(0.0024);
+      x.beginPath(); x.moveTo(X(m.x - 0.008), Y(m.y)); x.quadraticCurveTo(X(m.x - 0.004), Y(m.y + 0.003), X(m.x), Y(m.y)); x.quadraticCurveTo(X(m.x + 0.004), Y(m.y - 0.003), X(m.x + 0.008), Y(m.y)); x.stroke();
+      break;
+    case 'dark':      // 黑化: heavy lids, eyes gone a cold magenta, a thin smirk
+      eyes(e => {
+        x.fillStyle = 'rgba(190,30,110,0.55)';
+        x.beginPath(); x.ellipse(X(e.cx), Y(e.cy - 0.004), L(e.hw * 0.75), L((e.top - e.bot) * 0.36), 0, 0, Math.PI * 2); x.fill();
+        cover(e, 0.22); lidLine(e, 0.22, 0.6, 0.0048);
+      });
+      shut(); lips(0.008, 0.0006, 0.0026); break;
+  }
+  return c;
+}
+const FACE_OF = { cast: 'focus', hurt: 'hurt', happy: 'happy', spin: 'happy', angry: 'angry', shy: 'shy', curtsy: 'serene', wave: 'smile' };
+const BLINKS = ['calm', 'focus', 'angry', 'smile', 'shy', 'dark'];
 function createClaudeModel(T, gltf) {
   let mesh = null;
   gltf.scene.traverse(o => { if (o.isMesh && !mesh) mesh = o; });
@@ -999,13 +1132,34 @@ function createClaudeModel(T, gltf) {
     uSkirt: { value: new T.Vector3(0, 0, 0) },
     uHair: { value: new T.Vector3() },
     uTime: { value: 0 },
+    uFace: { value: null },
   };
   const J = MODEL_JOINTS, f = v => v.toFixed(4);
   mat.onBeforeCompile = sh => {
     Object.assign(sh.uniforms, U);
+    // the face overlay: looked up by where the fragment sits on her undeformed face, only on the skin
+    // facing forward (the bangs stand a little in front of it and stay as they are)
+    sh.fragmentShader = sh.fragmentShader
+      .replace('#include <common>', `#include <common>
+uniform sampler2D uFace;
+varying vec3 vRest, vRestN;`)
+      .replace('#include <map_fragment>', `#include <map_fragment>
+float faceA = 0.;
+{
+  vec2 fuv = (vRest.xy - vec2(${f(FACE.x0)}, ${f(FACE.y0)})) / ${f(FACE.size)};
+  if (fuv.x > 0. && fuv.x < 1. && fuv.y > 0. && fuv.y < 1. && vRestN.z > 0. && vRest.z > 0.04 && vRest.z < 0.112) {
+    vec4 fc = sRGBToLinear(texture2D(uFace, fuv));
+    diffuseColor.rgb = mix(diffuseColor.rgb, fc.rgb * diffuse, fc.a);
+    faceA = fc.a;
+  }
+}`)
+      // where the overlay paints, drop the normal map's sculpted eye sockets
+      .replace('#include <normal_fragment_maps>', `#include <normal_fragment_maps>
+normal = normalize(mix(normal, geometryNormal, faceA));`);
     sh.vertexShader = sh.vertexShader
       .replace('#include <common>', `#include <common>
 attribute vec4 _region;
+varying vec3 vRest, vRestN;
 uniform vec2 uLeg, uArmL, uArmR, uHead;
 uniform vec3 uSkirt, uHair;
 uniform float uTime;
@@ -1037,6 +1191,7 @@ void deform(inout vec3 p, inout vec3 n) {
 }`)
       .replace('#include <beginnormal_vertex>', `vec3 objectNormal = vec3(normal);
 vec3 deformed = vec3(position);
+vRest = position; vRestN = normal;
 deform(deformed, objectNormal);
 objectNormal = normalize(objectNormal);`)
       .replace('#include <begin_vertex>', 'vec3 transformed = deformed;');
@@ -1045,15 +1200,25 @@ objectNormal = normalize(objectNormal);`)
   mat.needsUpdate = true;
   const base = mat.color.clone();
   const DARK = new T.Color(0x3a1650);
+  // until the bare-skin plate arrives she keeps the face she was modelled with
+  const faces = new Map(), plate = new Image();
+  plate.onload = () => { plate.ready = true; };
+  plate.src = FACE.plate;
+  const faceTex = expr => {
+    if (!plate.ready) return null;
+    let t = faces.get(expr);
+    if (!t) { t = new T.CanvasTexture(paintFace(expr, plate)); t.anisotropy = 4; faces.set(expr, t); }
+    return t;
+  };
 
   // ---------- animation ----------
   // aLx/aRx swing an arm forward (negative) or back; aLz/aRz raise it out to the side
   const J0 = { yaw: 0, bob: 0, lean: 0, roll: 0, hx: 0, hz: 0, aLx: 0, aLz: 0, aRx: 0, aRz: 0, lL: 0, lR: 0, skx: 0, skz: 0, flare: 0, fall: 0, lift: 0 };
   const cur = Object.assign({}, J0), goal = Object.assign({}, J0);
-  let clock = 0, walk = 0, idle = 0, yawVel = 0, spinFrom = 0, lastPose = '', darkK = 0, flash = 0;
+  let clock = 0, walk = 0, idle = 0, yawVel = 0, spinFrom = 0, lastPose = '', darkK = 0, flash = 0, blinkT = 2;
   const trail = new T.Vector3();
   const angDiff = (a, b) => { let d = a - b; while (d > Math.PI) d -= Math.PI * 2; while (d < -Math.PI) d += Math.PI * 2; return d; };
-  // s: { moving, vx, vy, aim (yaw or null), pose, poseK (0..1), dash, ult (seconds into it or -1), dead (seconds since or -1), dark (0..1), flash, yaw (forced) }
+  // s: { moving, vx, vy, aim (yaw or null), pose, poseK (0..1), dash, ult (seconds into it or -1), dead (seconds since or -1), dark (0..1), flash, yaw (forced), face (forced) }
   function step(dt, s) {
     clock += dt;
     const t = clock;
@@ -1119,6 +1284,17 @@ objectNormal = normalize(objectNormal);`)
       cur.yaw += dt * (s.ult < 1.05 ? 1.2 : 0.4);
     }
     if (s.dead >= 0) { goal.fall = Math.min(1, s.dead / 0.45); goal.aLz = 0.4; goal.aRz = 0.4; goal.lL = 0.3; yawGoal = 0; }
+    // the face: composed by default, and she blinks
+    let expr = FACE_OF[s.pose] || 'calm';
+    if (s.dash) expr = 'focus';
+    if (s.ult >= 0) expr = 'serene';
+    if (s.dead >= 0) expr = 'blink';
+    if (darkK > 0.5 && (expr === 'calm' || expr === 'focus' || expr === 'angry')) expr = 'dark';
+    blinkT -= dt;
+    if (blinkT < 0) blinkT = 2 + Math.random() * 3.5;
+    if (blinkT < 0.13 && BLINKS.includes(expr)) expr = 'blink';
+    if (s.face) expr = s.face;
+    U.uFace.value = faceTex(expr);
     // facing: turn the shortest way round and remember how fast, for the hair
     const prevYaw = cur.yaw;
     if (s.yaw != null) cur.yaw = s.yaw;

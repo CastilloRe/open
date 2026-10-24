@@ -79,6 +79,62 @@ for (let i = 0; i < n; i++) {
   if (legL > 0.5) stats.legL++; if (legR > 0.5) stats.legR++; if (arm > 0.5) stats.arm++; if (hair > 0.5) stats.hair++;
 }
 console.log('vertices', n, stats);
+
+// the eyes sit in hollows with sculpted lashes standing out of them, and the mouth is a hole; the game paints
+// its own lids, lashes and mouths over them (FACE in index.html), which only reads on a smooth surface. So
+// press eyes, lashes and mouth flat onto "the face", a smooth surface fitted to the skin around the eyes:
+// z = a + b x + c y + d x² + e y² + f x y. Her painted eyes and mouth stay as they are, just level with the skin.
+const EYES = [[-0.0695, 0.759, 0.029, 0.784, 0.736, -1], [0.0375, 0.769, 0.026, 0.794, 0.745, 1]];
+const MOUTH = [-0.0065, 0.715, 0.014, 0.0095];
+const terms = (x, y) => [1, x, y, x * x, y * y, x * y];
+{
+  const AtA = Array.from({ length: 6 }, () => new Float64Array(6)), Atb = new Float64Array(6);
+  for (let i = 0; i < n; i++) {
+    const x = pos[i * 3], y = pos[i * 3 + 1], z = pos[i * 3 + 2];
+    if (Math.abs(x + 0.015) > 0.09 || y < 0.69 || y > 0.8 || z < 0.04 || z > 0.112 || nor[i * 3 + 2] < 0.15) continue;
+    const [, s, v] = hsv(sample(uv[i * 2], uv[i * 2 + 1]));
+    if (s > 0.3 || v < 0.72) continue;
+    const t = terms(x, y);
+    for (let a = 0; a < 6; a++) { Atb[a] += t[a] * z; for (let b = 0; b < 6; b++) AtA[a][b] += t[a] * t[b]; }
+  }
+  // Gaussian elimination
+  const M = AtA.map((r, a) => [...r, Atb[a]]);
+  for (let c = 0; c < 6; c++) {
+    let p = c; for (let r = c + 1; r < 6; r++) if (Math.abs(M[r][c]) > Math.abs(M[p][c])) p = r;
+    [M[c], M[p]] = [M[p], M[c]];
+    for (let r = 0; r < 6; r++) if (r !== c) { const f = M[r][c] / M[c][c]; for (let k = c; k < 7; k++) M[r][k] -= f * M[c][k]; }
+  }
+  const coef = M.map((r, a) => r[6] / r[a]);
+  const fit = (x, y) => terms(x, y).reduce((acc, t, a) => acc + t * coef[a], 0);
+  let flat = 0;
+  for (let i = 0; i < n; i++) {
+    const x = pos[i * 3], y = pos[i * 3 + 1], z = pos[i * 3 + 2];
+    if (x < -0.13 || x > 0.11 || y < 0.66 || y > 0.83) continue;
+    const dev = z - fit(x, y), [h, sat, v] = hsv(sample(uv[i * 2], uv[i * 2 + 1]));
+    // the orange bangs hang in front of the face and stay; the back of the head is far behind
+    const orange = h > 5 && h < 45 && sat > 0.42 && v > 0.5;
+    if (dev > 0.03 || dev < -0.04 || (orange && dev > 0.008)) continue;
+    // how far into an eye or the mouth (1 inside, fading out just past the edge)
+    let r = 9;
+    for (const [cx, cy, hw, top, bot, out] of EYES) {
+      const dx = (x - cx - out * 0.006) / (hw + 0.02), dy = y > cy ? (y - cy) / (top + 0.016 - cy) : (cy - y) / (cy - bot + 0.012);
+      r = Math.min(r, Math.hypot(dx, dy));
+    }
+    r = Math.min(r, Math.hypot((x - MOUTH[0]) / (MOUTH[2] + 0.01), (y - MOUTH[1]) / (MOUTH[3] + 0.009)));
+    const press = sstep(1.3, 1.0, r);
+    if (press > 0) { pos[i * 3 + 2] = z - dev * press + 0.0005 * press; flat++; }
+    // light the whole face as one smooth surface, fading back to the model's own normals at its edges
+    const smooth = Math.max(press, (orange ? 0 : 1) * sstep(0.105, 0.08, Math.abs(x + 0.015)) * sstep(0.68, 0.7, y) * sstep(0.815, 0.795, y) * sstep(0.012, 0.006, Math.abs(dev)));
+    if (smooth > 0) {
+      const gx = coef[1] + 2 * coef[3] * x + coef[5] * y, gy = coef[2] + 2 * coef[4] * y + coef[5] * x, l = Math.hypot(gx, gy, 1);
+      const nx = nor[i * 3] + (-gx / l - nor[i * 3]) * smooth, ny = nor[i * 3 + 1] + (-gy / l - nor[i * 3 + 1]) * smooth, nz = nor[i * 3 + 2] + (1 / l - nor[i * 3 + 2]) * smooth;
+      const m = Math.hypot(nx, ny, nz) || 1;
+      nor[i * 3] = nx / m; nor[i * 3 + 1] = ny / m; nor[i * 3 + 2] = nz / m;
+    }
+  }
+  P.setArray(pos); N.setArray(nor);
+  console.log('eye and mouth vertices pressed flat', flat);
+}
 const acc = doc.createAccessor('region').setType(Accessor.Type.VEC4).setArray(region).setNormalized(true).setBuffer(doc.getRoot().listBuffers()[0]);
 prim.setAttribute('_REGION', acc);
 

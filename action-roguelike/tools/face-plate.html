@@ -1,0 +1,28 @@
+<!doctype html><html><head><meta charset="utf-8"><title>face plate</title></head><body style="margin:0;background:#000">
+<canvas id="c" width="1536" height="512"></canvas>
+<!-- serve the repo over http, open tools/face-plate.html, and save a 1536x512 screenshot of the canvas;
+     tools/face-plate.py turns it into art/claude-face.webp. The square matches FACE in index.html. -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js"></script>
+<script>
+// the FACE square seen straight from the front: albedo | depth z (0..0.2 as red) | normal z (as green)
+const x0 = -0.115, y0 = 0.64, size = 0.21;
+const r = new THREE.WebGLRenderer({ canvas: document.getElementById('c'), antialias: false, preserveDrawingBuffer: true });
+r.outputEncoding = THREE.sRGBEncoding; r.setClearColor(0x000000, 0); r.setScissorTest(true);
+new THREE.GLTFLoader().load('../art/claude.glb', g => {
+  let mesh; g.scene.traverse(o => { if (o.isMesh) mesh = o; });
+  const geo = mesh.geometry;
+  const albedo = new THREE.Mesh(geo, new THREE.MeshBasicMaterial({ map: mesh.material.map }));
+  const info = new THREE.Mesh(geo, new THREE.ShaderMaterial({
+    vertexShader: 'varying vec3 vp, vn; void main(){ vp = position; vn = normal; gl_Position = projectionMatrix * modelViewMatrix * vec4(position,1.); }',
+    fragmentShader: 'varying vec3 vp, vn; void main(){ gl_FragColor = vec4(clamp(vp.z / 0.2, 0., 1.), clamp(vn.z * 0.5 + 0.5, 0., 1.), 0., 1.); }' }));
+  const cam = new THREE.OrthographicCamera(-size / 2, size / 2, size / 2, -size / 2, 0.1, 10);
+  cam.position.set(x0 + size / 2, y0 + size / 2, 3); cam.lookAt(x0 + size / 2, y0 + size / 2, 0);
+  const s1 = new THREE.Scene(); s1.add(albedo);
+  const s2 = new THREE.Scene(); s2.add(info);
+  r.setViewport(0, 0, 512, 512); r.setScissor(0, 0, 512, 512); r.render(s1, cam);
+  r.outputEncoding = THREE.LinearEncoding;
+  r.setViewport(512, 0, 512, 512); r.setScissor(512, 0, 512, 512); r.render(s2, cam);
+  document.title = 'done';
+});
+</script></body></html>
