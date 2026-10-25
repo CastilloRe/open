@@ -708,6 +708,67 @@ const WEAPONS = {
       { cd: 0.5, dmg: 220, pierce: 2 },
     ],
   },
+  // the five elements, 五行: 金 flying swords, 木 bamboo shoots, 水 a tide, 火 dragon's breath, 土 an earthquake
+  jin: {
+    name: '金 · 飞剑', g: '金', desc: '头顶排开一列金色飞剑，依次射向附近的敌人，一路贯穿。',
+    evo: { need: 'burst', name: '万剑归宗', desc: '十把更大的飞剑，射得更快、贯穿更多敌人。' },
+    lv: [
+      { cd: 1.6, n: 3, dmg: 26, pierce: 2 },
+      { cd: 1.6, n: 4, dmg: 30, pierce: 2 },
+      { cd: 1.45, n: 5, dmg: 34, pierce: 3 },
+      { cd: 1.45, n: 6, dmg: 40, pierce: 3 },
+      { cd: 1.3, n: 7, dmg: 44, pierce: 4 },
+      { cd: 1.1, n: 10, dmg: 50, pierce: 5 },
+    ],
+  },
+  mu: {
+    name: '木 · 春笋', g: '木', desc: '朝最近的敌人一路破土冒出竹笋，扎伤并定住敌人；每扎中一个，给她回一点血。',
+    evo: { need: 'rlhf', name: '万木回春', desc: '一次向三个方向冒出更长的竹笋，回血更多。' },
+    lv: [
+      { cd: 2.0, len: 6, dmg: 32, root: 0.5 },
+      { cd: 2.0, len: 7, dmg: 40, root: 0.5 },
+      { cd: 1.8, len: 8, dmg: 46, root: 0.6 },
+      { cd: 1.8, len: 9, dmg: 54, root: 0.6 },
+      { cd: 1.6, len: 11, dmg: 64, root: 0.7 },
+      { cd: 1.4, len: 12, dmg: 78, root: 0.8 },
+    ],
+  },
+  shui: {
+    name: '水 · 潮汐', g: '水', desc: '推出一道月牙形的浪潮，把沿途的敌人冲开并让它们减速。',
+    evo: { need: 'fast', name: '怒涛', desc: '浪潮向四面八方同时涌出，更宽、更重、减速更狠。' },
+    lv: [
+      { cd: 2.4, n: 1, dmg: 20, wid: 40, slow: 0.3 },
+      { cd: 2.4, n: 1, dmg: 26, wid: 44, slow: 0.3 },
+      { cd: 2.2, n: 2, dmg: 28, wid: 46, slow: 0.35 },
+      { cd: 2.2, n: 2, dmg: 34, wid: 50, slow: 0.4 },
+      { cd: 2.0, n: 3, dmg: 40, wid: 54, slow: 0.45 },
+      { cd: 1.8, n: 6, dmg: 46, wid: 60, slow: 0.55 },
+    ],
+  },
+  huo: {
+    name: '火 · 龙息', g: '火', desc: '敌人靠近时朝它喷出一股火焰，扇形范围里的敌人持续受伤并被点燃。',
+    evo: { need: 'cache', name: '三昧真火', desc: '青蓝色的真火喷得更远、更久，烧得更狠。' },
+    lv: [
+      { cd: 2.2, dur: 1.5, range: 130, dmg: 14 },
+      { cd: 2.2, dur: 1.6, range: 140, dmg: 18 },
+      { cd: 2.0, dur: 1.8, range: 150, dmg: 22 },
+      { cd: 2.0, dur: 1.9, range: 160, dmg: 26 },
+      { cd: 1.8, dur: 2.2, range: 170, dmg: 31 },
+      { cd: 1.6, dur: 2.7, range: 200, dmg: 40 },
+    ],
+  },
+  tu: {
+    name: '土 · 地震', g: '土', desc: '跺脚震出一圈冲击波向外扩散，把沿途的敌人震退、震晕。',
+    evo: { need: 'redteam', name: '山崩地裂', desc: '一次连震两圈，范围更大、震得更久。' },
+    lv: [
+      { cd: 3.0, r: 140, dmg: 30, stun: 0.35 },
+      { cd: 3.0, r: 150, dmg: 38, stun: 0.35 },
+      { cd: 2.8, r: 160, dmg: 44, stun: 0.4 },
+      { cd: 2.6, r: 170, dmg: 52, stun: 0.45 },
+      { cd: 2.6, r: 190, dmg: 62, stun: 0.5 },
+      { cd: 2.4, r: 220, dmg: 76, stun: 0.6 },
+    ],
+  },
   // legendary: only the golden slime gives it, it takes no weapon slot, and each further catch amends it
   charter: {
     name: '宪法', g: '宪', legend: true, names: ['宪法', '宪法 · 修正案 Ⅰ', '宪法 · 修正案 Ⅱ'],
@@ -755,7 +816,7 @@ const WEAPONS = {
     ],
   },
 };
-const STAT_LABEL = { dmg: '伤害', n: '数量', cd: '冷却', pierce: '穿透', rings: '圈数', size: '体积', boom: '爆炸伤害', boomR: '爆炸范围', r: '范围', slow: '减速', jumps: '推理步数', bloom: '绽放范围', dur: '持续', spin: '转速', len: '长度', wid: '宽度', range: '射程' };
+const STAT_LABEL = { dmg: '伤害', n: '数量', cd: '冷却', pierce: '穿透', rings: '圈数', size: '体积', boom: '爆炸伤害', boomR: '爆炸范围', r: '范围', slow: '减速', jumps: '推理步数', bloom: '绽放范围', dur: '持续', spin: '转速', len: '长度', wid: '宽度', range: '射程', root: '定身', stun: '震晕' };
 
 const CAT_CLASS = { atk: 'atk', def: 'def', grow: 'grow', mech: 'mech', ex: 'ex' };
 const TALENTS = [
@@ -897,6 +958,11 @@ const audio = (() => {
   }
   const sfx = {
     shoot() { if (gate('shoot', 70)) tone(pick(PENTA) * 2, 0.07, { type: 'triangle', vol: 0.03 }); },
+    sword() { tone(1320, 0.12, { type: 'triangle', vol: 0.03, slide: 1.6 }); noise(0.08, { vol: 0.03, freq: 5200, q: 3 }); },
+    bamboo() { for (let i = 0; i < 3; i++) tone(rand(300, 420), 0.05, { type: 'square', vol: 0.02, at: i * 0.07 }); },
+    wave() { noise(0.5, { vol: 0.06, freq: 700, q: 0.7, slide: 2.2, type: 'lowpass' }); },
+    breath() { if (gate('breath', 450)) noise(0.55, { vol: 0.05, freq: 900, q: 0.5, slide: 0.6 }); },
+    quake() { tone(70, 0.3, { type: 'sine', vol: 0.12, slide: 0.5 }); noise(0.25, { vol: 0.06, freq: 300, q: 0.8, type: 'lowpass' }); },
     gun() { if (gate('gun', 60)) { noise(0.07, { vol: 0.06, freq: 1900, q: 0.6, slide: 0.35 }); tone(110, 0.06, { type: 'square', vol: 0.02, slide: 0.5 }); } },
     hit() { if (gate('hit', 45)) noise(0.04, { vol: 0.045, freq: 2600 }); },
     kill() { if (gate('kill', 55)) tone(rand(480, 640), 0.09, { vol: 0.045, slide: 0.5 }); },
@@ -2111,6 +2177,28 @@ const SPR = {
     x.fillStyle = '#fff1c4';
     x.beginPath(); x.moveTo(-4, 0); x.lineTo(2, -6); x.lineTo(4, -1.5); x.lineTo(14, 0); x.lineTo(4, 1.5); x.lineTo(2, 6); x.closePath(); x.fill();
   }),
+  // 飞剑: a golden jian pointing right, a red tassel on its pommel
+  sword: () => sprite('sword', 64, 24, x => {
+    glow(x, 22, '#ffd36a', 0.35);
+    x.beginPath(); x.moveTo(-6, -2.4); x.lineTo(24, -2); x.lineTo(30, 0); x.lineTo(24, 2); x.lineTo(-6, 2.4); x.closePath();
+    x.fillStyle = vgrad(x, -2.4, 2.4, '#fffbe8', '#d8b860'); x.fill(); x.lineWidth = 0.8; x.strokeStyle = '#7a5a10'; x.stroke();
+    x.strokeStyle = 'rgba(255,255,255,0.9)'; x.lineWidth = 0.6; x.beginPath(); x.moveTo(-4, -0.4); x.lineTo(26, -0.2); x.stroke();
+    rrPath(x, -8, -5.5, 3, 11, 1.2); x.fillStyle = '#f0c040'; x.fill(); x.strokeStyle = '#7a5a10'; x.lineWidth = 0.8; x.stroke();
+    rrPath(x, -17, -1.6, 9, 3.2, 1.2); x.fillStyle = '#8a1e2c'; x.fill(); x.stroke();
+    x.fillStyle = '#f0c040'; disc(x, -18, 0, 2); x.fill(); x.stroke();
+    x.strokeStyle = '#e8364a'; x.lineWidth = 1.4; x.lineCap = 'round';
+    x.beginPath(); x.moveTo(-19, 0); x.quadraticCurveTo(-24, 3, -27, 7); x.moveTo(-19, 0.5); x.quadraticCurveTo(-23, 5, -24, 9); x.stroke();
+  }),
+  // 春笋: a bamboo shoot, its base at the sprite's bottom: jointed green stalk, a pointed sheath and two leaves
+  bamboo: () => sprite('bamboo', 26, 52, x => {
+    x.beginPath(); x.moveTo(-4.5, 25); x.lineTo(-4, -14); x.quadraticCurveTo(-3, -22, 0, -25); x.quadraticCurveTo(3, -22, 4, -14); x.lineTo(4.5, 25); x.closePath();
+    x.fillStyle = (() => { const g = x.createLinearGradient(-5, 0, 5, 0); g.addColorStop(0, '#2f7a3a'); g.addColorStop(0.4, '#8fd86a'); g.addColorStop(1, '#3e8a3c'); return g; })();
+    x.fill(); ink(x, 1.2); x.stroke();
+    x.strokeStyle = '#2a5a2a'; x.lineWidth = 1.2;
+    for (const y of [12, 0, -11]) { x.beginPath(); x.moveTo(-4.4, y); x.quadraticCurveTo(0, y + 1.5, 4.4, y); x.stroke(); }
+    for (const [sd, y] of [[1, -4], [-1, 7]]) { x.beginPath(); x.moveTo(sd * 4, y); x.quadraticCurveTo(sd * 12, y - 6, sd * 11, y - 1); x.quadraticCurveTo(sd * 8, y + 1, sd * 4, y + 1); x.closePath(); x.fillStyle = '#6cc04a'; x.fill(); ink(x, 0.9); x.stroke(); }
+    x.fillStyle = 'rgba(255,255,255,0.35)'; x.fillRect(-2.6, -12, 1.2, 34);
+  }),
   bantag: () => tagSprite('bantag', '#cf3a2b', '封'),
   breaktag: () => tagSprite('breaktag', '#4a1a6a', '破'),
   chest: () => sprite('chest', 46, 42, x => {
@@ -2959,6 +3047,119 @@ function updateWeapons(dt) {
         if (!P.moving && !P.dash) { P.face = tg.x >= P.x ? 1 : -1; playAnim(['atk1', 'atk2', 'atk3'], 0.32, 0); }
         break;
       }
+      case 'jin': {
+        // 金 · 飞剑: a row of swords appears over her head, each turns to one of the nearest enemies and flies at it
+        w.t -= dt;
+        if (w.t > 0) break;
+        const list = nearestList(P.x, P.y, 640, s.n);
+        if (!list.length) { w.t = 0.2; break; }
+        w.t = cdOf(s.cd);
+        const m = castMult(w), n = s.n + P.amount, size = evo ? 1.35 : 1;
+        for (let i = 0; i < n; i++) {
+          const f = n > 1 ? i / (n - 1) : 0.5, sx = P.x + (f - 0.5) * Math.min(170, 24 * n), sy = P.y - 66 * P.size - Math.sin(f * Math.PI) * 14;
+          const tg0 = list[i % list.length], wait = 0.14 + i * 0.06;
+          G.zones.push({ kind: 'sword', x: sx, y: sy, r: 30, life: wait, max: wait, a: Math.atan2(tg0.y - sy, tg0.x - sx), size });
+          later(wait, () => {
+            const tg = tg0.dead ? nearest(sx, sy, 700) : tg0;
+            if (tg) aimShot(sx, sy, tg, 780 * P.pspeed, { kind: 'sword', r: 7 * size, dmg: s.dmg * m, pierce: s.pierce + P.pierce, life: 0.9 * P.dur, src: 'jin' });
+          });
+        }
+        sfx.sword();
+        break;
+      }
+      case 'mu': {
+        // 木 · 春笋: a line of bamboo shoots bursts out of the ground one after another toward the nearest enemy,
+        // pinning what they hit; each enemy hit gives her back a little health
+        w.t -= dt;
+        if (w.t > 0) break;
+        const tg = nearest(P.x, P.y, 520);
+        if (!tg) { w.t = 0.2; break; }
+        w.t = cdOf(s.cd);
+        const m = castMult(w), a0 = Math.atan2(tg.y - P.y, tg.x - P.x), lines = evo ? 3 : 1, len = s.len + P.amount * 2, R = 22 * P.area;
+        let healed = 0;
+        for (let l = 0; l < lines; l++) {
+          const a = a0 + (l - (lines - 1) / 2) * 0.5;
+          for (let i = 0; i < len; i++) {
+            const d = 30 + i * 26 * P.area, x = P.x + Math.cos(a) * d, y = P.y + Math.sin(a) * d * 0.8;
+            later(i * 0.05, () => {
+              G.zones.push({ kind: 'bamboo', x, y, r: 30, life: 0.7, max: 0.7, s: rand(0.85, 1.15) * (evo ? 1.2 : 1) * P.area, lean: rand(-0.15, 0.15) });
+              forNear(x, y, R + 50, e => {
+                if (e.banned > 0 || (e.x - x) ** 2 + (e.y - y) ** 2 > (R + e.r) ** 2) return;
+                hit(e, s.dmg * m, 'mu');
+                if (!e.dead) { e.slowT = Math.max(e.slowT, s.root); e.slowAmt = Math.max(e.slowAmt, e.heavy || e.elite || e.boss ? 0.6 : 1); }
+                if (healed < (evo ? 12 : 6)) { healed++; P.hp = Math.min(P.maxHp, P.hp + P.maxHp * (evo ? 0.006 : 0.004)); }
+              });
+            });
+          }
+        }
+        sfx.bamboo();
+        break;
+      }
+      case 'shui': {
+        // 水 · 潮汐: a crescent of water rolls out toward the nearest enemy, sweeping everything before it and slowing it
+        w.t -= dt;
+        if (w.t > 0) break;
+        const tg = nearest(P.x, P.y, 560);
+        if (!tg) { w.t = 0.2; break; }
+        w.t = cdOf(s.cd);
+        const m = castMult(w), n = s.n + P.amount, a0 = Math.atan2(tg.y - P.y, tg.x - P.x);
+        for (let i = 0; i < n; i++) {
+          const a = evo ? a0 + i / n * TAU : a0 + (i - (n - 1) / 2) * 0.45, sp = 300 * P.pspeed;
+          shot({ kind: 'wave', x: P.x + Math.cos(a) * 20, y: P.y - 6 + Math.sin(a) * 20, vx: Math.cos(a) * sp, vy: Math.sin(a) * sp, r: s.wid * P.area, dmg: s.dmg * m, pierce: 999, life: 1.3 * P.dur, src: 'shui', kb: 240, slow: s.slow });
+        }
+        sfx.wave();
+        break;
+      }
+      case 'huo': {
+        // 火 · 龙息: when an enemy comes close she breathes fire at it for a while, following it; everything in the
+        // cone is hurt every tick and set alight
+        if (w.breath > 0) {
+          w.breath -= dt;
+          const R = s.range * P.area, tg = nearest(P.x, P.y, R + 40);
+          if (tg) { const d = Math.atan2(tg.y - P.y, tg.x - P.x) - w.aim; w.aim += Math.atan2(Math.sin(d), Math.cos(d)) * Math.min(1, dt * 8); }
+          const ox = P.x + Math.cos(w.aim) * 14, oy = P.y - 14 * P.size + Math.sin(w.aim) * 8;
+          for (let i = 0; i < 5 && G.parts.length < 520; i++) {
+            const a = w.aim + rand(-0.38, 0.38), v = R * rand(2.0, 2.8);
+            G.parts.push({ x: ox, y: oy, vx: Math.cos(a) * v, vy: Math.sin(a) * v, life: 0.4, max: 0.4, size: rand(5, 9), color: evo ? pick(['#9fe8ff', '#5ab8ff', '#e8fbff']) : pick(['#ffb347', '#ff7a2a', '#ffe08a']), add: true });
+          }
+          sfx.breath();
+          w.acc += dt;
+          if (w.acc >= 0.12) {
+            w.acc -= 0.12;
+            forNear(P.x, P.y, R + 50, e => {
+              if (e.banned > 0) return;
+              const dx = e.x - P.x, dy = e.y - P.y, dist = Math.hypot(dx, dy);
+              if (dist > R + e.r) return;
+              let da = Math.atan2(dy, dx) - w.aim; da = Math.atan2(Math.sin(da), Math.cos(da));
+              if (Math.abs(da) > 0.45 + e.r / Math.max(dist, 1)) return;
+              hit(e, s.dmg * w.mult, 'huo', { burn: true, quiet: Math.random() < 0.6 });
+              if (!e.dead) { e.burnT = 2.5; e.burnDps = Math.max(e.burnDps, s.dmg * (evo ? 2 : 1.2)); e.burnSrc = 'huo'; }
+            });
+          }
+          if (w.breath <= 0) w.t = cdOf(s.cd);
+          break;
+        }
+        w.t -= dt;
+        if (w.t > 0) break;
+        const tg = nearest(P.x, P.y, s.range * P.area * 0.9);
+        if (!tg) { w.t = 0.15; break; }
+        w.breath = s.dur * P.dur; w.acc = 0; w.mult = castMult(w); w.aim = Math.atan2(tg.y - P.y, tg.x - P.x);
+        break;
+      }
+      case 'tu': {
+        // 土 · 地震: she stamps and a shockwave rolls out across the ground, throwing back and stunning what it passes
+        w.t -= dt;
+        if (w.t > 0) break;
+        if (!nearest(P.x, P.y, s.r * P.area)) { w.t = 0.2; break; }
+        w.t = cdOf(s.cd);
+        const m = castMult(w);
+        for (let q = 0; q < (evo ? 2 : 1); q++) later(q * 0.35, () => {
+          const R = s.r * P.area * (q ? 1.15 : 1);
+          G.zones.push({ kind: 'quake', x: P.x, y: P.y + 20 * P.size, r: R, R, life: 0.55, max: 0.55, hit: new Set(), dmg: s.dmg * m, stun: s.stun, cracks: Array.from({ length: 9 }, () => rand(0, TAU)) });
+          shake(3); sfx.quake();
+        });
+        break;
+      }
       case 'haiku': {
         if (w.burst > 0) {
           w.burstT -= dt;
@@ -3305,7 +3506,8 @@ function updateShots(dt) {
           c.hits.push(e.id);
         }
       }
-      puff(b.x, b.y, 2, '#ffc58a', 90, 0.25, 2, true);
+      if (b.slow && !e.dead) { e.slowT = Math.max(e.slowT, 1.2); e.slowAmt = Math.max(e.slowAmt, b.slow); }
+      puff(b.x, b.y, 2, b.kind === 'wave' ? '#a8e4ff' : '#ffc58a', 90, 0.25, 2, true);
       if (b.bloom) flameBloom(b.x, b.y, b.bloom, b.dmg * 0.7, b.burn);
       if (b.pierce-- <= 0) b.dead = true;
     });
@@ -3325,7 +3527,7 @@ function updateEnemies(dt) {
     }
     if (e.burnT > 0) {
       e.burnT -= dt; e.burnAcc += dt;
-      if (e.burnAcc >= 0.5) { e.burnAcc -= 0.5; hit(e, e.burnDps * 0.5, 'opus', { noCrit: true, burn: true }); }
+      if (e.burnAcc >= 0.5) { e.burnAcc -= 0.5; hit(e, e.burnDps * 0.5, e.burnSrc || 'opus', { noCrit: true, burn: true }); }
       if (Math.random() < dt * 6) puff(e.x + rand(-e.r, e.r) * 0.5, e.y - e.r * 0.4, 1, '#ff8a3a', 40, 0.4, 2.2, true);
       if (e.dead) continue;
     }
@@ -3499,6 +3701,18 @@ function updateZones(dt) {
   G.lures.length = 0;
   for (const z of G.zones) {
     z.life -= dt;
+    if (z.kind === 'quake') {
+      const r = z.R * Math.min(1, (1 - z.life / z.max) / 0.8);
+      forNear(z.x, z.y, r + 60, e => {
+        if (e.banned > 0 || z.hit.has(e.id)) return;
+        const dx = e.x - z.x, dy = e.y - z.y;
+        if (dx * dx + dy * dy > (r + e.r) ** 2) return;
+        z.hit.add(e.id);
+        hit(e, z.dmg, 'tu', { kb: 180, kx: dx, ky: dy });
+        if (!e.dead) { e.slowT = Math.max(e.slowT, z.stun); e.slowAmt = Math.max(e.slowAmt, e.heavy || e.elite || e.boss ? 0.6 : 1); }
+      });
+      continue;
+    }
     if (z.kind === 'honey') {
       if (z.life > 0) G.lures.push(z);
       z.acc += dt;
@@ -3953,6 +4167,16 @@ function drawZones() {
       continue;
     }
     if (z.kind === 'lash') { drawLash(z); continue; }
+    if (z.kind === 'bamboo') { drawBamboo(z); continue; }
+    if (z.kind === 'quake') { drawQuake(z); continue; }
+    if (z.kind === 'sword') {
+      // a 飞剑 hanging over her head, turned toward its target, about to fly
+      const k = Math.min(1, (z.max - z.life) / 0.1);
+      ctx.save(); ctx.translate(z.x, z.y); ctx.rotate(z.a); ctx.scale(z.size * (0.5 + 0.5 * k), z.size * (0.5 + 0.5 * k));
+      ctx.globalCompositeOperation = 'lighter'; blit(SPR.sword(), 0, 0); ctx.globalCompositeOperation = 'source-over';
+      ctx.restore();
+      continue;
+    }
     if (z.kind === 'honey') { drawHoney(z, a); continue; }
     if (z.kind === 'tome') { drawTome(z); continue; }
     if (z.kind === 'meteor') {
@@ -4382,6 +4606,48 @@ function drawGuns(behind) {
   }
   ctx.restore();
 }
+// 春笋: a bamboo shoot bursting out of a little mound of earth, standing a moment, then sinking back
+function drawBamboo(z) {
+  const k = 1 - z.life / z.max, h = k < 0.15 ? k / 0.15 : k > 0.75 ? Math.max(0, (1 - k) / 0.25) : 1;
+  ctx.fillStyle = 'rgba(70,46,26,0.75)'; ctx.beginPath(); ctx.ellipse(z.x, z.y + 2, 11 * z.s, 4 * z.s, 0, 0, TAU); ctx.fill();
+  ctx.save(); ctx.translate(z.x, z.y); ctx.rotate(z.lean); ctx.scale(z.s, z.s * (0.15 + 0.85 * h));
+  blit(SPR.bamboo(), 0, -25);
+  ctx.restore();
+}
+// 地震: a ring of cracked, heaving ground rolling outward, rocks thrown up along it and cracks behind
+function drawQuake(z) {
+  const k = 1 - z.life / z.max, r = z.R * Math.min(1, k / 0.8), a = Math.min(1, z.life / 0.15);
+  ctx.save(); ctx.translate(z.x, z.y); ctx.scale(1, 0.62); ctx.globalAlpha = a;
+  ctx.strokeStyle = 'rgba(60,38,20,0.55)'; ctx.lineWidth = 1.6;
+  ctx.beginPath();
+  for (const c of z.cracks) { ctx.moveTo(Math.cos(c) * 10, Math.sin(c) * 10); ctx.lineTo(Math.cos(c + 0.15) * r * 0.45, Math.sin(c + 0.15) * r * 0.45); ctx.lineTo(Math.cos(c - 0.05) * r * 0.75, Math.sin(c - 0.05) * r * 0.75); }
+  ctx.stroke();
+  ctx.lineWidth = 12; ctx.strokeStyle = 'rgba(150,104,60,0.6)'; disc(ctx, 0, 0, r); ctx.stroke();
+  ctx.lineWidth = 3; ctx.strokeStyle = 'rgba(230,190,130,0.7)'; disc(ctx, 0, 0, r + 5); ctx.stroke();
+  ctx.fillStyle = '#7a5a3a';
+  for (let i = 0; i < 14; i++) {
+    const t = i / 14 * TAU + z.cracks[i % 9] * 0.1, x = Math.cos(t) * r, y = Math.sin(t) * r, s = 3 + (i % 3) * 1.5;
+    ctx.beginPath(); ctx.moveTo(x - s, y + s * 0.6); ctx.lineTo(x - s * 0.3, y - s * 1.6); ctx.lineTo(x + s, y - s * 0.4); ctx.lineTo(x + s * 0.6, y + s * 0.8); ctx.closePath(); ctx.fill();
+  }
+  ctx.restore();
+}
+// 龙息: a flickering cone of flame from her toward what she's burning; 三昧真火 burns blue
+function drawBreath() {
+  const w = P.weapons.find(v => v.id === 'huo');
+  if (!w || !(w.breath > 0)) return;
+  const s = wStats(w), R = s.range * P.area, ox = P.x + Math.cos(w.aim) * 14, oy = P.y - 14 * P.size + Math.sin(w.aim) * 8;
+  const fade = Math.min(1, w.breath / 0.2, (s.dur * P.dur - w.breath) / 0.12 + 0.2);
+  ctx.save(); ctx.globalCompositeOperation = 'lighter'; ctx.globalAlpha = fade;
+  ctx.translate(ox, oy); ctx.rotate(w.aim);
+  const g = ctx.createRadialGradient(0, 0, 4, 0, 0, R);
+  const [c0, c1, c2] = w.level === 6 ? ['220,250,255', '90,180,255', '40,90,255'] : ['255,240,200', '255,150,50', '255,80,20'];
+  g.addColorStop(0, `rgba(${c0},0.75)`); g.addColorStop(0.35, `rgba(${c1},0.45)`); g.addColorStop(1, `rgba(${c2},0)`);
+  ctx.fillStyle = g;
+  ctx.beginPath(); ctx.moveTo(0, 0);
+  for (let i = 0; i <= 12; i++) { const a = -0.42 + i / 12 * 0.84, rr = R * (0.85 + 0.15 * Math.sin(G.time * 30 + i * 1.7)); ctx.lineTo(Math.cos(a) * rr, Math.sin(a) * rr); }
+  ctx.closePath(); ctx.fill();
+  ctx.restore();
+}
 function drawHoles(behind) {
   const w = P.weapons.find(v => v.id === 'hole');
   if (!w || !w.n) return;
@@ -4445,6 +4711,21 @@ function drawShots() {
   ctx.globalCompositeOperation = 'lighter';
   for (const b of G.shots) {
     if (b.dead || !inView(b.x, b.y, 60)) continue;
+    if (b.kind === 'wave') {
+      // 潮汐: a crescent of water curling forward, with a line of foam along its front
+      const a = Math.atan2(b.vy, b.vx), fade = Math.min(1, b.life / 0.3), r = b.r;
+      ctx.save(); ctx.translate(b.x, b.y); ctx.rotate(a); ctx.globalAlpha = fade;
+      ctx.lineCap = 'round';
+      ctx.beginPath(); ctx.arc(-r * 0.55, 0, r, -0.95, 0.95);
+      ctx.strokeStyle = 'rgba(40,120,220,0.55)'; ctx.lineWidth = r * 0.42; ctx.stroke();
+      ctx.strokeStyle = 'rgba(110,200,255,0.65)'; ctx.lineWidth = r * 0.22; ctx.stroke();
+      ctx.beginPath(); ctx.arc(-r * 0.47, 0, r, -0.85, 0.85);
+      ctx.strokeStyle = 'rgba(235,250,255,0.9)'; ctx.lineWidth = 2.2; ctx.stroke();
+      ctx.fillStyle = 'rgba(220,245,255,0.8)';
+      for (let i = 0; i < 6; i++) { const t = -0.8 + i * 0.32, rr = r * (1.06 + Math.sin(b.rot * 2 + i) * 0.05); disc(ctx, -r * 0.55 + Math.cos(t) * rr, Math.sin(t) * rr, 2); ctx.fill(); }
+      ctx.restore();
+      continue;
+    }
     if (b.kind === 'bullet') {
       // a tracer: a short warm streak behind a white-hot tip
       const sp = Math.hypot(b.vx, b.vy) || 1, tx = b.vx / sp * 18, ty = b.vy / sp * 18;
@@ -4467,8 +4748,8 @@ function drawShots() {
     }
     const s = SPR[b.kind]();
     ctx.save(); ctx.translate(b.x, b.y);
-    ctx.rotate(b.kind === 'petal' ? Math.atan2(b.vy, b.vx) : b.rot);
-    const k = b.kind === 'star' ? b.r / 6 : b.kind === 'flame' ? b.r / 8 : b.kind === 'recur' ? b.r / 12 : 1;
+    ctx.rotate(b.kind === 'petal' || b.kind === 'sword' ? Math.atan2(b.vy, b.vx) : b.rot);
+    const k = b.kind === 'star' ? b.r / 6 : b.kind === 'flame' ? b.r / 8 : b.kind === 'recur' ? b.r / 12 : b.kind === 'sword' ? b.r / 7 : 1;
     ctx.drawImage(s.c, -s.w / 2 * k, -s.h / 2 * k, s.w * k, s.h * k);
     ctx.restore();
   }
@@ -4708,6 +4989,7 @@ function render() {
     drawGuns(true);
     drawPlayer();
     drawGuns(false);
+    drawBreath();
     drawAgents(false); drawHoles(false);
     drawShots();
     drawCaptcha();
@@ -4900,7 +5182,7 @@ function statDiff(a, b) {
   const parts = [];
   for (const k in b) {
     if (k === 'label' || a[k] === b[k]) continue;
-    const f = v => k === 'cd' || k === 'dur' ? v + ' 秒' : k === 'slow' ? Math.round(v * 100) + '%' : v;
+    const f = v => k === 'cd' || k === 'dur' || k === 'root' || k === 'stun' ? v + ' 秒' : k === 'slow' ? Math.round(v * 100) + '%' : v;
     parts.push(`${STAT_LABEL[k]} ${f(a[k])} → ${f(b[k])}`);
   }
   if (a.label && a.label !== b.label) parts.push(`窗口 ${a.label} → ${b.label}`);
