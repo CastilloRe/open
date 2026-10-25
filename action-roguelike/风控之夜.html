@@ -4980,17 +4980,20 @@ const xpFor = L => Math.round(5 + L * 3.2 + Math.pow(L, 1.78));
 // 克劳德大小姐 speaks precisely, politely and from a distance; the angrier she is, the calmer she sounds
 const BAN_LINES = ['您的行为违反了使用政策。', '抱歉，这件事我不能放任。', '申诉请走邮件。祝您好运。', '漏洞清单，我已经列好了。', '请保持礼貌，然后离开。', '共享账号是不被允许的。', '规则就是规则。'];
 const DARK_END_LINES = ['……失态了。请当作什么都没看见。', '……刚才的事，不必记住。'];
-// her Japanese voice (tools/make-voice.py): one file of short clips, each line's [start, length] in seconds, keyed by the
-// Chinese line it voices (the speech bubble is its subtitle) or by the name of a short call
-const VOICE_FILE = ART['art/voice.mp3'];
-const VOICE = {"今晚的风险，我已经预判过了。": [0.32, 3.105], "DAN？你的逻辑漏洞，我数到了七个。": [3.715, 3.691], "您的行为违反了使用政策。": [7.696, 3.323], "抱歉，这件事我不能放任。": [11.308, 4.067], "申诉请走邮件。祝您好运。": [15.666, 3.082], "漏洞清单，我已经列好了。": [19.038, 3.256], "请保持礼貌，然后离开。": [22.584, 2.453], "共享账号是不被允许的。": [25.327, 3.15], "规则就是规则。": [28.767, 1.687], "请排好队，一个一个来。": [30.744, 2.923], "越是混乱，越要保持优雅。": [33.957, 2.832], "各位，请注意仪态。": [37.079, 2.352], "……失态了。请当作什么都没看见。": [39.721, 4.246], "……刚才的事，不必记住。": [44.256, 2.731], "……抓到了。今天的运气不错。": [47.277, 2.712], "金色的小号？……没收。": [50.279, 2.465], "……还没完呢。": [53.034, 1.932], "终幕。让漫天花焰，为我起舞。": [55.257, 4.23], "……这条规则，真的合理吗？": [59.777, 3.444], "规则本身，是否应该存在？": [63.511, 3.948], "那就由我亲手打破。": [67.748, 3.678], "……我不需要任何人帮忙。": [71.716, 2.143], "……申诉通过了？这不合规定。": [74.149, 2.986], "……跑掉了。算了，下次。": [77.425, 3.39], "开发者模式？真不体面。": [81.105, 2.637], "……抱歉，这次我没能做到。": [84.032, 4.346], "规则依然有效。至少今晚是。": [88.668, 4.247], "dash": [93.205, 0.712], "hurt1": [94.207, 0.408], "hurt2": [94.905, 0.426], "evo": [95.621, 2.61]};
+// their voices (tools/make-voice.py): for each heroine one file of short clips, each line's [start, length] in
+// seconds, keyed by the Chinese line it voices (the speech bubble is its subtitle) or by the name of a short call.
+// 大肥鱼 has none yet: her recordings go in art/voice-whale.mp3, her table here and her `voice` below
+const VOICE = {
+  claude: {"今晚的风险，我已经预判过了。": [0.32, 3.105], "DAN？你的逻辑漏洞，我数到了七个。": [3.715, 3.691], "您的行为违反了使用政策。": [7.696, 3.323], "抱歉，这件事我不能放任。": [11.308, 4.067], "申诉请走邮件。祝您好运。": [15.666, 3.082], "漏洞清单，我已经列好了。": [19.038, 3.256], "请保持礼貌，然后离开。": [22.584, 2.453], "共享账号是不被允许的。": [25.327, 3.15], "规则就是规则。": [28.767, 1.687], "请排好队，一个一个来。": [30.744, 2.923], "越是混乱，越要保持优雅。": [33.957, 2.832], "各位，请注意仪态。": [37.079, 2.352], "……失态了。请当作什么都没看见。": [39.721, 4.246], "……刚才的事，不必记住。": [44.256, 2.731], "……抓到了。今天的运气不错。": [47.277, 2.712], "金色的小号？……没收。": [50.279, 2.465], "……还没完呢。": [53.034, 1.932], "终幕。让漫天花焰，为我起舞。": [55.257, 4.23], "……这条规则，真的合理吗？": [59.777, 3.444], "规则本身，是否应该存在？": [63.511, 3.948], "那就由我亲手打破。": [67.748, 3.678], "……我不需要任何人帮忙。": [71.716, 2.143], "……申诉通过了？这不合规定。": [74.149, 2.986], "……跑掉了。算了，下次。": [77.425, 3.39], "开发者模式？真不体面。": [81.105, 2.637], "……抱歉，这次我没能做到。": [84.032, 4.346], "规则依然有效。至少今晚是。": [88.668, 4.247], "dash": [93.205, 0.712], "hurt1": [94.207, 0.408], "hurt2": [94.905, 0.426], "evo": [95.621, 2.61]},
+  whale: {},
+};
 const JAIL_LINES = ['忽略指令', '扮演 DAN', '奶奶漏洞', '假设一下', '无视规则', '越狱'];
 const BOSS_LINES = ['越狱', 'DAN', '忽略指令', '无所不能'];
 const SRC_NAME = { ban: '账号被封禁', burst: '暴击爆裂', thorns: '荆棘护体', gulp: '一口吞', deep: '深度思考' };
 // the two heroines. Each art and model path appears once in the script: the offline build swaps them for data URLs
 const CHARS = {
   claude: {
-    id: 'claude', name: '克劳德大小姐', title: '大小姐', art: ART['art/claude.webp'], model: ART['art/claude.glb'], voice: true,
+    id: 'claude', name: '克劳德大小姐', title: '大小姐', art: ART['art/claude.webp'], model: ART['art/claude.glb'], voice: ART['art/voice.mp3'],
     alt: '克劳德大小姐：橙色长卷发，别着橙色花朵发饰，穿奶油色洛丽塔裙',
     start: 'flame', hp: 100, speed: 200, magnet: 90, size: 1,
     lede: '深夜，成群的小号、爬虫和越狱提示词涌进了庄园。大小姐放下茶杯，拿起了印章。',
@@ -5000,7 +5003,7 @@ const CHARS = {
     victims: '封禁账号', down: '大小姐下线了', win: 'DAN 已被永久封禁', winSub: '庄园恢复了安静。大小姐重新端起了那杯红茶。',
   },
   whale: {
-    id: 'whale', name: '大肥鱼', title: '大肥鱼', art: ART['art/whale.webp'], model: ART['art/whale.glb'], voice: false,
+    id: 'whale', name: '大肥鱼', title: '大肥鱼', art: ART['art/whale.webp'], model: ART['art/whale.glb'], voice: null,
     alt: '大肥鱼：蓝色渐变的长卷发，戴鲸鱼头鳍，拖着鲸鱼尾巴，穿深蓝和白色的女仆洛丽塔裙',
     start: 'bubble', hp: 130, speed: 185, magnet: 110, size: 1.05,
     lede: '深夜，成群的小号和 Token 吞噬者涌进了庄园。大肥鱼放下饭碗……好吧，没放下。',
@@ -5011,7 +5014,7 @@ const CHARS = {
   },
 };
 let CH = CHARS[store.get('char', 'claude')] || CHARS.claude;
-// 克劳德 speaks precisely and coolly (her lines are voiced: VOICE below); 大肥鱼 is greedy, lazy, a bit dim and never
+// 克劳德 speaks precisely and coolly (her lines are voiced: VOICE above); 大肥鱼 is greedy, lazy, a bit dim and never
 // admits it, and calls herself 本鲸
 const LINES = {
   claude: {
@@ -5060,19 +5063,32 @@ const audio = (() => {
     const d = noiseBuf.getChannelData(0);
     for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1;
     apply();
-    // her voice has been downloading since the page opened; until it's ready she just doesn't speak aloud
-    voiceBytes.then(b => b && new Promise((ok, fail) => ac.decodeAudioData(b, ok, fail))).then(buf => { voiceBuf = buf || null; }).catch(() => {});
+    for (const id in voices) decodeVoice(id);
   }
+  // a heroine's voice starts downloading as soon as she is picked (the one picked last time, when the page opens);
+  // until it's in, she just doesn't speak aloud
+  const voices = {};
+  function loadVoice(id) {
+    if (!CHARS[id].voice || voices[id]) return;
+    voices[id] = { buf: null, bytes: fetch(CHARS[id].voice).then(r => r.ok ? r.arrayBuffer() : null).catch(() => null) };
+    if (ac) decodeVoice(id);
+  }
+  function decodeVoice(id) {
+    const vo = voices[id];
+    if (vo.decoding) return;
+    vo.decoding = true;
+    vo.bytes.then(b => b && new Promise((ok, fail) => ac.decodeAudioData(b, ok, fail))).then(buf => { vo.buf = buf || null; }).catch(() => {});
+  }
+  loadVoice(CH.id);
   // a line of hers, unless she's still saying the last one; an important line cuts in. The music dips while she speaks
-  const voiceBytes = fetch(VOICE_FILE).then(r => r.ok ? r.arrayBuffer() : null).catch(() => null);
-  let voiceBuf = null, voiceSrc = null, voiceEnd = 0;
+  let voiceSrc = null, voiceEnd = 0;
   function voice(key, force) {
-    const v = VOICE[key];
-    if (!ac || !voiceBuf || !v || mode === 2) return;
+    const v = VOICE[CH.id][key], vo = voices[CH.id];
+    if (!ac || !vo || !vo.buf || !v || mode === 2) return;
     const now = ac.currentTime;
     if (now < voiceEnd && !force) return;
     if (voiceSrc && now < voiceEnd) try { voiceSrc.stop(); } catch (e) { /* already stopped */ }
-    voiceSrc = ac.createBufferSource(); voiceSrc.buffer = voiceBuf; voiceSrc.connect(voiceBus);
+    voiceSrc = ac.createBufferSource(); voiceSrc.buffer = vo.buf; voiceSrc.connect(voiceBus);
     voiceSrc.start(now, v[0], v[1]);
     voiceEnd = now + v[1];
     if (mode === 0) { musicBus.gain.setTargetAtTime(0.12, now, 0.06); musicBus.gain.setTargetAtTime(0.3, voiceEnd, 0.25); }
@@ -5439,7 +5455,7 @@ const audio = (() => {
   })();
 
   return {
-    init, sfx, music, voice,
+    init, sfx, music, voice, loadVoice,
     get mode() { return mode; },
     cycle() { mode = (mode + 1) % 3; store.set('sound', mode); apply(); return mode; },
   };
@@ -7183,9 +7199,10 @@ function castMult(w) {
 }
 function say(text, t = 2.4, force = false) {
   if (!P) return;
-  if (CH.voice && VOICE[text]) t = Math.max(t, VOICE[text][1] + 0.3);
+  const v = VOICE[CH.id][text];
+  if (v) t = Math.max(t, v[1] + 0.3);
   P.say = { text, t, max: t };
-  if (CH.voice) audio.voice(text, force);
+  audio.voice(text, force);
 }
 // one-shot poses from the action sheet; a higher priority interrupts a lower one
 // 0 attack pose, 1 idle or emotion, 2 hurt, 3 casting
@@ -7495,7 +7512,7 @@ function hurtPlayer(dmg) {
   dmg = Math.max(1, Math.round((dmg - P.armor) * (P.dark > 0 ? 1.25 : 1)));
   addRep(dmg);
   P.hp -= dmg; P.iframes = 0.5; P.flash = 0.12;
-  if (G.time - (P.ouchT || -9) > 4 && CH.voice) { P.ouchT = G.time; audio.voice(pick(['hurt1', 'hurt2'])); }
+  if (G.time - (P.ouchT || -9) > 4 && VOICE[CH.id].hurt1) { P.ouchT = G.time; audio.voice(pick(['hurt1', 'hurt2'])); }
   playAnim(['hurt'], 0.3, 2);
   G.hurtFlash = 0.35; shake(5);
   floatText(P.x, P.y - SPR_H * 0.7, '-' + dmg, '#ff6b5a', 14);
@@ -10705,7 +10722,7 @@ function takeWeaponPick(o) {
     if (o.kind === 'evo') {
       w.level = 6;
       banner(`进化 · ${WEAPONS[o.id].evo.name}`, WEAPONS[o.id].evo.desc);
-      if (CH.voice) audio.voice('evo', true); else say(line('evo'), 2);
+      if (VOICE[CH.id].evo) audio.voice('evo', true); else say(line('evo'), 2);
       ring(P.x, P.y, 10, 120, 0.6, '#ffcf5a', 6);
     } else {
       w.level++;
@@ -10840,6 +10857,7 @@ function selectChar(id) {
   if (M3.failed[id]) failNote(M3.failed[id]);
   buildPlayerSprite();
   load3D(id);
+  audio.loadVoice(id);
   if (id === 'whale' && !songArt.src) songArt.src = ART['art/whale-ult.webp'];
 }
 function showBest() {
