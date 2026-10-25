@@ -7,13 +7,20 @@ the mood that fits it, evened out in loudness and packed into one file, art/voic
     python3 -m venv venv && venv/bin/pip install pyopenjtalk-plus numpy
     # Mei is in MMDAgent_Example-1.8.zip (sourceforge.net/projects/mmdagent), under Voice/mei/
     venv/bin/python make-voice.py path/to/Voice/mei ../art/voice.mp3
+
+Or from recordings made elsewhere, e.g. VOICEVOX: read tools/voice-lines-ja.txt into it (one line per row, in the
+order of LINES below), export every line as its own WAV, and point this at the folder; the files are taken in the
+order their names sort, so keep VOICEVOX's numbering:
+
+    venv/bin/python make-voice.py --wavs path/to/exported/wavs ../art/voice.mp3
 """
 import json, subprocess, sys, tempfile, wave
 import numpy as np
 import pyopenjtalk
 from pyopenjtalk.htsengine import HTSEngine
 
-MEI, OUT = sys.argv[1], sys.argv[2]
+FROM_WAVS = sys.argv[1] == '--wavs'
+SRC, OUT = sys.argv[-2], sys.argv[-1]
 # (key in the game, what she says in Japanese, Mei's mood); keys are the Chinese lines, or a name for a call
 LINES = [
     ('今晚的风险，我已经预判过了。', '今夜のリスクは、すでに予測済みですわ。', 'normal'),
@@ -49,16 +56,29 @@ LINES = [
     ('evo', '新しい力。悪くありませんわ。', 'happy'),
 ]
 RATE, GAP = 48000, 0.35
+
+
+def read_wav(path):
+    # any WAV, resampled to RATE mono 16-bit by ffmpeg
+    raw = subprocess.run(['ffmpeg', '-loglevel', 'error', '-i', path, '-ac', '1', '-ar', str(RATE), '-f', 's16le', '-'], check=True, capture_output=True).stdout
+    return np.frombuffer(raw, dtype=np.int16).astype(np.float64)
+
+
 engines = {}
 clips = []
-for key, text, mood in LINES:
-    if mood not in engines:
-        engines[mood] = HTSEngine(f'{MEI}/mei_{mood}.htsvoice'.encode())
-        engines[mood].set_speed(0.95)
-    eng = engines[mood]
-    x = eng.synthesize(pyopenjtalk.extract_fullcontext(text)).astype(np.float64)
-    eng.refresh()
-    assert eng.get_sampling_frequency() == RATE
+wavs = sorted(str(p) for p in __import__('pathlib').Path(SRC).glob('*.wav')) if FROM_WAVS else []
+assert not FROM_WAVS or len(wavs) == len(LINES), f'expected {len(LINES)} WAVs in {SRC}, found {len(wavs)}'
+for n, (key, text, mood) in enumerate(LINES):
+    if FROM_WAVS:
+        x = read_wav(wavs[n])
+    else:
+        if mood not in engines:
+            engines[mood] = HTSEngine(f'{SRC}/mei_{mood}.htsvoice'.encode())
+            engines[mood].set_speed(0.95)
+        eng = engines[mood]
+        x = eng.synthesize(pyopenjtalk.extract_fullcontext(text)).astype(np.float64)
+        eng.refresh()
+        assert eng.get_sampling_frequency() == RATE
     # trim silence, then bring every line to the same loudness with a little headroom
     loud = np.nonzero(np.abs(x) > 300)[0]
     x = x[max(0, loud[0] - 960):loud[-1] + 2400]
