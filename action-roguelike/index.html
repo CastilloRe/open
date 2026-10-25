@@ -3564,6 +3564,7 @@ const DEEP_T = 1.2;
 const THOUGHTS = ['嗯……', '等等，', '让本鲸想想', '不对，', '再想想……', '所以说……', '好像是……', '先吃口饭？', '嗯，用户想要……'];
 function startDeep() {
   P.deep = { t: 0, from: P.tok, took: Math.max(1, Math.round(G.time - P.tokSince)), next: 0 };
+  P.say = null; // she stops talking to think
   playAnim(['think'], DEEP_T, 2);
   sfx.think();
 }
