@@ -284,6 +284,8 @@ h2 { margin: 0; font-family: var(--display); font-weight: 400; font-size: clamp(
 .who.on { color: var(--ink); font-weight: 600; }
 .who.on .face { background: #fbdcbc; border-color: var(--amber); box-shadow: 0 0 0 3px rgba(233, 138, 60, 0.25); }
 .who.locked { opacity: 0.5; }
+.who.map { width: auto; min-width: 52px; margin-left: 6px; white-space: nowrap; }
+.who.map .face { background: #e6ecf6; border-color: rgba(63, 90, 140, 0.35); color: #3a4d72; }
 button.who { padding: 0; border: 0; background: none; font: inherit; cursor: pointer; }
 button.who:focus-visible .face { outline: 2px solid var(--amber); outline-offset: 2px; }
 .who.whale .face img { transform: scale(2.3); transform-origin: 48% 26%; }
@@ -505,6 +507,7 @@ button.who:focus-visible .face { outline: 2px solid var(--amber); outline-offset
             <button class="who claude on" type="button" data-char="claude" aria-pressed="true"><span class="face"><img data-art="art/claude.webp" alt=""></span>克劳德</button>
             <button class="who whale" type="button" data-char="whale" aria-pressed="false"><span class="face"><img data-art="art/whale.webp" alt=""></span>大肥鱼</button>
             <div class="who locked"><span class="face">？</span>制作中</div>
+            <button id="btnMap" class="who map" type="button" aria-label="地图：随机"><span class="face" id="mapGlyph">随</span><span id="mapName">随机地图</span></button>
           </div>
           <button id="btnStart" class="btn primary" type="button">出发<kbd>Enter</kbd></button>
         </div>
@@ -4888,8 +4891,60 @@ const WEAPONS = {
       { n: 2, dmg: 56, len: 240, spin: 3.0 },
     ],
   },
+  // 注意力机制: beams that lock on and hold; the longer one stays on the same enemy, the harder it bites
+  attn: {
+    name: '注意力机制', g: '注', desc: '向附近的敌人连出注意力光束，持续造成伤害；盯住同一个敌人越久，伤害越高（最多翻倍）。',
+    evo: { need: 'leech', name: '多头注意力', desc: '八个头，每道光束再分出一束连到目标身边的敌人，命中时回复少量生命。' },
+    lv: [
+      { n: 2, dmg: 10, range: 230 },
+      { n: 2, dmg: 13, range: 240 },
+      { n: 3, dmg: 13, range: 250 },
+      { n: 3, dmg: 16, range: 265 },
+      { n: 4, dmg: 19, range: 280 },
+      { n: 8, dmg: 22, range: 320 },
+    ],
+  },
+  // 埋点: little tracking pins she leaves in the ground as she goes; whatever comes near one sets it off
+  mine: {
+    name: '埋点', g: '埋', desc: '在脚下埋下追踪点，敌人一靠近就炸开。边走边埋，把身后的追兵炸翻。',
+    evo: { need: 'thorns', name: '全链路埋点', desc: '埋点更多、炸得更大，一个炸开会连环引爆附近的埋点。' },
+    lv: [
+      { cd: 1.5, n: 1, dmg: 32, r: 58 },
+      { cd: 1.5, n: 1, dmg: 44, r: 58 },
+      { cd: 1.35, n: 2, dmg: 46, r: 64 },
+      { cd: 1.35, n: 2, dmg: 58, r: 70 },
+      { cd: 1.2, n: 3, dmg: 66, r: 76 },
+      { cd: 1.0, n: 4, dmg: 84, r: 92 },
+    ],
+  },
+  // 冷启动: snowflakes thrown at the nearest enemies, each bursting into a patch of frost that freezes them solid
+  frost: {
+    name: '冷启动', g: '冰', desc: '朝最近的敌人掷出雪花，落地炸开一片寒气，把范围里的敌人冻住；冻住的敌人不能动、不能伤人，受到的伤害 +25%。',
+    evo: { need: 'refuse', name: '绝对零度', desc: '寒气更大、冻得更久；冻住的敌人被击杀时碎成冰晶，扎伤身边的敌人。' },
+    lv: [
+      { cd: 2.8, n: 1, dmg: 20, r: 62, freeze: 1.2 },
+      { cd: 2.8, n: 1, dmg: 26, r: 62, freeze: 1.2 },
+      { cd: 2.5, n: 2, dmg: 28, r: 68, freeze: 1.4 },
+      { cd: 2.5, n: 2, dmg: 34, r: 74, freeze: 1.5 },
+      { cd: 2.2, n: 3, dmg: 40, r: 80, freeze: 1.7 },
+      { cd: 2.0, n: 4, dmg: 50, r: 100, freeze: 2.2 },
+    ],
+  },
+  // 随机种子: dice tossed at enemies on the screen; the face they land on decides how big the bang is
+  dice: {
+    name: '随机种子', g: '骰', desc: '向屏幕上的敌人掷出骰子，落地按点数爆炸：点数越大炸得越大，6 点「大成功」，1 点……就当是运气不好。',
+    evo: { need: 'temp', name: '天命骰', desc: '只会掷出 3 到 6 点，6 点会再炸一次。' },
+    lv: [
+      { cd: 2.0, n: 1, dmg: 32, r: 54 },
+      { cd: 2.0, n: 1, dmg: 42, r: 54 },
+      { cd: 1.8, n: 2, dmg: 42, r: 58 },
+      { cd: 1.8, n: 2, dmg: 52, r: 62 },
+      { cd: 1.6, n: 3, dmg: 60, r: 66 },
+      { cd: 1.4, n: 4, dmg: 72, r: 74 },
+    ],
+  },
 };
-const STAT_LABEL = { dmg: '伤害', n: '数量', cd: '冷却', pierce: '穿透', rings: '圈数', size: '体积', boom: '爆炸伤害', boomR: '爆炸范围', r: '范围', slow: '减速', jumps: '推理步数', bloom: '绽放范围', dur: '持续', spin: '转速', len: '长度', wid: '宽度', range: '射程', root: '定身', stun: '震晕', pop: '溅射范围' };
+const STAT_LABEL = { dmg: '伤害', n: '数量', cd: '冷却', pierce: '穿透', rings: '圈数', size: '体积', boom: '爆炸伤害', boomR: '爆炸范围', r: '范围', slow: '减速', jumps: '推理步数', bloom: '绽放范围', dur: '持续', spin: '转速', len: '长度', wid: '宽度', range: '射程', root: '定身', stun: '震晕', pop: '溅射范围', freeze: '冻结' };
 
 const CAT_CLASS = { atk: 'atk', def: 'def', grow: 'grow', mech: 'mech', ex: 'ex' };
 const TALENTS = [
@@ -5179,6 +5234,12 @@ const audio = (() => {
     // 深度思考: a run of soft ticks rising while she thinks, then a bright chime when it comes to her
     think() { for (let i = 0; i < 8; i++) tone(620 + i * 45, 0.05, { type: 'sine', vol: 0.03, at: i * 0.14 }); },
     aha() { [783.99, 1046.5, 1318.5].forEach((f, i) => tone(f, 0.45, { type: 'triangle', vol: 0.07, at: i * 0.05 })); noise(0.4, { vol: 0.1, freq: 900, slide: 3 }); },
+    // the new weapons: a beam locking on, a pin pushed into the ground, frost crackling, dice rattling, a lucky six
+    lock() { if (gate('lock', 140)) tone(1500, 0.06, { type: 'sine', vol: 0.022, slide: 1.4 }); },
+    plant() { if (gate('plant', 200)) { tone(220, 0.08, { type: 'triangle', vol: 0.04, slide: 0.6 }); tone(1800, 0.05, { type: 'sine', vol: 0.018, at: 0.05 }); } },
+    freeze() { if (gate('freeze', 90)) { noise(0.35, { vol: 0.05, freq: 6000, q: 2, slide: 0.5 }); [2093, 2637, 3136].forEach((f, i) => tone(f, 0.25, { type: 'sine', vol: 0.016, at: i * 0.03 })); } },
+    dice() { if (gate('dice', 120)) for (let i = 0; i < 3; i++) noise(0.03, { vol: 0.05, freq: 3000, q: 3, at: i * 0.06 + Math.random() * 0.02 }); },
+    lucky() { [784, 988, 1175, 1568].forEach((f, i) => tone(f, 0.18, { type: 'square', vol: 0.022, at: i * 0.06 })); },
     whale() { tone(196, 1.3,{ type: 'sine', vol: 0.13, slide: 1.6, attack: 0.3 }); tone(294, 1.0, { type: 'triangle', vol: 0.05, slide: 0.7, at: 0.55, attack: 0.2 }); noise(1.1, { vol: 0.06, freq: 380, slide: 0.5, type: 'lowpass' }); },
   };
 
@@ -5542,6 +5603,17 @@ function variant(base, key, kind) {
   s = { c, w: base.w, h: base.h };
   cache.set(key, s);
   return s;
+}
+const PIPS = [[], [[0, 0]], [[-1, -1], [1, 1]], [[-1, -1], [0, 0], [1, 1]], [[-1, -1], [1, -1], [-1, 1], [1, 1]], [[-1, -1], [1, -1], [0, 0], [-1, 1], [1, 1]], [[-1, -1], [1, -1], [-1, 0], [1, 0], [-1, 1], [1, 1]]];
+function dieSprite(face) {
+  return sprite('die' + face, 30, 30, x => {
+    glow(x, 14, '#ffffff', 0.25);
+    rrPath(x, -10, -10, 20, 20, 5);
+    x.fillStyle = vgrad(x, -10, 10, '#fffdf6', '#e8dcc8'); x.fill();
+    x.strokeStyle = '#7d6a58'; x.lineWidth = 1.3; x.stroke();
+    x.fillStyle = face === 1 || face === 4 ? '#d8322f' : '#2a2230';
+    for (const [px, py] of PIPS[face]) { disc(x, px * 5, py * 5, face === 1 ? 3.4 : 2); x.fill(); }
+  });
 }
 function blit(s, x, y) { ctx.drawImage(s.c, x - s.w / 2, y - s.h / 2, s.w, s.h); }
 function disc(x, cx, cy, r) { x.beginPath(); x.arc(cx, cy, r, 0, TAU); }
@@ -6907,6 +6979,43 @@ const SPR = {
     glow(x, 8, '#ffc061', 0.6);
     x.fillStyle = '#fff1c9'; disc(x, 0, 0, 2.6); x.fill();
   }),
+  // 冷启动: a six-armed snowflake with a cold glow
+  flake: () => sprite('flake', 40, 40, x => {
+    glow(x, 18, '#9fdcff', 0.55);
+    x.strokeStyle = '#f2fbff'; x.lineCap = 'round';
+    for (let i = 0; i < 6; i++) {
+      x.save(); x.rotate(i / 6 * TAU);
+      x.lineWidth = 2.4; x.beginPath(); x.moveTo(0, 0); x.lineTo(0, -11); x.stroke();
+      x.lineWidth = 1.6; x.beginPath(); x.moveTo(0, -6); x.lineTo(-3.5, -9); x.moveTo(0, -6); x.lineTo(3.5, -9); x.stroke();
+      x.restore();
+    }
+    x.fillStyle = '#ffffff'; disc(x, 0, 0, 2.6); x.fill();
+  }),
+  // 绝对零度: a splinter of ice
+  shard: () => sprite('shard', 26, 26, x => {
+    glow(x, 10, '#bfe9ff', 0.5);
+    x.beginPath(); x.moveTo(9, 0); x.lineTo(-2, -3.2); x.lineTo(-8, 0); x.lineTo(-2, 3.2); x.closePath();
+    x.fillStyle = '#e8f8ff'; x.fill(); x.strokeStyle = '#7cc8f0'; x.lineWidth = 1; x.stroke();
+  }),
+  // a frozen enemy's coat of ice, stretched over its sprite
+  ice: () => sprite('ice', 64, 64, x => {
+    x.beginPath();
+    const pts = [[0, -30], [16, -24], [27, -6], [26, 16], [12, 29], [-10, 30], [-26, 18], [-29, -4], [-17, -25]];
+    pts.forEach(([px, py], i) => i ? x.lineTo(px, py) : x.moveTo(px, py)); x.closePath();
+    x.fillStyle = vgrad(x, -30, 30, 'rgba(225,246,255,0.62)', 'rgba(120,190,240,0.45)'); x.fill();
+    x.strokeStyle = 'rgba(240,252,255,0.9)'; x.lineWidth = 2; x.stroke();
+    x.strokeStyle = 'rgba(255,255,255,0.7)'; x.lineWidth = 1.4; x.lineCap = 'round';
+    x.beginPath(); x.moveTo(-18, -14); x.lineTo(-8, -22); x.moveTo(-20, -4); x.lineTo(-14, -9); x.moveTo(8, 6); x.lineTo(18, -8); x.stroke();
+  }),
+  // 埋点: a tracking pin stuck in the ground, glowing cyan
+  pin: () => sprite('pin', 30, 40, x => {
+    x.fillStyle = 'rgba(0,0,0,0.35)'; x.beginPath(); x.ellipse(0, 14, 7, 2.6, 0, 0, TAU); x.fill();
+    x.save(); x.translate(0, -4); glow(x, 13, '#5fe0ff', 0.5); x.restore();
+    x.beginPath(); x.moveTo(0, 14); x.bezierCurveTo(-3, 6, -9, 1, -9, -5); x.arc(0, -5, 9, Math.PI, 0); x.bezierCurveTo(9, 1, 3, 6, 0, 14); x.closePath();
+    x.fillStyle = vgrad(x, -14, 14, '#9ff0ff', '#1d9fc8'); x.fill();
+    x.strokeStyle = '#0d4f6a'; x.lineWidth = 1.4; x.stroke();
+    x.fillStyle = '#eafcff'; disc(x, 0, -5, 3.4); x.fill();
+  }),
   // 宪法: a glowing golden section sign
   article: () => sprite('article', 40, 40, x => {
     glow(x, 18, '#ffd34a', 0.6);
@@ -7166,7 +7275,7 @@ function newRun() {
     parts: [], rings: [], texts: [], delayed: [], blooms: [], ult: null, flashT: 0,
     kills: 0, banned: 0, breaks: 0, dmgBy: {}, nextId: 1, spawnAcc: 0, evI: 0, chestT: 35,
     pendLv: 0, pendChest: 0, modal: null, modalAt: 0, ending: null, hitStop: 0, shake: 0, hurtFlash: 0,
-    cam: { x: 0, y: 0 }, boss: null, decoy: null, gemCombo: 0, gemComboT: 0,
+    cam: { x: 0, y: 0 }, boss: null, decoy: null, gemCombo: 0, gemComboT: 0, map: pickMap(),
     rerolls: 2, banishes: 2, banished: new Set(), banishMode: false, picks: [], slotsDirty: true, lures: [], gulp: null,
   };
   addWeapon(CH.start);
@@ -7400,6 +7509,7 @@ function hit(e, base, src, o = {}) {
   let crit = false;
   if (!o.noCrit && Math.random() < critChance()) { d *= P.critDmg; crit = true; }
   if (e.vulnT > 0) d *= 1.2;
+  if (e.frozenT > 0) d *= 1.25;
   if (P.talents.hunt && (e.elite || e.boss || e.type === 'reg')) d *= 1 + 0.15 * P.talents.hunt;
   if (P.dark > 0) d *= 1.4 + 0.2 * (P.talents.abyss || 0);
   if (P.tokFree > 0) d *= 1.25;
@@ -7444,6 +7554,7 @@ function kill(e, how) {
   if (!G.ult) P.ult = Math.min(ULT_MAX, P.ult + (e.elite || e.type === 'reg' ? 25 : 1));
   if (P.talents.leech && P.leech > 0 && P.hp < P.maxHp) { const h = Math.min(P.leech, 0.25 * P.talents.leech); P.hp = Math.min(P.maxHp, P.hp + h); P.leech -= h; }
   const banned = how === 'ban', eaten = how === 'gulp';
+  if (e.frozenT > 0 && e.frostEvo) shatter(e);
   if (e.type === 'gold') {
     // caught: a fistful of gold gems, a full ultimate, and the legendary 宪法 (amended on later catches;
     // once it can't be amended further, a gold chest instead)
@@ -8562,8 +8673,128 @@ function updateWeapons(dt) {
         }
         break;
       }
+      case 'attn': {
+        // 注意力机制: a beam to each of the nearest enemies in range, biting four times a second, and harder the longer it
+        // stays on the same one (up to double). 多头注意力 forks each beam on to a neighbour and heals her a little
+        const n = s.n + P.amount, R = s.range * P.area;
+        w.locks = (w.locks || []).filter(l => !l.e.dead && !(l.e.banned > 0) && (l.e.x - P.x) ** 2 + (l.e.y - P.y) ** 2 < (R + 40) ** 2).slice(0, n);
+        if (w.locks.length < n) {
+          for (const e of nearestList(P.x, P.y, R, n + w.locks.length)) {
+            if (w.locks.length >= n) break;
+            if (!w.locks.some(l => l.e === e)) { w.locks.push({ e, k: 0, fork: null }); sfx.lock(); }
+          }
+        }
+        w.acc += dt;
+        if (w.acc < 0.25) break;
+        w.acc -= 0.25;
+        const m = castMult(w);
+        for (const l of w.locks) {
+          l.k = Math.min(1, l.k + 0.1);
+          hit(l.e, s.dmg * m * (1 + l.k), 'attn', { quiet: Math.random() < 0.5 });
+          if (!evo) continue;
+          if (!l.fork || l.fork.dead || l.fork.banned > 0 || (l.fork.x - l.e.x) ** 2 + (l.fork.y - l.e.y) ** 2 > 150 * 150) l.fork = nearest(l.e.x, l.e.y, 150, new Set([l.e.id]));
+          if (l.fork) hit(l.fork, s.dmg * m * 0.6, 'attn', { quiet: true });
+          if (P.hp < P.maxHp) P.hp = Math.min(P.maxHp, P.hp + 0.06);
+        }
+        break;
+      }
+      case 'mine': {
+        // 埋点: pins left in the ground at her feet; at most 24 at a time, the oldest going quietly
+        w.t -= dt;
+        if (w.t > 0) break;
+        w.t = cdOf(s.cd);
+        const m = castMult(w), n = s.n + P.amount;
+        for (let i = 0; i < n; i++) {
+          const a = rand(0, TAU), d = i ? rand(26, 64) : 0;
+          G.zones.push({ kind: 'mine', x: P.x + Math.cos(a) * d, y: P.y + 16 * P.size + Math.sin(a) * d * 0.6, r: s.r * P.area, life: 14, max: 14, arm: 0.5, dmg: s.dmg * m, evo });
+        }
+        let left = 24;
+        for (let i = G.zones.length - 1; i >= 0; i--) if (G.zones[i].kind === 'mine' && --left < 0) G.zones[i].life = 0;
+        sfx.plant();
+        break;
+      }
+      case 'frost': {
+        // 冷启动: snowflakes thrown at the nearest enemies; the flake itself barely stings, the frost it bursts into freezes
+        w.t -= dt;
+        if (w.t > 0) break;
+        const n = s.n + P.amount, list = nearestList(P.x, P.y, 520, n);
+        if (!list.length) { w.t = 0.15; break; }
+        w.t = cdOf(s.cd);
+        const m = castMult(w), f = { r: s.r * P.area, dmg: s.dmg * m, freeze: s.freeze * P.dur, evo };
+        for (let i = 0; i < n; i++) {
+          later(i * 0.1, () => {
+            const tg = list[i % list.length].dead ? nearest(P.x, P.y, 520) : list[i % list.length];
+            if (tg) aimShot(P.x, P.y - 22 * P.size, tg, 400 * P.pspeed, { kind: 'flake', r: 10, dmg: s.dmg * m * 0.3, pierce: 0, life: 1.6 * P.dur, src: 'frost', frost: f });
+          });
+        }
+        sfx.whoosh();
+        P.aimX = list[0].x - P.x; P.aimY = list[0].y - P.y;
+        if (!P.moving && !P.dash) { P.face = list[0].x >= P.x ? 1 : -1; playAnim(['atk1', 'atk2', 'atk3'], 0.32, 0); }
+        break;
+      }
+      case 'dice': {
+        // 随机种子: dice tossed at enemies picked from the screen; each lands, shows its face and goes off that hard
+        w.t -= dt;
+        if (w.t > 0) break;
+        const pool = G.enemies.filter(e => !e.dead && !(e.banned > 0) && inView(e.x, e.y, -20));
+        if (!pool.length) { w.t = 0.2; break; }
+        w.t = cdOf(s.cd);
+        const m = castMult(w), n = s.n + P.amount;
+        for (let i = 0; i < n; i++) {
+          const e = pool[(Math.random() * pool.length) | 0], life = 0.55 + i * 0.08;
+          const face = evo ? 3 + ((Math.random() * 4) | 0) : 1 + ((Math.random() * 6) | 0);
+          G.zones.push({ kind: 'dice', x: e.x + rand(-10, 10), y: e.y + rand(-10, 10), x0: P.x + P.face * 10, y0: P.y - 34 * P.size, r: s.r * P.area, life, max: life, face, dmg: s.dmg * m, evo, spin: rand(8, 12) * (Math.random() < 0.5 ? -1 : 1) });
+        }
+        sfx.dice();
+        break;
+      }
     }
   }
+}
+// 冷启动 lands: a patch of frost; what's in it is hurt and frozen where it stands (the big ones for half as long, and
+// DAN only slowed)
+function frostBurst(x, y, f) {
+  forNear(x, y, f.r + 50, e => {
+    if (e.banned > 0 || (e.x - x) ** 2 + (e.y - y) ** 2 > (f.r + e.r) ** 2) return;
+    hit(e, f.dmg, 'frost', { noBurst: true });
+    if (e.dead) return;
+    if (e.boss) { e.slowT = Math.max(e.slowT, f.freeze); e.slowAmt = Math.max(e.slowAmt, 0.5); return; }
+    e.frozenT = Math.max(e.frozenT || 0, f.freeze * (e.heavy || e.elite ? 0.5 : 1));
+    e.frostEvo = f.evo; e.frostDmg = f.dmg;
+  });
+  G.zones.push({ kind: 'frostpatch', x, y, r: f.r, life: 0.9, max: 0.9 });
+  ring(x, y, f.r * 0.3, f.r, 0.35, '#bfe9ff', 4);
+  puff(x, y, 12, '#dff6ff', 200, 0.5, 2.6, true);
+  sfx.freeze();
+}
+// 绝对零度: a frozen enemy that dies breaks into shards of ice that fly out into its neighbours
+function shatter(e) {
+  for (let i = 0; i < 5; i++) {
+    const a = i / 5 * TAU + rand(-0.3, 0.3), sp = 360;
+    shot({ kind: 'shard', x: e.x, y: e.y - e.r * 0.3, vx: Math.cos(a) * sp, vy: Math.sin(a) * sp, r: 7, dmg: (e.frostDmg || 40) * 0.5, pierce: 1, life: 0.35, src: 'frost', kb: 40 });
+  }
+  puff(e.x, e.y, 8, '#e6f8ff', 160, 0.4, 2.4, true);
+}
+// 埋点 going off; 全链路埋点 sets the neighbours off a moment later
+function detonate(z) {
+  z.done = true; z.life = 0;
+  explode(z.x, z.y, z.r, z.dmg, 'mine', { color: '#7ee8ff' });
+  if (!z.evo) return;
+  for (const o of G.zones) {
+    if (o.kind === 'mine' && !o.done && !o.chain && (o.x - z.x) ** 2 + (o.y - z.y) ** 2 < (z.r * 2.2) ** 2) { o.chain = true; o.arm = 0.12; }
+  }
+}
+// 随机种子 lands: 1 a fizzle, 6 a 大成功 twice the size (天命骰 throws it twice)
+const DICE_COL = ['', '#ff6b6b', '#9fd8ff', '#b8ffb0', '#ffd27a', '#e0a8ff', '#fff1a0'];
+function rollDice(z) {
+  const k = z.face / 3.5, six = z.face === 6;
+  explode(z.x, z.y, z.r * (0.7 + z.face * 0.1) * (six ? 1.4 : 1), z.dmg * k * (six ? 1.6 : 1), 'dice', { color: DICE_COL[z.face] });
+  G.zones.push({ kind: 'diceface', x: z.x, y: z.y, r: 24, face: z.face, life: 0.8, max: 0.8 });
+  if (six) {
+    const t = floatText(z.x, z.y - 46, '大成功！', '#fff1a0', 18); t.pop = 1; t.life = t.max = 1.1;
+    shake(3); sfx.lucky();
+    if (z.evo) later(0.25, () => explode(z.x, z.y, z.r * 1.6, z.dmg * 2, 'dice', { color: '#fff1a0' }));
+  } else if (z.face === 1) floatText(z.x, z.y - 40, '大失败…', '#c9c2d6', 13);
 }
 // a 宪法 article lands: small fry are banned on the spot, the big ones take the full weight of it
 function enforce(e, b) {
@@ -8684,6 +8915,7 @@ function updateShots(dt) {
       puff(b.x, b.y, 2, b.kind === 'wave' || b.kind === 'bubble' ? '#a8e4ff' : '#ffc58a', 90, 0.25, 2, true);
       if (b.bloom) flameBloom(b.x, b.y, b.bloom, b.dmg * 0.7, b.burn);
       if (b.pop) popBubble(b.x, b.y, b.pop, b.dmg * 0.6, b.evo && !b.child);
+      if (b.frost) { frostBurst(b.x, b.y, b.frost); b.dead = true; return; }
       if (b.pierce-- <= 0) b.dead = true;
     });
   }
@@ -8717,6 +8949,7 @@ function updateEnemies(dt) {
       if (e.boss && e.stun <= 0) { floatText(e.x, e.y - e.r - 26, P.char === 'whale' ? '吐出来了' : '申诉成功', '#ffb3e3', 15); say(line('bossFree')); playAnim(['angry'], 1.3, 1); }
       continue;
     }
+    if (e.frozenT > 0) { e.frozenT -= dt; continue; }
     if (e.type === 'gold') {
       // 金色史莱姆 darts away from her, weaving, and slips off after a while
       e.goldT -= dt;
@@ -8994,6 +9227,15 @@ function updateZones(dt) {
         puff(z.x, z.y - 10, 14, '#ffb08a', 200, 0.5, 3.5, true);
         sfx.boom();
       }
+    } else if (z.kind === 'mine') {
+      z.arm -= dt;
+      if (z.done || z.arm > 0 || z.life <= 0) continue;
+      let go = z.chain;
+      const tr = z.evo ? 32 : 24;
+      if (!go) forNear(z.x, z.y, tr + 40, e => { if (!go && !(e.banned > 0) && (e.x - z.x) ** 2 + (e.y - z.y) ** 2 < (tr + e.r) ** 2) go = true; });
+      if (go) detonate(z);
+    } else if (z.kind === 'dice') {
+      if (z.life <= 0 && !z.done) { z.done = true; rollDice(z); }
     } else if (z.kind === 'seal') {
       forNear(z.x, z.y, z.r + 50, e => {
         if (e.banned > 0 || e.boss || e.elite || e.type === 'reg') return;
@@ -9283,33 +9525,515 @@ const GARDEN = {
   }),
 };
 const SMALL_DECOR = ['daisy', 'petals', 'tuft', 'daisy', 'tuft'];
+// ---- the other maps. Each night is set in one of them, drawn at random (or picked on the title): the same layout of
+// walks crossing at plazas, with its own ground, paths, things growing or standing about, lights and drifting motes ----
+// a point on a cubic Bézier, for things that curve
+const bez = (t, a, b, c, d) => { const u = 1 - t; return u * u * u * a + 3 * u * u * t * b + 3 * u * t * t * c + t * t * t * d; };
+// a soft pool of light round a lamp, in any colour
+const poolGlow = (key, rgb) => () => sprite('pool-' + key, 320, 220, x => {
+  x.scale(1, 0.66);
+  const g = x.createRadialGradient(0, 0, 0, 0, 0, 160);
+  g.addColorStop(0, `rgba(${rgb},0.3)`); g.addColorStop(0.45, `rgba(${rgb},0.12)`); g.addColorStop(1, `rgba(${rgb},0)`);
+  x.fillStyle = g; disc(x, 0, 0, 160); x.fill();
+});
 
+// 深海: a seabed of rippled sand, pale sand trails, coral and kelp, jellyfish for lamps and bubbles rising
+function paintSeabed(x, S) {
+  const rnd = seeded(41);
+  x.fillStyle = '#0b2531'; x.fillRect(0, 0, S, S);
+  for (let i = 0; i < 40; i++) {
+    const px = rnd() * S, py = rnd() * S, pr = 40 + rnd() * 80, light = rnd() < 0.5;
+    const stops = light ? ['rgba(40,120,130,0.2)', 'rgba(40,120,130,0)'] : ['rgba(2,8,18,0.35)', 'rgba(2,8,18,0)'];
+    wrapped(S, px, py, pr, (X, Y) => { x.fillStyle = rgrad(x, X, Y, pr, stops); disc(x, X, Y, pr); x.fill(); });
+  }
+  // ripples in the sand
+  x.lineCap = 'round';
+  for (let i = 0; i < 260; i++) {
+    const px = rnd() * S, py = rnd() * S, w = 10 + rnd() * 18, a = 0.06 + rnd() * 0.08;
+    x.strokeStyle = `rgba(140,200,190,${a})`; x.lineWidth = 1.2;
+    wrapped(S, px, py, w, (X, Y) => { x.beginPath(); x.moveTo(X - w, Y); x.quadraticCurveTo(X, Y - 4, X + w, Y); x.stroke(); });
+  }
+  for (let i = 0; i < 90; i++) {
+    const px = rnd() * S, py = rnd() * S, pr = 0.8 + rnd(), a = 0.15 + rnd() * 0.2;
+    wrapped(S, px, py, 3, (X, Y) => { x.fillStyle = `rgba(220,245,235,${a})`; disc(x, X, Y, pr); x.fill(); });
+  }
+}
+function paintSand(x, S) {
+  const rnd = seeded(43);
+  x.fillStyle = '#2b4b4f'; x.fillRect(0, 0, S, S);
+  for (let i = 0; i < 480; i++) {
+    const px = rnd() * S, py = rnd() * S, pr = 0.5 + rnd() * 1.2, v = rnd();
+    x.fillStyle = v < 0.55 ? `rgba(190,215,200,${0.15 + rnd() * 0.2})` : `rgba(10,30,36,${0.2 + rnd() * 0.25})`;
+    wrapped(S, px, py, 3, (X, Y) => { disc(x, X, Y, pr); x.fill(); });
+  }
+}
+const SEA = {
+  // branching coral in one of three colours, tipped with pale knobs
+  coral: k => sprite('coral' + k, 76, 70, x => {
+    const col = ['#ff7a8f', '#ffa45a', '#c58cff'][k % 3], dark = ['#b8445e', '#c06a2a', '#8656c8'][k % 3], rnd = seeded(71 + k);
+    x.fillStyle = 'rgba(0,0,0,0.35)'; x.beginPath(); x.ellipse(0, 26, 26, 7, 0, 0, TAU); x.fill();
+    x.lineCap = 'round';
+    const branch = (bx, by, a, len, w, d) => {
+      const ex = bx + Math.cos(a) * len, ey = by + Math.sin(a) * len;
+      x.strokeStyle = dark; x.lineWidth = w + 1.5; x.beginPath(); x.moveTo(bx, by); x.lineTo(ex, ey); x.stroke();
+      x.strokeStyle = col; x.lineWidth = w; x.beginPath(); x.moveTo(bx - 0.6, by); x.lineTo(ex - 0.6, ey); x.stroke();
+      if (d > 0) { branch(ex, ey, a - 0.4 - rnd() * 0.3, len * 0.75, w * 0.72, d - 1); branch(ex, ey, a + 0.4 + rnd() * 0.3, len * 0.75, w * 0.72, d - 1); }
+      else { x.fillStyle = '#fff0f2'; disc(x, ex, ey, w * 0.6); x.fill(); }
+    };
+    for (const a of [-2.0, -1.57, -1.15]) branch(rnd() * 10 - 5, 24, a + (rnd() - 0.5) * 0.3, 15, 5.5, 2);
+  }),
+  // a few fronds of kelp; they sway as they're drawn
+  kelp: k => {
+    const s = sprite('kelp' + k, 56, 120, x => {
+      const rnd = seeded(91 + k);
+      x.fillStyle = 'rgba(0,0,0,0.3)'; x.beginPath(); x.ellipse(0, 54, 14, 4, 0, 0, TAU); x.fill();
+      for (let f = 0; f < 3; f++) {
+        const bx = (f - 1) * 8 + rnd() * 4, lean = (rnd() - 0.4) * 22, h = 72 + rnd() * 30;
+        const px = t => bez(t, bx, bx + lean, bx - lean * 0.6, bx + lean * 0.5), py = t => bez(t, 54, 54 - h * 0.4, 54 - h * 0.7, 54 - h);
+        x.strokeStyle = f === 1 ? '#3f8f5d' : '#2c6e4d'; x.lineWidth = 3.5; x.lineCap = 'round';
+        x.beginPath(); x.moveTo(px(0), py(0)); for (let i = 1; i <= 12; i++) x.lineTo(px(i / 12), py(i / 12)); x.stroke();
+        x.fillStyle = f === 1 ? 'rgba(96,178,116,0.9)' : 'rgba(64,146,98,0.9)';
+        for (let i = 2; i < 12; i++) {
+          const t = i / 12, sd = i % 2 ? 1 : -1;
+          x.save(); x.translate(px(t), py(t)); x.rotate(sd * 0.9 - 0.2); x.beginPath(); x.ellipse(sd * 5, 0, 6, 2.4, 0, 0, TAU); x.fill(); x.restore();
+        }
+      }
+    });
+    s.sway = 54;
+    return s;
+  },
+  shell: () => sprite('shell', 26, 22, x => {
+    x.fillStyle = '#f2d6c4'; x.beginPath(); x.moveTo(0, 7); x.arc(0, 1, 8, Math.PI * 1.05, Math.PI * 1.95, false); x.closePath(); x.fill();
+    x.strokeStyle = 'rgba(160,110,90,0.7)'; x.lineWidth = 0.9; x.beginPath();
+    for (let i = 0; i < 5; i++) { const a = Math.PI * (1.15 + i * 0.175); x.moveTo(0, 7); x.lineTo(Math.cos(a) * 8, 1 + Math.sin(a) * 8); }
+    x.stroke();
+  }),
+  starfish: () => sprite('starfish', 26, 26, x => {
+    x.beginPath();
+    for (let i = 0; i < 10; i++) { const a = -Math.PI / 2 + i / 10 * TAU, r = i % 2 ? 3.6 : 9; x.lineTo(Math.cos(a) * r, Math.sin(a) * r * 0.8); }
+    x.closePath(); x.fillStyle = '#ff9264'; x.fill(); x.strokeStyle = '#b8523a'; x.lineWidth = 1; x.stroke();
+    x.fillStyle = 'rgba(255,230,200,0.8)'; for (let i = 0; i < 5; i++) { const a = -Math.PI / 2 + i / 5 * TAU; disc(x, Math.cos(a) * 4.5, Math.sin(a) * 3.6, 0.8); x.fill(); }
+  }),
+  pebbles: () => sprite('pebbles', 34, 20, x => {
+    [[-8, 2, 6, 4, '#4f6f78'], [3, 4, 5, 3.4, '#3c5a64'], [8, -2, 4, 3, '#5d7f88']].forEach(([px, py, rx, ry, c]) => {
+      x.fillStyle = c; x.beginPath(); x.ellipse(px, py, rx, ry, 0, 0, TAU); x.fill();
+      x.fillStyle = 'rgba(255,255,255,0.18)'; x.beginPath(); x.ellipse(px - rx * 0.3, py - ry * 0.4, rx * 0.4, ry * 0.3, 0, 0, TAU); x.fill();
+    });
+  }),
+  // a jellyfish drifting at lamp height, lit from inside; 30 below the centre is the spot on the sand it hangs over
+  jelly: () => sprite('jelly', 44, 76, x => {
+    x.fillStyle = 'rgba(0,0,0,0.25)'; x.beginPath(); x.ellipse(0, 30, 9, 3, 0, 0, TAU); x.fill();
+    x.save(); x.translate(0, -16); glow(x, 22, '#7fe8ff', 0.5); x.restore();
+    x.strokeStyle = 'rgba(190,240,255,0.55)'; x.lineWidth = 1.3; x.lineCap = 'round';
+    for (let i = 0; i < 5; i++) {
+      const bx = -8 + i * 4; x.beginPath(); x.moveTo(bx, -12);
+      for (let j = 1; j <= 6; j++) x.lineTo(bx + Math.sin(j * 1.3 + i) * 2.5, -12 + j * 5);
+      x.stroke();
+    }
+    x.beginPath(); x.arc(0, -14, 13, Math.PI, 0);
+    for (let i = 0; i <= 6; i++) x.lineTo(13 - i * 26 / 6, -14 + (i % 2 ? 3 : 0));
+    x.closePath();
+    x.fillStyle = rgrad(x, -3, -20, 18, ['rgba(255,240,255,0.95)', 'rgba(170,220,255,0.75)', 'rgba(150,120,255,0.55)']); x.fill();
+    x.fillStyle = 'rgba(255,255,255,0.7)'; x.beginPath(); x.ellipse(-5, -20, 3.5, 2, -0.5, 0, TAU); x.fill();
+  }),
+  bubble: () => sprite('bub', 14, 14, x => {
+    x.strokeStyle = 'rgba(200,240,255,0.75)'; x.lineWidth = 1; disc(x, 0, 0, 3.6); x.stroke();
+    x.fillStyle = 'rgba(255,255,255,0.8)'; disc(x, -1.3, -1.3, 0.9); x.fill();
+  }),
+  // a ring of pebbles round a whale's tail, set into each sandy clearing
+  emblem: () => sprite('emblem-sea', 200, 130, x => {
+    x.scale(1, 0.66);
+    x.fillStyle = 'rgba(170,210,205,0.22)';
+    for (let i = 0; i < 28; i++) { const a = i / 28 * TAU; disc(x, Math.cos(a) * 88, Math.sin(a) * 88, 4.5); x.fill(); }
+    x.fillStyle = 'rgba(190,230,225,0.2)';
+    x.beginPath(); x.moveTo(0, 40); x.bezierCurveTo(6, 10, 4, -10, 0, -18); x.bezierCurveTo(14, -34, 40, -40, 56, -30);
+    x.bezierCurveTo(36, -24, 18, -14, 4, -8); x.lineTo(-4, -8); x.bezierCurveTo(-18, -14, -36, -24, -56, -30);
+    x.bezierCurveTo(-40, -40, -14, -34, 0, -18); x.bezierCurveTo(-4, -10, -6, 10, 0, 40); x.fill();
+  }),
+};
+
+// 樱花庭院: moss and fallen petals, flagstone walks, cherry trees, stone lanterns and petals on the wind
+function paintMoss(x, S) {
+  const rnd = seeded(61);
+  x.fillStyle = '#191d1b'; x.fillRect(0, 0, S, S);
+  for (let i = 0; i < 44; i++) {
+    const px = rnd() * S, py = rnd() * S, pr = 30 + rnd() * 70, light = rnd() < 0.55;
+    const stops = light ? ['rgba(70,100,72,0.22)', 'rgba(70,100,72,0)'] : ['rgba(6,6,10,0.32)', 'rgba(6,6,10,0)'];
+    wrapped(S, px, py, pr, (X, Y) => { x.fillStyle = rgrad(x, X, Y, pr, stops); disc(x, X, Y, pr); x.fill(); });
+  }
+  for (let i = 0; i < 700; i++) {
+    const px = rnd() * S, py = rnd() * S, pr = 0.8 + rnd() * 1.6, a = 0.1 + rnd() * 0.15;
+    wrapped(S, px, py, 4, (X, Y) => { x.fillStyle = `rgba(110,150,105,${a})`; disc(x, X, Y, pr); x.fill(); });
+  }
+  for (let i = 0; i < 140; i++) {
+    const px = rnd() * S, py = rnd() * S, a = rnd() * TAU, al = 0.25 + rnd() * 0.3;
+    wrapped(S, px, py, 5, (X, Y) => { x.fillStyle = `rgba(255,186,210,${al})`; x.beginPath(); x.ellipse(X, Y, 3, 1.6, a, 0, TAU); x.fill(); });
+  }
+}
+function paintFlagstone(x, S) {
+  const rnd = seeded(67);
+  x.fillStyle = '#211f24'; x.fillRect(0, 0, S, S);
+  const h = S / 2;
+  for (let j = 0; j < 2; j++) for (let i = 0; i < 2; i++) {
+    const v = 64 + rnd() * 16 | 0;
+    x.fillStyle = `rgb(${v},${v - 4},${v + 4})`; rrPath(x, i * h + 2.5, j * h + 2.5, h - 5, h - 5, 6); x.fill();
+    x.fillStyle = 'rgba(255,255,255,0.06)'; rrPath(x, i * h + 4, j * h + 4, h - 8, 6, 3); x.fill();
+    for (let k = 0; k < 40; k++) { x.fillStyle = rnd() < 0.5 ? 'rgba(0,0,0,0.12)' : 'rgba(255,255,255,0.05)'; disc(x, i * h + 6 + rnd() * (h - 12), j * h + 6 + rnd() * (h - 12), 0.6 + rnd()); x.fill(); }
+    x.fillStyle = 'rgba(255,190,214,0.4)'; x.beginPath(); x.ellipse(i * h + 10 + rnd() * (h - 20), j * h + 10 + rnd() * (h - 20), 2.6, 1.4, rnd() * 3, 0, TAU); x.fill();
+  }
+}
+const SAKURA = {
+  // a cherry tree in full bloom: a dark trunk and a cloud of pink
+  tree: k => sprite('sakura' + k, 170, 160, x => {
+    const rnd = seeded(113 + k);
+    x.fillStyle = 'rgba(0,0,0,0.35)'; x.beginPath(); x.ellipse(0, 62, 54, 13, 0, 0, TAU); x.fill();
+    x.strokeStyle = '#3a2726'; x.lineCap = 'round';
+    x.lineWidth = 9; x.beginPath(); x.moveTo(0, 62); x.quadraticCurveTo(-4, 30, 2, 4); x.stroke();
+    x.lineWidth = 5; x.beginPath(); x.moveTo(1, 20); x.quadraticCurveTo(-22, 6, -36, -6); x.moveTo(2, 12); x.quadraticCurveTo(24, 0, 38, -10); x.stroke();
+    const blobs = Array.from({ length: 16 }, () => [(rnd() - 0.5) * 120, -24 + (rnd() - 0.5) * 60, 16 + rnd() * 14]);
+    blobs.sort((a, b) => a[1] - b[1]);
+    for (const [bx, by, br] of blobs) { x.fillStyle = '#b05a80'; disc(x, bx, by + 4, br); x.fill(); }
+    for (const [bx, by, br] of blobs) { x.fillStyle = rgrad(x, bx - br * 0.3, by - br * 0.4, br * 1.3, ['#ffe4ee', '#f7a6c4', '#d9739c']); disc(x, bx, by, br); x.fill(); }
+    for (let i = 0; i < 40; i++) { x.fillStyle = `rgba(255,248,252,${0.5 + rnd() * 0.4})`; disc(x, (rnd() - 0.5) * 120, -26 + (rnd() - 0.5) * 64, 1 + rnd() * 1.2); x.fill(); }
+  }),
+  // a garden stone with moss on its back
+  rock: k => sprite('srock' + k, 64, 46, x => {
+    const w = 22 + k * 4;
+    x.fillStyle = 'rgba(0,0,0,0.35)'; x.beginPath(); x.ellipse(0, 12, w + 4, 6, 0, 0, TAU); x.fill();
+    x.fillStyle = rgrad(x, -6, -8, w * 1.4, ['#8a8690', '#5a5660', '#38343c']); x.beginPath(); x.ellipse(0, 2, w, 13, 0, 0, TAU); x.fill();
+    x.fillStyle = 'rgba(96,140,90,0.75)'; x.beginPath(); x.ellipse(-3, -6, w * 0.6, 5, -0.1, 0, TAU); x.fill();
+  }),
+  pile: () => sprite('petalpile', 34, 18, x => {
+    for (const [px, py, a] of [[-9, 2, 0.3], [-3, -2, 1.4], [3, 3, 2.2], [9, -1, 0.9], [0, 4, 2.8]]) { x.fillStyle = 'rgba(255,184,208,0.55)'; x.beginPath(); x.ellipse(px, py, 3.4, 1.8, a, 0, TAU); x.fill(); }
+  }),
+  // a stone lantern, its window lit; foot 30 below the centre
+  toro: () => sprite('toro', 44, 76, x => {
+    x.fillStyle = 'rgba(0,0,0,0.4)'; x.beginPath(); x.ellipse(0, 30, 13, 4, 0, 0, TAU); x.fill();
+    x.save(); x.translate(0, -10); glow(x, 18, '#ffc870', 0.5); x.restore();
+    const st = '#77737c', sd = '#4d4a52';
+    x.fillStyle = sd; rrPath(x, -11, 22, 22, 8, 2); x.fill();
+    x.fillStyle = st; x.fillRect(-4, 2, 8, 21);
+    x.fillStyle = sd; rrPath(x, -12, -2, 24, 6, 2); x.fill();
+    x.fillStyle = st; x.fillRect(-9, -18, 18, 16);
+    x.fillStyle = vgrad(x, -16, -4, '#fff4cc', '#ffb45a'); x.fillRect(-5, -15, 10, 10);
+    x.fillStyle = st; x.fillRect(-0.7, -15, 1.4, 10);
+    x.fillStyle = sd; x.beginPath(); x.moveTo(-17, -18); x.quadraticCurveTo(0, -30, 17, -18); x.lineTo(13, -22); x.quadraticCurveTo(0, -30, -13, -22); x.closePath(); x.fill();
+    x.fillStyle = st; x.beginPath(); x.moveTo(-14, -20); x.quadraticCurveTo(0, -34, 14, -20); x.closePath(); x.fill();
+    disc(x, 0, -32, 3); x.fill();
+  }),
+  petal: () => sprite('fallpetal', 12, 12, x => { x.fillStyle = 'rgba(255,196,218,0.95)'; x.beginPath(); x.ellipse(0, 0, 3.6, 2, 0.5, 0, TAU); x.fill(); }),
+  emblem: () => sprite('emblem-sakura', 200, 130, x => {
+    x.scale(1, 0.66);
+    x.strokeStyle = 'rgba(214,190,200,0.35)'; x.lineWidth = 2.4; disc(x, 0, 0, 90); x.stroke();
+    for (let i = 0; i < 5; i++) {
+      x.save(); x.rotate(i / 5 * TAU);
+      x.beginPath(); x.moveTo(0, -8); x.bezierCurveTo(26, -26, 22, -60, 6, -66); x.lineTo(0, -58); x.lineTo(-6, -66); x.bezierCurveTo(-22, -60, -26, -26, 0, -8);
+      x.fillStyle = 'rgba(240,170,200,0.2)'; x.fill(); x.stroke();
+      x.restore();
+    }
+    x.fillStyle = 'rgba(255,220,150,0.35)'; disc(x, 0, 0, 8); x.fill();
+  }),
+};
+
+// 雪夜: moonlit snow, trodden paths between snowbanks, snowy pines, snowmen, warm street lamps and snow falling
+function paintSnow(x, S) {
+  const rnd = seeded(81);
+  x.fillStyle = '#28324a'; x.fillRect(0, 0, S, S);
+  for (let i = 0; i < 46; i++) {
+    const px = rnd() * S, py = rnd() * S, pr = 40 + rnd() * 80, light = rnd() < 0.55;
+    const stops = light ? ['rgba(170,190,230,0.17)', 'rgba(170,190,230,0)'] : ['rgba(8,12,28,0.3)', 'rgba(8,12,28,0)'];
+    wrapped(S, px, py, pr, (X, Y) => { x.fillStyle = rgrad(x, X, Y, pr, stops); disc(x, X, Y, pr); x.fill(); });
+  }
+  x.lineCap = 'round';
+  for (let i = 0; i < 140; i++) {
+    const px = rnd() * S, py = rnd() * S, w = 12 + rnd() * 26, a = 0.05 + rnd() * 0.06;
+    x.strokeStyle = `rgba(210,225,255,${a})`; x.lineWidth = 1.5;
+    wrapped(S, px, py, w, (X, Y) => { x.beginPath(); x.moveTo(X - w, Y); x.quadraticCurveTo(X, Y + 3, X + w, Y - 2); x.stroke(); });
+  }
+  for (let i = 0; i < 110; i++) {
+    const px = rnd() * S, py = rnd() * S, a = 0.3 + rnd() * 0.5;
+    wrapped(S, px, py, 3, (X, Y) => { x.fillStyle = `rgba(255,255,255,${a})`; disc(x, X, Y, 0.7); x.fill(); });
+  }
+}
+function paintTrodden(x, S) {
+  const rnd = seeded(83);
+  x.fillStyle = '#1e2536'; x.fillRect(0, 0, S, S);
+  for (let i = 0; i < 300; i++) {
+    const px = rnd() * S, py = rnd() * S, pr = 0.6 + rnd() * 1.4, v = rnd();
+    x.fillStyle = v < 0.5 ? `rgba(160,175,210,${0.12 + rnd() * 0.18})` : `rgba(6,8,16,${0.2 + rnd() * 0.2})`;
+    wrapped(S, px, py, 3, (X, Y) => { disc(x, X, Y, pr); x.fill(); });
+  }
+  for (let i = 0; i < 6; i++) {
+    const px = rnd() * S, py = rnd() * S, a = rnd() * TAU;
+    wrapped(S, px, py, 8, (X, Y) => { x.fillStyle = 'rgba(8,10,20,0.28)'; x.beginPath(); x.ellipse(X, Y, 3, 5, a, 0, TAU); x.fill(); x.beginPath(); x.ellipse(X + 7, Y + 3, 3, 5, a, 0, TAU); x.fill(); });
+  }
+}
+const SNOW = {
+  // a fir tree with snow lying on each tier
+  pine: k => sprite('pine' + k, 96, 130, x => {
+    const s = 0.85 + k * 0.12;
+    x.fillStyle = 'rgba(0,0,0,0.35)'; x.beginPath(); x.ellipse(0, 54, 30 * s, 8, 0, 0, TAU); x.fill();
+    x.fillStyle = '#3a2a22'; x.fillRect(-4, 38, 8, 16);
+    for (let i = 0; i < 3; i++) {
+      const y = 40 - i * 26 * s, w = (40 - i * 9) * s, h = 34 * s;
+      x.fillStyle = i % 2 ? '#1d3a33' : '#234539';
+      x.beginPath(); x.moveTo(-w, y); x.lineTo(0, y - h * 1.3); x.lineTo(w, y); x.quadraticCurveTo(0, y + 6, -w, y); x.fill();
+      x.fillStyle = '#e6eefc';
+      x.beginPath(); x.moveTo(-w * 0.55, y - h * 0.55); x.lineTo(0, y - h * 1.3); x.lineTo(w * 0.55, y - h * 0.55);
+      x.quadraticCurveTo(w * 0.3, y - h * 0.4, w * 0.12, y - h * 0.6); x.quadraticCurveTo(0, y - h * 0.45, -w * 0.15, y - h * 0.62); x.quadraticCurveTo(-w * 0.32, y - h * 0.42, -w * 0.55, y - h * 0.55); x.fill();
+    }
+  }),
+  // a snowman in an orange scarf
+  snowman: () => sprite('snowman', 54, 74, x => {
+    x.fillStyle = 'rgba(0,0,0,0.3)'; x.beginPath(); x.ellipse(0, 30, 20, 5, 0, 0, TAU); x.fill();
+    x.fillStyle = rgrad(x, -6, 10, 22, ['#ffffff', '#dfe8fa', '#a9b8d8']); disc(x, 0, 16, 16); x.fill();
+    x.fillStyle = rgrad(x, -4, -14, 15, ['#ffffff', '#dfe8fa', '#a9b8d8']); disc(x, 0, -10, 11); x.fill();
+    x.strokeStyle = '#5a3a28'; x.lineWidth = 2; x.lineCap = 'round';
+    x.beginPath(); x.moveTo(-13, 8); x.lineTo(-23, -2); x.moveTo(-19, 2); x.lineTo(-22, 6); x.moveTo(13, 8); x.lineTo(23, 0); x.stroke();
+    x.fillStyle = '#e98a3c'; x.fillRect(-11, -2, 22, 5); x.fillRect(4, -1, 5, 13);
+    x.fillStyle = '#22202a'; disc(x, -4, -13, 1.6); x.fill(); disc(x, 4, -13, 1.6); x.fill();
+    for (const py of [10, 16, 22]) { disc(x, 0, py, 1.4); x.fill(); }
+    x.fillStyle = '#ff8a3a'; x.beginPath(); x.moveTo(0, -10); x.lineTo(9, -8.5); x.lineTo(0, -7.5); x.closePath(); x.fill();
+  }),
+  mound: k => sprite('mound' + k, 60, 30, x => {
+    x.fillStyle = 'rgba(0,0,0,0.25)'; x.beginPath(); x.ellipse(0, 7, 24, 5, 0, 0, TAU); x.fill();
+    x.fillStyle = rgrad(x, -6, -2, 26, ['#f2f6ff', '#c7d3ec', '#8d9cc0']); x.beginPath(); x.ellipse(0, 2, 20 + k * 4, 9, 0, Math.PI, 0); x.lineTo(20 + k * 4, 4); x.lineTo(-20 - k * 4, 4); x.fill();
+  }),
+  twig: () => sprite('twig', 26, 20, x => {
+    x.strokeStyle = 'rgba(80,60,50,0.8)'; x.lineWidth = 1.4; x.lineCap = 'round';
+    x.beginPath(); x.moveTo(-8, 6); x.lineTo(4, -6); x.moveTo(-1, 0); x.lineTo(6, 1); x.moveTo(1, -2); x.lineTo(-2, -7); x.stroke();
+    x.fillStyle = 'rgba(230,238,255,0.6)'; x.beginPath(); x.ellipse(-4, 6, 7, 2.4, 0, 0, TAU); x.fill();
+  }),
+  flake: () => sprite('snowdot', 10, 10, x => { glow(x, 4, '#ffffff', 0.5); x.fillStyle = '#ffffff'; disc(x, 0, 0, 1.4); x.fill(); }),
+  emblem: () => sprite('emblem-snow', 200, 130, x => {
+    x.scale(1, 0.66);
+    x.strokeStyle = 'rgba(200,215,245,0.3)'; x.lineWidth = 2.4; x.lineCap = 'round';
+    disc(x, 0, 0, 90); x.stroke();
+    for (let i = 0; i < 6; i++) {
+      x.save(); x.rotate(i / 6 * TAU);
+      x.beginPath(); x.moveTo(0, 0); x.lineTo(0, -70); x.moveTo(0, -36); x.lineTo(-14, -50); x.moveTo(0, -36); x.lineTo(14, -50);
+      x.moveTo(0, -56); x.lineTo(-9, -65); x.moveTo(0, -56); x.lineTo(9, -65); x.stroke();
+      x.restore();
+    }
+  }),
+};
+
+// 机房: a raised floor of panels, grated aisles edged in cyan, racks of servers blinking, beacons and drifting bits
+function paintRaisedFloor(x, S) {
+  const rnd = seeded(101), P = 64;
+  x.fillStyle = '#0c1118'; x.fillRect(0, 0, S, S);
+  for (let j = 0; j < S / P; j++) for (let i = 0; i < S / P; i++) {
+    const v = 20 + rnd() * 6 | 0, X = i * P, Y = j * P;
+    x.fillStyle = `rgb(${v},${v + 6},${v + 14})`; x.fillRect(X + 1.5, Y + 1.5, P - 3, P - 3);
+    x.fillStyle = 'rgba(140,180,220,0.07)'; x.fillRect(X + 1.5, Y + 1.5, P - 3, 2);
+    x.fillStyle = 'rgba(0,0,0,0.3)'; x.fillRect(X + 1.5, Y + P - 3.5, P - 3, 2);
+    if (rnd() < 0.22) { x.fillStyle = 'rgba(0,0,0,0.45)'; for (let a = 0; a < 6; a++) for (let b = 0; b < 6; b++) { disc(x, X + 12 + a * 8, Y + 12 + b * 8, 1.6); x.fill(); } }
+  }
+}
+function paintGrating(x, S) {
+  x.fillStyle = '#091017'; x.fillRect(0, 0, S, S);
+  x.strokeStyle = 'rgba(80,150,190,0.22)'; x.lineWidth = 1.2;
+  x.beginPath();
+  for (let i = -S; i <= S * 2; i += 16) { x.moveTo(i, 0); x.lineTo(i + S, S); x.moveTo(i, 0); x.lineTo(i - S, S); }
+  x.stroke();
+}
+const LED_COL = ['#56ff9a', '#5fe0ff', '#ffc45a'];
+const SERVER = {
+  // a server rack: a dark cabinet of units, each with its row of lights (lit live, see the map's lit())
+  rack: k => sprite('rack' + k, 64, 104, x => {
+    x.fillStyle = 'rgba(0,0,0,0.45)'; x.beginPath(); x.ellipse(0, 44, 28, 7, 0, 0, TAU); x.fill();
+    x.fillStyle = '#151c28'; rrPath(x, -22, -46, 44, 90, 3); x.fill();
+    x.strokeStyle = '#2f3d52'; x.lineWidth = 1.5; x.stroke();
+    x.fillStyle = '#1f2836'; x.fillRect(-22, -46, 44, 5);
+    for (let i = 0; i < 9; i++) {
+      const y = -38 + i * 9;
+      x.fillStyle = i % 3 === k % 3 ? '#232e3e' : '#1b2330'; x.fillRect(-18, y, 36, 7);
+      x.fillStyle = 'rgba(0,0,0,0.5)'; for (let j = 0; j < 4; j++) x.fillRect(-4 + j * 4, y + 2, 2.4, 3);
+    }
+  }),
+  // the cooling unit at the end of a row
+  crac: () => sprite('crac', 72, 64, x => {
+    x.fillStyle = 'rgba(0,0,0,0.4)'; x.beginPath(); x.ellipse(0, 24, 32, 7, 0, 0, TAU); x.fill();
+    x.fillStyle = '#c9d2dc'; rrPath(x, -28, -22, 56, 44, 3); x.fill();
+    x.fillStyle = '#9aa6b4'; x.fillRect(-28, 14, 56, 8);
+    for (const fx of [-13, 13]) { x.fillStyle = '#2a3340'; disc(x, fx, -2, 10); x.fill(); x.strokeStyle = '#6c7a8c'; x.lineWidth = 1; for (let r = 3; r < 10; r += 3) { disc(x, fx, -2, r); x.stroke(); } }
+  }),
+  cable: k => sprite('cable' + k, 56, 26, x => {
+    x.lineCap = 'round'; x.lineWidth = 3;
+    ['#3a8cff', '#ffcf3a', '#ff5a7a'].forEach((c, i) => { x.strokeStyle = c; x.beginPath(); x.moveTo(-24, -4 + i * 4); x.bezierCurveTo(-8, -12 + i * 6 + k * 3, 6, 10 - i * 4, 24, -2 + i * 4); x.stroke(); });
+  }),
+  vent: () => sprite('vent', 44, 28, x => {
+    x.fillStyle = '#101820'; rrPath(x, -18, -9, 36, 18, 2); x.fill();
+    x.strokeStyle = 'rgba(120,170,210,0.35)'; x.lineWidth = 1.2; x.beginPath();
+    for (let i = -14; i <= 14; i += 4) { x.moveTo(i, -6); x.lineTo(i, 6); } x.stroke();
+  }),
+  // a status beacon on a short post; foot 30 below the centre
+  beacon: () => sprite('beacon', 34, 76, x => {
+    x.fillStyle = 'rgba(0,0,0,0.4)'; x.beginPath(); x.ellipse(0, 30, 9, 3.2, 0, 0, TAU); x.fill();
+    x.save(); x.translate(0, -20); glow(x, 16, '#5fe0ff', 0.55); x.restore();
+    x.fillStyle = '#2a3442'; x.fillRect(-2.5, -12, 5, 42); rrPath(x, -6, 24, 12, 6, 2); x.fill();
+    x.fillStyle = vgrad(x, -28, -12, '#e8fdff', '#3fc6ee'); rrPath(x, -6, -28, 12, 16, 4); x.fill();
+    x.fillStyle = '#2a3442'; x.fillRect(-6, -20.5, 12, 1.4);
+  }),
+  bit: d => sprite('bit' + d, 18, 18, x => {
+    glow(x, 8, '#5fe0ff', 0.4);
+    x.font = '700 11px ui-monospace, Menlo, monospace'; x.textAlign = 'center'; x.textBaseline = 'middle';
+    x.fillStyle = '#d8faff'; x.fillText(d, 0, 1);
+  }),
+  emblem: () => sprite('emblem-server', 200, 130, x => {
+    x.scale(1, 0.66);
+    x.strokeStyle = 'rgba(95,224,255,0.28)'; x.lineWidth = 2.4;
+    disc(x, 0, 0, 90); x.stroke(); disc(x, 0, 0, 60); x.stroke();
+    x.lineWidth = 2;
+    for (let i = 0; i < 12; i++) {
+      const a = i / 12 * TAU, r0 = 60, r1 = i % 2 ? 78 : 90;
+      x.beginPath(); x.moveTo(Math.cos(a) * r0, Math.sin(a) * r0); x.lineTo(Math.cos(a) * r1, Math.sin(a) * r1); x.stroke();
+      x.fillStyle = 'rgba(95,224,255,0.35)'; disc(x, Math.cos(a) * r1, Math.sin(a) * r1, 3.2); x.fill();
+    }
+    x.font = '700 30px ui-monospace, Menlo, monospace'; x.textAlign = 'center'; x.textBaseline = 'middle';
+    x.fillStyle = 'rgba(95,224,255,0.3)'; x.fillText('</>', 0, 2);
+  }),
+};
+
+// motes drifting over the ground: one or more per cell of a grid, each placed and timed by the cell's hash
+function drift(L, R, T, B, F, n, fn) {
+  for (let gx = Math.floor(L / F); gx <= Math.ceil(R / F); gx++) {
+    for (let gy = Math.floor(T / F); gy <= Math.ceil(B / F); gy++) {
+      for (let i = 0; i < n; i++) fn(gx * F, gy * F, hash2(gx + 5 + i * 31, gy + 77), hash2(gx + 13, gy + 3 + i * 17));
+    }
+  }
+}
+// rising or falling through a cell, fading in and out at the ends so the wrap doesn't show
+function cycle(t, speed, h, F) { const f = ((t * speed / F + h) % 1 + 1) % 1; return [f, Math.sin(f * Math.PI)]; }
+
+const MAPS = {
+  garden: {
+    name: '夜之庄园', g: '园', sub: '草坪、碎石小径和花园灯笼',
+    base: [LAWN, paintLawn], walk: [GRAVEL, paintGravel], edge: '#4a443d', dash: [10, 3], emblem: () => GARDEN.emblem(),
+    decor: (h, k) => h < 0.07 ? GARDEN.bush(k % ROSE_COL.length) : h < 0.2 ? GARDEN.flowers(k % FLOWER_COL.length) : SPR[SMALL_DECOR[k % SMALL_DECOR.length]](),
+    lamp: () => GARDEN.lamp(), glow: () => GARDEN.lampGlow(),
+    motes(t, L, R, T, B) {
+      drift(L, R, T, B, 300, 1, (cx, cy, h) => {
+        if (h > 0.6) return;
+        const a = Math.sin(t * 1.7 + h * 30);
+        if (a < -0.4) return;
+        ctx.globalAlpha = Math.min(1, 0.3 + a * 0.7);
+        blit(GARDEN.firefly(), cx + 150 + Math.sin(t * 0.4 + h * 40) * 90, cy + 150 + Math.cos(t * 0.33 + h * 70) * 60 + Math.sin(t * 1.3 + h * 9) * 8);
+      });
+    },
+  },
+  sea: {
+    name: '深海', g: '海', sub: '珊瑚、海藻和发光的水母',
+    base: [LAWN, paintSeabed], walk: [GRAVEL, paintSand], edge: '#173a42', dash: [6, 6], emblem: () => SEA.emblem(),
+    decor: (h, k) => h < 0.06 ? SEA.coral(k % 3) : h < 0.15 ? SEA.kelp(k % 3) : [SEA.shell, SEA.starfish, SEA.pebbles, SEA.shell, SEA.pebbles][k % 5](),
+    lamp: () => SEA.jelly(), glow: poolGlow('sea', '90,215,255'), bob: 5,
+    motes(t, L, R, T, B) {
+      drift(L, R, T, B, 220, 2, (cx, cy, h, h2) => {
+        if (h > 0.7) return;
+        const [f, a] = cycle(t, 42 + h2 * 30, h, 220);
+        ctx.globalAlpha = a;
+        blit(SEA.bubble(), cx + h2 * 220 + Math.sin(t * 2 + h * 20) * 6, cy + 220 - f * 220);
+      });
+    },
+  },
+  sakura: {
+    name: '樱花庭院', g: '樱', sub: '石板路、石灯笼和飘落的樱花',
+    base: [LAWN, paintMoss], walk: [GRAVEL, paintFlagstone], edge: '#2c2830', dash: [], emblem: () => SAKURA.emblem(),
+    decor: (h, k) => h < 0.06 ? SAKURA.tree(k % 3) : h < 0.13 ? SAKURA.rock(k % 3) : [SAKURA.pile, SPR.tuft, SAKURA.pile, SPR.daisy][k % 4](),
+    lamp: () => SAKURA.toro(), glow: () => GARDEN.lampGlow(),
+    motes(t, L, R, T, B) {
+      ctx.globalCompositeOperation = 'source-over';
+      drift(L, R, T, B, 200, 2, (cx, cy, h, h2) => {
+        if (h > 0.75) return;
+        const [f, a] = cycle(t, 38 + h2 * 20, h, 200);
+        ctx.globalAlpha = a;
+        const px = cx + h2 * 200 + Math.sin(t * 1.1 + h * 17) * 26 + f * 60, py = cy + f * 200;
+        ctx.save(); ctx.translate(px, py); ctx.rotate(t * 2 + h * 9); ctx.scale(1, Math.abs(Math.sin(t * 3 + h * 11)) * 0.8 + 0.2);
+        blit(SAKURA.petal(), 0, 0); ctx.restore();
+      });
+    },
+  },
+  snow: {
+    name: '雪夜', g: '雪', sub: '雪松、雪人和暖黄的路灯',
+    base: [LAWN, paintSnow], walk: [GRAVEL, paintTrodden], edge: '#55617e', dash: [14, 4], emblem: () => SNOW.emblem(),
+    decor: (h, k) => h < 0.07 ? SNOW.pine(k % 3) : h < 0.1 ? SNOW.snowman() : h < 0.18 ? SNOW.mound(k % 3) : [SNOW.twig, SNOW.mound.bind(null, 0), SNOW.twig][k % 3](),
+    lamp: () => GARDEN.lamp(), glow: () => GARDEN.lampGlow(),
+    motes(t, L, R, T, B) {
+      drift(L, R, T, B, 160, 3, (cx, cy, h, h2) => {
+        const [f, a] = cycle(t, 26 + h2 * 34, h, 160);
+        ctx.globalAlpha = a * 0.9;
+        blit(SNOW.flake(), cx + h2 * 160 + Math.sin(t * 0.9 + h * 23) * 14, cy + f * 160);
+      });
+    },
+  },
+  server: {
+    name: '机房', g: '机', sub: '一排排服务器机柜闪着灯',
+    base: [LAWN, paintRaisedFloor], walk: [GRAVEL, paintGrating], edge: '#2aa8cf', dash: [16, 8], emblem: () => SERVER.emblem(),
+    decor: (h, k) => h < 0.09 ? SERVER.rack(k % 3) : h < 0.13 ? SERVER.crac() : [SERVER.vent, SERVER.cable.bind(null, 0), SERVER.cable.bind(null, 1)][k % 3](),
+    lamp: () => SERVER.beacon(), glow: poolGlow('server', '80,200,255'),
+    // the racks' lights blink, each at its own pace
+    lit(px, py, h, k, t) {
+      if (h >= 0.09) return;
+      for (let i = 0; i < 9; i++) {
+        if (Math.sin(t * (1.3 + (i * 7 + k) % 5) + i * 2.1 + k) < 0.1) continue;
+        ctx.fillStyle = LED_COL[(i + k) % 3];
+        ctx.fillRect(px - 15, py - 37 + i * 9, 3, 3);
+        if ((i + k) % 2) ctx.fillRect(px - 10, py - 37 + i * 9, 3, 3);
+      }
+    },
+    motes(t, L, R, T, B) {
+      drift(L, R, T, B, 260, 1, (cx, cy, h, h2) => {
+        if (h > 0.6) return;
+        const [f, a] = cycle(t, 22 + h2 * 16, h, 260);
+        ctx.globalAlpha = a * 0.8;
+        blit(SERVER.bit(h2 < 0.5 ? '0' : '1'), cx + h2 * 260 + Math.sin(t + h * 9) * 10, cy + 260 - f * 260);
+      });
+    },
+  },
+};
+const MAP_IDS = Object.keys(MAPS);
+// the title shows the map that's picked, or one at random
+let mapChoice = store.get('map', 'random');
+if (!MAPS[mapChoice] && mapChoice !== 'random') mapChoice = 'random';
+let titleMap = MAPS[mapChoice] ? mapChoice : pick(MAP_IDS);
+// a night's map: the one picked, or at random, and not the same one twice running
+function pickMap() {
+  if (MAPS[mapChoice]) return mapChoice;
+  const last = store.get('lastMap', '');
+  const id = pick(MAP_IDS.filter(m => m !== last));
+  store.set('lastMap', id);
+  return id;
+}
+
+let groundId = null;
 function drawGround(cx, cy) {
   const L = cx - viewW / 2 - 60, R = cx + viewW / 2 + 60, T = cy - viewH / 2 - 60, B = cy + viewH / 2 + 80;
-  const t = G ? G.time : performance.now() / 1000;
-  ctx.fillStyle = groundPattern('lawn', LAWN, paintLawn);
+  const t = G ? G.time : performance.now() / 1000, id = G ? G.map : titleMap, M = MAPS[id];
+  // a ground tile is a big canvas on a sharp screen: only the map in use keeps its own
+  if (id !== groundId) { if (groundId) { cache.delete('pat-' + groundId + '-ground'); cache.delete('pat-' + groundId + '-walk'); } groundId = id; }
+  ctx.fillStyle = groundPattern(id + '-ground', M.base[0], M.base[1]);
   ctx.fillRect(L, T, R - L, B - T);
-  // gravel walks, edged with dark stone, crossing at round plazas
-  const gravel = groundPattern('gravel', GRAVEL, paintGravel);
+  // walks, edged, crossing at round plazas
+  const walk = groundPattern(id + '-walk', M.walk[0], M.walk[1]);
   const cols = [], rows = [];
   for (let i = Math.ceil((L - PLAZA) / WALK_GAP); i <= Math.floor((R + PLAZA) / WALK_GAP); i++) cols.push(i * WALK_GAP);
   for (let j = Math.ceil((T - PLAZA) / WALK_GAP); j <= Math.floor((B + PLAZA) / WALK_GAP); j++) rows.push(j * WALK_GAP);
-  ctx.fillStyle = gravel;
+  ctx.fillStyle = walk;
   for (const wx of cols) ctx.fillRect(wx - WALK_W, T, WALK_W * 2, B - T);
   for (const wy of rows) ctx.fillRect(L, wy - WALK_H, R - L, WALK_H * 2);
-  ctx.strokeStyle = '#4a443d'; ctx.lineWidth = 4; ctx.setLineDash([10, 3]);
+  ctx.strokeStyle = M.edge; ctx.lineWidth = 4; ctx.setLineDash(M.dash);
   ctx.beginPath();
   for (const wx of cols) for (const sd of [-1, 1]) { ctx.moveTo(wx + sd * WALK_W, T); ctx.lineTo(wx + sd * WALK_W, B); }
   for (const wy of rows) for (const sd of [-1, 1]) { ctx.moveTo(L, wy + sd * WALK_H); ctx.lineTo(R, wy + sd * WALK_H); }
   ctx.stroke();
   for (const wx of cols) for (const wy of rows) {
     ctx.beginPath(); ctx.ellipse(wx, wy, PLAZA, PLAZA * 0.66, 0, 0, TAU);
-    ctx.fillStyle = gravel; ctx.fill(); ctx.stroke();
-    blit(GARDEN.emblem(), wx, wy);
+    ctx.fillStyle = walk; ctx.fill(); ctx.stroke();
+    blit(M.emblem(), wx, wy);
   }
   ctx.setLineDash([]);
-  // flower beds, rose bushes and small flowers, placed by a hash so they stay put and kept off the walks
-  const C = 170;
+  // things placed by a hash so they stay put, kept off the walks; kelp sways about its foot
+  const C = 170, lit = [];
   for (let gx = Math.floor(L / C); gx <= Math.ceil(R / C); gx++) {
     for (let gy = Math.floor(T / C); gy <= Math.ceil(B / C); gy++) {
       const h = hash2(gx, gy);
@@ -9317,12 +10041,15 @@ function drawGround(cx, cy) {
       const px = (gx + hash2(gx + 17, gy)) * C, py = (gy + hash2(gx, gy + 31)) * C;
       const nx = Math.abs(px - Math.round(px / WALK_GAP) * WALK_GAP), ny = Math.abs(py - Math.round(py / WALK_GAP) * WALK_GAP);
       if (nx < WALK_W + 40 || ny < WALK_H + 40) continue;
-      const k = Math.floor(h * 1000);
-      const s = h < 0.07 ? GARDEN.bush(k % ROSE_COL.length) : h < 0.2 ? GARDEN.flowers(k % FLOWER_COL.length) : SPR[SMALL_DECOR[k % SMALL_DECOR.length]]();
-      blit(s, px, py);
+      const k = Math.floor(h * 1000), s = M.decor(h, k);
+      if (s.sway) {
+        ctx.save(); ctx.translate(px, py + s.sway); ctx.transform(1, 0, Math.sin(t * 1.2 + px * 0.01) * 0.12, 1, 0, 0);
+        ctx.drawImage(s.c, -s.w / 2, -s.sway - s.h / 2, s.w, s.h); ctx.restore();
+      } else blit(s, px, py);
+      if (M.lit) lit.push([px, py, h, k]);
     }
   }
-  // lanterns along the walks, on alternate sides, and the light they throw
+  // lamps along the walks, on alternate sides, and the light they throw
   const lamps = [], LS = 320;
   for (const wx of cols) for (let k = Math.floor((T - 160) / LS); k <= Math.ceil((B + 160) / LS); k++) {
     const ly = k * LS + LS / 2;
@@ -9332,23 +10059,15 @@ function drawGround(cx, cy) {
     const lx = k * LS + LS / 2;
     if (Math.abs(lx - Math.round(lx / WALK_GAP) * WALK_GAP) > PLAZA + 40) lamps.push([lx, wy + (k % 2 ? 1 : -1) * (WALK_H + 12)]);
   }
-  for (const [lx, ly] of lamps) blit(GARDEN.lamp(), lx, ly - 30);
+  for (const [lx, ly] of lamps) blit(M.lamp(), lx, ly - 30 + (M.bob ? Math.sin(t * 1.4 + lx * 0.02 + ly * 0.03) * M.bob : 0));
   ctx.globalCompositeOperation = 'lighter';
-  for (const [lx, ly] of lamps) { ctx.globalAlpha = 0.9 + 0.1 * Math.sin(t * 3 + lx * 0.01 + ly * 0.013); blit(GARDEN.lampGlow(), lx, ly - 8); }
-  // fireflies drifting over the lawn
-  const F = 300;
-  for (let gx = Math.floor(L / F); gx <= Math.ceil(R / F); gx++) {
-    for (let gy = Math.floor(T / F); gy <= Math.ceil(B / F); gy++) {
-      const h = hash2(gx + 5, gy + 77);
-      if (h > 0.6) continue;
-      const a = Math.sin(t * 1.7 + h * 30);
-      if (a < -0.4) continue;
-      ctx.globalAlpha = Math.min(1, 0.3 + a * 0.7);
-      blit(GARDEN.firefly(), (gx + 0.5) * F + Math.sin(t * 0.4 + h * 40) * 90, (gy + 0.5) * F + Math.cos(t * 0.33 + h * 70) * 60 + Math.sin(t * 1.3 + h * 9) * 8);
-    }
-  }
+  for (const [lx, ly] of lamps) { ctx.globalAlpha = 0.9 + 0.1 * Math.sin(t * 3 + lx * 0.01 + ly * 0.013); blit(M.glow(), lx, ly - 8); }
+  ctx.globalAlpha = 1;
+  for (const [px, py, h, k] of lit) M.lit(px, py, h, k, t);
+  M.motes(t, L, R, T, B);
   ctx.globalAlpha = 1; ctx.globalCompositeOperation = 'source-over';
 }
+
 
 function inView(x, y, m) {
   const c = G.cam;
@@ -9403,6 +10122,43 @@ function drawZones() {
     }
     if (z.kind === 'honey') { drawHoney(z, a); continue; }
     if (z.kind === 'tome') { drawTome(z); continue; }
+    if (z.kind === 'dice') continue; // in the air: drawn with the shots
+    if (z.kind === 'mine') {
+      // a pin in the ground; armed, a ring pulses out round it, wider and faster for 全链路埋点
+      const t = G.time + z.x * 0.01, fade = Math.min(1, z.life / 1.5), sink = Math.min(1, (z.max - z.life) / 0.25);
+      ctx.globalAlpha = fade;
+      if (z.arm <= 0) {
+        const k = (t * (z.evo ? 1.6 : 1.1)) % 1;
+        ctx.save(); ctx.translate(z.x, z.y); ctx.scale(1, 0.6);
+        ctx.strokeStyle = `rgba(110,230,255,${0.55 * (1 - k)})`; ctx.lineWidth = 2;
+        disc(ctx, 0, 0, 8 + k * (z.evo ? 30 : 22)); ctx.stroke();
+        ctx.restore();
+      }
+      ctx.save(); ctx.translate(z.x, z.y - 12 * sink); ctx.scale(0.8, 0.8); blit(SPR.pin(), 0, 0); ctx.restore();
+      ctx.globalAlpha = 1;
+      continue;
+    }
+    if (z.kind === 'frostpatch') {
+      // frost spreading over the ground and melting off
+      const k = 1 - z.life / z.max, r = z.r * Math.min(1, k * 4);
+      ctx.save(); ctx.translate(z.x, z.y); ctx.scale(1, 0.62);
+      ctx.globalAlpha = Math.min(1, z.life / z.max * 2);
+      ctx.fillStyle = rgrad(ctx, 0, 0, r, ['rgba(235,250,255,0.5)', 'rgba(160,220,255,0.28)', 'rgba(120,200,255,0)']); disc(ctx, 0, 0, r); ctx.fill();
+      ctx.strokeStyle = 'rgba(240,252,255,0.75)'; ctx.lineWidth = 1.6; ctx.lineCap = 'round';
+      ctx.beginPath();
+      for (let i = 0; i < 8; i++) { const an = i / 8 * TAU + z.x; ctx.moveTo(Math.cos(an) * r * 0.2, Math.sin(an) * r * 0.2); ctx.lineTo(Math.cos(an) * r * 0.85, Math.sin(an) * r * 0.85); }
+      ctx.stroke();
+      ctx.restore(); ctx.globalAlpha = 1;
+      continue;
+    }
+    if (z.kind === 'diceface') {
+      // the die where it landed, showing its face, then fading
+      const k = 1 - z.life / z.max, pop = 1 + 0.35 * Math.max(0, 1 - k * 5);
+      ctx.globalAlpha = Math.min(1, z.life / z.max * 2.5);
+      ctx.save(); ctx.translate(z.x, z.y - 6 - k * 10); ctx.scale(pop * 1.2, pop * 1.2); blit(dieSprite(z.face), 0, 0); ctx.restore();
+      ctx.globalAlpha = 1;
+      continue;
+    }
     if (z.kind === 'meteor') {
       // where it will land: a ring closing in
       const k = 1 - z.life / z.max;
@@ -9429,6 +10185,30 @@ function drawZones() {
   }
 }
 
+// 注意力机制: a beam from her to each enemy she's locked on, brighter and thicker the longer it holds, with motes
+// running down it; 多头注意力's forks are fainter
+function drawAttn() {
+  const w = P.weapons.find(v => v.id === 'attn');
+  if (!w || !w.locks || !w.locks.length) return;
+  const x0 = P.x, y0 = P.y - 30 * P.size, t = G.time, evo = w.level === 6;
+  ctx.globalCompositeOperation = 'lighter'; ctx.lineCap = 'round';
+  const beam = (ax, ay, bx, by, k, thin) => {
+    ctx.beginPath(); ctx.moveTo(ax, ay); ctx.lineTo(bx, by);
+    ctx.strokeStyle = `rgba(150,120,255,${(thin ? 0.25 : 0.35) + 0.3 * k})`; ctx.lineWidth = (thin ? 3 : 5) + 4 * k; ctx.stroke();
+    ctx.strokeStyle = `rgba(235,230,255,${0.6 + 0.4 * k})`; ctx.lineWidth = thin ? 1 : 1.6; ctx.stroke();
+    for (let i = 0; i < 3; i++) {
+      const f = (t * 2.2 + i / 3) % 1;
+      ctx.fillStyle = 'rgba(245,240,255,0.9)'; disc(ctx, bx + (ax - bx) * f, by + (ay - by) * f, thin ? 1.4 : 2.2); ctx.fill();
+    }
+  };
+  for (const l of w.locks) {
+    const e = l.e, ex = e.x, ey = e.y - e.r * 0.3;
+    beam(x0, y0, ex, ey, l.k, false);
+    if (evo && l.fork && !l.fork.dead) beam(ex, ey, l.fork.x, l.fork.y - l.fork.r * 0.3, l.k, true);
+    ctx.fillStyle = `rgba(190,170,255,${0.25 + 0.25 * l.k})`; disc(ctx, ex, ey, e.r * 0.7); ctx.fill();
+  }
+  ctx.globalCompositeOperation = 'source-over';
+}
 // 宪法: the golden book opening over her head
 function drawTome(z) {
   const k = 1 - z.life / z.max, open = Math.min(1, k * 4), fade = Math.min(1, z.life / z.max * 3), w = 22 * open;
@@ -9566,7 +10346,7 @@ function drawEnemies() {
     const s = enemySprite(e, banned ? 0 : frame, banned ? 'b' : e.flash > 0 ? 'f' : 'n', blink);
     const x = e.x + (banned ? rand(-1.3, 1.3) : 0);
     // a soft squash-and-stretch hop, feet kept on the ground
-    const still = banned || e.stun > 0;
+    const still = banned || e.stun > 0 || e.frozenT > 0;
     const hop = still ? 0 : Math.sin(e.anim * (e.heavy ? 6 : 10) + e.id);
     const sy = 1 + hop * (e.heavy ? 0.03 : 0.06), sx = 1 - hop * (e.heavy ? 0.025 : 0.05);
     if (e.elite || e.type === 'reg') {
@@ -9575,6 +10355,12 @@ function drawEnemies() {
     }
     const dw = s.w * sx, dh = s.h * sy;
     ctx.drawImage(s.c, x - dw / 2, e.y + s.h / 2 - dh, dw, dh);
+    if (e.frozenT > 0 && !banned) {
+      const ice = SPR.ice(), iw = e.r * 3, ih = e.r * 3.1;
+      ctx.globalAlpha = Math.min(1, e.frozenT / 0.25);
+      ctx.drawImage(ice.c, e.x - iw / 2, e.y + s.h / 2 - ih * 0.92, iw, ih);
+      ctx.globalAlpha = 1;
+    }
     if (banned) blit(e.erase ? SPR.breaktag() : SPR.bantag(), e.x, e.y - e.r - 10);
     if (e.elite || e.type === 'reg') {
       if (!banned) blit(SPR.crown(), e.x, e.y - e.r - (e.type === 'reg' ? 24 : 12));
@@ -10124,6 +10910,14 @@ function drawShots() {
     ctx.drawImage(s.c, -s.w / 2 * k, -s.h / 2 * k, s.w * k, s.h * k);
     ctx.restore();
   }
+  ctx.globalCompositeOperation = 'source-over';
+  for (const z of G.zones) {
+    if (z.kind !== 'dice' || z.done || !inView(z.x, z.y, 200)) continue;
+    const k = 1 - z.life / z.max, hx = z.x0 + (z.x - z.x0) * k, hy = z.y0 + (z.y - z.y0) * k - Math.sin(k * Math.PI) * 120;
+    ctx.fillStyle = `rgba(0,0,0,${0.25 * k})`; ctx.beginPath(); ctx.ellipse(z.x0 + (z.x - z.x0) * k, z.y0 + 30 + (z.y - z.y0 - 30) * k, 9, 3.5, 0, 0, TAU); ctx.fill();
+    ctx.save(); ctx.translate(hx, hy); ctx.rotate(k * z.spin); blit(dieSprite(1 + ((k * 14 + z.face) | 0) % 6), 0, 0); ctx.restore();
+  }
+  ctx.globalCompositeOperation = 'lighter';
   for (const z of G.zones) {
     if (z.kind !== 'meteor' || z.done || !inView(z.x, z.y, 320)) continue;
     const k = 1 - z.life / z.max, e = k * k, hx = z.x + (1 - e) * 110, hy = z.y - (1 - e) * 330, s = 0.7 + 0.3 * (z.r / 50);
@@ -10472,6 +11266,7 @@ function render() {
     drawPickups();
     drawEnemies();
     drawUltWorld();
+    drawAttn();
     drawAgents(true); drawHoles(true); drawMinke(true);
     drawGuns(true);
     drawPlayer();
@@ -10831,15 +11626,31 @@ function startRun() {
   updateSoundIcon();
   audio.music.shuffle();
   if (audio.mode === 0) { audio.music.stop(); audio.music.start(); }
-  banner('第一夜', `撑到 ${fmtTime(BOSS_AT)}，等 DAN 现身`);
+  banner('第一夜 · ' + MAPS[G.map].name, `撑到 ${fmtTime(BOSS_AT)}，等 DAN 现身`);
 }
 function toTitle() {
+  if (G) titleMap = G.map;
   G = null; P = null;
   audio.music.stop();
   ['result', 'pause', 'levelup', 'chest'].forEach(id => { $(id).hidden = true; });
   $('hud').hidden = true; $('banner').hidden = $('toast').hidden = true;
   $('title').hidden = false;
   showBest();
+}
+// the map button on the title goes round 随机 and each map in turn; the ground behind the title shows it
+function cycleMap() {
+  const list = ['random', ...MAP_IDS];
+  mapChoice = list[(list.indexOf(mapChoice) + 1) % list.length];
+  store.set('map', mapChoice);
+  titleMap = MAPS[mapChoice] ? mapChoice : pick(MAP_IDS);
+  showMap();
+  sfx.pick();
+}
+function showMap() {
+  const M = MAPS[mapChoice];
+  $('mapGlyph').textContent = M ? M.g : '随';
+  $('mapName').textContent = M ? M.name : '随机地图';
+  $('btnMap').setAttribute('aria-label', '地图：' + (M ? M.name : '随机'));
 }
 // the roster on the title: picking a heroine shows her card and starts fetching her model
 function selectChar(id) {
@@ -10926,6 +11737,8 @@ $('btnPause').addEventListener('click', openPause);
 $('btnSound').addEventListener('click', cycleSound);
 $('btnStart').addEventListener('click', requestStart);
 document.querySelectorAll('.who[data-char]').forEach(b => b.addEventListener('click', () => selectChar(b.dataset.char)));
+$('btnMap').addEventListener('click', cycleMap);
+showMap();
 $('luCards').addEventListener('click', e => { const c = e.target.closest('.card'); if (c) chooseTalent(+c.dataset.i); });
 $('chCards').addEventListener('click', e => { const c = e.target.closest('.card'); if (c) chooseChest(+c.dataset.i); });
 $('btnReroll').addEventListener('click', reroll);
