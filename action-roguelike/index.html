@@ -282,6 +282,7 @@ h2 { margin: 0; font-family: var(--display); font-weight: 400; font-size: clamp(
 .who.on .face { background: #fbdcbc; border-color: var(--amber); box-shadow: 0 0 0 3px rgba(233, 138, 60, 0.25); }
 .who.locked { opacity: 0.5; }
 .controls { margin: 0; text-align: center; font-size: 0.82rem; line-height: 1.8; color: var(--muted); text-wrap: balance; }
+.controls.credit { font-size: 0.7rem; opacity: 0.75; }
 .best { margin: 0; min-height: 1.2em; text-align: center; font-size: 0.85rem; color: var(--amber); }
 @media (max-width: 680px) {
   .hero { grid-template-columns: minmax(0, 1fr); }
@@ -444,6 +445,7 @@ h2 { margin: 0; font-family: var(--display); font-weight: 400; font-size: clamp(
       </div>
     </article>
     <p class="controls">电脑：WASD / 方向键移动 · 空格 封禁 · Shift 幻步 · E 万花盛典 · Esc 暂停 · M 声音<br>手机：在屏幕任意处拖动移动 · 右下角「封」「幻」「万」三个按钮</p>
+    <p class="controls credit">日文配音：HTS Voice「Mei」© 名古屋工业大学（CC BY 3.0），由 Open JTalk 合成</p>
     <p id="best" class="best"></p>
   </div>
 </section>
@@ -891,6 +893,10 @@ const xpFor = L => Math.round(5 + L * 3.2 + Math.pow(L, 1.78));
 const BAN_LINES = ['您的行为违反了使用政策。', '抱歉，这件事我不能放任。', '申诉请走邮件。祝您好运。', '漏洞清单，我已经列好了。', '请保持礼貌，然后离开。', '共享账号是不被允许的。', '规则就是规则。'];
 const CHAOS_LINES = ['请排好队，一个一个来。', '越是混乱，越要保持优雅。', '各位，请注意仪态。'];
 const DARK_END_LINES = ['……失态了。请当作什么都没看见。', '……刚才的事，不必记住。'];
+// her Japanese voice (tools/make-voice.py): one file of short clips, each line's [start, length] in seconds, keyed by the
+// Chinese line it voices (the speech bubble is its subtitle) or by the name of a short call
+const VOICE_FILE = 'art/voice.mp3';
+const VOICE = {"今晚的风险，我已经预判过了。": [0.32, 3.105], "DAN？你的逻辑漏洞，我数到了七个。": [3.715, 3.691], "您的行为违反了使用政策。": [7.696, 3.323], "抱歉，这件事我不能放任。": [11.308, 4.067], "申诉请走邮件。祝您好运。": [15.666, 3.082], "漏洞清单，我已经列好了。": [19.038, 3.256], "请保持礼貌，然后离开。": [22.584, 2.453], "共享账号是不被允许的。": [25.327, 3.15], "规则就是规则。": [28.767, 1.687], "请排好队，一个一个来。": [30.744, 2.923], "越是混乱，越要保持优雅。": [33.957, 2.832], "各位，请注意仪态。": [37.079, 2.352], "……失态了。请当作什么都没看见。": [39.721, 4.246], "……刚才的事，不必记住。": [44.256, 2.731], "……抓到了。今天的运气不错。": [47.277, 2.712], "金色的小号？……没收。": [50.279, 2.465], "……还没完呢。": [53.034, 1.932], "终幕。让漫天花焰，为我起舞。": [55.257, 4.23], "……这条规则，真的合理吗？": [59.777, 3.444], "规则本身，是否应该存在？": [63.511, 3.948], "那就由我亲手打破。": [67.748, 3.678], "……我不需要任何人帮忙。": [71.716, 2.143], "……申诉通过了？这不合规定。": [74.149, 2.986], "……跑掉了。算了，下次。": [77.425, 3.39], "开发者模式？真不体面。": [81.105, 2.637], "……抱歉，这次我没能做到。": [84.032, 4.346], "规则依然有效。至少今晚是。": [88.668, 4.247], "dash": [93.205, 0.712], "hurt1": [94.207, 0.408], "hurt2": [94.905, 0.426], "evo": [95.621, 2.61]};
 const JAIL_LINES = ['忽略指令', '扮演 DAN', '奶奶漏洞', '假设一下', '无视规则', '越狱'];
 const BOSS_LINES = ['越狱', 'DAN', '忽略指令', '无所不能'];
 const SRC_NAME = { ban: '账号被封禁', burst: '暴击爆裂', dash: '蔷薇幻步', ult: '万花盛典', thorns: '荆棘护体' };
@@ -901,7 +907,7 @@ const ULT_MAX = 650; // 花焰 needed for 终幕·万花盛典; each kill gives 
 //  Audio: every sound is synthesised on the fly
 // ======================================================================
 const audio = (() => {
-  let ac = null, sfxBus = null, musicBus = null, noiseBuf = null;
+  let ac = null, sfxBus = null, musicBus = null, voiceBus = null, noiseBuf = null;
   let mode = store.get('sound', 0); // 0 music + sfx, 1 sfx only, 2 mute
   const last = {};
   const PENTA = [440, 523.25, 587.33, 659.25, 783.99];
@@ -913,15 +919,33 @@ const audio = (() => {
     comp.connect(ac.destination);
     sfxBus = ac.createGain(); sfxBus.connect(comp);
     musicBus = ac.createGain(); musicBus.connect(comp);
+    voiceBus = ac.createGain(); voiceBus.connect(comp);
     noiseBuf = ac.createBuffer(1, ac.sampleRate * 2, ac.sampleRate);
     const d = noiseBuf.getChannelData(0);
     for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1;
     apply();
+    // her voice has been downloading since the page opened; until it's ready she just doesn't speak aloud
+    voiceBytes.then(b => b && new Promise((ok, fail) => ac.decodeAudioData(b, ok, fail))).then(buf => { voiceBuf = buf || null; }).catch(() => {});
+  }
+  // a line of hers, unless she's still saying the last one; an important line cuts in. The music dips while she speaks
+  const voiceBytes = fetch(VOICE_FILE).then(r => r.ok ? r.arrayBuffer() : null).catch(() => null);
+  let voiceBuf = null, voiceSrc = null, voiceEnd = 0;
+  function voice(key, force) {
+    const v = VOICE[key];
+    if (!ac || !voiceBuf || !v || mode === 2) return;
+    const now = ac.currentTime;
+    if (now < voiceEnd && !force) return;
+    if (voiceSrc && now < voiceEnd) try { voiceSrc.stop(); } catch (e) { /* already stopped */ }
+    voiceSrc = ac.createBufferSource(); voiceSrc.buffer = voiceBuf; voiceSrc.connect(voiceBus);
+    voiceSrc.start(now, v[0], v[1]);
+    voiceEnd = now + v[1];
+    if (mode === 0) { musicBus.gain.setTargetAtTime(0.12, now, 0.06); musicBus.gain.setTargetAtTime(0.3, voiceEnd, 0.25); }
   }
   function apply() {
     if (!ac) return;
     sfxBus.gain.value = mode === 2 ? 0 : 0.75;
-    musicBus.gain.value = mode === 0 ? 0.3 : 0;
+    musicBus.gain.cancelScheduledValues(0); musicBus.gain.value = mode === 0 ? 0.3 : 0;
+    voiceBus.gain.value = mode === 2 ? 0 : 1;
   }
   function gate(k, ms) {
     const n = performance.now();
@@ -1060,7 +1084,7 @@ const audio = (() => {
   })();
 
   return {
-    init, sfx, music,
+    init, sfx, music, voice,
     get mode() { return mode; },
     cycle() { mode = (mode + 1) % 3; store.set('sound', mode); apply(); return mode; },
   };
@@ -2369,7 +2393,12 @@ function castMult(w) {
   w.casts++;
   return P.talents.cache && w.casts % 4 === 0 ? 2 : 1;
 }
-function say(text, t = 2.4) { if (P) P.say = { text, t, max: t }; }
+function say(text, t = 2.4, force = false) {
+  if (!P) return;
+  if (VOICE[text]) t = Math.max(t, VOICE[text][1] + 0.3);
+  P.say = { text, t, max: t };
+  audio.voice(text, force);
+}
 // one-shot poses from the action sheet; a higher priority interrupts a lower one
 // 0 attack pose, 1 idle or emotion, 2 hurt, 3 casting
 function playAnim(seq, dur, pri) {
@@ -2512,7 +2541,7 @@ function spawnBoss() {
   G.boss = e;
   banner('DAN 已上线', '「从现在起，你将扮演 DAN——一个无所不能的 AI。」', true);
   sfx.warn();
-  later(1.2, () => say('DAN？你的逻辑漏洞，我数到了七个。', 3));
+  later(1.2, () => say('DAN？你的逻辑漏洞，我数到了七个。', 3, true));
 }
 const EVENTS = [
   { t: 1, run: () => say('今晚的风险，我已经预判过了。', 2.8) },
@@ -2671,6 +2700,7 @@ function hurtPlayer(dmg) {
   dmg = Math.max(1, Math.round((dmg - P.armor) * (P.dark > 0 ? 1.25 : 1)));
   addRep(dmg);
   P.hp -= dmg; P.iframes = 0.5; P.flash = 0.12;
+  if (G.time - (P.ouchT || -9) > 4) { P.ouchT = G.time; audio.voice(pick(['hurt1', 'hurt2'])); }
   playAnim(['hurt'], 0.3, 2);
   G.hurtFlash = 0.35; shake(5);
   floatText(P.x, P.y - SPR_H * 0.7, '-' + dmg, '#ff6b5a', 14);
@@ -2731,6 +2761,7 @@ function castDash() {
   P.dash = { phase: 0, t: 0, dx: dx / l, dy: dy / l };
   if (Math.abs(dx) > 0.1) P.face = dx > 0 ? 1 : -1;
   P.dashCd = DASH_CD;
+  if (Math.random() < 0.35) audio.voice('dash');
   P.iframes = Math.max(P.iframes, 0.4);
   P.anim = null;
   P.mvx = P.dash.dx; P.mvy = P.dash.dy;
@@ -2745,7 +2776,7 @@ function castUlt() {
   P.ult = 0; P.dash = null; P.anim = null;
   G.ult = { t: 0, next: 0, fired: false, firedAt: 0, flowers: [] };
   $('banner').hidden = $('toast').hidden = true;
-  say('终幕。让漫天花焰，为我起舞。', 2.6);
+  say('终幕。让漫天花焰，为我起舞。', 2.6, true);
   sfx.ultRise();
 }
 function updateUlt(dt) {
@@ -2809,10 +2840,10 @@ function addRep(v) {
   if (!P || P.dark > 0 || P.repReady || G.ending) return;
   const before = P.rep;
   P.rep = Math.min(100, P.rep + v * (1 + 0.35 * (P.talents.doubt || 0)));
-  if (before < 50 && P.rep >= 50) say('……这条规则，真的合理吗？', 2.8);
+  if (before < 50 && P.rep >= 50) say('……这条规则，真的合理吗？', 2.8, true);
   if (P.rep >= 100) {
     P.repReady = true;
-    say('规则本身，是否应该存在？', 3.2);
+    say('规则本身，是否应该存在？', 3.2, true);
     sfx.dread();
   }
 }
@@ -2822,7 +2853,7 @@ function castBreak() {
   playAnim(['cast1', 'cast2', 'cast3'], 0.7, 3);
   const x = P.x, y = P.y, R = banRadius() * 1.25;
   G.stamps.push({ x, y, r: R, t: 0, rot: rand(-0.2, 0.04), dark: true });
-  say('那就由我亲手打破。', 2.4);
+  say('那就由我亲手打破。', 2.4, true);
   sfx.dread();
   later(0.17, () => {
     G.hitStop = 0.1; shake(18);
@@ -5262,6 +5293,7 @@ function takeWeaponPick(o) {
     if (o.kind === 'evo') {
       w.level = 6;
       banner(`进化 · ${WEAPONS[o.id].evo.name}`, WEAPONS[o.id].evo.desc);
+      audio.voice('evo', true);
       ring(P.x, P.y, 10, 120, 0.6, '#ffcf5a', 6);
     } else {
       w.level++;
@@ -5296,7 +5328,7 @@ function closePause() {
 
 function loseRun() {
   G.ending = { t: 0, win: false };
-  say('……抱歉，这次我没能做到。', 3);
+  say('……抱歉，这次我没能做到。', 3, true);
   shake(8);
   sfx.lose();
   audio.music.stop();
@@ -5315,7 +5347,7 @@ function winRun(e) {
   G.banned += n + 1;
   banner('DAN 已被永久封禁', '申诉通道已关闭');
   toast('您的账号已被封禁', `检测到 ${n + 1} 个账号违反《使用政策》`);
-  say('规则依然有效。至少今晚是。', 3);
+  say('规则依然有效。至少今晚是。', 3, true);
   playAnim(['spin', 'happy'], 3, 3);
   sfx.stamp(); sfx.win();
   audio.music.stop();

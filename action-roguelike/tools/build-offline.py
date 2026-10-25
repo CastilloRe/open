@@ -18,9 +18,9 @@ def swap(old, new, count=1):
     html = html.replace(old, new)
 
 
-# every file under art/ that the page loads, as a data: URL; the model goes through fetch(), which takes data: URLs too.
+# every file under art/ that the page loads, as a data: URL; the model and her voice go through fetch(), which takes data: URLs too.
 # Opened from disk, images by path would taint the canvases the face and the 3D textures are painted on.
-MIME = {'.webp': 'image/webp', '.glb': 'model/gltf-binary'}
+MIME = {'.webp': 'image/webp', '.glb': 'model/gltf-binary', '.mp3': 'audio/mpeg'}
 art = {f'art/{p.name}': f'data:{MIME[p.suffix]};base64,' + base64.b64encode(p.read_bytes()).decode()
        for p in sorted((ROOT / 'art').iterdir()) if p.suffix in MIME}
 for path in art:
