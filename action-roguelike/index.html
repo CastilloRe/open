@@ -182,6 +182,7 @@ kbd {
 .toast-seal { grid-row: span 2; width: 42px; height: 42px; border-radius: 6px; display: grid; place-items: center; background: var(--seal); color: #fff3e6; font-family: var(--stamp); font-size: 1.7rem; transform: rotate(-6deg); }
 .toast.dark .toast-seal { background: #4a1a6a; }
 .toast.gold .toast-seal { background: #d39a1c; }
+.toast.wx .toast-seal { background: #3f6fb0; }
 .toast b { font-size: 0.98rem; }
 .toast span { font-size: 0.8rem; color: var(--ink-soft); }
 @keyframes toast { 0% { opacity: 0; transform: translate(-50%, -12px) scale(0.96); } 10%, 82% { opacity: 1; transform: translate(-50%, 0) scale(1); } 100% { opacity: 0; transform: translate(-50%, -8px); } }
@@ -1064,7 +1065,7 @@ const VOICE = {
 };
 const JAIL_LINES = ['忽略指令', '扮演 DAN', '奶奶漏洞', '假设一下', '无视规则', '越狱'];
 const BOSS_LINES = ['越狱', 'DAN', '忽略指令', '无所不能'];
-const SRC_NAME = { ban: '账号被封禁', burst: '暴击爆裂', thorns: '荆棘护体', gulp: '一口吞', deep: '深度思考' };
+const SRC_NAME = { tree: '倒下的树', lightning: '雷击', ban: '账号被封禁', burst: '暴击爆裂', thorns: '荆棘护体', gulp: '一口吞', deep: '深度思考' };
 // the two heroines. Each art and model path appears once in the script: the offline build swaps them for data URLs
 const CHARS = {
   claude: {
@@ -1260,6 +1261,10 @@ const audio = (() => {
     freeze() { if (gate('freeze', 90)) { noise(0.35, { vol: 0.05, freq: 6000, q: 2, slide: 0.5 }); [2093, 2637, 3136].forEach((f, i) => tone(f, 0.25, { type: 'sine', vol: 0.016, at: i * 0.03 })); } },
     dice() { if (gate('dice', 120)) for (let i = 0; i < 3; i++) noise(0.03, { vol: 0.05, freq: 3000, q: 3, at: i * 0.06 + Math.random() * 0.02 }); },
     lucky() { [784, 988, 1175, 1568].forEach((f, i) => tone(f, 0.18, { type: 'square', vol: 0.022, at: i * 0.06 })); },
+    // the world: thunder, a tree rustling when she bumps it, a tree coming down
+    thunder() { noise(0.12, { vol: 0.2, freq: 3200, q: 0.5 }); noise(1.8, { vol: 0.24, freq: 380, type: 'lowpass', slide: 0.35, at: 0.05 }); tone(52, 1.4, { vol: 0.14, slide: 0.6, at: 0.05 }); },
+    rustle() { if (gate('rustle', 250)) noise(0.4, { vol: 0.06, freq: 3600, q: 0.5, slide: 0.7 }); },
+    timber() { if (gate('timber', 120)) { noise(0.09, { vol: 0.14, freq: 2200, q: 1.2 }); tone(110, 0.45, { vol: 0.2, slide: 0.45, at: 0.06 }); noise(0.55, { vol: 0.22, freq: 520, type: 'lowpass', at: 0.06 }); } },
     whale() { tone(196, 1.3,{ type: 'sine', vol: 0.13, slide: 1.6, attack: 0.3 }); tone(294, 1.0, { type: 'triangle', vol: 0.05, slide: 0.7, at: 0.55, attack: 0.2 }); noise(1.1, { vol: 0.06, freq: 380, slide: 0.5, type: 'lowpass' }); },
   };
 
@@ -1272,6 +1277,29 @@ const audio = (() => {
   // of bells and drums, in a reverb and an echo in time, the chords dipping under each kick. Verse and chorus take
   // eight bars each, and the night fills it out: the verse tune and hi-hats come in after 2:00, the kick and a busier
   // bass after 5:00, and the boss gets a driving minor piece with the whole kit
+  // weather in the background: a loop of noise through a filter, hissing for rain or roaring for wind, swelling and
+  // fading with it, and silent whenever the night isn't running
+  let amb = null;
+  function ambient(kind, k) {
+    if (!ac) return;
+    const v = kind === 'rain' ? 0.1 * k : kind === 'wind' ? 0.16 * k : 0;
+    if (!amb) {
+      if (!v) return;
+      const src = ac.createBufferSource(), f = ac.createBiquadFilter(), g = ac.createGain();
+      src.buffer = noiseBuf; src.loop = true; g.gain.value = 0;
+      src.connect(f); f.connect(g); g.connect(sfxBus); src.start();
+      amb = { f, g, kind: null, v: 0 };
+    }
+    if (kind && kind !== amb.kind) {
+      amb.kind = kind;
+      amb.f.type = kind === 'rain' ? 'bandpass' : 'lowpass';
+      amb.f.frequency.value = kind === 'rain' ? 2600 : 420; amb.f.Q.value = kind === 'rain' ? 0.4 : 1.2;
+    }
+    if (Math.abs(v - amb.v) < 0.004) return;
+    amb.v = v;
+    amb.g.gain.setTargetAtTime(v, ac.currentTime, 0.3);
+  }
+
   const music = (() => {
     let timer = 0, step = 0, nextT = 0, song = null, fx = null;
     const mf = m => 440 * Math.pow(2, (m - 69) / 12);
@@ -1536,7 +1564,7 @@ const audio = (() => {
   })();
 
   return {
-    init, sfx, music, voice, loadVoice,
+    init, sfx, music, voice, loadVoice, ambient,
     get mode() { return mode; },
     cycle() { mode = (mode + 1) % 3; store.set('sound', mode); apply(); return mode; },
   };
@@ -3296,6 +3324,7 @@ function newRun() {
     kills: 0, banned: 0, breaks: 0, dmgBy: {}, nextId: 1, spawnAcc: 0, evI: 0, chestT: 35,
     pendLv: 0, pendChest: 0, modal: null, modalAt: 0, ending: null, hitStop: 0, shake: 0, hurtFlash: 0,
     cam: { x: 0, y: 0 }, boss: null, decoy: null, gemCombo: 0, gemComboT: 0, map: pickMap(),
+    trees: new Map(), near: [], wx: { kind: null, k: 0, next: rand(75, 100), last: null }, boltFlash: 0,
     rerolls: 2, banishes: 2, banished: new Set(), banishMode: false, picks: [], slotsDirty: true, lures: [], gulp: null,
   };
   addWeapon(CH.start);
@@ -3530,6 +3559,7 @@ function hit(e, base, src, o = {}) {
   if (!o.noCrit && Math.random() < critChance()) { d *= P.critDmg; crit = true; }
   if (e.vulnT > 0) d *= 1.2;
   if (e.frozenT > 0) d *= 1.25;
+  if ((src === 'chain' || src === 'lightning') && wxOn('rain')) d *= 1.3;
   if (P.talents.hunt && (e.elite || e.boss || e.type === 'reg')) d *= 1 + 0.15 * P.talents.hunt;
   if (P.dark > 0) d *= 1.4 + 0.2 * (P.talents.abyss || 0);
   if (P.tokFree > 0) d *= 1.25;
@@ -3697,6 +3727,7 @@ function castBan() {
     G.hitStop = 0.07; shake(14);
     sfx.stamp();
     ring(x, y, R * 0.2, R * 1.05, 0.45, '#ff5a46', 8);
+    fellTrees(x, y, R * 0.75);
     const n = applyBan(x, y, R, 0);
     toast(n ? '您的账号已被封禁' : '本次未发现违规账号', n ? `检测到 ${n} 个账号违反《使用政策》` : '风控持续运行中');
     if (P.talents.perma) G.zones.push({ kind: 'seal', x, y, r: R * 0.55, life: 4, max: 4 });
@@ -3756,6 +3787,7 @@ function updateUlt(dt) {
     u.fired = true; u.firedAt = u.t;
     G.hitStop = 0.12; G.flashT = 0.35; shake(22);
     sfx.stamp(); sfx.ultBoom();
+    fellTrees(P.x, P.y, Math.max(viewW, viewH) * 0.6);
     // 深海鲸歌 hits harder the more Token she pours into it, double at a full 100
     const tk = u.whale ? 1 + Math.min(1, u.tok / 100) : 1;
     const base = (70 + 9 * P.level) * tk;
@@ -3844,6 +3876,7 @@ function castBreak() {
     G.hitStop = 0.1; shake(18);
     sfx.stamp();
     ring(x, y, R * 0.2, R * 1.05, 0.55, '#a46bff', 9);
+    fellTrees(x, y, R * 0.8);
     let n = 0;
     forNear(x, y, R + 50, e => {
       if (e.banned > 0 || (e.x - x) ** 2 + (e.y - y) ** 2 > (R + e.r * 0.5) ** 2) return;
@@ -4000,6 +4033,7 @@ function updateGulp(dt) {
     }
   } else if (!g.done) {
     g.done = true;
+    fellTrees(P.x, P.y, R, true);
     G.hitStop = 0.06; shake(10);
     sfx.chomp();
     const bite = R * 0.62, hard = 1 + 0.5 * (P.talents.chonk || 0);
@@ -4779,7 +4813,7 @@ function frostBurst(x, y, f) {
     hit(e, f.dmg, 'frost', { noBurst: true });
     if (e.dead) return;
     if (e.boss) { e.slowT = Math.max(e.slowT, f.freeze); e.slowAmt = Math.max(e.slowAmt, 0.5); return; }
-    e.frozenT = Math.max(e.frozenT || 0, f.freeze * (e.heavy || e.elite ? 0.5 : 1));
+    e.frozenT = Math.max(e.frozenT || 0, f.freeze * (e.heavy || e.elite ? 0.5 : 1) * (wxOn('rain') ? 1.4 : 1));
     e.frostEvo = f.evo; e.frostDmg = f.dmg;
   });
   G.zones.push({ kind: 'frostpatch', x, y, r: f.r, life: 0.9, max: 0.9 });
@@ -4953,7 +4987,7 @@ function updateEnemies(dt) {
       continue;
     }
     if (e.burnT > 0) {
-      e.burnT -= dt; e.burnAcc += dt;
+      e.burnT -= dt * (wxOn('rain') ? 2.5 : 1); e.burnAcc += dt;
       if (e.burnAcc >= 0.5) { e.burnAcc -= 0.5; hit(e, e.burnDps * 0.5, e.burnSrc || 'opus', { noCrit: true, burn: true }); }
       if (Math.random() < dt * 6) puff(e.x + rand(-e.r, e.r) * 0.5, e.y - e.r * 0.4, 1, '#ff8a3a', 40, 0.4, 2.2, true);
       if (e.dead) continue;
@@ -4995,7 +5029,7 @@ function updateEnemies(dt) {
       for (const z of G.lures) { const q = (z.x - e.x) ** 2 + (z.y - e.y) ** 2; if (q < best) { best = q; tx = z.x; ty = z.y; } }
     }
     const dx = tx - e.x, dy = ty - e.y, d = Math.hypot(dx, dy) || 1;
-    let sp = e.speed * (1 - e.slowAmt);
+    let sp = e.speed * (1 - e.slowAmt) * (wxOn('fog') ? 0.85 : 1);
     if (rl && d < 150) sp *= 1 - 0.15 * rl;
     if (e.boss) {
       bossAI(e, dt, dx, dy, d, sp);
@@ -5004,7 +5038,7 @@ function updateEnemies(dt) {
       e.x += (dx / d * k + (-dy / d) * 0.35) * sp * dt;
       e.y += (dy / d * k + (dx / d) * 0.35) * sp * dt;
       e.shootT -= dt;
-      if (e.shootT <= 0 && d < 430) {
+      if (e.shootT <= 0 && d < (wxOn('fog') ? 260 : 430)) {
         e.shootT = rand(3.2, 4.2);
         const a = Math.atan2(P.y - e.y, P.x - e.x);
         G.ebullets.push({ x: e.x, y: e.y, vx: Math.cos(a) * 175, vy: Math.sin(a) * 175, r: 9, dmg: e.dmg, life: 4, text: pick(JAIL_LINES), boss: false });
@@ -5297,6 +5331,12 @@ function updatePickups(dt) {
     else if (it.type === 'tea') {
       eatTea(0.3);
       sfx.pick();
+    } else if (it.type === 'fruit') {
+      const D = TREE[G.map], h = Math.max(5, Math.round(P.maxHp * 0.08));
+      P.hp = Math.min(P.maxHp, P.hp + h);
+      if (P.char === 'whale') addTok(10);
+      floatText(P.x, P.y - SPR_H * 0.7, `${D.fruitName} +${h}`, '#9fe0a8', 13);
+      sfx.pick();
     } else if (it.type === 'magnet') {
       for (const g of G.gems) g.pull = true;
       floatText(P.x, P.y - SPR_H * 0.7, '吸取全部经验', '#9cc6ff', 14);
@@ -5386,6 +5426,8 @@ function update(dt) {
   updateShots(dt);
   updateEnemies(dt);
   updateBullets(dt);
+  updateTrees(dt);
+  updateWeather(dt);
   updateZones(dt);
   updatePickups(dt);
   updateFx(dt);
@@ -5959,7 +6001,7 @@ const MAPS = {
   sakura: {
     name: '樱花庭院', g: '樱', sub: '石板路、石灯笼和飘落的樱花',
     base: [LAWN, paintMoss], walk: [GRAVEL, paintFlagstone], edge: '#2c2830', dash: [], emblem: () => SAKURA.emblem(),
-    decor: (h, k) => h < 0.06 ? SAKURA.tree(k % 3) : h < 0.13 ? SAKURA.rock(k % 3) : [SAKURA.pile, SPR.tuft, SAKURA.pile, SPR.daisy][k % 4](),
+    decor: (h, k) => h < 0.1 ? SAKURA.rock(k % 3) : [SAKURA.pile, SPR.tuft, SAKURA.pile, SPR.daisy][k % 4](),
     lamp: () => SAKURA.toro(), glow: () => GARDEN.lampGlow(),
     motes(t, L, R, T, B) {
       ctx.globalCompositeOperation = 'source-over';
@@ -5976,7 +6018,7 @@ const MAPS = {
   snow: {
     name: '雪夜', g: '雪', sub: '雪松、雪人和暖黄的路灯',
     base: [LAWN, paintSnow], walk: [GRAVEL, paintTrodden], edge: '#55617e', dash: [14, 4], emblem: () => SNOW.emblem(),
-    decor: (h, k) => h < 0.07 ? SNOW.pine(k % 3) : h < 0.1 ? SNOW.snowman() : h < 0.18 ? SNOW.mound(k % 3) : [SNOW.twig, SNOW.mound.bind(null, 0), SNOW.twig][k % 3](),
+    decor: (h, k) => h < 0.04 ? SNOW.snowman() : h < 0.14 ? SNOW.mound(k % 3) : [SNOW.twig, SNOW.mound.bind(null, 0), SNOW.twig][k % 3](),
     lamp: () => GARDEN.lamp(), glow: () => GARDEN.lampGlow(),
     motes(t, L, R, T, B) {
       drift(L, R, T, B, 160, 3, (cx, cy, h, h2) => {
@@ -6088,6 +6130,444 @@ function drawGround(cx, cy) {
   ctx.globalAlpha = 1; ctx.globalCompositeOperation = 'source-over';
 }
 
+
+// ======================================================================
+//  The world: trees to bump, hide behind and bring down, and the weather
+// ======================================================================
+// Trees stand on a coarse grid, placed by a hash like the rest of the scenery, but each one in view is kept as a thing
+// with a state: shaken, fruiting, falling, down, burning, growing back. Trunks are solid to her and to the crowd, and
+// the jailbreakers' text bullets stop at them. Walk into one and it shakes; if its fruit is ripe some drops. Her big
+// skills knock the trees round her down, and a falling tree flattens whatever is in the way. Lightning sets them alight.
+const TREE_C = 300;
+GARDEN.oak = k => sprite('oak' + k, 164, 160, x => {
+  const rnd = seeded(141 + k);
+  x.fillStyle = 'rgba(0,0,0,0.35)'; x.beginPath(); x.ellipse(0, 60, 54, 13, 0, 0, TAU); x.fill();
+  x.strokeStyle = '#4a3426'; x.lineCap = 'round';
+  x.lineWidth = 10; x.beginPath(); x.moveTo(0, 60); x.quadraticCurveTo(-3, 30, 2, 2); x.stroke();
+  x.lineWidth = 5; x.beginPath(); x.moveTo(1, 22); x.quadraticCurveTo(-20, 10, -32, -4); x.moveTo(2, 14); x.quadraticCurveTo(22, 4, 34, -8); x.stroke();
+  const blobs = Array.from({ length: 15 }, () => [(rnd() - 0.5) * 112, -22 + (rnd() - 0.5) * 58, 17 + rnd() * 13]);
+  blobs.sort((a, b) => a[1] - b[1]);
+  for (const [bx, by, br] of blobs) { x.fillStyle = '#183a24'; disc(x, bx, by + 5, br); x.fill(); }
+  for (const [bx, by, br] of blobs) { x.fillStyle = rgrad(x, bx - br * 0.3, by - br * 0.4, br * 1.3, ['#86c476', '#3f8a4a', '#24572f']); disc(x, bx, by, br); x.fill(); }
+  for (let i = 0; i < 30; i++) { x.fillStyle = `rgba(210,245,180,${0.2 + rnd() * 0.25})`; disc(x, (rnd() - 0.5) * 110, -24 + (rnd() - 0.5) * 60, 1 + rnd()); x.fill(); }
+});
+// a great branching coral, as tall as a tree
+SEA.bigCoral = k => sprite('bigcoral' + k, 150, 156, x => {
+  const col = ['#ff7a8f', '#ffa45a', '#c58cff'][k % 3], dark = ['#b8445e', '#c06a2a', '#8656c8'][k % 3], rnd = seeded(171 + k);
+  x.fillStyle = 'rgba(0,0,0,0.35)'; x.beginPath(); x.ellipse(0, 58, 42, 10, 0, 0, TAU); x.fill();
+  x.lineCap = 'round';
+  const branch = (bx, by, a, len, w, d) => {
+    const ex = bx + Math.cos(a) * len, ey = by + Math.sin(a) * len;
+    x.strokeStyle = dark; x.lineWidth = w + 2; x.beginPath(); x.moveTo(bx, by); x.lineTo(ex, ey); x.stroke();
+    x.strokeStyle = col; x.lineWidth = w; x.beginPath(); x.moveTo(bx - 1, by); x.lineTo(ex - 1, ey); x.stroke();
+    if (d > 0) { branch(ex, ey, a - 0.35 - rnd() * 0.3, len * 0.76, w * 0.72, d - 1); branch(ex, ey, a + 0.35 + rnd() * 0.3, len * 0.76, w * 0.72, d - 1); }
+    else { x.fillStyle = '#fff0f2'; disc(x, ex, ey, w * 0.65); x.fill(); }
+  };
+  branch(0, 58, -Math.PI / 2, 34, 11, 3);
+  branch(-4, 50, -2.1, 22, 7, 2); branch(4, 50, -1.05, 22, 7, 2);
+});
+// a big double cabinet, glass-fronted, its lights lit live while it stands
+SERVER.tower = k => sprite('tower' + k, 100, 140, x => {
+  x.fillStyle = 'rgba(0,0,0,0.45)'; x.beginPath(); x.ellipse(0, 56, 42, 9, 0, 0, TAU); x.fill();
+  x.fillStyle = '#121925'; rrPath(x, -36, -62, 72, 118, 4); x.fill();
+  x.strokeStyle = '#30405a'; x.lineWidth = 2; x.stroke();
+  for (const cx of [-18, 18]) {
+    x.fillStyle = '#18212f'; x.fillRect(cx - 15, -54, 30, 102);
+    for (let i = 0; i < 11; i++) { x.fillStyle = (i + k) % 4 ? '#1d2737' : '#243246'; x.fillRect(cx - 13, -52 + i * 9, 26, 7); }
+  }
+  x.fillStyle = 'rgba(180,220,255,0.08)'; x.beginPath(); x.moveTo(-36, -30); x.lineTo(-6, -62); x.lineTo(10, -62); x.lineTo(-36, -14); x.fill();
+  x.fillStyle = '#2a3a52'; x.fillRect(-36, -62, 72, 6);
+  x.fillStyle = '#5fe0ff'; x.font = '700 6px ui-monospace, Menlo, monospace'; x.textAlign = 'center'; x.fillText('NODE-0' + (k + 1), 0, -57);
+});
+// what's left when a tree is down: a stump, a coral stub, a cabinet's base
+const STUMP = {
+  wood: () => sprite('stump-wood', 44, 30, x => {
+    x.fillStyle = 'rgba(0,0,0,0.3)'; x.beginPath(); x.ellipse(0, 7, 18, 5, 0, 0, TAU); x.fill();
+    x.fillStyle = '#4a3426'; x.fillRect(-12, -4, 24, 10); x.beginPath(); x.ellipse(0, 6, 12, 4, 0, 0, TAU); x.fill();
+    x.fillStyle = '#c99a6a'; x.beginPath(); x.ellipse(0, -4, 12, 4.5, 0, 0, TAU); x.fill();
+    x.strokeStyle = 'rgba(110,70,40,0.6)'; x.lineWidth = 0.8; x.beginPath(); x.ellipse(0, -4, 7, 2.6, 0, 0, TAU); x.stroke(); x.beginPath(); x.ellipse(0, -4, 3, 1.1, 0, 0, TAU); x.stroke();
+  }),
+  coral: () => sprite('stump-coral', 44, 30, x => {
+    x.fillStyle = 'rgba(0,0,0,0.3)'; x.beginPath(); x.ellipse(0, 7, 16, 4.5, 0, 0, TAU); x.fill();
+    x.strokeStyle = '#d06a80'; x.lineWidth = 6; x.lineCap = 'round'; x.beginPath(); x.moveTo(0, 6); x.lineTo(-2, -6); x.moveTo(-1, 2); x.lineTo(7, -3); x.stroke();
+  }),
+  metal: () => sprite('stump-metal', 60, 30, x => {
+    x.fillStyle = 'rgba(0,0,0,0.35)'; x.beginPath(); x.ellipse(0, 7, 26, 5, 0, 0, TAU); x.fill();
+    x.fillStyle = '#1a2230'; x.fillRect(-24, -4, 48, 10); x.strokeStyle = '#30405a'; x.lineWidth = 1.5; x.strokeRect(-24, -4, 48, 10);
+  }),
+  ash: () => sprite('stump-ash', 48, 30, x => {
+    x.fillStyle = 'rgba(30,26,26,0.55)'; x.beginPath(); x.ellipse(0, 4, 20, 6, 0, 0, TAU); x.fill();
+    x.fillStyle = '#2a201c'; x.fillRect(-8, -5, 16, 9); x.fillStyle = '#5a463a'; x.beginPath(); x.ellipse(0, -5, 8, 3, 0, 0, TAU); x.fill();
+    x.fillStyle = 'rgba(255,140,60,0.6)'; disc(x, -3, -5, 1.4); x.fill();
+  }),
+};
+// fruit: what a shaken tree drops, healing her a little (and a little Token for 大肥鱼)
+const FRUIT = {
+  apple: () => sprite('apple', 24, 24, x => {
+    x.fillStyle = rgrad(x, -3, -3, 10, ['#ff8a7a', '#e2302c', '#9a1418']); disc(x, 0, 1, 7); x.fill();
+    x.strokeStyle = '#5a3a20'; x.lineWidth = 1.5; x.beginPath(); x.moveTo(0, -5); x.lineTo(1, -9); x.stroke();
+    x.fillStyle = '#5fae4a'; x.beginPath(); x.ellipse(4, -8, 3.6, 1.6, -0.5, 0, TAU); x.fill();
+    x.fillStyle = 'rgba(255,255,255,0.6)'; x.beginPath(); x.ellipse(-3, -2, 2, 1.2, -0.6, 0, TAU); x.fill();
+  }),
+  cherry: () => sprite('cherry', 24, 24, x => {
+    x.strokeStyle = '#4f7a3a'; x.lineWidth = 1.2; x.beginPath(); x.moveTo(-4, 3); x.quadraticCurveTo(-2, -6, 2, -9); x.moveTo(4, 4); x.quadraticCurveTo(4, -4, 2, -9); x.stroke();
+    for (const [cx, cy] of [[-4, 4], [4, 5]]) { x.fillStyle = rgrad(x, cx - 1.5, cy - 1.5, 6, ['#ff6a7a', '#d0182e', '#7a0a18']); disc(x, cx, cy, 4.2); x.fill(); }
+    x.fillStyle = 'rgba(255,255,255,0.7)'; disc(x, -5.2, 2.8, 1); x.fill(); disc(x, 2.8, 3.8, 1); x.fill();
+  }),
+  cone: () => sprite('cone', 24, 26, x => {
+    x.fillStyle = '#6a4024';
+    for (let i = 0; i < 5; i++) { const y = -7 + i * 3.4, w = 6 - Math.abs(i - 2) * 1.3; x.beginPath(); x.ellipse(0, y, w, 2.4, 0, 0, TAU); x.fill(); }
+    x.strokeStyle = '#3a2412'; x.lineWidth = 0.8; for (let i = 0; i < 5; i++) { const y = -7 + i * 3.4; x.beginPath(); x.moveTo(-5, y); x.lineTo(5, y); x.stroke(); }
+    x.fillStyle = 'rgba(240,246,255,0.8)'; x.beginPath(); x.ellipse(0, -8.5, 4, 1.6, 0, 0, TAU); x.fill();
+  }),
+  pearl: () => sprite('pearl', 26, 26, x => {
+    glow(x, 12, '#ffffff', 0.4);
+    x.fillStyle = rgrad(x, -2, -2, 8, ['#ffffff', '#e8eef8', '#a8b4c8']); disc(x, 0, 0, 6); x.fill();
+    x.fillStyle = 'rgba(255,255,255,0.9)'; disc(x, -2, -2, 1.6); x.fill();
+  }),
+  ram: () => sprite('ram', 30, 18, x => {
+    x.fillStyle = '#1f7a3a'; x.fillRect(-12, -4, 24, 8);
+    x.fillStyle = '#1a1a1a'; for (let i = 0; i < 4; i++) x.fillRect(-10 + i * 5.4, -3, 4, 5);
+    x.fillStyle = '#e8c04a'; for (let i = 0; i < 10; i++) x.fillRect(-11 + i * 2.4, 3, 1.2, 1.6);
+  }),
+};
+// each map's tree: its picture and where its foot is in it, its trunk, how far it reaches when it falls, its crown (as
+// an ellipse up from the foot: rise, half-width, half-height) where fruit shows and leaves fall from, and its fruit
+const TREE = {
+  garden: { make: k => GARDEN.oak(k), foot: 60, r: 16, len: 130, crown: [-82, 48, 30], leaf: '#7fbf6a', fruit: 'apple', fruitCol: '#e2302c', fruitName: '苹果', stump: 'wood' },
+  sea: { make: k => SEA.bigCoral(k), foot: 58, r: 14, len: 120, crown: [-80, 40, 34], leaf: '#ffb0c0', fruit: 'pearl', fruitCol: '#f4f8ff', fruitName: '珍珠', stump: 'coral' },
+  sakura: { make: k => SAKURA.tree(k), foot: 62, r: 15, len: 135, crown: [-86, 52, 28], leaf: '#ffc4d8', fruit: 'cherry', fruitCol: '#d0182e', fruitName: '樱桃', stump: 'wood' },
+  snow: { make: k => SNOW.pine(k), foot: 54, r: 13, len: 120, crown: [-62, 24, 34], leaf: '#eef4ff', fruit: 'cone', fruitCol: '#6a4024', fruitName: '松果', stump: 'wood' },
+  server: { make: k => SERVER.tower(k), foot: 56, r: 22, len: 115, crown: [-60, 28, 44], leaf: '#5fe0ff', fruit: 'ram', fruitCol: '#56ff9a', fruitName: '内存条', stump: 'metal' },
+};
+const FALL_T = 0.55, DOWN_FOR = 50, FRUIT_EVERY = 40;
+// where a tree stands, if one does in this cell: off the walks and their edges, so it never blocks a path
+function treeAt(gx, gy) {
+  const h = hash2(gx * 3 + 101, gy * 7 + 29);
+  if (h > 0.4) return null;
+  const x = (gx + 0.2 + 0.6 * hash2(gx + 41, gy + 3)) * TREE_C, y = (gy + 0.2 + 0.6 * hash2(gx + 9, gy + 57)) * TREE_C;
+  const nx = Math.abs(x - Math.round(x / WALK_GAP) * WALK_GAP), ny = Math.abs(y - Math.round(y / WALK_GAP) * WALK_GAP);
+  if (nx < WALK_W + 70 || ny < WALK_H + 90) return null;
+  return { x, y, k: Math.floor(h * 1000) % 3 };
+}
+const treeDmg = () => 90 + 30 * G.time / 60;
+const standing = tr => !tr.fall && tr.downAt == null;
+// the trees round the camera, made into things the first time they're seen
+function gatherTrees() {
+  const c = G.cam, L = c.x - viewW / 2 - 300, R = c.x + viewW / 2 + 300, T = c.y - viewH / 2 - 300, B = c.y + viewH / 2 + 300;
+  G.near.length = 0;
+  for (let gx = Math.floor(L / TREE_C); gx <= Math.floor(R / TREE_C); gx++) {
+    for (let gy = Math.floor(T / TREE_C); gy <= Math.floor(B / TREE_C); gy++) {
+      const p = treeAt(gx, gy);
+      if (!p) continue;
+      const id = gx * 100003 + gy;
+      let tr = G.trees.get(id);
+      if (!tr) { tr = { id, x: p.x, y: p.y, k: p.k, shake: 0, shakeAt: -9, fruitAt: G.time + rand(0, 25), fall: null, downAt: null, burnUntil: 0, grow: 1, ash: false }; G.trees.set(id, tr); }
+      G.near.push(tr);
+    }
+  }
+}
+function shakeTree(tr, byWind) {
+  if (G.time - tr.shakeAt < (byWind ? 3 : 1.2)) return;
+  const D = TREE[G.map];
+  tr.shake = 1; tr.shakeAt = G.time;
+  for (let i = 0; i < (byWind ? 3 : 7) && G.parts.length < 520; i++) {
+    const a = rand(0, TAU);
+    G.parts.push({ x: tr.x + Math.cos(a) * D.crown[1] * rand(0, 1), y: tr.y + D.crown[0] + Math.sin(a) * D.crown[2] * rand(0, 1), vx: rand(-30, 30), vy: rand(10, 60), life: rand(0.8, 1.4), max: 1.4, size: 2.4, color: D.leaf });
+  }
+  if (G.time >= tr.fruitAt) dropFruit(tr, tr.x, tr.y);
+  if (!byWind) sfx.rustle();
+}
+function dropFruit(tr, x, y) {
+  tr.fruitAt = G.time + FRUIT_EVERY;
+  const n = 1 + (Math.random() < 0.4 ? 1 : 0);
+  for (let i = 0; i < n; i++) G.items.push({ type: 'fruit', kind: TREE[G.map].fruit, x: x + rand(-46, 46), y: y + rand(8, 34), t: 0 });
+  // no more than a dozen lying about
+  const fr = G.items.filter(it => it.type === 'fruit' && !it.dead);
+  for (let i = 0; i < fr.length - 12; i++) fr[i].dead = true;
+}
+// bring down the trees within R of a blow; each falls to the side away from it (or towards her, for 一口吞)
+function fellTrees(x, y, R, toward) {
+  for (const tr of G.near) {
+    if (!standing(tr) || tr.grow < 1 || (tr.x - x) ** 2 + ((tr.y - y) * 1.4) ** 2 > R * R) continue;
+    const d = toward ? Math.sign(x - tr.x) : Math.sign(tr.x - x);
+    tr.fall = { t: -rand(0, 0.18), dir: d || 1, hit: false };
+  }
+}
+// the moment it hits the ground: everything along it is flattened
+function crushTree(tr) {
+  const D = TREE[G.map], dir = tr.fall.dir, L = D.len, x0 = tr.x, y = tr.y;
+  forNear(x0 + dir * L / 2, y, L / 2 + 60, e => {
+    if (e.banned > 0) return;
+    const along = (e.x - x0) * dir, fy = e.y + e.r * 0.4;
+    if (along < -e.r || along > L + e.r || Math.abs(fy - y) > 36 + e.r) return;
+    hit(e, treeDmg(), 'tree', { kb: 150, kx: dir, ky: 0 });
+    if (!e.dead && !e.boss) { e.slowT = Math.max(e.slowT, 1); e.slowAmt = Math.max(e.slowAmt, 0.8); }
+  });
+  for (let i = 0; i < 6; i++) puff(x0 + dir * L * (i + 0.5) / 6, y + rand(-6, 6), 3, i < 2 ? '#c8b8a0' : D.leaf, 160, 0.6, 3);
+  shake(5); sfx.timber();
+  if (G.time >= tr.fruitAt) dropFruit(tr, x0 + dir * L * 0.8, y - 10);
+  tr.downAt = G.time; tr.burnUntil = 0;
+}
+function burnTree(tr) {
+  if (!standing(tr) || tr.burnUntil > G.time) return;
+  tr.burnUntil = G.time + 7;
+  G.zones.push({ kind: 'fire', x: tr.x, y: tr.y - 6, r: 80, life: 7, max: 7, acc: 0, dmg: 8 + 3 * G.time / 60, src: 'tree' });
+}
+function updateTrees(dt) {
+  gatherTrees();
+  const D = TREE[G.map];
+  for (const tr of G.near) {
+    tr.shake = Math.max(0, tr.shake - dt * 1.5);
+    if (tr.fall) {
+      tr.fall.t += dt;
+      if (tr.fall.t >= FALL_T && !tr.fall.hit) { tr.fall.hit = true; crushTree(tr); }
+    }
+    if (tr.downAt != null) {
+      // back after a while, growing up out of the stump
+      if (G.time - tr.downAt > DOWN_FOR) { tr.downAt = null; tr.fall = null; tr.ash = false; tr.grow = 0; tr.burnUntil = 0; }
+      continue;
+    }
+    if (tr.fall) continue;
+    tr.grow = Math.min(1, tr.grow + dt * 0.8);
+    if (tr.burnUntil) {
+      if (G.time >= tr.burnUntil) { tr.burnUntil = 0; tr.downAt = G.time; tr.ash = true; puff(tr.x, tr.y + D.crown[0] * 0.5, 14, '#5a4a44', 120, 0.9, 4); continue; }
+      if (G.parts.length < 500 && Math.random() < dt * 30) {
+        const a = rand(0, TAU);
+        G.parts.push({ x: tr.x + Math.cos(a) * D.crown[1] * rand(0, 0.9), y: tr.y + D.crown[0] + Math.sin(a) * D.crown[2] * rand(0, 0.9), vx: rand(-15, 15), vy: rand(-90, -40), life: 0.6, max: 0.6, size: 3.5, color: Math.random() < 0.5 ? '#ff8a3a' : '#ffd060', add: true });
+      }
+    }
+    if (tr.grow < 0.6) continue;
+    // the trunk is solid: she slides round it, and bumping into it shakes the tree
+    const pf = P.y + 24 * P.size, dx = P.x - tr.x, dy = (pf - tr.y) * 1.6, d = Math.hypot(dx, dy) || 1, rr = D.r + P.r * 0.8;
+    if (d < rr) {
+      P.x += dx / d * (rr - d); P.y += dy / d * (rr - d) / 1.6;
+      shakeTree(tr);
+    }
+    forNear(tr.x, tr.y - 10, D.r + 60, e => {
+      if (e.banned > 0) return;
+      const ex = e.x - tr.x, ey = (e.y + e.r * 0.6 - tr.y) * 1.6, ed = Math.hypot(ex, ey) || 1, er = D.r + e.r * 0.8;
+      if (ed >= er) return;
+      // DAN doesn't go round trees, he goes through them
+      if (e.boss) { tr.fall = { t: 0, dir: Math.sign(tr.x - e.x) || 1, hit: false }; return; }
+      e.x += ex / ed * (er - ed); e.y += ey / ed * (er - ed) / 1.6;
+    });
+    // cover: text bullets stop at the trunk
+    for (const b of G.ebullets) {
+      if (b.dead || (b.x - tr.x) ** 2 + ((b.y - tr.y + 22) * 1.3) ** 2 > (D.r + b.r) ** 2) continue;
+      b.dead = true;
+      puff(b.x, b.y, 5, D.leaf, 90, 0.35, 2.2);
+    }
+  }
+}
+function drawTrees() {
+  const D = TREE[G.map], t = G.time;
+  for (const tr of G.near) {
+    if (!inView(tr.x, tr.y - D.foot, 120)) continue;
+    const s = D.make(tr.k);
+    if (tr.downAt != null || (tr.fall && tr.fall.hit)) {
+      blit(tr.ash ? STUMP.ash() : STUMP[D.stump](), tr.x, tr.y - 4);
+      // the trunk lying where it fell, for a few seconds
+      const lie = G.time - (tr.downAt ?? G.time);
+      if (!tr.ash && lie < 4) {
+        ctx.globalAlpha = Math.min(1, (4 - lie) / 1);
+        ctx.save(); ctx.translate(tr.x, tr.y); ctx.rotate(tr.fall.dir * Math.PI / 2 * 0.96); ctx.scale(1, 0.9);
+        ctx.drawImage(s.c, -s.w / 2, -D.foot - s.h / 2, s.w, s.h); ctx.restore();
+        ctx.globalAlpha = 1;
+      }
+      if (tr.downAt != null) continue;
+    }
+    if (tr.fall && !tr.fall.hit) {
+      // toppling: slow at first, then fast, about its foot
+      const k = Math.max(0, tr.fall.t) / FALL_T, a = tr.fall.dir * Math.PI / 2 * 0.96 * k * k;
+      ctx.save(); ctx.translate(tr.x, tr.y); ctx.rotate(a);
+      ctx.drawImage(s.c, -s.w / 2, -D.foot - s.h / 2, s.w, s.h); ctx.restore();
+      continue;
+    }
+    // standing, swaying when shaken; growing back from the stump scales it up from its foot
+    const g = tr.grow, sway = tr.shake * Math.sin(t * 28 + tr.id) * 0.06;
+    if (g < 1) blit(tr.ash ? STUMP.ash() : STUMP[D.stump](), tr.x, tr.y - 4);
+    ctx.save(); ctx.translate(tr.x, tr.y); ctx.rotate(sway); ctx.scale(0.4 + 0.6 * g, 0.4 + 0.6 * g);
+    ctx.globalAlpha = Math.min(1, g * 1.5);
+    ctx.drawImage(s.c, -s.w / 2, -D.foot - s.h / 2, s.w, s.h);
+    // ripe fruit shows in the crown, so she knows it's worth a shake
+    if (G.time >= tr.fruitAt && g >= 1) {
+      for (let i = 0; i < 4; i++) {
+        const fx = (hash2(tr.id % 997, i) - 0.5) * D.crown[1] * 1.4, fy = D.crown[0] + (hash2(i, tr.id % 991) - 0.3) * D.crown[2];
+        ctx.fillStyle = D.fruitCol; disc(ctx, fx, fy, 3.4); ctx.fill();
+        ctx.fillStyle = 'rgba(255,255,255,0.7)'; disc(ctx, fx - 1, fy - 1.2, 1); ctx.fill();
+      }
+    }
+    if (G.map === 'server') {
+      // the cabinet's lights
+      for (let i = 0; i < 18; i++) {
+        if (Math.sin(t * (1.1 + (i * 5 + tr.k) % 4) + i * 1.7 + tr.id) < 0) continue;
+        ctx.fillStyle = LED_COL[(i + tr.k) % 3];
+        ctx.fillRect((i % 2 ? 18 : -18) - 9, -D.foot - 52 + ((i / 2) | 0) * 9 + 2, 2.6, 2.6);
+      }
+    }
+    if (tr.burnUntil) {
+      ctx.globalCompositeOperation = 'lighter';
+      ctx.fillStyle = rgrad(ctx, 0, D.crown[0], D.crown[1] * 1.2, ['rgba(255,170,60,0.55)', 'rgba(255,90,30,0.25)', 'rgba(255,60,20,0)']);
+      ctx.beginPath(); ctx.ellipse(0, D.crown[0], D.crown[1] * 1.2, D.crown[2] * 1.3, 0, 0, TAU); ctx.fill();
+      ctx.globalCompositeOperation = 'source-over';
+    }
+    ctx.restore(); ctx.globalAlpha = 1;
+  }
+}
+
+// ---- weather: from about 1:20, now and then, for most of a minute; which kinds come depends on the map ----
+const WEATHER = {
+  garden: [['rain', '雷雨'], ['fog', '大雾'], ['wind', '大风']],
+  sea: [['fog', '浑水'], ['wind', '洋流']],
+  sakura: [['rain', '春雷'], ['fog', '夜雾'], ['wind', '樱吹雪']],
+  snow: [['wind', '暴风雪'], ['fog', '冰雾']],
+  server: [['rain', '机房漏水'], ['fog', '停电'], ['wind', '空调全开']],
+};
+const WX_DESC = {
+  rain: '会有雷劈中敌人，也会点着树；雨里思维链和雷击伤害 +30%，燃烧很快被浇灭，冻住的敌人冻得更久',
+  fog: '谁都看不远：敌人移速 -15%，越狱提示词要走近才开火',
+  wind: '风把敌人往一边推，树被吹得直掉果子',
+};
+// the fog's colour, and how thick it gets at the edge of sight
+const FOG = { fog: ['205,212,228', 0.8], 夜雾: ['190,180,205', 0.8], 冰雾: ['215,230,250', 0.82], 浑水: ['16,66,74', 0.8], 停电: ['3,5,10', 0.93] };
+const wxOn = k => G.wx.kind === k && G.wx.k > 0.5;
+function updateWeather(dt) {
+  const w = G.wx;
+  if (!w.kind && G.time >= w.next) {
+    const opts = WEATHER[G.map].filter(o => o[0] !== w.last || WEATHER[G.map].length === 1), [kind, name] = pick(opts);
+    Object.assign(w, { kind, name, until: G.time + rand(40, 55), a: (Math.random() < 0.5 ? 0 : Math.PI) + rand(-0.35, 0.35), boltT: 4 });
+    toast(name, WX_DESC[kind], 'wx', { rain: '雨', fog: '雾', wind: '风' }[kind]);
+  }
+  const target = w.kind && G.time < w.until ? 1 : 0;
+  w.k += clamp(target - w.k, -dt / 3, dt / 3);
+  if (w.kind && !target && w.k <= 0) { w.last = w.kind; w.kind = null; w.next = G.time + rand(45, 70); }
+  G.boltFlash = Math.max(0, G.boltFlash - dt * 2.5);
+  if (wxOn('rain')) {
+    w.boltT -= dt;
+    if (w.boltT <= 0) { w.boltT = rand(3.5, 6.5); strike(); }
+  }
+  if (wxOn('wind')) {
+    const cx = Math.cos(w.a), cy = Math.sin(w.a) * 0.5;
+    for (const e of G.enemies) {
+      if (e.dead || e.boss || e.banned > 0 || e.stun > 0) continue;
+      const f = (e.heavy || e.elite ? 18 : 55) * w.k * dt;
+      e.x += cx * f; e.y += cy * f;
+    }
+    for (const tr of G.near) if (standing(tr) && tr.grow >= 1 && Math.random() < dt * 0.3) shakeTree(tr, true);
+  }
+}
+// lightning (or, in the server room, a sparking short): a tree now and then, which catches fire, else an enemy
+function strike() {
+  const trees = G.near.filter(tr => standing(tr) && tr.grow >= 1 && !tr.burnUntil && inView(tr.x, tr.y, -40));
+  let x, y;
+  if (trees.length && Math.random() < 0.3) {
+    const tr = pick(trees);
+    x = tr.x; y = tr.y - 8; burnTree(tr);
+  } else {
+    const pool = G.enemies.filter(e => !e.dead && !(e.banned > 0) && inView(e.x, e.y, -30));
+    if (!pool.length) return;
+    const e = pick(pool);
+    x = e.x; y = e.y;
+  }
+  G.zones.push({ kind: 'bolt', x, y, r: 60, life: 0.35, max: 0.35 });
+  explode(x, y, 75, 50 + 20 * G.time / 60, 'lightning', { color: '#d8ecff' });
+  G.boltFlash = 0.3; shake(4);
+  sfx.thunder();
+}
+
+// weather drawn on the ground (rain rippling the puddles) and in the air (fog banks drifting, bolts)
+function drawWeatherGround() {
+  const w = G.wx;
+  if (w.kind !== 'rain' || w.k <= 0) return;
+  const c = G.cam, t = G.time, L = c.x - viewW / 2, T = c.y - viewH / 2;
+  ctx.lineWidth = 1.2;
+  for (let i = 0; i < 36; i++) {
+    const f = (t / 0.7 + i * 0.37) % 1, ep = Math.floor(t / 0.7 + i * 0.37);
+    const x = L + hash2(i, ep) * viewW, y = T + hash2(ep, i + 9) * viewH;
+    ctx.strokeStyle = `rgba(200,220,255,${(1 - f) * 0.45 * w.k})`;
+    ctx.beginPath(); ctx.ellipse(x, y, 2 + f * 13, (2 + f * 13) * 0.45, 0, 0, TAU); ctx.stroke();
+  }
+}
+const fogBlob = () => sprite('fogblob', 460, 240, x => {
+  x.scale(1, 0.52);
+  const g = x.createRadialGradient(0, 0, 0, 0, 0, 230);
+  g.addColorStop(0, 'rgba(255,255,255,0.5)'); g.addColorStop(0.6, 'rgba(255,255,255,0.2)'); g.addColorStop(1, 'rgba(255,255,255,0)');
+  x.fillStyle = g; disc(x, 0, 0, 230); x.fill();
+});
+function drawWeatherAir() {
+  const w = G.wx, t = G.time;
+  for (const z of G.zones) {
+    if (z.kind !== 'bolt' || !inView(z.x, z.y, 400)) continue;
+    // a jagged bolt from out of the sky, re-forked every frame so it flickers
+    const a = z.life / z.max, spark = G.map === 'server';
+    ctx.globalCompositeOperation = 'lighter';
+    ctx.beginPath(); ctx.moveTo(z.x + rand(-60, 60), z.y - 620);
+    for (let i = 1; i <= 10; i++) ctx.lineTo(z.x + rand(-26, 26) * (1 - i / 10), z.y - 620 + i * 62);
+    ctx.lineJoin = 'round';
+    ctx.strokeStyle = spark ? `rgba(95,224,255,${0.6 * a})` : `rgba(170,200,255,${0.6 * a})`; ctx.lineWidth = 9; ctx.stroke();
+    ctx.strokeStyle = `rgba(255,255,255,${a})`; ctx.lineWidth = 2.5; ctx.stroke();
+    ctx.globalCompositeOperation = 'source-over';
+  }
+  if (w.kind === 'fog' && w.k > 0 && w.name !== '停电') {
+    // banks of fog rolling slowly past
+    const c = G.cam, F = 520;
+    ctx.globalAlpha = 0.55 * w.k;
+    for (let gx = Math.floor((c.x - viewW / 2 - 300) / F); gx <= Math.ceil((c.x + viewW / 2 + 300) / F); gx++) {
+      for (let gy = Math.floor((c.y - viewH / 2 - 200) / F); gy <= Math.ceil((c.y + viewH / 2 + 200) / F); gy++) {
+        const h = hash2(gx + 3, gy + 11);
+        blit(fogBlob(), gx * F + h * F + Math.sin(t * 0.15 + h * 9) * 120, gy * F + hash2(gx, gy + 5) * F);
+      }
+    }
+    ctx.globalAlpha = 1;
+  }
+}
+const wrapTo = (v, m) => ((v % m) + m) % m;
+// in screen space: rain streaks, the fog closing in round her, things on the wind, the flash of a strike
+const WIND_MOTE = { garden: () => GARDEN.leaf(), sea: () => SEA.bubble(), sakura: () => SAKURA.petal(), snow: () => SNOW.flake(), server: null };
+GARDEN.leaf = () => sprite('leaf', 14, 14, x => { x.fillStyle = '#9ccf6a'; x.beginPath(); x.ellipse(0, 0, 4.4, 2, 0.6, 0, TAU); x.fill(); x.strokeStyle = 'rgba(60,100,40,0.7)'; x.lineWidth = 0.7; x.beginPath(); x.moveTo(-3, -2); x.lineTo(3, 2); x.stroke(); });
+function drawWeatherScreen() {
+  const w = G.wx, k = w.k, t = G.time;
+  if (k > 0) {
+    if (w.kind === 'rain') {
+      ctx.fillStyle = `rgba(14,22,44,${0.22 * k})`; ctx.fillRect(0, 0, W, H);
+      ctx.strokeStyle = `rgba(190,210,240,${0.38 * k})`; ctx.lineWidth = 1.1;
+      ctx.beginPath();
+      const n = Math.round(130 * k);
+      for (let i = 0; i < n; i++) {
+        const sp = 900 + hash2(i, 3) * 400, x = hash2(i, 7) * (W + 200) - 100, y = wrapTo(t * sp + hash2(i, 11) * 4000, H + 120) - 60;
+        ctx.moveTo(x, y); ctx.lineTo(x - 7, y + 26);
+      }
+      ctx.stroke();
+    } else if (w.kind === 'fog') {
+      const [rgb, thick] = FOG[w.name] || FOG.fog, sx = (P.x - G.cam.x) * zoom + W / 2, sy = (P.y - 20 - G.cam.y) * zoom + H / 2;
+      const g = ctx.createRadialGradient(sx, sy, 130 * zoom, sx, sy, 430 * zoom);
+      g.addColorStop(0, `rgba(${rgb},${0.08 * k})`); g.addColorStop(1, `rgba(${rgb},${thick * k})`);
+      ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
+    } else if (w.kind === 'wind') {
+      const cx = Math.cos(w.a), cy = Math.sin(w.a) * 0.5, mote = WIND_MOTE[G.map], snow = G.map === 'snow', n = Math.round((snow ? 180 : 70) * k);
+      // a blizzard whitens the air
+      if (snow) { ctx.fillStyle = `rgba(215,228,250,${0.14 * k})`; ctx.fillRect(0, 0, W, H); }
+      ctx.strokeStyle = `rgba(230,240,255,${(snow || G.map === 'server' ? 0.4 : 0.26) * k})`; ctx.lineWidth = snow ? 1.4 : 1.1;
+      ctx.beginPath();
+      const span = W + 300;
+      for (let i = 0; i < n; i++) {
+        const sp = 380 + hash2(i, 5) * 360, d = wrapTo(t * sp + hash2(i, 13) * span, span) - 150;
+        const x = cx > 0 ? d : W - d, y = wrapTo(hash2(i, 17) * (H + 200) + t * sp * cy, H + 200) - 100;
+        if (i % 3 === 0 || !mote) { ctx.moveTo(x, y); ctx.lineTo(x - cx * 30, y - cy * 30); }
+      }
+      ctx.stroke();
+      if (mote) {
+        for (let i = 0; i < n; i += snow ? 1 : 2) {
+          const sp = 300 + hash2(i, 5) * 300, d = wrapTo(t * sp + hash2(i, 19) * span, span) - 150;
+          const x = cx > 0 ? d : W - d, y = wrapTo(hash2(i, 23) * (H + 200) + t * sp * cy, H + 200) - 100 + Math.sin(t * 3 + i) * 14;
+          ctx.save(); ctx.translate(x, y); ctx.rotate(t * 4 + i); ctx.scale(1.7, 1.7); blit(mote(), 0, 0); ctx.restore();
+        }
+      }
+    }
+  }
+  if (G.boltFlash > 0) { ctx.fillStyle = `rgba(225,238,255,${G.boltFlash * 0.7})`; ctx.fillRect(0, 0, W, H); }
+}
 
 function inView(x, y, m) {
   const c = G.cam;
@@ -6344,7 +6824,7 @@ function drawPickups() {
       ctx.fillStyle = g; disc(ctx, it.x, it.y, R); ctx.fill();
       ctx.globalCompositeOperation = 'source-over';
     }
-    blit(SPR[it.type === 'tea' && P.char === 'whale' ? 'rice' : it.type](), it.x, it.y + bob);
+    blit(it.type === 'fruit' ? FRUIT[it.kind]() : SPR[it.type === 'tea' && P.char === 'whale' ? 'rice' : it.type](), it.x, it.y + bob);
   }
 }
 
@@ -7232,6 +7712,7 @@ function drawCutin() {
 function drawScreen() {
   ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
   if (!G) return;
+  drawWeatherScreen();
   const low = P.hp / P.maxHp;
   if (low < 0.3 && !G.ending) {
     const a = (0.3 - low) / 0.3 * (0.35 + Math.sin(performance.now() / 180) * 0.12);
@@ -7280,10 +7761,12 @@ function render() {
   ctx.setTransform(PX, 0, 0, PX, (W / 2 - (cam.x + ox) * zoom) * dpr, (H / 2 - (cam.y + oy) * zoom) * dpr);
   drawGround(cam.x, cam.y);
   if (G) {
+    drawWeatherGround();
     drawZones();
     drawGulp();
     drawContext();
     drawPickups();
+    drawTrees();
     drawEnemies();
     drawUltWorld();
     drawAttn();
@@ -7298,6 +7781,7 @@ function render() {
     drawBullets();
     drawStamps();
     drawFx();
+    drawWeatherAir();
   }
   drawScreen();
 }
@@ -7359,12 +7843,13 @@ function banner(title, sub, boss) {
   bannerTimer = setTimeout(() => { el.hidden = true; }, 2900);
 }
 // kind: nothing for a ban notice, true or 'dark' for 打破规则, 'gold' for the golden slime
-function toast(title, sub, kind) {
+function toast(title, sub, kind, seal) {
   const el = $('toast'), k = kind === true ? 'dark' : kind || '';
   $('toastTitle').textContent = title; $('toastSub').textContent = sub;
-  $('toastSeal').textContent = k === 'dark' ? '破' : k === 'gold' ? '金' : '封';
+  $('toastSeal').textContent = seal || (k === 'dark' ? '破' : k === 'gold' ? '金' : '封');
   el.classList.toggle('dark', k === 'dark');
   el.classList.toggle('gold', k === 'gold');
+  el.classList.toggle('wx', k === 'wx');
   replay(el);
   clearTimeout(toastTimer);
   toastTimer = setTimeout(() => { el.hidden = true; }, 2300);
@@ -7808,6 +8293,7 @@ if (DEBUG) {
   window.__fk = {
     get G() { return G; }, get P() { return P; }, M3, bot, spawn: spawnEnemy, char: selectChar,
     talent(id) { const t = TALENT[id]; P.talents[id] = (P.talents[id] || 0) + 1; if (t.apply) t.apply(P); }, start: startRun, update, render,
+    treeAt, fellTrees, WEATHER,
     // simulate without rendering; modals are resolved by taking the first card
     sim(sec, dt = 1 / 30) {
       const steps = Math.round(sec / dt);
@@ -7848,6 +8334,8 @@ function frame(now) {
   }
   render();
   if (G && P) updateHud();
+  const live = G && !G.modal && !G.ending;
+  audio.ambient(live ? G.wx.kind : null, live ? G.wx.k : 0);
 }
 addEventListener('resize', resize);
 resize();
