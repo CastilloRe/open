@@ -1276,6 +1276,7 @@ function resize() {
   zoom = clamp(Math.sqrt(W * H / (1000 * 700)), 0.6, 1.3);
   viewW = W / zoom; viewH = H / zoom; PX = zoom * dpr;
   cache.clear();
+  textCache.clear();
   frameCache.clear();
   buildPlayerSprite();
   size3D();
@@ -1291,6 +1292,27 @@ function sprite(key, w, h, draw) {
   draw(x);
   s = { c, w, h };
   cache.set(key, s);
+  return s;
+}
+// damage numbers and floating words, outlined, each drawn once into a small bitmap: text is slow to draw on a phone,
+// and dozens of them are on screen at a time. The numbers change as hits add up, so old ones are let go in batches
+const textCache = new Map();
+function textSprite(text, color, size) {
+  const key = size + color + text;
+  let s = textCache.get(key);
+  if (s) return s;
+  if (textCache.size > 500) { for (const v of textCache.values()) v.c.width = 0; textCache.clear(); }
+  const font = `800 ${size}px ${UI_FONT}`;
+  ctx.font = font;
+  const w = ctx.measureText(text).width + 8, h = size * 1.5 + 4, c = document.createElement('canvas');
+  c.width = Math.ceil(w * PX); c.height = Math.ceil(h * PX);
+  const x = c.getContext('2d');
+  x.scale(PX, PX); x.translate(w / 2, h / 2);
+  x.font = font; x.textAlign = 'center'; x.textBaseline = 'middle'; x.lineJoin = 'round';
+  x.lineWidth = 3; x.strokeStyle = 'rgba(20,10,5,0.85)'; x.strokeText(text, 0, 0);
+  x.fillStyle = color; x.fillText(text, 0, 0);
+  s = { c, w, h };
+  textCache.set(key, s);
   return s;
 }
 // white hit-flash or grey "banned" copies of a sprite, built with compositing only
@@ -2073,14 +2095,20 @@ function failNote(err) {
 }
 function init3D(id, gltf) {
   const T = window.THREE;
-  M3.models[id] = (id === 'whale' ? createWhaleModel : createClaudeModel)(T, gltf);
+  const m = M3.models[id] = (id === 'whale' ? createWhaleModel : createClaudeModel)(T, gltf);
   if (!M3.renderer) initRenderer(T);
+  // compile its shaders now, while the title is up, rather than with a stutter on the first frame of the run
+  const off = M3.model !== m;
+  if (off) M3.scene.add(m.root);
+  M3.renderer.compile(M3.scene, M3.cam);
+  if (off) M3.scene.remove(m.root);
   if (CH.id !== id) return;
   m3Note('');
   if (M3.waiting) startRun();
 }
 function initRenderer(T) {
-  const renderer = new T.WebGLRenderer({ alpha: true, antialias: true, preserveDrawingBuffer: true });
+  // the drawing buffer isn't kept: each frame's picture is copied out right after it is rendered
+  const renderer = new T.WebGLRenderer({ alpha: true, antialias: true });
   renderer.setClearColor(0x000000, 0);
   renderer.setPixelRatio(1);
   renderer.outputEncoding = T.sRGBEncoding;
@@ -2120,9 +2148,10 @@ function requestStart() {
 }
 function size3D() {
   if (!M3.renderer) return;
-  // render at up to twice the on-screen size (she's bigger with 巨大化) on top of the GPU's own antialiasing,
-  // and let the downscale smooth her outline and hair
-  const k = PX * (P ? P.size : 1), ss = Math.min(2, 900 / (M3_FH * M3_UNIT * k));
+  // on top of the GPU's own antialiasing, render at up to twice the on-screen size (she's bigger with 巨大化) and let
+  // the downscale smooth her outline and hair; a phone's screen is already so dense that it needs little or none,
+  // and every pixel of it has to be copied out of WebGL each frame
+  const k = PX * (P ? P.size : 1), ss = Math.min(clamp(2 / PX, 1, 2), 900 / (M3_FH * M3_UNIT * k));
   M3.renderer.setSize(Math.round(M3_FW * M3_UNIT * k * ss), Math.round(M3_FH * M3_UNIT * k * ss), false);
 }
 const POSE_OF = { atk1: 'attack', atk2: 'attack', atk3: 'attack', cast1: 'cast', cast2: 'cast', cast3: 'cast', dash4: 'land', hurt: 'hurt', skirt: 'curtsy', spin: 'spin', happy: 'happy', angry: 'angry', shy: 'shy', wave: 'wave', gulp: 'gulp', eat: 'eat', slack: 'slack', think: 'think' };
@@ -2161,6 +2190,7 @@ function draw3D(footY) {
 // a still copy of her current pose, for the dash phantom and the decoy
 function snapshot3D() {
   if (!M3.ready) return null;
+  M3.renderer.render(M3.scene, M3.cam);
   const src = M3.renderer.domElement, c = document.createElement('canvas');
   c.width = src.width; c.height = src.height;
   c.getContext('2d').drawImage(src, 0, 0);
@@ -2905,7 +2935,7 @@ function bubbleSprite(text, boss) {
     x.fillText(text, 0, 0.5);
   });
 }
-if (document.fonts && document.fonts.ready) document.fonts.ready.then(() => cache.clear());
+if (document.fonts && document.fonts.ready) document.fonts.ready.then(() => { cache.clear(); textCache.clear(); });
 
 // ======================================================================
 //  Run state
@@ -5441,9 +5471,10 @@ function drawBoss(e) {
     for (const s of [-1, 1]) { const ex = s * r * 0.32, ey = -r * 0.18, k = r * 0.12; ctx.moveTo(ex - k, ey - k); ctx.lineTo(ex + k, ey + k); ctx.moveTo(ex + k, ey - k); ctx.lineTo(ex - k, ey + k); }
     ctx.stroke();
   } else {
-    ctx.fillStyle = '#ff3b6b'; ctx.shadowColor = '#ff2d6f'; ctx.shadowBlur = 10;
+    ctx.fillStyle = 'rgba(255,45,111,0.3)';
+    for (const s of [-1, 1]) { ctx.beginPath(); ctx.ellipse(s * r * 0.32, -r * 0.18, r * 0.26, r * 0.15, s * 0.35, 0, TAU); ctx.fill(); }
+    ctx.fillStyle = '#ff3b6b';
     for (const s of [-1, 1]) { ctx.beginPath(); ctx.ellipse(s * r * 0.32, -r * 0.18, r * 0.17, r * 0.07, s * 0.35, 0, TAU); ctx.fill(); }
-    ctx.shadowBlur = 0;
   }
   ctx.font = `900 ${r * 0.42}px ${UI_FONT}`;
   ctx.fillStyle = stunned ? '#b9a9b9' : '#ff5c8a';
@@ -5973,13 +6004,10 @@ function drawFx() {
     ctx.globalCompositeOperation = 'source-over';
   }
   ctx.globalAlpha = 1;
-  ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.lineJoin = 'round';
   for (const t of G.texts) {
     ctx.globalAlpha = clamp(t.life / t.max * 2, 0, 1);
-    ctx.font = `800 ${Math.round(t.size * (1 + 0.35 * t.pop))}px ${UI_FONT}`;
-    ctx.lineWidth = 3; ctx.strokeStyle = 'rgba(20,10,5,0.85)';
-    ctx.strokeText(t.text, t.x, t.y);
-    ctx.fillStyle = t.color; ctx.fillText(t.text, t.x, t.y);
+    const s = textSprite(t.text, t.color, t.size), k = 1 + 0.35 * t.pop;
+    ctx.drawImage(s.c, t.x - s.w * k / 2, t.y - s.h * k / 2, s.w * k, s.h * k);
   }
   ctx.globalAlpha = 1;
 }
@@ -6585,6 +6613,9 @@ function startRun() {
   newRun();
   use3D(CH.id);
   size3D();
+  // build now what the first ultimate would otherwise build mid-cast: 大肥鱼's whale of light, 克劳德's close-up renderer
+  if (CH.id === 'whale') spiritWhale();
+  else if (M3.ready) cutin3D(200, 104);
   resetHud();
   $('hud').classList.toggle('whale', CH.id === 'whale');
   $('dashGlyph').textContent = CH.dash[0]; $('dashName').textContent = CH.dash[1]; $('dashBtn').setAttribute('aria-label', CH.dash[2]);
@@ -6759,6 +6790,8 @@ if (DEBUG) {
 let lastT = performance.now();
 function frame(now) {
   requestAnimationFrame(frame);
+  // a 120 Hz screen draws every other refresh, 60 frames a second, rather than everything twice as often for nothing
+  if (now - lastT < 10) return;
   let dt = Math.min(0.05, (now - lastT) / 1000);
   lastT = now;
   if (G && !G.modal) {
