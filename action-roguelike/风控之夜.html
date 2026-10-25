@@ -4676,16 +4676,16 @@ const WEAPONS = {
   // AK-47: one rifle in her hand, single aimed shots; each level hits harder and earns a better finish, like a rank:
   // 普通, 白银, 黄金, 铂金, 钻石, and 星耀 once evolved
   ak47: {
-    name: 'AK-47', g: '枪', skins: ['普通', '白银', '黄金', '铂金', '钻石', '星耀'],
-    desc: '握在手里的步枪，向最近的敌人单发点射。每升一级伤害更高，外观也跟着升级：普通、白银、黄金、铂金、钻石。',
+    name: 'AK-47', g: '枪', skins: ['普通', '白银', '黄金', '铂金', '钻石', '星耀'], oneshot: 5,
+    desc: '握在手里的步枪，向最近的敌人单发点射。每升一级伤害更高，外观也跟着升级：普通、白银、黄金、铂金、钻石；满级后一发「颗秒」普通怪。',
     evo: { need: 'hunt', name: 'AK-47 · 星耀', desc: '星耀外观：子弹拖着星光，伤害再提升，还能穿透两个敌人。' },
     lv: [
-      { cd: 0.55, dmg: 30 },
-      { cd: 0.55, dmg: 42 },
-      { cd: 0.55, dmg: 56 },
-      { cd: 0.55, dmg: 72 },
-      { cd: 0.55, dmg: 92 },
-      { cd: 0.5, dmg: 125, pierce: 2 },
+      { cd: 0.55, dmg: 45 },
+      { cd: 0.55, dmg: 65 },
+      { cd: 0.55, dmg: 90 },
+      { cd: 0.55, dmg: 120 },
+      { cd: 0.55, dmg: 160 },
+      { cd: 0.5, dmg: 220, pierce: 2 },
     ],
   },
   // legendary: only the golden slime gives it, it takes no weapon slot, and each further catch amends it
@@ -6429,6 +6429,7 @@ function hit(e, base, src, o = {}) {
   if (P.talents.hunt && (e.elite || e.boss || e.type === 'reg')) d *= 1 + 0.15 * P.talents.hunt;
   if (P.dark > 0) d *= 1.4 + 0.2 * (P.talents.abyss || 0);
   d = Math.max(1, Math.round(d));
+  if (o.kill) d = Math.max(d, Math.ceil(e.hp));
   // the golden slime shrugs off almost everything
   if (e.type === 'gold') d = crit ? 2 : 1;
   e.hp -= d; e.flash = 0.07;
@@ -6928,7 +6929,7 @@ function updateWeapons(dt) {
         const m = castMult(w), mz = gunMuzzle(w), k = 1 + P.amount, skin = AK_SKINS[w.level - 1];
         for (let j = 0; j < k; j++) {
           const a = w.aim + (j - (k - 1) / 2) * 0.08, sp = 1050 * P.pspeed;
-          shot({ kind: 'bullet', x: mz.x, y: mz.y, vx: Math.cos(a) * sp, vy: Math.sin(a) * sp, r: 4.5, dmg: s.dmg * m, pierce: (s.pierce || 0) + P.pierce, life: 0.65 * P.dur, src: 'ak47', kb: 50, tint: skin.tracer, star: w.level === 6 });
+          shot({ kind: 'bullet', x: mz.x, y: mz.y, vx: Math.cos(a) * sp, vy: Math.sin(a) * sp, r: 4.5, dmg: s.dmg * m, pierce: (s.pierce || 0) + P.pierce, life: 0.65 * P.dur, src: 'ak47', kb: 50, tint: skin.tracer, star: w.level === 6, oneshot: w.level >= WEAPONS.ak47.oneshot });
         }
         // a brass casing flicks out of the side
         if (G.parts.length < 520) G.parts.push({ x: mz.bx, y: mz.by, vx: -Math.cos(w.aim) * 60 + rand(-30, 30), vy: -110 + rand(-30, 20), life: 0.35, max: 0.35, size: 2.2, color: '#e8b84a', add: false });
@@ -7272,7 +7273,11 @@ function updateShots(dt) {
       if ((e.x - b.x) ** 2 + (e.y - b.y) ** 2 > (b.r + e.r) ** 2) return;
       b.hits.push(e.id);
       if (b.kind === 'article') { enforce(e, b); b.dead = true; return; }
-      hit(e, b.dmg, b.src, { kb: b.kb != null ? b.kb : 80, kx: b.vx, ky: b.vy });
+      // 颗秒: a maxed AK-47 kills an ordinary mob with one bullet and says so on it; elites, 注册机, DAN and the
+      // golden slime just take the hit
+      const one = b.oneshot && !e.elite && !e.boss && e.type !== 'reg' && e.type !== 'gold';
+      hit(e, b.dmg, b.src, { kb: b.kb != null ? b.kb : 80, kx: b.vx, ky: b.vy, kill: one, quiet: one });
+      if (one && e.dead) { const t = floatText(e.x, e.y - e.r - 6, '颗秒', '#ffe27a', 17); t.pop = 1; t.life = t.max = 1.1; }
       if (b.split && !b.child) {
         const a = Math.atan2(b.vy, b.vx), sp = Math.hypot(b.vx, b.vy);
         for (const da of [-0.55, 0.55]) {
@@ -8895,6 +8900,7 @@ function weaponCard(o, i) {
   } else {
     title = d.skins ? `${d.name} · ${d.skins[w.level]}` : `${d.name} Lv ${w.level + 1}`; tag = '升级'; desc = statDiff(d.lv[w.level - 1], d.lv[w.level]);
     if (d.skins) desc += `，换上「${d.skins[w.level]}」外观`;
+    if (d.oneshot === w.level + 1) desc += '，解锁「颗秒」：一发秒杀普通怪';
     meta = w.level + 1 === 5 ? `<span>满级后带上「${TALENT[d.evo.need].name}」再开宝箱即可进化</span>` : '';
   }
   return `<button class="card ${o.kind === 'evo' ? 'evo' : o.kind === 'new' ? 'r1' : ''}" type="button" data-i="${i}">
