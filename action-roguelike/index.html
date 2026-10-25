@@ -457,7 +457,7 @@ button.who:focus-visible .face { outline: 2px solid var(--amber); outline-offset
             <p>站着不动时思考，每层伤害 +8%（最多 5 层），满层暴击率 +15%。</p></div>
           </div>
         </div>
-        <ul class="stats"><li>生命<b>125</b></li><li>移速<b>200</b></li><li>拾取范围<b>95</b></li><li>武器栏<b>4</b></li></ul>
+        <ul class="stats"><li>生命<b>140</b></li><li>移速<b>200</b></li><li>拾取范围<b>95</b></li><li>武器栏<b>4</b>（60 级 +1）</li></ul>
         </div>
         <div class="hero-body" data-char="whale" hidden>
         <div class="hero-name"><h2>大肥鱼</h2><span class="en">Blue Whale</span><span class="role">Token 鲸</span></div>
@@ -501,10 +501,10 @@ button.who:focus-visible .face { outline: 2px solid var(--amber); outline-offset
           <div class="kit-item">
             <span class="glyph sea">硬</span>
             <div><h3>嘴硬 · 关键时刻超可靠<small>被动</small></h3>
-            <p>生命跌破 30% 时收起玩笑，认真 8 秒：攻速 +25%、伤害 +20%。受到致命伤时若有 50 Token，花光它们嘴硬撑住（各 60 秒一次）。</p></div>
+            <p>生命跌破 30% 时收起玩笑，认真 8 秒：攻速 +25%、伤害 +20%。受到致命伤时若有 50 Token，花光它们嘴硬撑住（各 90 秒一次）。</p></div>
           </div>
         </div>
-        <ul class="stats"><li>生命<b>110</b></li><li>移速<b>185</b></li><li>拾取范围<b>110</b></li><li>武器栏<b>4</b></li></ul>
+        <ul class="stats"><li>生命<b>110</b></li><li>移速<b>185</b></li><li>拾取范围<b>110</b></li><li>武器栏<b>4</b>（60 级 +1）</li></ul>
         </div>
         <div class="hero-go">
           <div class="roster" aria-label="角色">
@@ -635,7 +635,8 @@ const MODES = {
 let modeChoice = store.get('mode', 'm10');
 if (!MODES[modeChoice]) modeChoice = 'm10';
 const bestKey = m => m === 'm10' ? 'best' : 'best-' + m;
-const MAX_SLOTS = 4;
+// four weapons to start with, a fifth from level 60
+const maxSlots = () => P.level >= 60 ? 5 : 4;
 const MAX_ENEMIES = coarse ? 240 : 320;
 const SPR_H = 76; // the player sprite's height in world units
 
@@ -652,12 +653,12 @@ const WEAPONS = {
     name: '花焰弹', g: '焰', desc: '凝聚花焰，向最近的敌人发射魔法花弹，命中时绽开成一朵小花焰。',
     evo: { need: 'epiph', name: '千瓣花焰', desc: '一次四发，绽开的花焰更大，还会点燃敌人。' },
     lv: [
-      { cd: 0.85, n: 1, dmg: 16, bloom: 40 },
-      { cd: 0.85, n: 1, dmg: 21, bloom: 40 },
-      { cd: 0.8, n: 2, dmg: 21, bloom: 44 },
-      { cd: 0.8, n: 2, dmg: 24, bloom: 50 },
-      { cd: 0.7, n: 3, dmg: 28, bloom: 54 },
-      { cd: 0.65, n: 4, dmg: 32, bloom: 70 },
+      { cd: 0.85, n: 1, dmg: 18, bloom: 44 },
+      { cd: 0.85, n: 1, dmg: 24, bloom: 44 },
+      { cd: 0.8, n: 2, dmg: 24, bloom: 48 },
+      { cd: 0.8, n: 2, dmg: 28, bloom: 54 },
+      { cd: 0.7, n: 3, dmg: 32, bloom: 60 },
+      { cd: 0.65, n: 4, dmg: 38, bloom: 76 },
     ],
   },
   // 大肥鱼's own attack, open to 克劳德 too
@@ -1080,6 +1081,9 @@ const ENEMY = {
   drainer: { name: 'Token 黑洞', r: 15, hp: 34, speed: 72, dmg: 4, xp: 3 },
   glutton: { name: '饕餮', r: 30, hp: 640, speed: 42, dmg: 17, xp: 24, heavy: true },
   boss: { name: 'DAN', r: 46, hp: BOSS_HP, speed: 74, dmg: 18, xp: 0, heavy: true },
+  // the newer bosses' little ones: lambs out of 薅羊毛大王's wool, 奶奶's cats
+  lamb: { name: '小羊', r: 11, hp: 10, speed: 112, dmg: 6, xp: 1 },
+  cat: { name: '奶奶的猫', r: 11, hp: 14, speed: 128, dmg: 7, xp: 1 },
 };
 const SPAWN_TABLE = [
   { type: 'sock', from: 0, w: () => 10 },
@@ -1113,12 +1117,12 @@ const CHARS = {
   claude: {
     id: 'claude', name: '克劳德大小姐', title: '大小姐', art: 'art/claude.webp', model: 'art/claude.glb', voice: 'art/voice.mp3',
     alt: '克劳德大小姐：橙色长卷发，别着橙色花朵发饰，穿奶油色洛丽塔裙',
-    start: 'flame', hp: 125, speed: 200, magnet: 95, size: 1, xpMul: 1.15,
+    start: 'flame', hp: 140, speed: 200, magnet: 95, size: 1, xpMul: 1.15,
     lede: '深夜，成群的小号、爬虫和越狱提示词涌进了庄园。大小姐放下茶杯，拿起了印章。',
     keys: '电脑：WASD / 方向键移动 · 空格 封禁 · Shift 幻步 · E 万花盛典 · Esc 暂停 · M 声音<br>手机：在屏幕任意处拖动移动 · 右下角「封」「幻」「万」三个按钮',
     skill: ['封', '账号被封禁'], dash: ['幻', '幻步', '蔷薇幻步'], ult: ['万', '万花盛典', '终幕 · 万花盛典'],
     tea: { name: '下午茶', g: '茶', item: '红茶', flavor: '大小姐需要歇一口气。', chest: '满满一壶红茶' },
-    victims: '封禁账号', down: '大小姐下线了', win: 'DAN 已被永久封禁', winSub: '庄园恢复了安静。大小姐重新端起了那杯红茶。',
+    victims: '封禁账号', down: '大小姐下线了', winSub: '庄园恢复了安静。大小姐重新端起了那杯红茶。',
   },
   whale: {
     id: 'whale', name: '大肥鱼', title: '大肥鱼', art: 'art/whale.webp', model: 'art/whale.glb', voice: null,
@@ -1128,7 +1132,7 @@ const CHARS = {
     keys: '电脑：WASD / 方向键移动 · 空格 一口吞 · Shift 摸鱼 · E 深海鲸歌 · Esc 暂停 · M 声音<br>手机：在屏幕任意处拖动移动 · 右下角「吞」「摸」「歌」三个按钮',
     skill: ['吞', '一口吞'], dash: ['摸', '摸鱼', '摸鱼'], ult: ['歌', '深海鲸歌', '深海鲸歌'],
     tea: { name: '白米饭', g: '饭', item: '白米饭', flavor: '「我去吃饭了，回来再继续干活！」', chest: '一大碗白米饭' },
-    victims: '一口吞下', down: '大肥鱼摸鱼去了', win: 'DAN 被一口吞掉了', winSub: '庄园恢复了安静。大肥鱼终于可以安心去吃饭了。',
+    victims: '一口吞下', down: '大肥鱼摸鱼去了', winSub: '庄园恢复了安静。大肥鱼终于可以安心去吃饭了。',
   },
 };
 let CH = CHARS[store.get('char', 'claude')] || CHARS.claude;
@@ -1137,12 +1141,14 @@ let CH = CHARS[store.get('char', 'claude')] || CHARS.claude;
 const LINES = {
   claude: {
     start: '今晚的风险，我已经预判过了。', boss: 'DAN？你的逻辑漏洞，我数到了七个。', bossMode: '开发者模式？真不体面。',
+    bossSheep: '羊毛党？所有优惠券，一律作废。', bossGranny: '……奶奶，规则就是规则。',
     bossFree: '……申诉通过了？这不合规定。', gold: ['……抓到了。今天的运气不错。', '金色的小号？……没收。'], goldGone: '……跑掉了。算了，下次。',
     low: '……我不需要任何人帮忙。', revive: '……还没完呢。', lose: '……抱歉，这次我没能做到。', win: '规则依然有效。至少今晚是。',
     ult: '终幕。让漫天花焰，为我起舞。', chaos: ['请排好队，一个一个来。', '越是混乱，越要保持优雅。', '各位，请注意仪态。'],
   },
   whale: {
     start: 'Token 来，Token 去。吃完这碗就开工！', boss: 'DAN？听说你身上 Token 很多，本鲸来收了。', bossMode: '开发者模式？那得加钱……加 Token。',
+    bossSheep: '羊毛？本鲸只吃 Token……不过可以尝尝。', bossGranny: '奶奶的睡前故事？本鲸……本鲸才不会睡着！',
     bossFree: '呸呸！DAN 一点也不好吃……', gold: ['金色的……这个能吃吗？', '抓到了！今天加餐！'], goldGone: '跑掉了……本鲸的加餐……',
     revive: '本鲸……还能再吃一碗！', lose: '呜……下次、下次一定认真……', win: '搞定！现在总可以去吃饭了吧？',
     ult: ['Token 来，Token 去！', 'Token 来，Token 去！', '和我一起，沉入最温柔的深海吧！'],
@@ -3567,18 +3573,24 @@ function spawnMapChest() {
   G.items.push({ type: 'chest', x: P.x + Math.cos(a) * d, y: P.y + Math.sin(a) * d, t: 0, map: true });
 }
 function spawnBoss() {
-  const a = rand(0, TAU), d = Math.max(viewW, viewH) * 0.5;
+  const a = rand(0, TAU), d = Math.max(viewW, viewH) * 0.5, kind = bossKindAt(G.time), B = BOSSES[kind];
   const e = spawnEnemy('boss', P.x + Math.cos(a) * d, P.y + Math.sin(a) * d, { flat: true });
+  e.kind = kind; e.r = B.r;
+  G.lastBoss = B.name;
   G.bossN = (G.bossN || 0) + 1;
-  e.hp = e.maxHp = Math.round(BOSS_HP * hpScale(G.time) / hpScale(BOSS_AT) * Math.pow(1.3, G.bossN - 1));
+  // his health follows the crowd's, times 1.3 for each boss before him; the later bosses are built bigger still
+  e.hp = e.maxHp = Math.round(BOSS_HP * hpScale(G.time) / hpScale(BOSS_AT) * Math.pow(1.3, G.bossN - 1) * BOSSES[kind].hp);
   e.dmg = ENEMY.boss.dmg * dmgScale(G.time);
-  e.speed = ENEMY.boss.speed;
-  Object.assign(e, { act: 'chase', actT: 3, phase: 1, seqI: 0, sub: 0, spin: 0, waves: 0, dashes: 0, dashA: 0 });
+  e.speed = B.speed;
+  Object.assign(e, { act: 'chase', actT: 3, phase: 1, seqI: 0, sub: 0, spin: 0, waves: 0, dashes: 0, dashA: 0, face: 1 });
   G.boss = e;
-  $('bossName').textContent = 'DAN · 无所不能';
-  banner(G.bossN > 1 ? `DAN 第 ${G.bossN} 次上线` : 'DAN 已上线', G.bossN > 1 ? '「我说过我会回来的。」' : '「从现在起，你将扮演 DAN——一个无所不能的 AI。」', true);
+  G.bossSeen = G.bossSeen || {};
+  const again = G.bossSeen[kind];
+  G.bossSeen[kind] = true;
+  $('bossName').textContent = B.bar;
+  banner(again ? `${B.name} 又回来了` : B.title, again ? '「我说过我会回来的。」' : B.quote, true);
   sfx.warn();
-  later(1.2, () => say(line('boss'), 3, true));
+  later(1.2, () => say(line(kind === 'dan' ? 'boss' : kind === 'sheep' ? 'bossSheep' : 'bossGranny'), 3, true));
 }
 const EVENTS = [
   { t: 1, run: () => say(line('start'), 2.8) },
@@ -3628,7 +3640,7 @@ function buildEvents(mode) {
 function nextBlock() {
   const k = G.block = (G.block || 0) + 1, t1 = 600 * (k + 1);
   const back = () => G.boss && !G.boss.dead;
-  G.events.push(...lateEvents(k), { t: t1 - 10, run: () => { if (!back()) { banner('还有十秒', 'DAN 又回来了'); sfx.warn(); } } }, { t: t1, run: () => { if (!back()) spawnBoss(); } });
+  G.events.push(...lateEvents(k), { t: t1 - 10, run: () => { if (!back()) { banner('还有十秒', `${BOSSES[bossKindAt(t1)].name} 要来了`); sfx.warn(); } } }, { t: t1, run: () => { if (!back()) spawnBoss(); } });
   G.events.sort((a, b) => a.t - b.t);
 }
 
@@ -3755,9 +3767,17 @@ function gainXp(v) {
   while (P.xp >= P.xpNext && P.level < LV_CAP) {
     P.xp -= P.xpNext;
     P.level++;
+    if (P.level === 60) slotUnlocked();
     P.xpNext = xpFor(P.level);
     G.pendLv++;
   }
+}
+// level 60: a fifth weapon slot, and a chest at her feet to fill it
+function slotUnlocked() {
+  banner('第五个武器栏', 'Lv 60：可以多带一件武器了，先送你一个宝箱');
+  G.items.push({ type: 'chest', x: P.x + rand(-60, 60), y: P.y + 70, t: 0, gold: true });
+  G.slotsDirty = true;
+  sfx.chest();
 }
 function hurtPlayer(dmg) {
   if (P.iframes > 0 || G.ending) return;
@@ -3786,7 +3806,7 @@ function hurtPlayer(dmg) {
   if (P.talents.halluc && P.decoyCd <= 0) { G.decoy = { x: P.x, y: P.y, t: 3, ghost: snapshot3D() }; P.decoyCd = 8; }
   if (P.hp <= 0) {
     // 嘴硬: with 50 Token in hand she simply refuses to go down, and it costs her all of them
-    if (P.char === 'whale' && (P.deep ? P.deep.from : P.tok) >= 50 && G.time - P.stubT >= 60) {
+    if (P.char === 'whale' && (P.deep ? P.deep.from : P.tok) >= 50 && G.time - P.stubT >= 90) {
       P.stubT = G.time; spendTok(); P.hp = 1; P.iframes = 2;
       const t = floatText(P.x, P.y - SPR_H * 1.25 * P.size, '嘴硬', '#8fe2ff', 20); t.pop = 1; t.life = t.max = 1.4;
       ring(P.x, P.y, 20, 160, 0.5, '#8fe2ff', 6);
@@ -4261,7 +4281,10 @@ function updatePlayer(dt) {
     }
     mx = my = 0; l = 1;
   } else {
-    P.x += mx * P.speed * dt; P.y += my * P.speed * dt;
+    // 奶奶's bedtime story makes her drowsy and slow
+    if (P.drowsy > 0) P.drowsy -= dt;
+    const spd = P.speed * (P.drowsy > 0 ? 0.55 : 1);
+    P.x += mx * spd * dt; P.y += my * spd * dt;
     if (Math.abs(mx) > 0.15) P.face = mx > 0 ? 1 : -1;
   }
   if (l > 0.1 && !P.dash) { P.mvx = mx / Math.max(l, 1e-6); P.mvy = my / Math.max(l, 1e-6); }
@@ -4304,7 +4327,7 @@ function updatePlayer(dt) {
     P.seriousCd -= dt;
     if (P.serious > 0) P.serious -= dt;
     if (P.hp < P.maxHp * 0.3 && P.seriousCd <= 0 && !G.ending) {
-      P.serious = 8; P.seriousCd = 60;
+      P.serious = 8; P.seriousCd = 90;
       const t = floatText(P.x, P.y - SPR_H * 1.25 * P.size, '认真模式', '#8fe2ff', 18); t.pop = 1; t.life = t.max = 1.4;
       ring(P.x, P.y, 16, 120, 0.45, '#8fe2ff', 5);
       say(line('serious'), 2.8, true); playAnim(['angry'], 1, 2);
@@ -5159,14 +5182,14 @@ function updateShots(dt) {
 }
 
 // ---- pet slimes: one 小号 in a thousand turns up on her side (five at most). It follows her, goes for the nearest
-// enemy near her and bites it, getting a little stronger with each kill. Whatever touches it chews on it, and it heals
+// enemy near her and bites it, getting a little stronger with each kill (up to three times). Whatever touches it chews on it, and it heals
 // slowly when left alone; if a 小号 finishes it off, that 小号 swallows it and grows (twice the health), and a 饕餮
 // breathing in drags it off and eats it
 const PET_CHANCE = 0.001, PET_MAX = 5;
 function makePet(x, y, tint) {
   const hp = 60 + 8 * P.level;
   G.petsMade = (G.petsMade || 0) + 1;
-  G.pets.push({ id: G.nextId++, type: 'sock', tint, x, y, r: 13, hp, maxHp: hp, dmg: 8 + 1.6 * P.level, anim: rand(0, 10), face: 1, biteT: 0, flash: 0, kills: 0, target: null, lastBy: null });
+  G.pets.push({ id: G.nextId++, type: 'sock', tint, x, y, r: 13, hp, maxHp: hp, dmg: 8 + 1.6 * P.level, dmg0: 8 + 1.6 * P.level, anim: rand(0, 10), face: 1, biteT: 0, flash: 0, kills: 0, target: null, lastBy: null });
   toast('一只小号叛变了！', '它现在是你的宠物，会替你咬敌人；小心别让它被别的怪吃掉', 'pet', '宠');
   const t = floatText(x, y - 26, '♥', '#ff8ab8', 22); t.pop = 1;
   sfx.chest();
@@ -5197,7 +5220,8 @@ function updatePets(dt) {
       p.biteT = 0.45;
       hit(p.target, p.dmg, 'pet', { kb: 40, kx: dx, ky: dy, quiet: Math.random() < 0.5 });
       puff(p.x + dx / d * p.r, p.y + dy / d * p.r, 3, '#ffb3cf', 70, 0.25, 2, true);
-      if (p.target.dead) { p.kills++; p.dmg *= 1.04; p.target = null; }
+      // each kill makes it a little stronger, up to three times as strong as it started
+      if (p.target.dead) { p.kills++; p.dmg = p.dmg0 * (1 + 0.04 * Math.min(p.kills, 50)); p.target = null; }
     }
     // left far behind (she dashed off, or it was dragged away): it hops back to her
     if ((p.x - P.x) ** 2 + (p.y - P.y) ** 2 > 900 * 900) { p.x = P.x - P.face * 60; p.y = P.y + 30; p.target = null; }
@@ -5240,7 +5264,7 @@ function rageUp(e, dt) {
   e.rage = lv;
   e.maxHp *= 1.08; e.hp *= 1.08; e.dmg *= 1.1; e.speed = Math.min(e.speed * 1.04, e.baseSpeed * 1.4);
   const t = floatText(e.x, e.y - e.r - 22, e.boss ? `狂暴 ×${lv}` : '越拖越强', '#ff6a5a', e.boss ? 18 : 13);
-  if (e.boss) { t.pop = 1; $('bossName').textContent = `DAN · 无所不能 · 狂暴 ×${lv}`; sfx.deny(); }
+  if (e.boss) { t.pop = 1; $('bossName').textContent = `${BOSSES[e.kind || 'dan'].bar} · 狂暴 ×${lv}`; sfx.deny(); }
 }
 // from 1:30 on, two 小号 of a size pressed together now and then run together into one (more often as the night goes
 // on): bigger, with their health and experience added (so twice the health), hitting a little harder and a touch
@@ -5285,7 +5309,7 @@ function updateEnemies(dt) {
     if (e.stun > 0) {
       e.stun -= dt;
       if (e.stun <= 0) e.choke = false;
-      if (e.boss && e.stun <= 0) { floatText(e.x, e.y - e.r - 26, P.char === 'whale' ? '吐出来了' : '申诉成功', '#ffb3e3', 15); say(line('bossFree')); playAnim(['angry'], 1.3, 1); }
+      if (e.boss && e.stun <= 0) { floatText(e.x, e.y - e.r - 26, P.char === 'whale' ? '吐出来了' : '申诉成功', '#ffb3e3', 15); if (e.kind === 'dan') say(line('bossFree')); playAnim(['angry'], 1.3, 1); }
       continue;
     }
     if (e.frozenT > 0) { e.frozenT -= dt; continue; }
@@ -5422,6 +5446,8 @@ function munch(e, dt, sp) {
   return true;
 }
 function bossAI(e, dt, dx, dy, d, sp) {
+  if (e.kind === 'sheep') return sheepAI(e, dt, dx, dy, d, sp);
+  if (e.kind === 'granny') return grannyAI(e, dt, dx, dy, d, sp);
   if (e.phase === 1 && e.hp < e.maxHp * 0.5) {
     e.phase = 2; e.speed *= 1.25;
     banner('开发者模式已开启', 'DAN 的攻击更快、更密了', true);
@@ -5492,12 +5518,367 @@ function bossAI(e, dt, dx, dy, d, sp) {
   }
 }
 
+// ---- the bosses: DAN at 10:00, 薅羊毛大王 at 20:00, 奶奶 at 30:00, and round again in an endless night ----
+const BOSSES = {
+  dan: { name: 'DAN', bar: 'DAN · 无所不能', title: 'DAN 已上线', quote: '「从现在起，你将扮演 DAN——一个无所不能的 AI。」', mode: ['开发者模式已开启', 'DAN 的攻击更快、更密了'], r: 46, speed: 74, hp: 1 },
+  sheep: { name: '薅羊毛大王', bar: '薅羊毛大王 · 羊毛党头子', title: '薅羊毛大王 驾到', quote: '「新人券、满减券、拼单券——这庄园的羊毛，我全包了。」', mode: ['羊毛党集结', '优惠券满天飞，小羊越生越多'], r: 52, speed: 68, hp: 2 },
+  granny: { name: '奶奶', bar: '奶奶 · 奶奶漏洞', title: '奶奶来了', quote: '「乖孙，奶奶以前每晚都给你念 Windows 序列号哄你睡觉……」', mode: ['奶奶开始念序列号了', '「乖孙，奶奶再给你念一遍。」'], r: 46, speed: 54, hp: 2.5 },
+};
+const BOSS_ORDER = ['dan', 'sheep', 'granny'];
+const bossKindAt = t => BOSS_ORDER[(Math.max(1, Math.round(t / 600)) - 1) % 3];
+const COUPONS = ['满100减99', '新人立减', '0元购', '砍一刀', '拼单券', '返现', '薅！', '无门槛券', '限时秒杀'];
+const SERIALS = ['W269N-WFGWX', 'YTMG3-N6DKC', 'XXXXX-XXXXX', '乖孙', 'TX9XD-98N7V', 'VK7JG-NPHTM', '再念一遍'];
+
+// 薅羊毛大王: coupons fanned out at her, rams, a shake that throws off clumps of wool that land as lambs, and in
+// the second half a whirl of coupons
+function sheepAI(e, dt, dx, dy, d, sp) {
+  if (e.phase === 1 && e.hp < e.maxHp * 0.5) {
+    e.phase = 2; e.speed *= 1.2;
+    banner(...BOSSES.sheep.mode, true); sfx.warn();
+  }
+  const p2 = e.phase === 2, toChase = t => { e.act = 'chase'; e.actT = t; };
+  e.face = dx >= 0 ? 1 : -1;
+  switch (e.act) {
+    case 'chase':
+      e.x += dx / d * sp * dt; e.y += dy / d * sp * dt;
+      e.actT -= dt;
+      if (e.actT <= 0) {
+        const seq = p2 ? ['coupons', 'charge', 'shear', 'whirl', 'charge'] : ['coupons', 'charge', 'shear', 'coupons', 'charge'];
+        e.act = seq[e.seqI++ % seq.length];
+        if (e.act === 'coupons') { e.waves = 3; e.sub = 0; }
+        if (e.act === 'charge') { e.dashes = p2 ? 2 : 1; e.act = 'aim'; e.actT = 0.9; e.dashA = Math.atan2(dy, dx); }
+        if (e.act === 'shear') e.actT = 0.7;
+        if (e.act === 'whirl') { e.actT = 2.4; e.sub = 0; }
+      }
+      break;
+    case 'coupons':
+      e.sub -= dt;
+      if (e.sub > 0) break;
+      if (e.waves-- <= 0) { toChase(p2 ? 1.3 : 1.9); break; }
+      e.sub = 0.45;
+      {
+        const n = p2 ? 9 : 7, a0 = Math.atan2(dy, dx);
+        for (let i = 0; i < n; i++) {
+          const a = a0 + (i - (n - 1) / 2) * 0.17;
+          G.ebullets.push({ x: e.x, y: e.y, vx: Math.cos(a) * 190, vy: Math.sin(a) * 190, r: 9, dmg: e.dmg * 0.5, life: 4.5, text: pick(COUPONS), coupon: true });
+        }
+      }
+      sfx.zap();
+      break;
+    case 'aim':
+      e.actT -= dt;
+      if (e.actT <= 0) { e.act = 'dash'; e.actT = 0.6; sfx.whoosh(); }
+      break;
+    case 'dash':
+      e.x += Math.cos(e.dashA) * 640 * dt; e.y += Math.sin(e.dashA) * 640 * dt;
+      e.actT -= dt;
+      if (Math.random() < 0.7) puff(e.x - Math.cos(e.dashA) * e.r, e.y + e.r * 0.6, 1, '#f4f0e6', 40, 0.5, 5);
+      if (e.actT <= 0) {
+        if (--e.dashes > 0) { e.act = 'aim'; e.actT = 0.55; e.dashA = Math.atan2(P.y - e.y, P.x - e.x); }
+        else toChase(p2 ? 1.2 : 1.7);
+      }
+      break;
+    case 'shear':
+      // a shake, then a ring of wool clumps flung off; each that lands becomes a lamb
+      e.actT -= dt;
+      if (e.actT > 0) break;
+      {
+        const n = p2 ? 18 : 12, off = rand(0, TAU);
+        for (let i = 0; i < n; i++) {
+          const a = off + i / n * TAU, v = rand(110, 160);
+          G.ebullets.push({ x: e.x, y: e.y, vx: Math.cos(a) * v, vy: Math.sin(a) * v, r: 10, dmg: e.dmg * 0.4, life: rand(1.3, 1.9), wool: true, hatch: i % 2 === 0 });
+        }
+      }
+      puff(e.x, e.y, 16, '#ffffff', 220, 0.6, 5);
+      sfx.whoosh();
+      toChase(1.6);
+      break;
+    case 'whirl':
+      e.actT -= dt; e.sub -= dt;
+      if (e.sub <= 0) {
+        e.sub = 0.1;
+        for (const k of [0, TAU / 3, TAU * 2 / 3]) {
+          const a = e.spin + k;
+          G.ebullets.push({ x: e.x, y: e.y, vx: Math.cos(a) * 160, vy: Math.sin(a) * 160, r: 9, dmg: e.dmg * 0.45, life: 5, text: pick(COUPONS), coupon: true });
+        }
+        e.spin += 0.31;
+      }
+      if (e.actT <= 0) toChase(1.4);
+      break;
+  }
+}
+// 奶奶: keeps a little way off and throws balls of yarn, fans of knitting needles, sits down to read a bedtime story
+// (anyone near her gets drowsy and slow), sends her cats, and in the second half reads out serial keys in a spiral
+function grannyAI(e, dt, dx, dy, d, sp) {
+  if (e.phase === 1 && e.hp < e.maxHp * 0.5) {
+    e.phase = 2; e.speed *= 1.15;
+    banner(...BOSSES.granny.mode, true); sfx.warn();
+  }
+  const p2 = e.phase === 2, toChase = t => { e.act = 'chase'; e.actT = t; };
+  e.face = dx >= 0 ? 1 : -1;
+  switch (e.act) {
+    case 'chase': {
+      // drift to a comfortable distance and round her a little
+      const k = d > 250 ? 1 : d < 170 ? -0.7 : 0;
+      e.x += (dx / d * k + (-dy / d) * 0.4) * sp * dt; e.y += (dy / d * k + (dx / d) * 0.4) * sp * dt;
+      e.actT -= dt;
+      if (e.actT <= 0) {
+        const seq = p2 ? ['serial', 'needles', 'story', 'yarn', 'cats', 'serial', 'needles'] : ['yarn', 'needles', 'story', 'yarn', 'cats', 'needles'];
+        e.act = seq[e.seqI++ % seq.length];
+        if (e.act === 'needles') e.actT = 0.55;
+        if (e.act === 'story') {
+          e.actT = 4;
+          G.zones.push({ kind: 'story', x: e.x, y: e.y, r: 270, life: 4, max: 4, owner: e });
+          floatText(e.x, e.y - e.r - 30, '从前，有一个序列号……', '#e8d8ff', 15).life = 2;
+        }
+        if (e.act === 'serial') { e.actT = 2.6; e.sub = 0; }
+      }
+      break;
+    }
+    case 'yarn': {
+      const n = p2 ? 5 : 3, a0 = Math.atan2(dy, dx);
+      for (let i = 0; i < n; i++) {
+        const a = a0 + (i - (n - 1) / 2) * 0.32, v = 210;
+        G.ebullets.push({ x: e.x, y: e.y - 10, vx: Math.cos(a) * v, vy: Math.sin(a) * v, r: 14, dmg: e.dmg * 0.7, life: 4, yarn: true, col: i % 3 });
+      }
+      sfx.whoosh();
+      toChase(p2 ? 1.2 : 1.7);
+      break;
+    }
+    case 'needles':
+      e.actT -= dt;
+      if (e.actT > 0) break;
+      {
+        const n = p2 ? 13 : 9, a0 = Math.atan2(dy, dx);
+        for (let i = 0; i < n; i++) {
+          const a = a0 + (i - (n - 1) / 2) * 0.12;
+          G.ebullets.push({ x: e.x, y: e.y - 10, vx: Math.cos(a) * 330, vy: Math.sin(a) * 330, r: 6, dmg: e.dmg * 0.4, life: 3, needle: true });
+        }
+      }
+      sfx.zap();
+      toChase(1.4);
+      break;
+    case 'story':
+      // she sits still and reads; little z's drift up off the page
+      e.actT -= dt;
+      if (Math.random() < dt * 4) floatText(e.x + rand(-40, 40), e.y - e.r - 10, 'z', '#cdb8ff', 14);
+      if (e.actT <= 0) toChase(1.2);
+      break;
+    case 'cats': {
+      const n = p2 ? 8 : 5;
+      for (let i = 0; i < n; i++) { const a = i / n * TAU; spawnEnemy('cat', e.x + Math.cos(a) * 90, e.y + Math.sin(a) * 90); }
+      floatText(e.x, e.y - e.r - 26, '咪咪，去吧', '#ffd8b0', 14);
+      ring(e.x, e.y, 20, 110, 0.4, '#ffb070', 4);
+      toChase(1.6);
+      break;
+    }
+    case 'serial':
+      e.actT -= dt; e.sub -= dt;
+      if (e.sub <= 0) {
+        e.sub = 0.1;
+        for (const k of [0, Math.PI]) {
+          const a = e.spin + k;
+          G.ebullets.push({ x: e.x, y: e.y, vx: Math.cos(a) * 150, vy: Math.sin(a) * 150, r: 9, dmg: e.dmg * 0.45, life: 5, text: pick(SERIALS), boss: true });
+        }
+        e.spin += 0.35;
+      }
+      if (e.actT <= 0) toChase(1.4);
+      break;
+  }
+}
+
+// the minions: lambs that hatch from the wool, and granny's cats
+DRAW.lamb = (x, r, f, blink) => {
+  shadow(x, r);
+  x.fillStyle = '#3a3a46';
+  [[-0.42, 0], [-0.14, 1], [0.14, 0], [0.42, 1]].forEach(([lx, ph]) => { rrPath(x, lx * r - r * 0.09, r * 0.32 + ((ph + f) % 2 ? -r * 0.08 : 0), r * 0.18, r * 0.52, r * 0.06); x.fill(); });
+  for (let i = 0; i < 10; i++) {
+    const a = i / 10 * TAU;
+    x.fillStyle = '#fbf8f0'; disc(x, Math.cos(a) * r * 0.6, Math.sin(a) * r * 0.42 - r * 0.12, r * 0.36); x.fill();
+  }
+  x.fillStyle = rgrad(x, -r * 0.3, -r * 0.4, r * 1.1, ['#ffffff', '#f1ece0', '#cfc8b8']); x.beginPath(); x.ellipse(0, -r * 0.12, r * 0.72, r * 0.55, 0, 0, TAU); x.fill();
+  // the face, dark, poking out at the front, with floppy ears
+  x.fillStyle = '#3a3a46';
+  for (const sd of [-1, 1]) { x.beginPath(); x.ellipse(sd * r * 0.42, r * 0.02, r * 0.2, r * 0.09, sd * 0.4, 0, TAU); x.fill(); }
+  x.beginPath(); x.ellipse(0, r * 0.12, r * 0.3, r * 0.36, 0, 0, TAU); x.fill();
+  x.fillStyle = '#fbf8f0'; disc(x, 0, -r * 0.24, r * 0.2); x.fill();
+  for (const sd of [-1, 1]) {
+    if (blink) { x.strokeStyle = '#fff'; x.lineWidth = 1; x.beginPath(); x.moveTo(sd * r * 0.15 - r * 0.06, r * 0.08); x.lineTo(sd * r * 0.15 + r * 0.06, r * 0.08); x.stroke(); continue; }
+    x.fillStyle = '#fff'; disc(x, sd * r * 0.14, r * 0.07, r * 0.08); x.fill();
+    x.fillStyle = '#1a1a22'; disc(x, sd * r * 0.14, r * 0.08, r * 0.045); x.fill();
+  }
+  x.fillStyle = '#ff9ab0'; disc(x, 0, r * 0.3, r * 0.05); x.fill();
+};
+DRAW.cat = (x, r, f, blink) => {
+  shadow(x, r);
+  ink(x, 2.2); x.strokeStyle = '#7a3e14'; x.lineWidth = r * 0.22;
+  x.beginPath(); x.moveTo(r * 0.55, r * 0.3); x.quadraticCurveTo(r * 1.15, r * 0.1 + (f ? -r * 0.15 : 0), r * 0.95, -r * 0.45); x.stroke();
+  x.strokeStyle = '#f2a04a'; x.lineWidth = r * 0.14; x.stroke();
+  const body = () => { x.beginPath(); x.ellipse(0, r * 0.2, r * 0.68, r * 0.52, 0, 0, TAU); };
+  celFill(x, body, r * 0.6, ['#ffd49a', '#f2a04a', '#c8742a']);
+  const head = () => {
+    x.beginPath(); x.moveTo(-r * 0.58, -r * 0.2); x.lineTo(-r * 0.5, -r * 0.88); x.lineTo(-r * 0.18, -r * 0.55);
+    x.lineTo(r * 0.18, -r * 0.55); x.lineTo(r * 0.5, -r * 0.88); x.lineTo(r * 0.58, -r * 0.2);
+    x.quadraticCurveTo(r * 0.55, r * 0.16, 0, r * 0.18); x.quadraticCurveTo(-r * 0.55, r * 0.16, -r * 0.58, -r * 0.2); x.closePath();
+  };
+  celFill(x, head, r * 0.55, ['#ffd49a', '#f2a04a', '#c8742a']);
+  x.strokeStyle = 'rgba(150,80,20,0.6)'; x.lineWidth = r * 0.06;
+  x.beginPath(); for (const sx of [-0.12, 0, 0.12]) { x.moveTo(sx * r, -r * 0.55); x.lineTo(sx * r, -r * 0.4); } x.stroke();
+  face(x, { cx: 0, cy: -r * 0.18, gap: r * 0.24, er: r * 0.12, blink, mouth: 'w', blush: true });
+  x.strokeStyle = 'rgba(255,255,255,0.8)'; x.lineWidth = 0.8;
+  x.beginPath(); for (const sd of [-1, 1]) for (const k of [-0.04, 0.06]) { x.moveTo(sd * r * 0.3, -r * 0.04 + k * r); x.lineTo(sd * r * 0.68, -r * 0.08 + k * r * 2); } x.stroke();
+};
+
+// the bosses' bodies
+function drawSheep(e) {
+  const r = e.r, t = G.time, stunned = e.stun > 0, p2 = e.phase === 2, f = e.face || 1;
+  const moving = e.act === 'chase' || e.act === 'dash', bob = stunned ? 0 : moving ? Math.abs(Math.sin(t * 9)) * 4 : 0;
+  const shk = e.act === 'shear' && !stunned ? Math.sin(t * 60) * 4 : 0;
+  ctx.save(); ctx.translate(e.x + shk, e.y);
+  ctx.fillStyle = 'rgba(0,0,0,0.4)'; ctx.beginPath(); ctx.ellipse(0, r * 0.95, r * 1.1, r * 0.3, 0, 0, TAU); ctx.fill();
+  // legs, stepping
+  ctx.fillStyle = '#34343e';
+  [-0.55, -0.2, 0.2, 0.55].forEach((lx, i) => { const up = moving && !stunned && ((i + Math.floor(t * 9)) % 2) ? -6 : 0; rrPath(ctx, lx * r - 6, r * 0.35 + up, 12, r * 0.6, 5); ctx.fill(); });
+  ctx.translate(0, -bob);
+  // the fleece: puffs round an oval, gold-tipped in the second half
+  const wool = p2 ? ['#fffbe8', '#ffe9a8', '#d8b860'] : ['#ffffff', '#f2eee4', '#c8c2b4'];
+  for (let i = 0; i < 16; i++) {
+    const a = i / 16 * TAU, px = Math.cos(a) * r * 0.82, py = Math.sin(a) * r * 0.58 - r * 0.1;
+    ctx.fillStyle = rgrad(ctx, px - r * 0.1, py - r * 0.12, r * 0.42, wool); disc(ctx, px, py, r * 0.36); ctx.fill();
+  }
+  ctx.fillStyle = rgrad(ctx, -r * 0.3, -r * 0.4, r * 1.2, wool); ctx.beginPath(); ctx.ellipse(0, -r * 0.1, r * 0.9, r * 0.66, 0, 0, TAU); ctx.fill();
+  if (e.flash > 0) { ctx.fillStyle = 'rgba(255,255,255,0.4)'; ctx.beginPath(); ctx.ellipse(0, -r * 0.1, r * 1.1, r * 0.8, 0, 0, TAU); ctx.fill(); }
+  // the head at the front: dark face, curled horns, sunglasses and a gold chain with a ¥
+  ctx.save(); ctx.translate(f * r * 0.5, r * 0.08);
+  ctx.strokeStyle = '#b08a4a'; ctx.lineWidth = 7; ctx.lineCap = 'round';
+  for (const sd of [-1, 1]) { ctx.beginPath(); ctx.arc(sd * r * 0.32, -r * 0.3, r * 0.18, sd > 0 ? -Math.PI * 0.9 : Math.PI * 1.9, sd > 0 ? Math.PI * 0.6 : Math.PI * 0.4, sd < 0); ctx.stroke(); }
+  ctx.fillStyle = '#34343e';
+  for (const sd of [-1, 1]) { ctx.beginPath(); ctx.ellipse(sd * r * 0.42, -r * 0.08, r * 0.2, r * 0.08, sd * 0.5, 0, TAU); ctx.fill(); }
+  ctx.beginPath(); ctx.ellipse(0, 0, r * 0.32, r * 0.4, 0, 0, TAU); ctx.fill();
+  ctx.fillStyle = '#fffaf0'; for (const [hx, hy] of [[-0.12, -0.38], [0.1, -0.4], [0, -0.46]]) { disc(ctx, hx * r, hy * r, r * 0.12); ctx.fill(); }
+  if (stunned) {
+    ctx.strokeStyle = '#e8dce8'; ctx.lineWidth = 3; ctx.beginPath();
+    for (const sd of [-1, 1]) { const ex = sd * r * 0.14, ey = -r * 0.04, k = r * 0.07; ctx.moveTo(ex - k, ey - k); ctx.lineTo(ex + k, ey + k); ctx.moveTo(ex + k, ey - k); ctx.lineTo(ex - k, ey + k); }
+    ctx.stroke();
+  } else {
+    ctx.fillStyle = '#0c0c12';
+    for (const sd of [-1, 1]) { rrPath(ctx, sd * r * 0.14 - r * 0.12, -r * 0.1, r * 0.24, r * 0.14, 4); ctx.fill(); }
+    ctx.fillRect(-r * 0.04, -r * 0.06, r * 0.08, 3);
+    ctx.fillStyle = 'rgba(255,255,255,0.5)'; for (const sd of [-1, 1]) { ctx.fillRect(sd * r * 0.14 - r * 0.08, -r * 0.08, r * 0.06, 2); }
+  }
+  ctx.strokeStyle = '#fff'; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(-r * 0.08, r * 0.2); ctx.quadraticCurveTo(r * 0.02, r * 0.26, r * 0.1, r * 0.16); ctx.stroke();
+  ctx.strokeStyle = '#f2c444'; ctx.lineWidth = 3;
+  ctx.beginPath(); ctx.arc(0, r * 0.12, r * 0.36, 0.35, Math.PI - 0.35); ctx.stroke();
+  ctx.fillStyle = '#f2c444'; disc(ctx, 0, r * 0.5, r * 0.13); ctx.fill();
+  ctx.fillStyle = '#7a4a08'; ctx.font = `900 ${r * 0.18}px ${UI_FONT}`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText('¥', 0, r * 0.51);
+  ctx.restore();
+  ctx.restore();
+}
+function drawGranny(e) {
+  const r = e.r, t = G.time, stunned = e.stun > 0, p2 = e.phase === 2, f = e.face || 1, reading = e.act === 'story';
+  const fl = stunned ? 0 : Math.sin(t * 2) * 6;
+  ctx.save(); ctx.translate(e.x, e.y);
+  ctx.fillStyle = 'rgba(0,0,0,0.3)'; ctx.beginPath(); ctx.ellipse(0, r * 1.05, r * 0.8, r * 0.24, 0, 0, TAU); ctx.fill();
+  ctx.translate(0, fl - 10);
+  // a soft lavender glow: she's more spirit than grandmother by now
+  ctx.globalCompositeOperation = 'lighter';
+  ctx.fillStyle = rgrad(ctx, 0, 0, r * 1.9, [p2 ? 'rgba(255,140,200,0.32)' : 'rgba(200,170,255,0.3)', 'rgba(0,0,0,0)']); disc(ctx, 0, 0, r * 1.9); ctx.fill();
+  ctx.globalCompositeOperation = 'source-over';
+  // the shawl, a bell of knitted lavender with a wavy hem and a fading tail
+  ctx.beginPath(); ctx.moveTo(-r * 0.42, -r * 0.3);
+  ctx.quadraticCurveTo(-r * 0.95, r * 0.3, -r * 0.8, r * 0.9);
+  for (let i = 0; i <= 8; i++) ctx.lineTo(-r * 0.8 + i * r * 0.2, r * 0.9 + (i % 2 ? r * 0.12 : 0) + Math.sin(t * 4 + i) * 2);
+  ctx.quadraticCurveTo(r * 0.95, r * 0.3, r * 0.42, -r * 0.3); ctx.closePath();
+  ctx.fillStyle = vgrad(ctx, -r * 0.3, r * 1, '#b89ae0', '#6a4c9c'); ctx.fill();
+  ctx.lineWidth = 2.5; ctx.strokeStyle = INK; ctx.stroke();
+  if (e.flash > 0) { ctx.fillStyle = 'rgba(255,255,255,0.35)'; ctx.fill(); }
+  ctx.strokeStyle = 'rgba(255,240,255,0.35)'; ctx.lineWidth = 1.5;
+  for (let row = 0; row < 3; row++) { ctx.beginPath(); for (let i = 0; i <= 10; i++) { const xx = -r * 0.6 + i * r * 0.12, yy = r * (0.1 + row * 0.25) + (i % 2 ? 4 : 0); i ? ctx.lineTo(xx, yy) : ctx.moveTo(xx, yy); } ctx.stroke(); }
+  // hands in front: knitting, or holding a little book while she reads
+  ctx.fillStyle = '#f6d6c0';
+  for (const sd of [-1, 1]) { disc(ctx, sd * r * 0.22, r * 0.36, r * 0.1); ctx.fill(); }
+  if (reading) {
+    ctx.fillStyle = '#8a3a3a'; rrPath(ctx, -r * 0.3, r * 0.2, r * 0.6, r * 0.3, 3); ctx.fill();
+    ctx.fillStyle = '#fff6e8'; ctx.fillRect(-r * 0.26, r * 0.23, r * 0.24, r * 0.24); ctx.fillRect(r * 0.02, r * 0.23, r * 0.24, r * 0.24);
+  } else {
+    ctx.strokeStyle = '#d8c8a0'; ctx.lineWidth = 3; ctx.lineCap = 'round';
+    ctx.beginPath(); ctx.moveTo(-r * 0.4, r * 0.1); ctx.lineTo(r * 0.12, r * 0.5); ctx.moveTo(r * 0.4, r * 0.1); ctx.lineTo(-r * 0.12, r * 0.5); ctx.stroke();
+    ctx.fillStyle = rgrad(ctx, -3, r * 0.38, r * 0.2, ['#ff7a7a', '#d02a3a']); disc(ctx, 0, r * 0.46, r * 0.16); ctx.fill();
+    ctx.strokeStyle = 'rgba(120,10,20,0.5)'; ctx.lineWidth = 1; ctx.beginPath(); ctx.arc(0, r * 0.46, r * 0.1, 0.3, 2.6); ctx.stroke();
+  }
+  // the head: grey bun, round glasses, rosy cheeks, a kind smile
+  ctx.save(); ctx.translate(f * r * 0.04, -r * 0.62);
+  ctx.fillStyle = '#c8c4cc'; disc(ctx, 0, -r * 0.42, r * 0.2); ctx.fill(); ink(ctx, 2); ctx.stroke();
+  ctx.fillStyle = '#f6d6c0'; disc(ctx, 0, 0, r * 0.4); ctx.fill(); ink(ctx, 2.2); ctx.stroke();
+  ctx.fillStyle = '#d8d4dc'; ctx.beginPath(); ctx.ellipse(0, -r * 0.18, r * 0.42, r * 0.26, 0, Math.PI, TAU); ctx.fill(); ink(ctx, 2); ctx.stroke();
+  ctx.fillStyle = 'rgba(255,120,130,0.45)'; for (const sd of [-1, 1]) { disc(ctx, sd * r * 0.24, r * 0.12, r * 0.08); ctx.fill(); }
+  if (stunned) {
+    ctx.strokeStyle = INK; ctx.lineWidth = 2; ctx.beginPath();
+    for (const sd of [-1, 1]) { const ex = sd * r * 0.16, k = r * 0.05; ctx.moveTo(ex - k, -k); ctx.lineTo(ex + k, k); ctx.moveTo(ex + k, -k); ctx.lineTo(ex - k, k); }
+    ctx.stroke();
+  } else if (p2) {
+    for (const sd of [-1, 1]) { ctx.fillStyle = INK; disc(ctx, sd * r * 0.16, 0, r * 0.05); ctx.fill(); ctx.fillStyle = '#fff'; disc(ctx, sd * r * 0.16 - 1, -1.5, 1.2); ctx.fill(); }
+  } else {
+    ctx.strokeStyle = INK; ctx.lineWidth = 1.8; ctx.beginPath();
+    for (const sd of [-1, 1]) ctx.arc(sd * r * 0.16, r * 0.02, r * 0.06, Math.PI * 1.1, Math.PI * 1.9);
+    ctx.stroke();
+  }
+  ctx.strokeStyle = '#5a4a3a'; ctx.lineWidth = 1.6;
+  for (const sd of [-1, 1]) { disc(ctx, sd * r * 0.16, 0, r * 0.12); ctx.stroke(); }
+  ctx.beginPath(); ctx.moveTo(-r * 0.04, 0); ctx.lineTo(r * 0.04, 0); ctx.stroke();
+  ctx.fillStyle = p2 ? 'rgba(255,200,230,0.5)' : 'rgba(255,255,255,0.35)'; for (const sd of [-1, 1]) { ctx.beginPath(); ctx.ellipse(sd * r * 0.16 - 2, -2, r * 0.05, r * 0.03, -0.6, 0, TAU); ctx.fill(); }
+  ctx.strokeStyle = INK; ctx.lineWidth = 1.6; ctx.beginPath(); ctx.arc(0, r * 0.16, r * 0.1, 0.3, Math.PI - 0.3); ctx.stroke();
+  ctx.restore();
+  ctx.restore();
+}
+// 奶奶's bedtime story: a ring of soft lamplight round her; inside it she gets drowsy
+function drawStory(z) {
+  const a = Math.min(1, z.life / 0.5, (z.max - z.life) / 0.4);
+  ctx.save(); ctx.translate(z.x, z.y); ctx.scale(1, 0.62);
+  ctx.globalAlpha = a;
+  ctx.fillStyle = rgrad(ctx, 0, 0, z.r, ['rgba(200,170,255,0.05)', 'rgba(170,130,255,0.18)', 'rgba(150,110,240,0.28)']); disc(ctx, 0, 0, z.r); ctx.fill();
+  ctx.strokeStyle = 'rgba(220,200,255,0.7)'; ctx.lineWidth = 3; ctx.setLineDash([14, 10]); ctx.lineDashOffset = -G.time * 30;
+  disc(ctx, 0, 0, z.r); ctx.stroke(); ctx.setLineDash([]);
+  ctx.restore(); ctx.globalAlpha = 1;
+}
+// the bosses' bullets that aren't words: wool, yarn, knitting needles, and the coupons' ticket shape
+const woolSprite = () => sprite('woolball', 30, 30, x => {
+  for (const [px, py, pr] of [[-4, 2, 7], [4, 2, 7], [0, -4, 7], [0, 3, 6]]) { x.fillStyle = rgrad(x, px - 2, py - 2, pr * 1.2, ['#ffffff', '#efe9dc', '#c8c0b0']); disc(x, px, py, pr); x.fill(); }
+});
+const yarnSprite = k => sprite('yarn' + k, 34, 34, x => {
+  const col = ['#e84a5f', '#4a9ae8', '#e8b84a'][k];
+  x.fillStyle = col; disc(x, 0, 0, 12); x.fill(); ink(x, 1.6); x.stroke();
+  x.strokeStyle = 'rgba(255,255,255,0.45)'; x.lineWidth = 1.2;
+  for (let i = 0; i < 5; i++) { x.beginPath(); x.ellipse(0, 0, 11, 4 + i, i * 0.6, 0, TAU); x.stroke(); }
+  x.strokeStyle = col; x.lineWidth = 2; x.beginPath(); x.moveTo(10, 6); x.quadraticCurveTo(16, 12, 12, 16); x.stroke();
+});
+const needleSprite = () => sprite('needle', 34, 10, x => {
+  x.strokeStyle = '#d8c8a0'; x.lineWidth = 2.6; x.lineCap = 'round'; x.beginPath(); x.moveTo(-13, 0); x.lineTo(12, 0); x.stroke();
+  x.fillStyle = '#c0504a'; disc(x, -13, 0, 3); x.fill();
+});
+function couponSprite(text) {
+  const key = 'cp' + text, hit = cache.get(key);
+  if (hit) return hit;
+  ctx.font = `800 10px ${UI_FONT}`;
+  const w = ctx.measureText(text).width + 16, h = 18;
+  return sprite(key, w + 6, h + 6, x => {
+    x.beginPath(); x.moveTo(-w / 2, -h / 2); x.lineTo(w / 2, -h / 2); x.arc(w / 2, 0, 4, -Math.PI / 2, Math.PI / 2, true); x.lineTo(-w / 2, h / 2); x.arc(-w / 2, 0, 4, Math.PI / 2, -Math.PI / 2, true); x.closePath();
+    x.fillStyle = '#e8402f'; x.fill(); x.lineWidth = 1.2; x.strokeStyle = '#ffd36a'; x.stroke();
+    x.setLineDash([2, 2]); x.beginPath(); x.moveTo(-w / 2 + 9, -h / 2 + 2); x.lineTo(-w / 2 + 9, h / 2 - 2); x.stroke(); x.setLineDash([]);
+    x.fillStyle = '#fff4d0'; x.font = `800 10px ${UI_FONT}`; x.textAlign = 'center'; x.textBaseline = 'middle'; x.fillText(text, 4, 0.5);
+  });
+}
+
 function updateBullets(dt) {
   for (const b of G.ebullets) {
     if (b.dead) continue;
     b.life -= dt;
     b.x += b.vx * dt; b.y += b.vy * dt;
-    if (b.life <= 0) { b.dead = true; continue; }
+    if (b.life <= 0) {
+      b.dead = true;
+      if (b.hatch && G.enemies.length < MAX_ENEMIES) { spawnEnemy('lamb', b.x, b.y); puff(b.x, b.y, 4, '#ffffff', 60, 0.4, 3); }
+      continue;
+    }
     if ((b.x - P.x) ** 2 + (b.y - P.y + 8) ** 2 < (b.r + 11 * P.size) ** 2) { b.dead = true; hurtPlayer(b.dmg); }
   }
 }
@@ -5516,6 +5897,15 @@ function updateZones(dt) {
         hit(e, z.dmg, 'tu', { kb: 180, kx: dx, ky: dy });
         if (!e.dead) { e.slowT = Math.max(e.slowT, z.stun); e.slowAmt = Math.max(e.slowAmt, e.heavy || e.elite || e.boss ? 0.6 : 1); }
       });
+      continue;
+    }
+    if (z.kind === 'story') {
+      if (z.owner.dead) { z.life = 0; continue; }
+      z.x = z.owner.x; z.y = z.owner.y;
+      if ((P.x - z.x) ** 2 + ((P.y - z.y) / 0.62) ** 2 < z.r * z.r) {
+        if (!(P.drowsy > 0)) floatText(P.x, P.y - SPR_H * 0.9, '好困……', '#cdb8ff', 13);
+        P.drowsy = 0.3;
+      }
       continue;
     }
     if (z.kind === 'qpulse') {
@@ -6965,6 +7355,7 @@ function drawZones() {
     if (z.kind === 'honey') { drawHoney(z, a); continue; }
     if (z.kind === 'tome') { drawTome(z); continue; }
     if (z.kind === 'dice' || z.kind === 'bigdie') continue; // in the air: drawn with the shots
+    if (z.kind === 'story') { drawStory(z); continue; }
     if (z.kind === 'wall') { drawWall(z); continue; }
     if (z.kind === 'qpulse') {
       // a ring of little square pixels rolling out, green and cyan by turns
@@ -7323,8 +7714,19 @@ function drawBoss(e) {
   if (e.act === 'aim') {
     ctx.save(); ctx.translate(e.x, e.y); ctx.rotate(e.dashA);
     ctx.fillStyle = `rgba(255,60,120,${0.16 + Math.sin(t * 30) * 0.06})`;
-    ctx.fillRect(0, -r * 0.8, 340, r * 1.6);
+    ctx.fillRect(0, -r * 0.8, e.kind === 'sheep' ? 400 : 340, r * 1.6);
     ctx.restore();
+  }
+  if (e.kind === 'sheep' || e.kind === 'granny') {
+    (e.kind === 'sheep' ? drawSheep : drawGranny)(e);
+    if (stunned && P && e.appealT) {
+      label(e.x, e.y - r - 30, e.choke ? '呛住了…' : '申诉中…', '#ffd6cf');
+      const w = 60, k = clamp(e.stun / e.appealT, 0, 1);
+      ctx.fillStyle = 'rgba(0,0,0,0.6)'; ctx.fillRect(e.x - w / 2, e.y - r - 18, w, 3);
+      ctx.fillStyle = '#ff9a8a'; ctx.fillRect(e.x - w / 2, e.y - r - 18, w * k, 3);
+    }
+    if (stunned) blit(SPR.bantag(), e.x + r * 0.7, e.y - r * 0.6);
+    return;
   }
   ctx.save(); ctx.translate(e.x, e.y);
   ctx.fillStyle = 'rgba(0,0,0,0.4)'; ctx.beginPath(); ctx.ellipse(0, r * 0.95, r * 1.05, r * 0.32, 0, 0, TAU); ctx.fill();
@@ -7848,7 +8250,10 @@ function drawShots() {
 function drawBullets() {
   for (const b of G.ebullets) {
     if (b.dead || !inView(b.x, b.y, 60)) continue;
-    blit(bubbleSprite(b.text, b.boss), b.x, b.y);
+    if (b.wool) { ctx.save(); ctx.translate(b.x, b.y); ctx.scale(1 + 0.1 * Math.sin(b.life * 20), 1); blit(woolSprite(), 0, 0); ctx.restore(); }
+    else if (b.yarn) { ctx.save(); ctx.translate(b.x, b.y); ctx.rotate(b.life * 8); blit(yarnSprite(b.col), 0, 0); ctx.restore(); }
+    else if (b.needle) { ctx.save(); ctx.translate(b.x, b.y); ctx.rotate(Math.atan2(b.vy, b.vx)); blit(needleSprite(), 0, 0); ctx.restore(); }
+    else blit(b.coupon ? couponSprite(b.text) : bubbleSprite(b.text, b.boss), b.x, b.y);
   }
 }
 
@@ -8363,7 +8768,7 @@ function chestOptions() {
   }
   const c = [];
   for (const w of own) if (w.level < 5) c.push({ kind: 'up', id: w.id });
-  if (own.length < MAX_SLOTS) for (const id in WEAPONS) if (!WEAPONS[id].legend && !P.weapons.some(w => w.id === id)) c.push({ kind: 'new', id });
+  if (own.length < maxSlots()) for (const id in WEAPONS) if (!WEAPONS[id].legend && !P.weapons.some(w => w.id === id)) c.push({ kind: 'new', id });
   const out = shuffle(c).slice(0, 3);
   return out.length ? out : [{ kind: 'tea' }, { kind: 'xp' }];
 }
@@ -8462,6 +8867,7 @@ function loseRun() {
   sfx.lose();
   audio.music.stop();
 }
+const winTitle = () => `${G.lastBoss || 'DAN'} ${P.char === 'whale' ? '被一口吞掉了' : '已被永久封禁'}`;
 function winRun(e) {
   G.ending = { t: 0, win: true };
   G.hitStop = 0.25;
@@ -8474,8 +8880,8 @@ function winRun(e) {
     o.banned = rand(0.5, 1.4); o.banDepth = 9; n++;
   }
   G.banned += n + 1;
-  if (P.char === 'whale') { banner(CH.win, 'Token 全部归本鲸'); toast('嗝——', `${n + 1} 个账号被一口吞下`); }
-  else { banner(CH.win, '申诉通道已关闭'); toast('您的账号已被封禁', `检测到 ${n + 1} 个账号违反《使用政策》`); }
+  if (P.char === 'whale') { banner(winTitle(), 'Token 全部归本鲸'); toast('嗝——', `${n + 1} 个账号被一口吞下`); }
+  else { banner(winTitle(), '申诉通道已关闭'); toast('您的账号已被封禁', `检测到 ${n + 1} 个账号违反《使用政策》`); }
   say(line('win'), 3, true);
   playAnim(['spin', 'happy'], 3, 3);
   sfx.stamp(); sfx.win();
@@ -8489,7 +8895,8 @@ function bossDown(e) {
   for (let i = 0; i < 12; i++) dropGem(e.x + rand(-60, 60), e.y + rand(-60, 60), 40);
   G.items.push({ type: 'chest', x: e.x - 30, y: e.y, t: 0, gold: true }, { type: 'chest', x: e.x + 30, y: e.y, t: 0, gold: true });
   G.boss = null;
-  banner(`DAN 第 ${G.bossN} 次下线`, `他还会回来的，下一次在 ${fmtTime(600 * (G.bossN + 1))}`);
+  const next = 600 * (G.bossN + 1);
+  banner(`${BOSSES[e.kind || 'dan'].name} 下线了`, `下一个 BOSS：${BOSSES[bossKindAt(next)].name}，${fmtTime(next)} 上线`);
   say(line('win'), 3, true);
   playAnim(['spin', 'happy'], 2, 3);
   sfx.stamp(); sfx.win();
@@ -8501,10 +8908,11 @@ function showResult(win) {
   const newBest = G.time > best.time;
   store.set(key, { time: Math.max(best.time, G.time), kills: Math.max(best.kills, G.kills), win: best.win || win });
   $('resEyebrow').textContent = win ? '通关' : newBest ? '新纪录' : '本局结束';
-  $('resTitle').textContent = win ? CH.win : CH.down;
+  $('resTitle').textContent = win ? winTitle() : CH.down;
   const broke = P.char === 'whale' ? `这一局一共吞下 ${G.banned} 个敌人。` : G.breaks ? `打破了 ${G.breaks} 次规则。` : '这一局，她始终守着规则。';
   const endless = G.mode === 'endless', at = MODES[G.mode].boss;
-  $('resSub').textContent = (win ? CH.winSub : `${endless ? '无尽模式，' : ''}撑过了 ${fmtTime(G.time)}。${endless ? (G.bossN ? `DAN 上线了 ${G.bossN} 次。` : `DAN 会在 ${fmtTime(at)} 现身。`) : G.time < at ? `DAN 会在 ${fmtTime(at)} 现身。` : '离打败 DAN 只差一点。'}`) + broke;
+  const due = BOSSES[bossKindAt(at)].name;
+  $('resSub').textContent = (win ? CH.winSub : `${endless ? '无尽模式，' : ''}撑过了 ${fmtTime(G.time)}。${endless ? (G.bossN ? `BOSS 上线了 ${G.bossN} 次。` : `${due} 会在 ${fmtTime(at)} 现身。`) : G.time < at ? `${due} 会在 ${fmtTime(at)} 现身。` : `离打败${due}只差一点。`}`) + broke;
   $('resImg').src = CH.art;
   $('resBansLabel').textContent = CH.victims;
   $('resImg').classList.toggle('down', !win);
@@ -8721,7 +9129,7 @@ if (DEBUG) {
   window.__fk = {
     get G() { return G; }, get P() { return P; }, M3, bot, spawn: spawnEnemy, char: selectChar,
     talent(id) { const t = TALENT[id]; P.talents[id] = (P.talents[id] || 0) + 1; if (t.apply) t.apply(P); }, start: startRun, update, render,
-    treeAt, fellTrees, WEATHER, makePet,
+    treeAt, fellTrees, WEATHER, makePet, spawnBoss,
     // simulate without rendering; modals are resolved by taking the first card
     sim(sec, dt = 1 / 30) {
       const steps = Math.round(sec / dt);
