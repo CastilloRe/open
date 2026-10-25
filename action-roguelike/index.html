@@ -996,31 +996,66 @@ const audio = (() => {
     win() { [523.25, 659.25, 783.99, 1046.5, 783.99, 1046.5].forEach((f, i) => tone(f, 0.35, { type: 'triangle', vol: 0.1, at: i * 0.12 })); },
   };
 
-  // A light four-chord loop (Am F C G) that thickens as the night goes on
+  // The background music is composed afresh: a new piece every run, another every two or three minutes, and a tense
+  // one when DAN arrives. Each piece draws a key, major or minor, a tempo, a chord progression, an arpeggio, a bass
+  // rhythm and a lead voice, and its melody is a random two-bar motif that comes back varied. It thickens as the night
+  // goes on: hi-hats and the melody after 2:00, a kick after 5:00, a snare and a louder lead for the boss
   const music = (() => {
-    let timer = 0, step = 0, nextT = 0;
-    const S16 = 60 / 116 / 4;
-    const PROG = [[57, 60, 64], [53, 57, 60], [48, 52, 55], [55, 59, 62]];
+    let timer = 0, step = 0, nextT = 0, song = null;
     const mf = m => 440 * Math.pow(2, (m - 69) / 12);
+    const MAJOR = [0, 2, 4, 5, 7, 9, 11], MINOR = [0, 2, 3, 5, 7, 8, 10];
+    // progressions as scale degrees from the tonic: I-V-vi-IV, the royal road IV-V-iii-vi, i-VI-III-VII, and so on
+    const PROGS = {
+      major: [[0, 4, 5, 3], [0, 5, 3, 4], [3, 4, 2, 5], [5, 3, 0, 4], [0, 3, 4, 0], [0, 2, 3, 4]],
+      minor: [[0, 5, 2, 6], [0, 3, 6, 2], [0, 6, 5, 6], [0, 3, 4, 0], [5, 6, 0, 0]],
+    };
+    const ARPS = [[0, 1, 2, 1], [0, 1, 2, 3], [0, 2, 1, 2], [2, 1, 0, 1]];
+    const BASS = [[0, 6, 8, 14], [0, 3, 8, 11], [0, 8], [0, 4, 8, 12], [0, 7, 10]];
+    const deg = (sg, d) => sg.root + sg.scale[((d % 7) + 7) % 7] + 12 * Math.floor(d / 7);
+    function compose(tense) {
+      const minor = tense || Math.random() < 0.5, bpm = tense ? 128 + Math.floor(Math.random() * 16) : 100 + Math.floor(Math.random() * 28);
+      return {
+        tense, minor, scale: minor ? MINOR : MAJOR, root: 45 + Math.floor(Math.random() * 12), prog: pick(PROGS[minor ? 'minor' : 'major']),
+        s16: 60 / bpm / 4, arp: pick(ARPS), bass: pick(BASS), lead: tense ? 'square' : pick(['triangle', 'sine', 'square']),
+        motif: Array.from({ length: 16 }, (_, i) => i % 2 && Math.random() < 0.45 ? null : Math.floor(Math.random() * 8) - 1),
+        until: G ? G.time + 150 + Math.random() * 60 : 1e9,
+      };
+    }
     function play(s, t) {
-      const i = s % 16, ch = PROG[Math.floor(s / 16) % 4];
+      const i = s % 16;
+      // a new piece starts on a bar line: DAN's when he turns up, otherwise when this one has run its time
+      if (i === 0 && G) {
+        const boss = G.boss && !G.boss.dead;
+        if (boss && !song.tense) song = compose(true);
+        else if (!boss && (song.tense || G.time > song.until)) song = compose(false);
+      }
+      const sg = song, bar = Math.floor(s / 16), d = sg.prog[bar % 4];
+      const ch = [deg(sg, d), deg(sg, d + 2), deg(sg, d + 4), deg(sg, d + 7)];
       const lvl = !G ? 0 : G.boss && !G.boss.dead ? 3 : G.time > 300 ? 2 : G.time > 120 ? 1 : 0;
-      if (i === 0 || i === 6 || i === 8 || i === 14) tone(mf(ch[0] - 24), S16 * 1.9, { type: 'triangle', vol: 0.2, t, bus: musicBus });
-      if (i % 2 === 0) {
-        const n = ch[(i / 2) % 3] + 12 + (i >= 8 ? 12 : 0);
-        tone(mf(n), S16 * 1.3, { type: 'triangle', vol: 0.045, t, bus: musicBus });
+      if (sg.bass.includes(i)) tone(mf(ch[0] - 12), sg.s16 * 1.9, { type: 'triangle', vol: 0.2, t, bus: musicBus });
+      if (i % 2 === 0) tone(mf(ch[sg.arp[(i / 2) % 4]] + 12 + (i >= 8 ? 12 : 0)), sg.s16 * 1.3, { type: 'triangle', vol: 0.045, t, bus: musicBus });
+      if (lvl >= 1 && i % 2 === 0) {
+        // the motif on eighth notes, landing on a chord tone on each beat, lifted a third when it comes round again
+        const m = sg.motif[(bar % 2) * 8 + i / 2];
+        if (m != null) {
+          const note = i % 8 === 0 ? d + (m >= 3 ? 4 : m > 0 ? 2 : 0) : m + (bar % 8 >= 4 ? 2 : 0);
+          tone(mf(deg(sg, note) + (sg.root > 50 ? 12 : 24)), sg.s16 * 1.8, { type: sg.lead, vol: lvl >= 3 ? 0.04 : sg.lead === 'square' ? 0.018 : 0.035, t, bus: musicBus });
+        }
       }
       if (lvl >= 1 && i % 4 === 2) noise(0.04, { vol: 0.05, freq: 8000, type: 'highpass', t, bus: musicBus });
       if (lvl >= 2 && i % 4 === 0) tone(110, 0.12, { vol: 0.22, slide: 0.4, t, bus: musicBus });
-      if (lvl >= 3 && (i === 0 || i === 3 || i === 6 || i === 10)) tone(mf(ch[(i >> 1) % 3] + 24), S16 * 2.2, { type: 'square', vol: 0.025, t, bus: musicBus });
+      if (lvl >= 3 && (i === 4 || i === 12)) noise(0.1, { vol: 0.07, freq: 1800, q: 0.7, t, bus: musicBus });
     }
     function tick() {
       if (!ac) return;
-      while (nextT < ac.currentTime + 0.12) { play(step, nextT); nextT += S16; step++; }
+      if (!song) song = compose(false);
+      while (nextT < ac.currentTime + 0.12) { play(step, nextT); nextT += song.s16; step++; }
     }
     return {
       start() { if (!ac || timer) return; step = 0; nextT = ac.currentTime + 0.08; timer = setInterval(tick, 30); },
       stop() { clearInterval(timer); timer = 0; },
+      // a new piece for a new run
+      shuffle() { song = compose(false); },
     };
   })();
 
@@ -1859,44 +1894,38 @@ const DRAW = {
     sparkle(x, r * 0.15, -r * 1.14, r * 0.26); sparkle(x, -r * 1.1, -r * 0.6, r * 0.18); sparkle(x, r * 1.12, -r * 0.2, r * 0.15);
     face(x, { cx: 0, cy: r * 0.14, gap: r * 0.36, er: r * 0.22, blink, mouth: 'w', blush: true });
   },
-  // 爬虫: a round little bat with big ears and a fanged grin, flapping about in swarms
+  // 爬虫: the plainest of crawling bugs: a glossy black beetle on six jointed legs, two antennae, and tiny eyes
   crawler(x, r, f, blink) {
-    shadow(x, r, 0.7);
-    x.save(); x.translate(0, -r * 0.24);
-    const up = f ? -r * 0.4 : r * 0.08;
+    shadow(x, r, 0.9);
+    // six short legs from the thorax, three a side, the front pair reaching forward and the back pair back,
+    // stepping in alternating triples
+    x.lineCap = 'round'; x.lineJoin = 'round';
+    const LEGS = [[[0.28, 0.32], [0.55, 0.6], [0.62, 0.92]], [[0.34, 0.4], [0.72, 0.32], [0.98, 0.44]], [[0.28, 0.48], [0.64, -0.06], [0.9, -0.4]]];
+    for (const sd of [-1, 1]) LEGS.forEach(([a, k, ft], i) => {
+      const up = ((i + (sd > 0 ? 1 : 0) + f) % 2) ? -r * 0.1 : r * 0.03;
+      x.beginPath(); x.moveTo(sd * a[0] * r, a[1] * r); x.lineTo(sd * k[0] * r, k[1] * r + up); x.lineTo(sd * ft[0] * r, ft[1] * r + up);
+      x.strokeStyle = 'rgba(190,190,215,0.35)'; x.lineWidth = 2.6; x.stroke();
+      x.strokeStyle = '#141419'; x.lineWidth = 1.5; x.stroke();
+    });
+    // antennae
+    x.beginPath();
+    for (const sd of [-1, 1]) { x.moveTo(sd * r * 0.1, r * 0.7); x.quadraticCurveTo(sd * r * 0.16, r * 1.0, sd * r * 0.5, r * 1.12); }
+    x.strokeStyle = 'rgba(190,190,215,0.35)'; x.lineWidth = 2.2; x.stroke(); x.strokeStyle = '#141419'; x.lineWidth = 1.1; x.stroke();
+    // abdomen, thorax and head, glossy black with a faint sheen
+    const abd = () => { x.beginPath(); x.ellipse(0, -r * 0.24, r * 0.6, r * 0.62, 0, 0, TAU); };
+    celFill(x, abd, r * 0.6, ['#8a8aa8', '#2a2a36', '#0c0c12'], 1.2);
+    x.strokeStyle = 'rgba(0,0,0,0.75)'; x.lineWidth = 1; x.beginPath(); x.moveTo(0, -r * 0.84); x.lineTo(0, r * 0.32); x.stroke();
+    x.save(); x.translate(-r * 0.24, -r * 0.48); x.rotate(-0.5); x.fillStyle = 'rgba(255,255,255,0.75)'; x.beginPath(); x.ellipse(0, 0, r * 0.07, r * 0.2, 0, 0, TAU); x.fill(); x.restore();
+    x.fillStyle = 'rgba(150,140,255,0.28)'; x.beginPath(); x.ellipse(r * 0.24, -r * 0.1, r * 0.14, r * 0.3, 0.3, 0, TAU); x.fill();
+    const tho = () => { x.beginPath(); x.ellipse(0, r * 0.38, r * 0.38, r * 0.24, 0, 0, TAU); };
+    celFill(x, tho, r * 0.38, ['#7a7a96', '#24242e', '#0c0c12'], 1.1);
+    const head = () => { x.beginPath(); x.ellipse(0, r * 0.62, r * 0.26, r * 0.18, 0, 0, TAU); };
+    celFill(x, head, r * 0.26, ['#6a6a86', '#1e1e28', '#0a0a10'], 1);
     for (const sd of [-1, 1]) {
-      x.beginPath();
-      x.moveTo(sd * r * 0.6, -r * 0.14);
-      x.quadraticCurveTo(sd * r * 1.06, -r * 0.62 + up, sd * r * 1.46, -r * 0.34 + up);
-      x.quadraticCurveTo(sd * r * 1.34, -r * 0.02 + up * 0.5, sd * r * 1.2, r * 0.12 + up * 0.4);
-      x.quadraticCurveTo(sd * r * 1.08, -r * 0.04 + up * 0.3, sd * r * 0.94, r * 0.22 + up * 0.3);
-      x.quadraticCurveTo(sd * r * 0.82, r * 0.06, sd * r * 0.6, r * 0.26);
-      x.closePath();
-      x.fillStyle = '#4a3480'; x.fill(); ink(x, 1.3); x.stroke();
-      x.strokeStyle = '#8a74d0'; x.lineWidth = 0.9;
-      x.beginPath(); x.moveTo(sd * r * 0.66, -r * 0.06); x.lineTo(sd * r * 1.4, -r * 0.32 + up); x.moveTo(sd * r * 0.7, 0); x.lineTo(sd * r * 1.18, r * 0.08 + up * 0.4); x.stroke();
+      if (blink) { x.strokeStyle = '#fff'; x.lineWidth = 0.8; x.beginPath(); x.moveTo(sd * r * 0.16, r * 0.62); x.lineTo(sd * r * 0.06, r * 0.62); x.stroke(); continue; }
+      x.fillStyle = '#fff'; disc(x, sd * r * 0.11, r * 0.6, r * 0.075); x.fill();
+      x.fillStyle = '#0a0a10'; disc(x, sd * r * 0.11, r * 0.62, r * 0.035); x.fill();
     }
-    for (const sd of [-1, 1]) {
-      x.beginPath(); x.moveTo(sd * r * 0.16, -r * 0.66); x.lineTo(sd * r * 0.6, -r * 1.22); x.lineTo(sd * r * 0.7, -r * 0.4); x.closePath();
-      x.fillStyle = '#6c58d0'; x.fill(); ink(x, 1.2); x.stroke();
-      x.beginPath(); x.moveTo(sd * r * 0.3, -r * 0.64); x.lineTo(sd * r * 0.56, -r * 1.0); x.lineTo(sd * r * 0.6, -r * 0.56); x.closePath();
-      x.fillStyle = '#ff9ab8'; x.fill();
-    }
-    for (const sd of [-1, 1]) { x.beginPath(); x.ellipse(sd * r * 0.22, r * 0.8, r * 0.14, r * 0.09, 0, 0, TAU); x.fillStyle = '#ffb04a'; x.fill(); ink(x, 1); x.stroke(); }
-    celFill(x, () => disc(x, 0, 0, r * 0.8), r * 0.8, ['#c8b8ff', '#6c58d0', '#3e2c90'], 1.4);
-    for (const sd of [-1, 1]) {
-      const ex = sd * r * 0.28, ey = -r * 0.14;
-      if (blink) { ink(x, 1.2); x.beginPath(); x.arc(ex, ey + r * 0.08, r * 0.13, Math.PI * 1.15, Math.PI * 1.85); x.stroke(); continue; }
-      x.beginPath(); x.ellipse(ex, ey, r * 0.17, r * 0.21, 0, 0, TAU); x.fillStyle = '#fff'; x.fill(); ink(x, 0.9); x.stroke();
-      x.fillStyle = INK; disc(x, ex - sd * r * 0.04, ey + r * 0.04, r * 0.09); x.fill();
-    }
-    // the grin, with two little fangs
-    const my = r * 0.24;
-    x.beginPath(); x.moveTo(-r * 0.4, my); x.quadraticCurveTo(0, my + r * 0.06, r * 0.4, my); x.quadraticCurveTo(0, my + r * 0.4, -r * 0.4, my); x.closePath();
-    x.fillStyle = '#5a1424'; x.fill(); ink(x, 1); x.stroke();
-    x.fillStyle = '#fff';
-    for (const sd of [-1, 1]) { x.beginPath(); x.moveTo(sd * r * 0.28, my + r * 0.02); x.lineTo(sd * r * 0.14, my + r * 0.04); x.lineTo(sd * r * 0.21, my + r * 0.2); x.closePath(); x.fill(); }
-    x.restore();
   },
   // 拼车号: a big soap bubble with three slimes squeezed inside; pop it and out they tumble
   carpool(x, r, f, blink) {
@@ -5330,6 +5359,7 @@ function startRun() {
   $('hud').hidden = false;
   $('banner').hidden = $('toast').hidden = true;
   updateSoundIcon();
+  audio.music.shuffle();
   if (audio.mode === 0) { audio.music.stop(); audio.music.start(); }
   banner('第一夜', `撑到 ${fmtTime(BOSS_AT)}，等 DAN 现身`);
 }
