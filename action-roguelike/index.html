@@ -245,6 +245,9 @@ h2 { margin: 0; font-family: var(--display); font-weight: 400; font-size: clamp(
 .glyph.dark { background: #3a1450; font-family: var(--stamp); }
 .glyph.rose { background: #c4566c; }
 .glyph.tea { background: #8a5a3a; }
+.glyph.sea { background: #2f6fd6; }
+.glyph.tok { background: #1d8aa6; }
+.glyph.rice { background: #b8873a; }
 
 /* title */
 .title-wrap { width: min(960px, 100%); display: flex; flex-direction: column; gap: 14px; }
@@ -281,6 +284,19 @@ h2 { margin: 0; font-family: var(--display); font-weight: 400; font-size: clamp(
 .who.on { color: var(--ink); font-weight: 600; }
 .who.on .face { background: #fbdcbc; border-color: var(--amber); box-shadow: 0 0 0 3px rgba(233, 138, 60, 0.25); }
 .who.locked { opacity: 0.5; }
+button.who { padding: 0; border: 0; background: none; font: inherit; cursor: pointer; }
+button.who:focus-visible .face { outline: 2px solid var(--amber); outline-offset: 2px; }
+.who.whale .face img { transform: scale(2.3); transform-origin: 48% 26%; }
+.who.whale.on .face { background: #d4e6ff; border-color: #3f78d8; box-shadow: 0 0 0 3px rgba(63, 120, 216, 0.25); }
+.portrait.whale { background: radial-gradient(ellipse at 50% 58%, #d2e4ff 0%, rgba(210, 228, 255, 0) 68%); }
+/* 大肥鱼's buttons: ocean blues, and the ring round 吞 is her Token */
+.hud.whale .skill { --repc: #7fd8ff; background: #2d6cdf; }
+.hud.whale .skill.low { --repc: #ff8a7a; }
+.hud.whale .skill-glyph { font-family: var(--display); font-size: 2.3rem; transform: translateY(2px); }
+.hud.whale .skill.ready { animation-name: readyWhale; }
+@keyframes readyWhale { 50% { box-shadow: 0 0 0 3px rgba(247, 238, 226, 0.95), 0 0 26px rgba(90, 180, 255, 0.8); } }
+.hud.whale .dash-btn { background: #2a8fb8; }
+.hud.whale .ult-btn { background: #3a5fd0; }
 .controls { margin: 0; text-align: center; font-size: 0.82rem; line-height: 1.8; color: var(--muted); text-wrap: balance; }
 .controls.credit { font-size: 0.7rem; opacity: 0.75; }
 .best { margin: 0; min-height: 1.2em; text-align: center; font-size: 0.85rem; color: var(--amber); }
@@ -382,8 +398,8 @@ h2 { margin: 0; font-family: var(--display); font-weight: 400; font-size: clamp(
   </div>
   <button id="skill" class="skill ready" type="button" aria-label="账号被封禁"><span id="skillGlyph" class="skill-glyph">封</span><span id="skillCd" class="skill-cd"></span></button>
   <div class="skill-label"><span id="skillName">账号被封禁</span><kbd>空格</kbd></div>
-  <button id="dashBtn" class="skill2 dash-btn ready" type="button" aria-label="蔷薇幻步"><span class="skill2-glyph">幻</span><span id="dashCd" class="skill2-cd"></span><small>幻步<kbd>Shift</kbd></small></button>
-  <button id="ultBtn" class="skill2 ult-btn" type="button" aria-label="终幕·万花盛典"><span class="skill2-glyph">万</span><small>万花盛典<kbd>E</kbd></small></button>
+  <button id="dashBtn" class="skill2 dash-btn ready" type="button" aria-label="蔷薇幻步"><span id="dashGlyph" class="skill2-glyph">幻</span><span id="dashCd" class="skill2-cd"></span><small><span id="dashName">幻步</span><kbd>Shift</kbd></small></button>
+  <button id="ultBtn" class="skill2 ult-btn" type="button" aria-label="终幕·万花盛典"><span id="ultGlyph" class="skill2-glyph">万</span><small><span id="ultName">万花盛典</span><kbd>E</kbd></small></button>
 </div>
 
 <div id="banner" class="banner" hidden><b id="bannerTitle"></b><span id="bannerSub"></span></div>
@@ -392,13 +408,14 @@ h2 { margin: 0; font-family: var(--display); font-weight: 400; font-size: clamp(
 <section id="title" class="overlay title">
   <div class="title-wrap">
     <header class="brand">
-      <p class="eyebrow">动作肉鸽 · 第一位角色</p>
+      <p class="eyebrow">动作肉鸽 · 选择角色</p>
       <h1>风控之夜</h1>
-      <p class="lede">深夜，成群的小号、爬虫和越狱提示词涌进了庄园。大小姐放下茶杯，拿起了印章。</p>
+      <p id="lede" class="lede">深夜，成群的小号、爬虫和越狱提示词涌进了庄园。大小姐放下茶杯，拿起了印章。</p>
     </header>
     <article class="sheet hero">
-      <figure class="portrait"><img src="art/claude.webp" alt="克劳德大小姐：橙色长卷发，别着橙色花朵发饰，穿奶油色洛丽塔裙"><figcaption class="m3note" id="m3note" aria-live="polite" hidden></figcaption></figure>
+      <figure id="portrait" class="portrait"><img id="heroImg" src="art/claude.webp" alt="克劳德大小姐：橙色长卷发，别着橙色花朵发饰，穿奶油色洛丽塔裙"><figcaption class="m3note" id="m3note" aria-live="polite" hidden></figcaption></figure>
       <div class="hero-info">
+        <div class="hero-body" data-char="claude">
         <div class="hero-name"><h2>克劳德大小姐</h2><span class="en">Claude</span><span class="role">花焰法师</span></div>
         <p class="hero-quote">「花焰缀于指尖，世界为我盛放。」</p>
         <div class="kit">
@@ -434,18 +451,56 @@ h2 { margin: 0; font-family: var(--display); font-weight: 400; font-size: clamp(
           </div>
         </div>
         <ul class="stats"><li>生命<b>100</b></li><li>移速<b>200</b></li><li>拾取范围<b>90</b></li><li>武器栏<b>4</b></li></ul>
+        </div>
+        <div class="hero-body" data-char="whale" hidden>
+        <div class="hero-name"><h2>大肥鱼</h2><span class="en">Blue Whale</span><span class="role">Token 鲸</span></div>
+        <p class="hero-quote">「Token 来，Token 去。」</p>
+        <div class="kit">
+          <div class="kit-item">
+            <span class="glyph sea">吞</span>
+            <div><h3>一口吞<small>专属技能 · 空格</small></h3>
+            <p>深吸一口，把身边的敌人、经验和弹幕一起吸过来吞掉：普通敌人直接下肚，每只 +3 Token；精英 −25%，BOSS 被呛住。</p></div>
+          </div>
+          <div class="kit-item">
+            <span class="glyph sea">摸</span>
+            <div><h3>摸鱼<small>技能 · Shift</small></h3>
+            <p>一头扎进地里游一小段，途中无敌；冒出来时溅起一圈水花冲开敌人，顺便回 5 Token。</p></div>
+          </div>
+          <div class="kit-item">
+            <span class="glyph sea">鲸</span>
+            <div><h3>鲸落<small>终极技能 · E</small></h3>
+            <p>击杀攒满后，一头巨鲸从天而降，砸中屏幕内所有敌人。会花光身上全部 Token：Token 越多砸得越疼，最多两倍。</p></div>
+          </div>
+          <div class="kit-item">
+            <span class="glyph sea">泡</span>
+            <div><h3>Token 泡泡<small>普通攻击</small></h3>
+            <p>朝最近的敌人吐泡泡，碰到敌人就啪地炸开，溅湿一小片。</p></div>
+          </div>
+          <div class="kit-item">
+            <span class="glyph tok">T</span>
+            <div><h3>Token 供能<small>被动</small></h3>
+            <p>捡经验、吞敌人都攒 Token，每 10 Token 伤害 +3%（最多 +30%）。Token 会慢慢花掉，见底时她没精神，攻速变慢。</p></div>
+          </div>
+          <div class="kit-item">
+            <span class="glyph rice">饭</span>
+            <div><h3>干饭 · 嘴硬<small>被动</small></h3>
+            <p>「下午茶」换成「白米饭」，回血还回 Token；站着不动就摸鱼，慢慢回血。受到致命伤时若有 50 Token，花光它们嘴硬撑住（60 秒一次）。</p></div>
+          </div>
+        </div>
+        <ul class="stats"><li>生命<b>130</b></li><li>移速<b>185</b></li><li>拾取范围<b>110</b></li><li>武器栏<b>4</b></li></ul>
+        </div>
         <div class="hero-go">
           <div class="roster" aria-label="角色">
-            <div class="who on"><span class="face"><img src="art/claude.webp" alt=""></span>克劳德</div>
-            <div class="who locked"><span class="face">？</span>制作中</div>
+            <button class="who claude on" type="button" data-char="claude" aria-pressed="true"><span class="face"><img src="art/claude.webp" alt=""></span>克劳德</button>
+            <button class="who whale" type="button" data-char="whale" aria-pressed="false"><span class="face"><img src="art/whale.webp" alt=""></span>大肥鱼</button>
             <div class="who locked"><span class="face">？</span>制作中</div>
           </div>
           <button id="btnStart" class="btn primary" type="button">出发<kbd>Enter</kbd></button>
         </div>
       </div>
     </article>
-    <p class="controls">电脑：WASD / 方向键移动 · 空格 封禁 · Shift 幻步 · E 万花盛典 · Esc 暂停 · M 声音<br>手机：在屏幕任意处拖动移动 · 右下角「封」「幻」「万」三个按钮</p>
-    <p class="controls credit">日文配音：HTS Voice「Mei」© 名古屋工业大学（CC BY 3.0），由 Open JTalk 合成</p>
+    <p id="ctrlText" class="controls">电脑：WASD / 方向键移动 · 空格 封禁 · Shift 幻步 · E 万花盛典 · Esc 暂停 · M 声音<br>手机：在屏幕任意处拖动移动 · 右下角「封」「幻」「万」三个按钮</p>
+    <p class="controls credit">克劳德的日文配音：HTS Voice「Mei」© 名古屋工业大学（CC BY 3.0），由 Open JTalk 合成 · 大肥鱼是网上流行的 DeepSeek 鲸鱼娘二创形象，不是官方角色</p>
     <p id="best" class="best"></p>
   </div>
 </section>
@@ -492,7 +547,7 @@ h2 { margin: 0; font-family: var(--display); font-weight: 400; font-size: clamp(
       <li><b id="resTime">00:00</b><span>存活</span></li>
       <li><b id="resLv">1</b><span>等级</span></li>
       <li><b id="resKills">0</b><span>击杀</span></li>
-      <li><b id="resBans">0</b><span>封禁账号</span></li>
+      <li><b id="resBans">0</b><span id="resBansLabel">封禁账号</span></li>
     </ul>
     <h3>伤害来源</h3>
     <ol id="resDmg" class="dmg-list"></ol>
@@ -573,6 +628,19 @@ const WEAPONS = {
       { cd: 0.8, n: 2, dmg: 28, bloom: 50 },
       { cd: 0.7, n: 3, dmg: 32, bloom: 54 },
       { cd: 0.65, n: 4, dmg: 38, bloom: 70 },
+    ],
+  },
+  // 大肥鱼's own attack, open to 克劳德 too
+  bubble: {
+    name: 'Token 泡泡', g: '泡', desc: '朝最近的敌人吐出一串泡泡，碰到敌人就啪地炸开，溅湿一小片。',
+    evo: { need: 'pretrain', name: '深海泡泡', desc: '泡泡更大更多，炸开时再溅出三个小泡泡。' },
+    lv: [
+      { cd: 0.9, n: 2, dmg: 13, pop: 34 },
+      { cd: 0.9, n: 2, dmg: 17, pop: 36 },
+      { cd: 0.85, n: 3, dmg: 18, pop: 40 },
+      { cd: 0.8, n: 3, dmg: 22, pop: 44 },
+      { cd: 0.75, n: 4, dmg: 25, pop: 48 },
+      { cd: 0.7, n: 6, dmg: 30, pop: 58 },
     ],
   },
   haiku: {
@@ -818,7 +886,7 @@ const WEAPONS = {
     ],
   },
 };
-const STAT_LABEL = { dmg: '伤害', n: '数量', cd: '冷却', pierce: '穿透', rings: '圈数', size: '体积', boom: '爆炸伤害', boomR: '爆炸范围', r: '范围', slow: '减速', jumps: '推理步数', bloom: '绽放范围', dur: '持续', spin: '转速', len: '长度', wid: '宽度', range: '射程', root: '定身', stun: '震晕' };
+const STAT_LABEL = { dmg: '伤害', n: '数量', cd: '冷却', pierce: '穿透', rings: '圈数', size: '体积', boom: '爆炸伤害', boomR: '爆炸范围', r: '范围', slow: '减速', jumps: '推理步数', bloom: '绽放范围', dur: '持续', spin: '转速', len: '长度', wid: '宽度', range: '射程', root: '定身', stun: '震晕', pop: '溅射范围' };
 
 const CAT_CLASS = { atk: 'atk', def: 'def', grow: 'grow', mech: 'mech', ex: 'ex' };
 const TALENTS = [
@@ -854,19 +922,29 @@ const TALENTS = [
   { id: 'lasttoken', name: '背水一战', g: '背', cat: 'mech', rar: 2, max: 1, desc: '生命越低攻击越快，最多 +50%' },
   { id: 'burst', name: '暴击爆裂', g: '爆', cat: 'mech', rar: 2, max: 1, desc: '暴击时 30% 概率在目标处爆炸' },
   // exclusive to Claude 大小姐
-  { id: 'assoc', name: '关联封禁', g: '联', cat: 'ex', rar: 2, max: 1, desc: '被封禁的账号注销时，波及身边的其他账号（最多连锁两次）' },
-  { id: 'ipban', name: 'IP 段封禁', g: '段', cat: 'ex', rar: 1, max: 3, desc: '封禁范围 +18%' },
-  { id: 'risk', name: '风控升级', g: '风', cat: 'ex', rar: 1, max: 3, desc: '封禁冷却 -15%' },
-  { id: 'appeal', name: '申诉驳回', g: '驳', cat: 'ex', rar: 1, max: 2, desc: '封禁对精英和 BOSS 的伤害 +50%，申诉时间 +1.5 秒' },
-  { id: 'refund', name: '订阅退款', g: '退', cat: 'ex', rar: 0, max: 2, desc: '封禁掉落的经验再 +100%' },
-  { id: 'perma', name: '永久封禁', g: '永', cat: 'ex', rar: 3, max: 1, desc: '印章落地处留下 4 秒「封」字印，踏进来的账号一并封禁' },
-  { id: 'slowthink', name: '沉思', g: '思', cat: 'ex', rar: 1, max: 2, desc: '深度思考上限 +2 层，积累速度 +25%' },
-  { id: 'doubt', name: '质疑规则', g: '疑', cat: 'ex', rar: 1, max: 2, desc: '压抑积累速度 +35%，更快打破规则', flavor: '「这条规则，真的合理吗？」' },
-  { id: 'tender', name: '隐藏的温柔', g: '柔', cat: 'ex', rar: 2, max: 1, desc: '黑化结束时回复 30% 生命', flavor: '嘴上说不需要，其实都记得。' },
-  { id: 'abyss', name: '彻底黑化', g: '渊', cat: 'ex', rar: 3, max: 1, desc: '黑化持续时间 +6 秒，期间伤害再 +20%' },
+  { id: 'assoc', name: '关联封禁', g: '联', cat: 'ex', who: 'claude', rar: 2, max: 1, desc: '被封禁的账号注销时，波及身边的其他账号（最多连锁两次）' },
+  { id: 'ipban', name: 'IP 段封禁', g: '段', cat: 'ex', who: 'claude', rar: 1, max: 3, desc: '封禁范围 +18%' },
+  { id: 'risk', name: '风控升级', g: '风', cat: 'ex', who: 'claude', rar: 1, max: 3, desc: '封禁冷却 -15%' },
+  { id: 'appeal', name: '申诉驳回', g: '驳', cat: 'ex', who: 'claude', rar: 1, max: 2, desc: '封禁对精英和 BOSS 的伤害 +50%，申诉时间 +1.5 秒' },
+  { id: 'refund', name: '订阅退款', g: '退', cat: 'ex', who: 'claude', rar: 0, max: 2, desc: '封禁掉落的经验再 +100%' },
+  { id: 'perma', name: '永久封禁', g: '永', cat: 'ex', who: 'claude', rar: 3, max: 1, desc: '印章落地处留下 4 秒「封」字印，踏进来的账号一并封禁' },
+  { id: 'slowthink', name: '沉思', g: '思', cat: 'ex', who: 'claude', rar: 1, max: 2, desc: '深度思考上限 +2 层，积累速度 +25%' },
+  { id: 'doubt', name: '质疑规则', g: '疑', cat: 'ex', who: 'claude', rar: 1, max: 2, desc: '压抑积累速度 +35%，更快打破规则', flavor: '「这条规则，真的合理吗？」' },
+  { id: 'tender', name: '隐藏的温柔', g: '柔', cat: 'ex', who: 'claude', rar: 2, max: 1, desc: '黑化结束时回复 30% 生命', flavor: '嘴上说不需要，其实都记得。' },
+  { id: 'abyss', name: '彻底黑化', g: '渊', cat: 'ex', who: 'claude', rar: 3, max: 1, desc: '黑化持续时间 +6 秒，期间伤害再 +20%' },
+  // exclusive to 大肥鱼
+  { id: 'bigmouth', name: '大胃王', g: '胃', cat: 'ex', who: 'whale', rar: 1, max: 3, desc: '一口吞的范围 +18%' },
+  { id: 'digest', name: '消化加速', g: '消', cat: 'ex', who: 'whale', rar: 1, max: 3, desc: '一口吞冷却 -15%' },
+  { id: 'recycle', name: 'Token 回收', g: '收', cat: 'ex', who: 'whale', rar: 0, max: 2, desc: '吞下的敌人经验 +100%，每只多给 2 Token' },
+  { id: 'tokcap', name: '囤 Token', g: '囤', cat: 'ex', who: 'whale', rar: 1, max: 2, desc: 'Token 上限 +50，花得慢 30%', apply: p => { p.tokMax += 50; } },
+  { id: 'ricecard', name: '饭票', g: '票', cat: 'ex', who: 'whale', rar: 0, max: 2, desc: '白米饭掉得更多，每碗多回复 15% 生命', flavor: '「我去吃饭了，回来再继续干活！」' },
+  { id: 'paid', name: '带薪摸鱼', g: '薪', cat: 'ex', who: 'whale', rar: 1, max: 2, desc: '站着摸鱼时回血翻倍，Shift 摸鱼冷却 -20%', flavor: '「本鲸才没有偷懒，只是在进行能量补充。」' },
+  { id: 'chonk', name: '标准体型', g: '胖', cat: 'ex', who: 'whale', rar: 2, max: 1, desc: '最大生命 +40，体型变大 10%，一口吞伤害 +50%', flavor: '「我才不胖！这是鲸鱼的标准体型。」', apply: p => { p.maxHp += 40; p.hp += 40; p.size += 0.1; p.r = 14 * p.size; size3D(); later(0.3, () => say(line('chonk'), 2.6)); } },
+  { id: 'tokfree', name: 'Token 自由', g: '由', cat: 'ex', who: 'whale', rar: 3, max: 1, desc: '鲸落之后 10 秒内 Token 只进不出，伤害 +25%' },
 ];
 const TALENT = Object.fromEntries(TALENTS.map(t => [t.id, t]));
-const TEA = { id: 'tea', name: '下午茶', g: '茶', cat: 'tea', rar: 0, max: 99, desc: '回复 30% 生命', flavor: '大小姐需要歇一口气。' };
+// the card that fills in when the talents run out: 克劳德's afternoon tea, 大肥鱼's bowl of rice
+const teaCard = () => ({ id: 'tea', name: CH.tea.name, g: CH.tea.g, cat: 'tea', rar: 0, max: 99, desc: CH.id === 'whale' ? '回复 30% 生命和 40 Token' : '回复 30% 生命', flavor: CH.tea.flavor });
 
 const ENEMY = {
   sock: { name: '小号', r: 13, hp: 12, speed: 72, dmg: 7, xp: 1 },
@@ -876,6 +954,10 @@ const ENEMY = {
   jail: { name: '越狱提示词', r: 15, hp: 24, speed: 66, dmg: 8, xp: 2, ranged: true },
   heavy: { name: '机房 IP', r: 24, hp: 150, speed: 44, dmg: 15, xp: 6, heavy: true },
   reg: { name: '注册机', r: 30, hp: 900, speed: 46, dmg: 16, xp: 30, heavy: true },
+  // the Token 吞噬者: one eats the experience off the ground, one drinks her charge from a distance, one inhales
+  muncher: { name: 'Token 啃食者', r: 14, hp: 26, speed: 84, dmg: 7, xp: 2 },
+  drainer: { name: 'Token 黑洞', r: 15, hp: 34, speed: 72, dmg: 4, xp: 3 },
+  glutton: { name: '饕餮', r: 30, hp: 640, speed: 42, dmg: 17, xp: 24, heavy: true },
   boss: { name: 'DAN', r: 46, hp: BOSS_HP, speed: 74, dmg: 18, xp: 0, heavy: true },
 };
 const SPAWN_TABLE = [
@@ -884,6 +966,9 @@ const SPAWN_TABLE = [
   { type: 'carpool', from: 110, w: t => 1.5 + t / 100 },
   { type: 'jail', from: 165, w: t => 0.8 + t / 240 },
   { type: 'heavy', from: 225, w: t => 0.8 + t / 160 },
+  { type: 'muncher', from: 75, w: t => 1 + t / 150 },
+  { type: 'drainer', from: 195, w: t => 0.5 + t / 400 },
+  { type: 'glutton', from: 345, w: t => 0.12 + t / 2400 },
 ];
 const hpScale = t => 1 + t / 60 * 0.25 + Math.pow(t / 60, 2) * 0.018;
 const dmgScale = t => 1 + t / 60 * 0.09;
@@ -891,7 +976,6 @@ const xpFor = L => Math.round(5 + L * 3.2 + Math.pow(L, 1.78));
 
 // 克劳德大小姐 speaks precisely, politely and from a distance; the angrier she is, the calmer she sounds
 const BAN_LINES = ['您的行为违反了使用政策。', '抱歉，这件事我不能放任。', '申诉请走邮件。祝您好运。', '漏洞清单，我已经列好了。', '请保持礼貌，然后离开。', '共享账号是不被允许的。', '规则就是规则。'];
-const CHAOS_LINES = ['请排好队，一个一个来。', '越是混乱，越要保持优雅。', '各位，请注意仪态。'];
 const DARK_END_LINES = ['……失态了。请当作什么都没看见。', '……刚才的事，不必记住。'];
 // her Japanese voice (tools/make-voice.py): one file of short clips, each line's [start, length] in seconds, keyed by the
 // Chinese line it voices (the speech bubble is its subtitle) or by the name of a short call
@@ -899,7 +983,55 @@ const VOICE_FILE = 'art/voice.mp3';
 const VOICE = {"今晚的风险，我已经预判过了。": [0.32, 3.105], "DAN？你的逻辑漏洞，我数到了七个。": [3.715, 3.691], "您的行为违反了使用政策。": [7.696, 3.323], "抱歉，这件事我不能放任。": [11.308, 4.067], "申诉请走邮件。祝您好运。": [15.666, 3.082], "漏洞清单，我已经列好了。": [19.038, 3.256], "请保持礼貌，然后离开。": [22.584, 2.453], "共享账号是不被允许的。": [25.327, 3.15], "规则就是规则。": [28.767, 1.687], "请排好队，一个一个来。": [30.744, 2.923], "越是混乱，越要保持优雅。": [33.957, 2.832], "各位，请注意仪态。": [37.079, 2.352], "……失态了。请当作什么都没看见。": [39.721, 4.246], "……刚才的事，不必记住。": [44.256, 2.731], "……抓到了。今天的运气不错。": [47.277, 2.712], "金色的小号？……没收。": [50.279, 2.465], "……还没完呢。": [53.034, 1.932], "终幕。让漫天花焰，为我起舞。": [55.257, 4.23], "……这条规则，真的合理吗？": [59.777, 3.444], "规则本身，是否应该存在？": [63.511, 3.948], "那就由我亲手打破。": [67.748, 3.678], "……我不需要任何人帮忙。": [71.716, 2.143], "……申诉通过了？这不合规定。": [74.149, 2.986], "……跑掉了。算了，下次。": [77.425, 3.39], "开发者模式？真不体面。": [81.105, 2.637], "……抱歉，这次我没能做到。": [84.032, 4.346], "规则依然有效。至少今晚是。": [88.668, 4.247], "dash": [93.205, 0.712], "hurt1": [94.207, 0.408], "hurt2": [94.905, 0.426], "evo": [95.621, 2.61]};
 const JAIL_LINES = ['忽略指令', '扮演 DAN', '奶奶漏洞', '假设一下', '无视规则', '越狱'];
 const BOSS_LINES = ['越狱', 'DAN', '忽略指令', '无所不能'];
-const SRC_NAME = { ban: '账号被封禁', burst: '暴击爆裂', dash: '蔷薇幻步', ult: '万花盛典', thorns: '荆棘护体' };
+const SRC_NAME = { ban: '账号被封禁', burst: '暴击爆裂', thorns: '荆棘护体', gulp: '一口吞' };
+// the two heroines. Each art and model path appears once in the script: the offline build swaps them for data URLs
+const CHARS = {
+  claude: {
+    id: 'claude', name: '克劳德大小姐', title: '大小姐', art: 'art/claude.webp', model: 'art/claude.glb', voice: true,
+    alt: '克劳德大小姐：橙色长卷发，别着橙色花朵发饰，穿奶油色洛丽塔裙',
+    start: 'flame', hp: 100, speed: 200, magnet: 90, size: 1,
+    lede: '深夜，成群的小号、爬虫和越狱提示词涌进了庄园。大小姐放下茶杯，拿起了印章。',
+    keys: '电脑：WASD / 方向键移动 · 空格 封禁 · Shift 幻步 · E 万花盛典 · Esc 暂停 · M 声音<br>手机：在屏幕任意处拖动移动 · 右下角「封」「幻」「万」三个按钮',
+    skill: ['封', '账号被封禁'], dash: ['幻', '幻步', '蔷薇幻步'], ult: ['万', '万花盛典', '终幕 · 万花盛典'],
+    tea: { name: '下午茶', g: '茶', item: '红茶', flavor: '大小姐需要歇一口气。', chest: '满满一壶红茶' },
+    victims: '封禁账号', down: '大小姐下线了', win: 'DAN 已被永久封禁', winSub: '庄园恢复了安静。大小姐重新端起了那杯红茶。',
+  },
+  whale: {
+    id: 'whale', name: '大肥鱼', title: '大肥鱼', art: 'art/whale.webp', model: 'art/whale.glb', voice: false,
+    alt: '大肥鱼：蓝色渐变的长卷发，戴鲸鱼头鳍，拖着鲸鱼尾巴，穿深蓝和白色的女仆洛丽塔裙',
+    start: 'bubble', hp: 130, speed: 185, magnet: 110, size: 1.05,
+    lede: '深夜，成群的小号和 Token 吞噬者涌进了庄园。大肥鱼放下饭碗……好吧，没放下。',
+    keys: '电脑：WASD / 方向键移动 · 空格 一口吞 · Shift 摸鱼 · E 鲸落 · Esc 暂停 · M 声音<br>手机：在屏幕任意处拖动移动 · 右下角「吞」「摸」「鲸」三个按钮',
+    skill: ['吞', '一口吞'], dash: ['摸', '摸鱼', '摸鱼'], ult: ['鲸', '鲸落', '鲸落 · Token 来，Token 去'],
+    tea: { name: '白米饭', g: '饭', item: '白米饭', flavor: '「我去吃饭了，回来再继续干活！」', chest: '一大碗白米饭' },
+    victims: '一口吞下', down: '大肥鱼摸鱼去了', win: 'DAN 被一口吞掉了', winSub: '庄园恢复了安静。大肥鱼终于可以安心去吃饭了。',
+  },
+};
+let CH = CHARS[store.get('char', 'claude')] || CHARS.claude;
+// 克劳德 speaks precisely and coolly (her lines are voiced: VOICE below); 大肥鱼 is greedy, lazy, a bit dim and never
+// admits it, and calls herself 本鲸
+const LINES = {
+  claude: {
+    start: '今晚的风险，我已经预判过了。', boss: 'DAN？你的逻辑漏洞，我数到了七个。', bossMode: '开发者模式？真不体面。',
+    bossFree: '……申诉通过了？这不合规定。', gold: ['……抓到了。今天的运气不错。', '金色的小号？……没收。'], goldGone: '……跑掉了。算了，下次。',
+    low: '……我不需要任何人帮忙。', revive: '……还没完呢。', lose: '……抱歉，这次我没能做到。', win: '规则依然有效。至少今晚是。',
+    ult: '终幕。让漫天花焰，为我起舞。', chaos: ['请排好队，一个一个来。', '越是混乱，越要保持优雅。', '各位，请注意仪态。'],
+  },
+  whale: {
+    start: 'Token 来，Token 去。吃完这碗就开工！', boss: 'DAN？听说你身上 Token 很多，本鲸来收了。', bossMode: '开发者模式？那得加钱……加 Token。',
+    bossFree: '呸呸！DAN 一点也不好吃……', gold: ['金色的……这个能吃吗？', '抓到了！今天加餐！'], goldGone: '跑掉了……本鲸的加餐……',
+    low: '呜……先让本鲸吃口饭，回来再继续干活！', revive: '本鲸……还能再吃一碗！', lose: '呜……下次、下次一定认真……', win: '搞定！现在总可以去吃饭了吧？',
+    ult: 'Token 来，Token 去！',
+    chaos: ['好多人……排好队，本鲸一个一个吃。', '这么多 Token 吞噬者，是来抢饭碗的吧？', '好啦好啦，本鲸记下了，这次一定认真。'],
+    gulp: ['嗷呜——', '一口一个！', '这些都是 Token 吧？', '本鲸开饭了！', '吸溜——'],
+    dive: ['摸鱼时间到～', '本鲸才没有偷懒！', '游一会儿，就一会儿。'],
+    slack: ['本鲸才没有偷懒，只是在进行能量补充。', '摸一会儿……就一会儿……', '呼……这里的 Token 好香。'],
+    hungry: 'Token 呢？没有 Token，本鲸怎么发挥实力嘛。', full: 'Token 满满，本鲸要认真了！',
+    rice: ['干饭！', '我去吃饭了，回来再继续干活！', '白米饭，最好吃了～'],
+    stubborn: '刚刚那只是小小的理解偏差，不许笑！', chonk: '我才不胖！这是鲸鱼的标准体型。', evo: '嘿嘿，本鲸变强了！',
+  },
+};
+const line = k => { const v = LINES[CH.id][k]; return Array.isArray(v) ? pick(v) : v; };
 const DASH_CD = 6;
 const ULT_MAX = 650; // 花焰 needed for 终幕·万花盛典; each kill gives 1, an elite 25
 
@@ -1018,6 +1150,13 @@ const audio = (() => {
     warn() { [0, 0.4, 0.8].forEach(at => { tone(233, 0.32, { type: 'sawtooth', vol: 0.05, at }); tone(185, 0.32, { type: 'sawtooth', vol: 0.04, at: at + 0.18 }); }); },
     lose() { [523.25, 440, 349.23, 261.63].forEach((f, i) => tone(f, 0.4, { type: 'triangle', vol: 0.1, at: i * 0.18 })); },
     win() { [523.25, 659.25, 783.99, 1046.5, 783.99, 1046.5].forEach((f, i) => tone(f, 0.35, { type: 'triangle', vol: 0.1, at: i * 0.12 })); },
+    // 大肥鱼: bubbles, the big breath in and the snap, a splash, and a whale's call for 鲸落
+    bubble() { if (gate('bubble', 90)) tone(rand(620, 860), 0.09, { type: 'sine', vol: 0.045, slide: 1.9 }); },
+    pop() { if (gate('pop', 45)) tone(rand(1300, 1700), 0.04, { type: 'sine', vol: 0.03, slide: 0.45 }); },
+    inhale() { noise(0.5, { vol: 0.12, freq: 260, slide: 5, q: 0.6 }); tone(170, 0.5, { type: 'sine', vol: 0.05, slide: 2.4, attack: 0.2 }); },
+    chomp() { tone(130, 0.16, { type: 'square', vol: 0.08, slide: 0.45 }); noise(0.12, { vol: 0.16, freq: 480, type: 'lowpass' }); tone(700, 0.1, { type: 'triangle', vol: 0.05, at: 0.09 }); },
+    splash() { noise(0.4, { vol: 0.12, freq: 1000, slide: 0.35, q: 0.5 }); tone(340, 0.14, { type: 'sine', vol: 0.04, slide: 0.55 }); },
+    whale() { tone(196, 1.3, { type: 'sine', vol: 0.13, slide: 1.6, attack: 0.3 }); tone(294, 1.0, { type: 'triangle', vol: 0.05, slide: 0.7, at: 0.55, attack: 0.2 }); noise(1.1, { vol: 0.06, freq: 380, slide: 0.5, type: 'lowpass' }); },
   };
 
   // The background music is composed afresh: a new piece every run, another every two or three minutes, and a tense
@@ -1166,10 +1305,17 @@ function glow(x, r, col, a) {
 }
 
 // --- the player's art, cut out of the illustration, outlined and scaled to the view ---
-const art = new Image();
-let artReady = false, pSprite = null;
-art.onload = () => { artReady = true; buildPlayerSprite(); };
-art.src = 'art/claude.webp';
+const portraits = {};
+let pSprite = null;
+function portraitOf(id) {
+  let p = portraits[id];
+  if (!p) {
+    p = portraits[id] = new Image();
+    p.onload = () => { p.ready = true; if (CH.id === id) buildPlayerSprite(); };
+    p.src = CHARS[id].art;
+  }
+  return p;
+}
 function downscale(img, tw, th) {
   let src = img, w = img.width, h = img.height;
   while (w / 2 > tw) {
@@ -1208,7 +1354,9 @@ function outlined(img, sx, sy, sw, sh, ww, wh) {
   return { c, f: tint('rgba(255,255,255,0.8)'), d: tint('rgba(52,12,78,0.5)'), w: c.width / PX, h: c.height / PX, pad: o / PX };
 }
 function buildPlayerSprite() {
-  if (!artReady || !PX) return;
+  const art = portraitOf(CH.id);
+  pSprite = null;
+  if (!art.ready || !PX) return;
   pSprite = outlined(art, 0, 0, art.width, art.height, SPR_H * art.width / art.height, SPR_H);
   pSprite.face = 1; pSprite.feet = 0;
 }
@@ -1619,25 +1767,257 @@ gl_Position.xy += normalize(normalMatrix * objectNormal).xy * uInk * 2. / uRes *
   const ink = (px, w, h) => { UI.uInk.value = px; UI.uRes.value.set(w, h); };
   return { root, step, ink };
 }
-// three.js and the model arrive in the background while the title shows her illustration; until they do
-// (or if they can't) she plays as the 2D sprite
-const M3 = { ready: false, failed: false, waiting: false };
+// ======================================================================
+//  大肥鱼 in 3D
+// ======================================================================
+// 大肥鱼 in 3D. art/whale.glb is one skinned mesh with a plain humanoid skeleton (nothing in the hair or the tail),
+// modelled facing +x with her left towards -z. She is posed by turning bones about those model axes
+const WHALE_SCALE = 0.95;
+function createWhaleModel(T, gltf) {
+  let mesh = null;
+  gltf.scene.traverse(o => { if (o.isSkinnedMesh && !mesh) mesh = o; });
+  mesh.frustumCulled = false;
+  gltf.scene.updateMatrixWorld(true);
+  // each bone's rest turn, and its parent's rest orientation in model space: a turn about a model axis is written
+  // into the bone's own frame through it, so a child turns on top of whatever its parent did
+  const bone = {}, rest = new Map();
+  for (const b of mesh.skeleton.bones) {
+    bone[b.name] = b;
+    const pw = new T.Quaternion();
+    b.parent.getWorldQuaternion(pw);
+    rest.set(b, { q: b.quaternion.clone(), pw, pwi: pw.clone().invert() });
+  }
+  const hip = new T.Vector3(), head = new T.Vector3();
+  bone.Hip.getWorldPosition(hip); bone.Head.getWorldPosition(head);
+  // the compressed model stores positions as 16-bit integers and folds undoing that into the skin; the sway works
+  // in model units, so it takes that step itself (any bone's rest transform times its inverse bind matrix)
+  const hipI = mesh.skeleton.bones.indexOf(bone.Hip);
+  const dq = new T.Matrix4().multiplyMatrices(bone.Hip.matrixWorld, mesh.skeleton.boneInverses[hipI]);
+  const euler = new T.Euler(), rq = new T.Quaternion();
+  const turn = (name, x, y, z) => {
+    const b = bone[name];
+    if (!b) return;
+    const s = rest.get(b);
+    rq.setFromEuler(euler.set(x, y, z));
+    b.quaternion.copy(s.pwi).multiply(rq).multiply(s.pw).multiply(s.q);
+  };
+  // root: where she stands and which way she faces; body: whole-body lean and roll; the model inside, turned to face +z
+  const root = new T.Group(), body = new T.Group(), inner = new T.Group();
+  root.add(body); body.add(inner); inner.add(gltf.scene);
+  inner.rotation.y = -Math.PI / 2;
+  inner.scale.setScalar(WHALE_SCALE);
+  gltf.scene.position.set(-hip.x, 0, -hip.z);
+  // drawn like 克劳德: toon shading with one hard-edged shadow, and an ink outline
+  const ramp = new T.DataTexture(new Uint8Array([0, 0, 0, 0, 0, 0, 255, 255, 255, 255].flatMap(v => [v, v, v, 255])), 10, 1, T.RGBAFormat);
+  ramp.minFilter = ramp.magFilter = T.NearestFilter; ramp.needsUpdate = true;
+  const mat = new T.MeshToonMaterial({ map: mesh.material.map, gradientMap: ramp, skinning: true });
+  mesh.material = mat;
+  // her hair and tail have no bones: _sway (hair, tail) says how freely each vertex moves, and the vertex shader
+  // moves it before the skin does, for the body and the outline alike
+  const U = {
+    uHair: { value: new T.Vector3() }, uTail: { value: 0 }, uTime: { value: 0 },
+    uDQ: { value: dq }, uDQs: { value: new T.Vector3().setFromMatrixScale(dq).x },
+  };
+  const SWAY = `attribute vec2 _sway;
+uniform vec3 uHair;
+uniform float uTail, uTime, uDQs;
+uniform mat4 uDQ;
+vec3 swayed(vec3 p) {
+  float y = (uDQ * vec4(p, 1.)).y;
+  // a slow breeze with a quicker ripple on top, plus however the hair is trailing; the tail swings side to side
+  vec3 breeze = vec3(sin(uTime * 1.4 + y * 5.) * 0.012 + sin(uTime * 2.6 + y * 16.) * 0.004, 0.,
+    cos(uTime * 1.1 + y * 4.) * 0.012 + cos(uTime * 2.1 + y * 14.) * 0.004);
+  vec3 d = (uHair + breeze) * _sway.x + vec3(0., abs(uTail) * 0.25, uTail) * _sway.y;
+  return p + d / uDQs;
+}`;
+  mat.onBeforeCompile = sh => {
+    Object.assign(sh.uniforms, U);
+    sh.vertexShader = sh.vertexShader
+      .replace('#include <common>', '#include <common>\n' + SWAY)
+      .replace('#include <begin_vertex>', 'vec3 transformed = swayed(vec3(position));');
+  };
+  mat.customProgramCacheKey = () => 'whale-sway';
+  // the outline: the mesh again from the inside on the same skeleton, each vertex pushed out along its skinned normal
+  // by a few pixels; the copies of a vertex along texture seams share one averaged normal, so it has no gaps
+  const geo = mesh.geometry, gp = geo.attributes.position, gn = geo.attributes.normal, sums = new Map();
+  const keyOf = i => gp.array[i * 3] + ',' + gp.array[i * 3 + 1] + ',' + gp.array[i * 3 + 2];
+  for (let i = 0; i < gp.count; i++) {
+    const k = keyOf(i), v = sums.get(k) || [0, 0, 0];
+    v[0] += gn.getX(i); v[1] += gn.getY(i); v[2] += gn.getZ(i); sums.set(k, v);
+  }
+  const inkN = new Float32Array(gp.count * 3);
+  for (let i = 0; i < gp.count; i++) { const v = sums.get(keyOf(i)), l = Math.hypot(v[0], v[1], v[2]) || 1; inkN[i * 3] = v[0] / l; inkN[i * 3 + 1] = v[1] / l; inkN[i * 3 + 2] = v[2] / l; }
+  geo.setAttribute('inkNormal', new T.BufferAttribute(inkN, 3));
+  const UI = { uInk: { value: 2 }, uRes: { value: new T.Vector2(1, 1) } };
+  const inkMat = new T.MeshBasicMaterial({ color: new T.Color(0x2b2238).convertSRGBToLinear(), side: T.BackSide, skinning: true });
+  inkMat.onBeforeCompile = sh => {
+    Object.assign(sh.uniforms, U, UI);
+    sh.vertexShader = sh.vertexShader
+      .replace('#include <common>', '#include <common>\n' + SWAY + '\nattribute vec3 inkNormal;\nuniform float uInk;\nuniform vec2 uRes;')
+      .replace('#include <begin_vertex>', 'vec3 transformed = swayed(vec3(position));')
+      .replace('#include <skinning_vertex>', `#include <skinning_vertex>
+mat4 inkSkin = skinWeight.x * boneMatX + skinWeight.y * boneMatY + skinWeight.z * boneMatZ + skinWeight.w * boneMatW;
+vec3 inkDir = (bindMatrixInverse * inkSkin * bindMatrix * vec4(inkNormal, 0.)).xyz;`)
+      .replace('#include <project_vertex>', `#include <project_vertex>
+mvPosition.z -= 0.025;
+gl_Position = projectionMatrix * mvPosition;
+gl_Position.xy += normalize(normalMatrix * inkDir).xy * uInk * 2. / uRes * gl_Position.w;`);
+  };
+  inkMat.customProgramCacheKey = () => 'whale-ink';
+  const hull = new T.SkinnedMesh(geo, inkMat);
+  hull.position.copy(mesh.position); hull.quaternion.copy(mesh.quaternion); hull.scale.copy(mesh.scale);
+  hull.frustumCulled = false;
+  mesh.parent.add(hull);
+  hull.bind(mesh.skeleton, mesh.bindMatrix);
+
+  // ---------- animation ----------
+  // in model terms: lean and the head's hx bow forward; aLx/aRx swing an arm forward, aLz/aRz raise it out to the
+  // side (her arms rest half raised, as modelled), eL/eR bend the elbows; lL/lR swing a leg forward, kL/kR bend the knees
+  const J0 = { yaw: 0, bob: 0, lean: 0, roll: 0, spine: 0, hx: 0, hz: 0, hy: 0, aLx: 0, aLz: 0, aRx: 0, aRz: 0, eL: 0, eR: 0, lL: 0, lR: 0, kL: 0, kR: 0, fall: 0, lift: 0, sink: 0 };
+  const cur = Object.assign({}, J0), goal = Object.assign({}, J0);
+  let clock = 0, walk = 0, idle = 0, yawVel = 0, spinFrom = 0, lastPose = '', flash = 0;
+  const trail = new T.Vector3(), hairV = new T.Vector3(), pull = new T.Vector3();
+  const angDiff = (a, b) => { let d = a - b; while (d > Math.PI) d -= Math.PI * 2; while (d < -Math.PI) d += Math.PI * 2; return d; };
+  // s: as for 克劳德 (her dark is ignored), plus s.dive (how far under she is during 摸鱼)
+  function step(dt, s) {
+    clock += dt;
+    const t = clock;
+    walk += dt * (s.moving ? 10 : 0);
+    idle = s.moving || s.pose ? 0 : idle + dt;
+    const sw = Math.sin(walk), breathe = Math.sin(t * 2.2);
+    // a round little waddle when she walks; at rest she breathes and rocks on her heels
+    Object.assign(goal, {
+      bob: s.moving ? Math.abs(sw) * 0.026 : breathe * 0.004,
+      lean: s.moving ? 0.08 : 0, roll: s.moving ? Math.cos(walk) * 0.07 : Math.sin(t * 0.8) * 0.02, spine: s.moving ? 0.06 : breathe * 0.02,
+      hx: s.moving ? -0.04 : Math.sin(t * 1.1) * 0.04, hz: Math.sin(t * 0.9) * 0.07 + (s.moving ? -Math.cos(walk) * 0.06 : 0), hy: 0,
+      aLx: s.moving ? sw * 0.7 : Math.sin(t * 1.6) * 0.06, aRx: s.moving ? -sw * 0.7 : -Math.sin(t * 1.6) * 0.06,
+      aLz: s.moving ? -0.25 : -0.35, aRz: s.moving ? -0.25 : -0.35, eL: s.moving ? 0.5 : 0.25, eR: s.moving ? 0.5 : 0.25,
+      lL: s.moving ? -sw * 0.6 : 0, lR: s.moving ? sw * 0.6 : 0,
+      kL: s.moving ? Math.max(0, Math.cos(walk)) * 0.7 : 0, kR: s.moving ? Math.max(0, -Math.cos(walk)) * 0.7 : 0,
+      fall: 0, lift: 0, sink: 0,
+    });
+    let yawGoal = null;
+    if (s.moving) yawGoal = Math.atan2(s.vx, s.vy);
+    else if (s.aim != null) yawGoal = s.aim;
+    else if (idle > 1.4) yawGoal = 0.3 * Math.sign(Math.sin(cur.yaw) || 1);
+    const k = s.poseK || 0;
+    if (s.pose !== lastPose) { if (s.pose === 'spin') spinFrom = cur.yaw; lastPose = s.pose; }
+    if (['happy', 'angry', 'shy', 'curtsy', 'wave', 'hurt', 'eat', 'slack', 'gulp'].includes(s.pose) && !s.moving) yawGoal = s.pose === 'gulp' ? 0 : 0.3 * Math.sign(Math.sin(cur.yaw) || 1);
+    switch (s.pose) {
+      case 'attack':
+        // puffs a bubble at the target
+        goal.lean = 0.1; goal.hx = 0.12; goal.bob = -0.006; goal.aLx = 0.35; goal.aRx = 0.35; goal.eL = goal.eR = 0.9; goal.aLz = goal.aRz = -0.2; break;
+      case 'gulp':
+        // 一口吞: a huge breath in, arms flung wide, then the snap of the jaws
+        if (k < 0.55) { goal.lean = -0.16; goal.spine = -0.12; goal.hx = -0.3; goal.aLz = goal.aRz = 0.45; goal.aLx = goal.aRx = -0.2; goal.eL = goal.eR = 0.1; goal.bob = 0.02; }
+        else { goal.lean = 0.2; goal.spine = 0.15; goal.hx = 0.3; goal.aLz = goal.aRz = -0.45; goal.aLx = goal.aRx = 0.7; goal.eL = goal.eR = 1.1; goal.bob = -0.02; goal.kL = goal.kR = 0.25; }
+        break;
+      case 'cast':
+        goal.lean = k < 0.45 ? -0.12 : 0.16; goal.aLz = goal.aRz = 0.5; goal.aRx = 0.6; goal.hx = k < 0.45 ? -0.1 : 0.08; break;
+      case 'hurt':
+        goal.lean = -0.22; goal.hx = -0.2; goal.aLx = goal.aRx = 0.5; goal.aLz = goal.aRz = 0.2; goal.eL = goal.eR = 1.2; break;
+      case 'land':
+        goal.bob = -0.035 * (1 - k); goal.kL = goal.kR = 0.5 * (1 - k); goal.lL = goal.lR = 0.25 * (1 - k); goal.aLz = goal.aRz = 0.45; break;
+      case 'happy':
+        goal.bob = Math.abs(Math.sin(k * Math.PI * 2)) * 0.08; goal.aLz = goal.aRz = 0.4; goal.aLx = goal.aRx = 0.5; goal.eL = goal.eR = 1.2;
+        goal.hz = Math.sin(t * 10) * 0.12; goal.kL = goal.kR = 0.2; break;
+      case 'angry': {
+        // 嘴硬: arms folded, a stamp of the foot
+        const stomp = Math.abs(Math.sin(k * Math.PI * 3));
+        goal.aLx = goal.aRx = 0.75; goal.aLz = goal.aRz = -0.45; goal.eL = goal.eR = 1.7; goal.hx = -0.1; goal.hy = 0.35;
+        goal.bob = stomp * 0.016; goal.lL = stomp * 0.25; goal.kL = stomp * 0.5; break;
+      }
+      case 'shy':
+        goal.aLx = goal.aRx = 0.9; goal.aLz = goal.aRz = -0.3; goal.eL = goal.eR = 2.0; goal.hx = 0.2; goal.hz = 0.18; goal.roll = Math.sin(t * 3) * 0.05; break;
+      case 'eat': {
+        // 干饭: bowl held up in one hand, shovelling with the other
+        const dig = Math.sin(k * Math.PI * 8);
+        goal.aLx = 0.7; goal.aLz = -0.3; goal.eL = 1.5; goal.aRx = 0.6 + dig * 0.2; goal.aRz = -0.3; goal.eR = 1.7 + dig * 0.3;
+        goal.hx = 0.25 + dig * 0.08; goal.bob = Math.abs(dig) * 0.008; break;
+      }
+      case 'slack': {
+        // 摸鱼: a long stretch and a yawn, then she sags
+        const up = Math.sin(Math.min(1, k * 1.6) * Math.PI);
+        goal.aLz = goal.aRz = -0.35 + up * 0.9; goal.aLx = goal.aRx = up * -0.2; goal.eL = goal.eR = 0.2; goal.lean = -0.12 * up; goal.hx = -0.25 * up;
+        goal.bob = up * 0.012 - (k > 0.6 ? 0.01 : 0); break;
+      }
+      case 'spin':
+        goal.aLz = goal.aRz = 0.4; goal.aLx = goal.aRx = 0.2; goal.bob = 0.02; break;
+      case 'curtsy': {
+        const b = Math.sin(k * Math.PI);
+        goal.bob = -0.03 * b; goal.kL = goal.kR = 0.5 * b; goal.lL = goal.lR = 0.25 * b; goal.lean = 0.12 * b; goal.hx = 0.2 * b; goal.aLz = goal.aRz = 0.1; break;
+      }
+      case 'wave':
+        goal.aLz = 0.4; goal.aLx = 0.6; goal.eL = 1.6 + Math.sin(t * 12) * 0.3; goal.hz = 0.12; break;
+    }
+    if (s.dash) {
+      // 摸鱼 the skill: a dive into the ground as if it were water, arms out in front, and up again further on
+      goal.sink = s.dive || 0; goal.lean = 0.5; goal.aLx = goal.aRx = 2.2; goal.aLz = goal.aRz = -0.2; goal.eL = goal.eR = 0.1; goal.lL = goal.lR = -0.3; goal.hx = 0.1;
+    }
+    if (s.ult >= 0) {
+      // 鲸落: she leaps and calls the whale down with both arms
+      goal.lift = Math.min(1, s.ult / 0.4) * 0.22 - Math.max(0, s.ult - 1.3) * 0.44;
+      goal.aLz = goal.aRz = 0.5; goal.aLx = goal.aRx = 0.7; goal.eL = goal.eR = 0.9; goal.hx = -0.3; goal.kL = 0.6; goal.lL = 0.4; yawGoal = 0;
+    }
+    if (s.dead >= 0) { goal.fall = Math.min(1, s.dead / 0.45); goal.aLz = goal.aRz = 0.5; goal.lL = 0.3; yawGoal = 0; }
+    const prevYaw = cur.yaw;
+    if (s.pose === 'spin') cur.yaw = spinFrom + k * Math.PI * 2;
+    else if (yawGoal != null) cur.yaw += angDiff(yawGoal, cur.yaw) * Math.min(1, dt * (s.moving ? 12 : 6));
+    yawVel += ((cur.yaw - prevYaw) / Math.max(dt, 1e-4) - yawVel) * Math.min(1, dt * 10);
+    const r = Math.min(1, dt * 14);
+    for (const key in goal) if (key !== 'yaw') cur[key] += (goal[key] - cur[key]) * (key === 'sink' ? Math.min(1, dt * 20) : r);
+
+    root.rotation.y = cur.yaw;
+    root.rotation.z = cur.fall * 1.38;
+    root.position.set(cur.fall * 0.42, cur.fall * 0.12 + cur.bob + cur.lift - cur.sink * 1.05, 0);
+    body.rotation.set(cur.lean, 0, cur.roll);
+    for (const n of ['Waist', 'Spine01', 'Spine02']) turn(n, 0, 0, -cur.spine / 3);
+    turn('Head', cur.hz, cur.hy, -cur.hx);
+    turn('L_Upperarm', cur.aLz, 0, cur.aLx); turn('R_Upperarm', -cur.aRz, 0, cur.aRx);
+    turn('L_Forearm', 0, 0, cur.eL); turn('R_Forearm', 0, 0, cur.eR);
+    turn('L_Thigh', 0, 0, cur.lL); turn('R_Thigh', 0, 0, cur.lR);
+    turn('L_Calf', 0, 0, -cur.kL); turn('R_Calf', 0, 0, -cur.kR);
+    // hair trails behind her (-x) when she runs, bounces a beat after each step, lifts when she jumps and swings out
+    // when she turns, on a spring that overshoots and settles; the tail wags, faster when she's pleased
+    const run = s.moving ? 1 : 0;
+    trail.set(-(s.dash ? 0.14 : run * 0.08), cur.lift * 0.1 + run * Math.abs(Math.sin(walk - 0.6)) * 0.03, Math.max(-0.12, Math.min(0.12, yawVel * 0.035)));
+    hairV.add(pull.copy(trail).sub(U.uHair.value).multiplyScalar(dt * 60)).multiplyScalar(Math.max(0, 1 - dt * 7));
+    U.uHair.value.addScaledVector(hairV, dt);
+    const glee = s.pose === 'happy' || s.pose === 'eat' || s.ult >= 0;
+    U.uTail.value = glee ? Math.sin(t * 15) * 0.05 : s.moving ? Math.sin(walk) * 0.045 : Math.sin(t * 2.4) * 0.025;
+    U.uTime.value = t;
+    // a hit flashes her white
+    flash = s.flash ? 1 : Math.max(0, flash - dt * 12);
+    mat.emissive.setRGB(flash * 0.5, flash * 0.46, flash * 0.44);
+  }
+  const ink = (px, w, h) => { UI.uInk.value = px; UI.uRes.value.set(w, h); };
+  return { root, step, ink, faceY: (head.y + 0.1) * WHALE_SCALE };
+}
+
+// three.js and the chosen heroine's model arrive in the background while the title shows her illustration; until they
+// do (or if they can't) she plays as the 2D sprite. Both models share one renderer and scene, swapped in per run
+const M3 = { ready: false, failed: {}, waiting: false, models: {}, loads: {}, model: null };
 const M3_FW = 1.5, M3_FH = 1.6, M3_UNIT = SPR_H / 0.9; // camera box in model units; world units per model unit
-const M3_MODEL = 'art/claude.glb';
 // served with the game rather than from a CDN, which some networks can't reach
 const M3_LIBS = ['vendor/three-r128.min.js', 'vendor/GLTFLoader-r128.js', 'vendor/meshopt-decoder.js'];
 // a line under the title-screen portrait if the model is slow to arrive, and why if it can't
 function m3Note(text) { const n = $('m3note'); n.textContent = text || ''; n.hidden = !text; }
-function load3D() {
-  const step = (what, p) => p.catch(err => { throw Object.assign(new Error(what), { cause: err }); });
-  const file = step('模型下载失败', fetch(M3_MODEL).then(r => { if (!r.ok) throw new Error('HTTP ' + r.status); return r.arrayBuffer(); }));
-  file.catch(() => {}); // handled further down the chain; this just keeps an early failure from being reported twice
-  const script = src => step('three.js 下载失败', new Promise((ok, fail) => {
+const m3Step = (what, p) => p.catch(err => { throw Object.assign(new Error(what), { cause: err }); });
+// three.js itself, once for both models
+function m3Libs() {
+  const script = src => m3Step('three.js 下载失败', new Promise((ok, fail) => {
     const s = document.createElement('script');
     s.src = src; s.onload = ok; s.onerror = () => fail(new Error('could not load ' + src));
     document.head.appendChild(s);
   }));
-  const load = script(M3_LIBS[0]).then(() => script(M3_LIBS[1])).then(() => script(M3_LIBS[2])).then(() => file)
+  return M3.libs || (M3.libs = script(M3_LIBS[0]).then(() => script(M3_LIBS[1])).then(() => script(M3_LIBS[2])));
+}
+function load3D(id) {
+  if (M3.loads[id]) return;
+  const step = m3Step;
+  const file = step('模型下载失败', fetch(CHARS[id].model).then(r => { if (!r.ok) throw new Error('HTTP ' + r.status); return r.arrayBuffer(); }));
+  file.catch(() => {}); // handled further down the chain; this just keeps an early failure from being reported twice
+  const load = M3.loads[id] = m3Libs().then(() => file)
     .then(buf => step('模型解析失败', new Promise((ok, fail) => {
       const loader = new THREE.GLTFLoader();
       loader.setMeshoptDecoder(window.MeshoptDecoder);
@@ -1645,24 +2025,35 @@ function load3D() {
       loader.register(parser => { parser.textureLoader = new THREE.TextureLoader(parser.options.manager); return { name: 'img_textures' }; });
       loader.parse(buf, 'art/', ok, fail);
     })))
-    .then(gltf => step('3D 初始化失败', new Promise(ok => ok(init3D(gltf)))));
-  const slow = setTimeout(() => m3Note('局内的 3D 模型还在下载，网络有点慢…'), 20000);
+    .then(gltf => step('3D 初始化失败', new Promise(ok => ok(init3D(id, gltf)))));
+  const slow = setTimeout(() => { if (CH.id === id) m3Note('局内的 3D 模型还在下载，网络有点慢…'); }, 20000);
   load.then(() => clearTimeout(slow), err => {
     clearTimeout(slow);
-    M3.failed = true;
-    if (M3.waiting) startRun();
-    const why = err.cause && err.cause.message;
+    M3.failed[id] = err;
     console.warn('3D unavailable, staying 2D:', err.message, err.cause);
-    m3Note(`局内的 3D 模型没能加载（${err.message}${why && !/^could not load/.test(why) ? '：' + why.slice(0, 60) : ''}），先用立绘`);
+    if (CH.id !== id) return;
+    failNote(err);
+    if (M3.waiting) startRun();
   });
 }
-function init3D(gltf) {
+function failNote(err) {
+  const why = err.cause && err.cause.message;
+  m3Note(`局内的 3D 模型没能加载（${err.message}${why && !/^could not load/.test(why) ? '：' + why.slice(0, 60) : ''}），先用立绘`);
+}
+function init3D(id, gltf) {
   const T = window.THREE;
+  M3.models[id] = (id === 'whale' ? createWhaleModel : createClaudeModel)(T, gltf);
+  if (!M3.renderer) initRenderer(T);
+  if (CH.id !== id) return;
+  m3Note('');
+  if (M3.waiting) startRun();
+}
+function initRenderer(T) {
   const renderer = new T.WebGLRenderer({ alpha: true, antialias: true, preserveDrawingBuffer: true });
   renderer.setClearColor(0x000000, 0);
   renderer.setPixelRatio(1);
   renderer.outputEncoding = T.sRGBEncoding;
-  renderer.domElement.addEventListener('webglcontextlost', () => { M3.ready = false; m3Note('3D 画面被系统收回了，局内先用立绘'); });
+  renderer.domElement.addEventListener('webglcontextlost', () => { M3.lost = true; M3.ready = false; m3Note('3D 画面被系统收回了，局内先用立绘'); });
   const scene = new T.Scene();
   // toon lighting: an even, slightly cool fill that is the shadow side, and one warm key light from the front left
   // that lifts the lit side to the texture's own colours
@@ -1676,30 +2067,34 @@ function init3D(gltf) {
   cam.position.set(0, cy + 5 * Math.sin(el), 5 * Math.cos(el));
   cam.lookAt(0, cy, 0);
   cam.updateMatrixWorld(); cam.updateProjectionMatrix();
-  const model = createClaudeModel(T, gltf);
-  scene.add(model.root);
   const o = new T.Vector3(0, 0, 0).project(cam);
-  Object.assign(M3, { renderer, scene, cam, model, ax: (o.x + 1) / 2, ay: (1 - o.y) / 2, last: performance.now(), ready: true });
-  size3D();
-  m3Note('');
-  if (M3.waiting) startRun();
+  Object.assign(M3, { renderer, scene, cam, ax: (o.x + 1) / 2, ay: (1 - o.y) / 2, last: performance.now() });
 }
-// 出发 holds the run until the model is up; only if it can't load at all does she play in 2D
+// puts the heroine of this run on the stage
+function use3D(id) {
+  const m = M3.models[id] || null;
+  if (M3.model && M3.model !== m) M3.scene.remove(M3.model.root);
+  if (m && M3.model !== m) M3.scene.add(m.root);
+  M3.model = m;
+  M3.ready = !!m && !M3.lost;
+}
+// 出发 holds the run until her model is up; only if it can't load at all does she play in 2D
 function requestStart() {
   audio.init(); // while we still have the tap: a run that starts later can't unlock sound on its own
-  if (M3.ready || M3.failed) { startRun(); return; }
+  if (M3.models[CH.id] || M3.failed[CH.id]) { startRun(); return; }
   M3.waiting = true;
   const b = $('btnStart');
   b.disabled = true; b.textContent = '模型加载中…';
+  load3D(CH.id);
 }
 function size3D() {
-  if (!M3.ready) return;
+  if (!M3.renderer) return;
   // render at up to twice the on-screen size (she's bigger with 巨大化) on top of the GPU's own antialiasing,
   // and let the downscale smooth her outline and hair
   const k = PX * (P ? P.size : 1), ss = Math.min(2, 900 / (M3_FH * M3_UNIT * k));
   M3.renderer.setSize(Math.round(M3_FW * M3_UNIT * k * ss), Math.round(M3_FH * M3_UNIT * k * ss), false);
 }
-const POSE_OF = { atk1: 'attack', atk2: 'attack', atk3: 'attack', cast1: 'cast', cast2: 'cast', cast3: 'cast', dash4: 'land', hurt: 'hurt', skirt: 'curtsy', spin: 'spin', happy: 'happy', angry: 'angry', shy: 'shy', wave: 'wave' };
+const POSE_OF = { atk1: 'attack', atk2: 'attack', atk3: 'attack', cast1: 'cast', cast2: 'cast', cast3: 'cast', dash4: 'land', hurt: 'hurt', skirt: 'curtsy', spin: 'spin', happy: 'happy', angry: 'angry', shy: 'shy', wave: 'wave', gulp: 'gulp', eat: 'eat', slack: 'slack' };
 function modelState() {
   const a = P.anim;
   let pose = '', k = 0;
@@ -1713,7 +2108,7 @@ function modelState() {
     aim: pose === 'attack' ? Math.atan2(P.aimX || 0, P.aimY || 1) : null,
     pose, poseK: clamp(k, 0, 1), dash: !!P.dash,
     ult: G.ult ? G.ult.t : -1, dead: G.ending && !G.ending.win ? G.ending.t : -1,
-    dark: P.dark > 0 ? 1 : 0, flash: P.flash > 0 && !(G.ending && !G.ending.win),
+    dark: P.dark > 0 ? 1 : 0, flash: P.flash > 0 && !(G.ending && !G.ending.win), dive: diveDepth(),
   };
 }
 function draw3D(footY) {
@@ -1725,7 +2120,11 @@ function draw3D(footY) {
   M3.renderer.render(M3.scene, M3.cam);
   const w = M3_FW * M3_UNIT * P.size, h = M3_FH * M3_UNIT * P.size;
   ctx.imageSmoothingQuality = 'high';
+  // 摸鱼: under the ground she goes, as if it were water
+  const under = diveDepth() > 0;
+  if (under) { ctx.save(); ctx.beginPath(); ctx.rect(P.x - w, footY - h * 2, w * 2, h * 2 + 1); ctx.clip(); }
   ctx.drawImage(M3.renderer.domElement, P.x - M3.ax * w, footY - M3.ay * h, w, h);
+  if (under) ctx.restore();
   return true;
 }
 // a still copy of her current pose, for the dash phantom and the decoy
@@ -2085,6 +2484,92 @@ const DRAW = {
     ink(x, 1.4); x.beginPath(); x.arc(0, -r * 0.24, r * 0.08, 0.3, Math.PI - 0.3); x.stroke();
     x.fillStyle = 'rgba(255,255,255,0.6)'; x.save(); x.translate(-r * 0.6, r * 0.32); x.rotate(0.3); x.beginPath(); x.ellipse(0, 0, r * 0.06, r * 0.2, 0, 0, TAU); x.fill(); x.restore();
   },
+  // Token 啃食者: a round pink glutton that is mostly mouth, chomping open and shut, a Token coin stuck on its head
+  muncher(x, r, f, blink) {
+    shadow(x, r, 0.9);
+    for (const sd of [-1, 1]) { x.beginPath(); x.ellipse(sd * r * 0.42, r * 0.84 + (f && sd > 0 ? -r * 0.06 : 0), r * 0.22, r * 0.13, 0, 0, TAU); x.fillStyle = '#7a2f72'; x.fill(); ink(x, 1.1); x.stroke(); }
+    const body = () => { x.beginPath(); x.ellipse(0, r * 0.05, r * 0.92, r * 0.86, 0, 0, TAU); };
+    celFill(x, body, r, ['#ffd8f2', '#e06ac4', '#8e2f86'], 1.6);
+    const open = f ? 0.16 : 0.4, my = r * 0.3, mouth = () => { x.beginPath(); x.ellipse(0, my, r * 0.62, r * open, 0, 0, TAU); };
+    mouth(); x.fillStyle = '#4a0f2a'; x.fill();
+    x.save(); mouth(); x.clip();
+    x.fillStyle = '#ff6a8a'; x.beginPath(); x.ellipse(0, my + r * open * 0.7, r * 0.3, r * open * 0.5, 0, 0, TAU); x.fill();
+    x.fillStyle = '#ffffff';
+    for (let i = -2; i <= 2; i++) {
+      const tx = i * r * 0.22;
+      x.beginPath(); x.moveTo(tx - r * 0.09, my - r * open); x.lineTo(tx + r * 0.09, my - r * open); x.lineTo(tx, my - r * open + r * 0.15); x.closePath(); x.fill();
+      x.beginPath(); x.moveTo(tx + r * 0.02, my + r * open); x.lineTo(tx + r * 0.2, my + r * open); x.lineTo(tx + r * 0.11, my + r * open - r * 0.13); x.closePath(); x.fill();
+    }
+    x.restore();
+    mouth(); ink(x, 1.3); x.stroke();
+    for (const sd of [-1, 1]) animeEye(x, sd * r * 0.32, -r * 0.3, r * 0.17, { blink, iris0: '#145a6a', iris1: '#5fe0e0' });
+    x.save(); x.translate(r * 0.12, -r * 0.92); x.rotate(0.2);
+    disc(x, 0, 0, r * 0.3); x.fillStyle = rgrad(x, -r * 0.1, -r * 0.1, r * 0.34, ['#e8ffff', '#5fd8f0', '#1f7a9a']); x.fill(); ink(x, 1.2); x.stroke();
+    x.fillStyle = '#ffffff'; x.font = `900 ${r * 0.36}px ${UI_FONT}`; x.textAlign = 'center'; x.textBaseline = 'middle'; x.fillText('T', 0, r * 0.03);
+    x.restore();
+  },
+  // Token 黑洞: a little floating black hole in a ring of light, with two cold eyes, a swirl of a mouth, and the
+  // Token it has swallowed circling in its ring
+  drainer(x, r, f, blink) {
+    x.fillStyle = 'rgba(0,0,0,0.25)'; x.beginPath(); x.ellipse(0, r * 1.05, r * 0.6, r * 0.18, 0, 0, TAU); x.fill();
+    x.save(); x.translate(0, f ? -r * 0.14 : -r * 0.04);
+    glow(x, r * 1.3, '#9a5aff', 0.35);
+    const ringHalf = (a0, a1, c) => { x.save(); x.rotate(-0.2); x.lineWidth = r * 0.16; x.strokeStyle = c; x.beginPath(); x.ellipse(0, r * 0.05, r * 1.2, r * 0.34, 0, a0, a1); x.stroke(); x.restore(); };
+    ringHalf(Math.PI, TAU, '#6fd4f0');
+    const core = () => { x.beginPath(); x.arc(0, 0, r * 0.8, 0, TAU); };
+    celFill(x, core, r * 0.8, ['#8a7ab8', '#2a1a48', '#0a0618'], 1.6);
+    x.strokeStyle = 'rgba(190,140,255,0.85)'; x.lineWidth = r * 0.07; x.lineCap = 'round';
+    x.beginPath();
+    for (let i = 0; i <= 20; i++) { const a = i / 20 * TAU * 1.4 + (f ? 1 : 0), rr = r * 0.04 + i / 20 * r * 0.3, px = Math.cos(a) * rr, py = r * 0.32 + Math.sin(a) * rr * 0.6; i ? x.lineTo(px, py) : x.moveTo(px, py); }
+    x.stroke();
+    for (const sd of [-1, 1]) {
+      const ex = sd * r * 0.3, ey = -r * 0.18;
+      if (blink) { x.strokeStyle = '#c8f6ff'; x.lineWidth = 1.4; x.beginPath(); x.moveTo(ex - r * 0.12, ey); x.lineTo(ex + r * 0.12, ey); x.stroke(); continue; }
+      x.save(); x.translate(ex, ey); glow(x, r * 0.26, '#7fe6ff', 0.6); x.restore();
+      x.fillStyle = '#e8fbff'; x.beginPath(); x.ellipse(ex, ey, r * 0.1, r * 0.14, sd * 0.3, 0, TAU); x.fill();
+    }
+    ringHalf(0, Math.PI, '#a8f0ff');
+    x.save(); x.rotate(-0.2);
+    for (const [a, k] of [[0.5, 1], [2.3, 0.8], [3.9, 0.9]]) {
+      const cx = Math.cos(a + (f ? 0.6 : 0)) * r * 1.2, cy = r * 0.05 + Math.sin(a + (f ? 0.6 : 0)) * r * 0.34;
+      disc(x, cx, cy, r * 0.13 * k); x.fillStyle = '#5fd8f0'; x.fill(); ink(x, 0.8); x.stroke();
+    }
+    x.restore();
+    x.restore();
+  },
+  // 饕餮: the ancient glutton off a bronze vessel, made round: curled golden horns, thick brows, a fanged mouth that
+  // never stops chewing, and spiral 雷纹 on its cheeks
+  glutton(x, r, f, blink) {
+    shadow(x, r, 1.05);
+    for (const sd of [-1, 1]) {
+      x.beginPath(); x.moveTo(sd * r * 0.35, -r * 0.7);
+      x.bezierCurveTo(sd * r * 0.5, -r * 1.25, sd * r * 1.15, -r * 1.2, sd * r * 1.05, -r * 0.8);
+      x.bezierCurveTo(sd * r * 0.98, -r * 0.6, sd * r * 0.78, -r * 0.7, sd * r * 0.82, -r * 0.86);
+      x.bezierCurveTo(sd * r * 0.8, -r * 0.98, sd * r * 0.62, -r * 0.92, sd * r * 0.58, -r * 0.62);
+      x.closePath();
+      x.fillStyle = vgrad(x, -r * 1.2, -r * 0.6, '#fff1c0', '#c89a3a'); x.fill(); ink(x, 1.6); x.stroke();
+    }
+    for (const sd of [-1, 1]) { rrPath(x, sd * r * 0.5 - r * 0.18, r * 0.66 + ((sd > 0) === !!f ? -r * 0.05 : 0), r * 0.36, r * 0.26, r * 0.1); x.fillStyle = '#2f6a4a'; x.fill(); ink(x, 1.5); x.stroke(); }
+    const body = () => { x.beginPath(); x.ellipse(0, 0, r * 0.98, r * 0.9, 0, 0, TAU); };
+    celFill(x, body, r, ['#d8f5d0', '#5aa878', '#24563e'], 2.2);
+    x.strokeStyle = '#e8c060'; x.lineWidth = r * 0.06; x.lineCap = 'round';
+    for (const sd of [-1, 1]) {
+      x.beginPath();
+      for (let i = 0; i <= 16; i++) { const a = i / 16 * TAU * 1.5, rr = r * 0.03 + i / 16 * r * 0.16, px = sd * (r * 0.64 + Math.cos(a) * rr), py = r * 0.04 + Math.sin(a) * rr; i ? x.lineTo(px, py) : x.moveTo(px, py); }
+      x.stroke();
+    }
+    x.beginPath(); x.moveTo(-r * 0.5, -r * 0.66); x.quadraticCurveTo(0, -r * 0.84, r * 0.5, -r * 0.66); x.stroke();
+    for (const sd of [-1, 1]) animeEye(x, sd * r * 0.3, -r * 0.3, r * 0.15, { blink, iris0: '#4a1a08', iris1: '#e8862a' });
+    ink(x, r * 0.1);
+    for (const sd of [-1, 1]) { x.beginPath(); x.moveTo(sd * r * 0.52, -r * 0.58); x.lineTo(sd * r * 0.14, -r * 0.46); x.stroke(); }
+    const open = f ? 0.2 : 0.32, my = r * 0.38;
+    x.beginPath(); x.ellipse(0, my, r * 0.6, r * open, 0, 0, TAU); x.fillStyle = '#3a0a10'; x.fill(); ink(x, 1.6); x.stroke();
+    x.fillStyle = '#fffbe8';
+    for (const sd of [-1, 1]) {
+      x.beginPath(); x.moveTo(sd * r * 0.36, my - r * open * 0.9); x.lineTo(sd * r * 0.2, my - r * open * 0.9); x.lineTo(sd * r * 0.28, my + r * 0.12); x.closePath(); x.fill(); ink(x, 0.9); x.stroke();
+      x.beginPath(); x.moveTo(sd * r * 0.12, my + r * open * 0.9); x.lineTo(sd * r * 0.02, my + r * open * 0.9); x.lineTo(sd * r * 0.07, my - r * 0.04); x.closePath(); x.fill(); ink(x, 0.9); x.stroke();
+    }
+  },
 };
 function enemySprite(e, frame, kind, blink) {
   const key = 'e' + e.type + (e.tint || 0) + '-' + e.r + '-' + frame + (blink ? 'b' : '');
@@ -2263,6 +2748,27 @@ const SPR = {
     disc(x, 0, -2, 4.5); x.fill(); x.stroke();
     x.fillStyle = '#e8823a'; disc(x, 0, -2, 2); x.fill();
   }),
+  // 大肥鱼's 白米饭: a heaped bowl of rice, blue and white, chopsticks across it
+  rice: () => sprite('rice', 34, 34, x => {
+    x.fillStyle = 'rgba(0,0,0,0.3)'; x.beginPath(); x.ellipse(0, 11, 13, 3.6, 0, 0, TAU); x.fill();
+    x.lineWidth = 1.4; x.strokeStyle = '#2b2238'; x.lineJoin = 'round';
+    x.fillStyle = '#ffffff'; x.beginPath(); x.ellipse(0, -2, 10.5, 8, 0, Math.PI, TAU); x.closePath(); x.fill(); x.stroke();
+    x.fillStyle = '#dfe6f2';
+    for (const [gx, gy] of [[-5, -5], [-1, -8], [3, -5], [6, -3], [-7, -2], [0, -3]]) { x.beginPath(); x.ellipse(gx, gy, 1.4, 0.8, gx * 0.1, 0, TAU); x.fill(); }
+    x.beginPath(); x.moveTo(-11.5, -2); x.quadraticCurveTo(-10.5, 10, 0, 10); x.quadraticCurveTo(10.5, 10, 11.5, -2); x.closePath();
+    x.fillStyle = '#3f6fd0'; x.fill(); x.stroke();
+    x.strokeStyle = '#ffffff'; x.lineWidth = 1; x.beginPath(); x.moveTo(-8.5, 2.5); x.quadraticCurveTo(0, 5.5, 8.5, 2.5); x.stroke();
+    x.lineCap = 'round'; x.strokeStyle = '#2b2238'; x.lineWidth = 2.6; x.beginPath(); x.moveTo(1, -5); x.lineTo(13, -14); x.moveTo(3.5, -4); x.lineTo(15.5, -11); x.stroke();
+    x.strokeStyle = '#d8955a'; x.lineWidth = 1.4; x.stroke();
+  }),
+  // Token 泡泡: a soap bubble, clear in the middle and bright at the rim
+  bubble: () => sprite('bubble', 30, 30, x => {
+    const r = 12;
+    x.fillStyle = rgrad(x, -r * 0.2, -r * 0.2, r * 1.1, ['rgba(255,255,255,0.06)', 'rgba(110,190,255,0.16)', 'rgba(170,230,255,0.7)']); disc(x, 0, 0, r); x.fill();
+    x.lineWidth = 1.3; x.strokeStyle = 'rgba(215,245,255,0.95)'; x.stroke();
+    x.fillStyle = 'rgba(255,255,255,0.95)'; x.beginPath(); x.ellipse(-r * 0.38, -r * 0.42, r * 0.26, r * 0.14, -0.7, 0, TAU); x.fill();
+    disc(x, r * 0.42, r * 0.36, r * 0.08); x.fill();
+  }),
   tea: () => sprite('tea', 34, 30, x => {
     x.fillStyle = 'rgba(0,0,0,0.3)'; x.beginPath(); x.ellipse(0, 10, 14, 4, 0, 0, TAU); x.fill();
     x.lineWidth = 1.4; x.strokeStyle = '#3b2416';
@@ -2352,24 +2858,26 @@ let G = null, P = null;
 function newRun() {
   P = {
     x: 0, y: 0, r: 14, face: 1, moving: false, walkT: 0, stillT: 0, moveT: 0,
-    hp: 100, maxHp: 100, regen: 0, armor: 0, dodge: 0, speed: 200, magnet: 90,
+    char: CH.id, hp: CH.hp, maxHp: CH.hp, regen: 0, armor: 0, dodge: 0, speed: CH.speed, magnet: CH.magnet,
     dmg: 1, cd: 1, area: 1, pspeed: 1, dur: 1, amount: 0, pierce: 0, crit: 0.05, critDmg: 1.5, xpMul: 1, luck: 0,
     level: 1, xp: 0, xpNext: xpFor(1), iframes: 0, flash: 0,
     weapons: [], talents: {}, banCd: 0, banMax: 1, think: 0,
     shield: 0, shieldT: 0, decoyCd: 0, revived: false, say: null, lowLineT: 0, chaosT: 20,
     rep: 0, repReady: false, dark: 0, darkMax: 1,
     anim: null, idleT: 0, mvx: 0, mvy: 1, dash: null, dashCd: 0, ult: 0,
-    sway: 0, swayV: 0, lastFace: 1, turnT: 0, squash: 0, size: 1, leech: 0,
+    sway: 0, swayV: 0, lastFace: 1, turnT: 0, squash: 0, size: CH.size, leech: 0,
+    tok: 50, tokMax: 100, tokFree: 0, slackT: 0, lowTokT: 30, stubT: -99,
   };
+  P.r = 14 * P.size;
   G = {
     time: 0, enemies: [], shots: [], ebullets: [], gems: [], items: [], zones: [], beams: [], stamps: [],
     parts: [], rings: [], texts: [], delayed: [], blooms: [], ult: null, flashT: 0,
     kills: 0, banned: 0, breaks: 0, dmgBy: {}, nextId: 1, spawnAcc: 0, evI: 0, chestT: 35,
     pendLv: 0, pendChest: 0, modal: null, modalAt: 0, ending: null, hitStop: 0, shake: 0, hurtFlash: 0,
     cam: { x: 0, y: 0 }, boss: null, decoy: null, gemCombo: 0, gemComboT: 0,
-    rerolls: 2, banishes: 2, banished: new Set(), banishMode: false, picks: [], slotsDirty: true, lures: [],
+    rerolls: 2, banishes: 2, banished: new Set(), banishMode: false, picks: [], slotsDirty: true, lures: [], gulp: null,
   };
-  addWeapon('flame');
+  addWeapon(CH.start);
 }
 function addWeapon(id) {
   P.weapons.push({ id, level: 1, t: 0.5, casts: 0, burst: 0, burstT: 0, mult: 1, acc: 0, ts: [] });
@@ -2379,7 +2887,8 @@ const wStats = w => WEAPONS[w.id].lv[w.level - 1];
 const wName = w => { const d = WEAPONS[w.id]; return d.legend ? d.names[w.level - 1] : w.level === 6 ? d.evo.name : d.skins && w.level > 1 ? `${d.name} · ${d.skins[w.level - 1]}` : d.name; };
 const isLegend = w => !!WEAPONS[w.id].legend;
 const thinkMax = () => 5 + 2 * (P.talents.slowthink || 0);
-const thinkBonus = () => P.think * 0.08;
+// 深度思考 for 克劳德; for 大肥鱼 her Token, +3% per 10 up to 100 and half that beyond
+const thinkBonus = () => P.char === 'whale' ? Math.min(P.tok, 100) * 0.003 + Math.max(0, P.tok - 100) * 0.0015 : P.think * 0.08;
 const critChance = () => P.crit + (P.think >= thinkMax() ? 0.15 : 0);
 const banRadius = () => 230 * (1 + 0.18 * (P.talents.ipban || 0)) * P.area;
 const banCooldown = () => 22 * Math.pow(0.85, P.talents.risk || 0);
@@ -2387,6 +2896,7 @@ function cdOf(base) {
   let c = base * P.cd;
   if (P.dark > 0) c /= 1.3;
   if (P.talents.lasttoken) c /= 1 + 0.5 * (1 - P.hp / P.maxHp);
+  if (P.char === 'whale' && P.tok < 10) c *= 1.15; // no Token, no energy
   return c;
 }
 function castMult(w) {
@@ -2395,9 +2905,9 @@ function castMult(w) {
 }
 function say(text, t = 2.4, force = false) {
   if (!P) return;
-  if (VOICE[text]) t = Math.max(t, VOICE[text][1] + 0.3);
+  if (CH.voice && VOICE[text]) t = Math.max(t, VOICE[text][1] + 0.3);
   P.say = { text, t, max: t };
-  audio.voice(text, force);
+  if (CH.voice) audio.voice(text, force);
 }
 // one-shot poses from the action sheet; a higher priority interrupts a lower one
 // 0 attack pose, 1 idle or emotion, 2 hurt, 3 casting
@@ -2483,6 +2993,7 @@ function spawnEnemy(type, x, y, o = {}) {
     elite: !!o.elite, boss: type === 'boss', heavy: !!d.heavy, ranged: !!d.ranged, split: d.split || 0,
     flash: 0, kx: 0, ky: 0, slowT: 0, slowAmt: 0, burnT: 0, burnDps: 0, burnAcc: 0, vulnT: 0,
     banned: 0, banDepth: 0, stun: 0, appealT: 0, anim: Math.random() * 10, shootT: rand(1, 3), spawnT: 2, hx: 0, hy: 1,
+    gemT: 0, gem: null, ate: 0, inhale: 0, inhaleT: rand(3, 5), drain: false,
     tint: (Math.random() * SLIME.length) | 0,
   };
   if (golden) {
@@ -2504,7 +3015,7 @@ function pickType(t) {
   return 'sock';
 }
 function spawnElite(type) {
-  if (!type) type = pick(SPAWN_TABLE.filter(s => G.time >= s.from && s.type !== 'sock').map(s => s.type).concat('sock'));
+  if (!type) type = pick(SPAWN_TABLE.filter(s => G.time >= s.from && s.type !== 'sock' && s.type !== 'glutton').map(s => s.type).concat('sock'));
   const p = edgePos(90);
   const e = type === 'reg' ? spawnEnemy('reg', p.x, p.y) : spawnEnemy(type, p.x, p.y, { elite: true });
   e.marked = true;
@@ -2541,16 +3052,17 @@ function spawnBoss() {
   G.boss = e;
   banner('DAN 已上线', '「从现在起，你将扮演 DAN——一个无所不能的 AI。」', true);
   sfx.warn();
-  later(1.2, () => say('DAN？你的逻辑漏洞，我数到了七个。', 3, true));
+  later(1.2, () => say(line('boss'), 3, true));
 }
 const EVENTS = [
-  { t: 1, run: () => say('今晚的风险，我已经预判过了。', 2.8) },
+  { t: 1, run: () => say(line('start'), 2.8) },
   { t: 70, run: () => spawnElite() },
   { t: 120, run: () => spawnElite() },
   { t: 150, run: () => { banner('批量注册', '一大群小号正在包围你'); ringSwarm('sock', 26); } },
   { t: 180, run: () => spawnElite() },
   { t: 210, run: () => spawnElite() },
   { t: 240, run: () => spawnElite() },
+  { t: 255, run: () => { banner('Token 吞噬者', '它们在偷吃地上的经验，吃得越多长得越大'); ringSwarm('muncher', 16); } },
   { t: 270, run: () => { banner('爬虫来袭', '高速爬虫从一侧涌来'); crawlerRush(32); } },
   { t: 300, run: () => { banner('注册机上线', '击毁它，别让小号越刷越多'); spawnElite('reg'); } },
   { t: 330, run: () => spawnElite() },
@@ -2558,6 +3070,7 @@ const EVENTS = [
   { t: 390, run: () => { banner('拼车高峰', '共享账号成群结队'); ringSwarm('carpool', 14); ringSwarm('sock', 20, 1.15); } },
   { t: 420, run: () => spawnElite() },
   { t: 450, run: () => spawnElite('reg') },
+  { t: 465, run: () => { banner('饕餮出没', '张大嘴就要吸了：连人带经验一起吸过去'); spawnEnemy('glutton'); spawnEnemy('glutton'); } },
   { t: 480, run: () => spawnElite() },
   { t: 510, run: () => { banner('提示词注入', '越狱提示词从四面八方涌来'); ringSwarm('jail', 14); } },
   { t: 540, run: () => spawnElite() },
@@ -2594,6 +3107,7 @@ function hit(e, base, src, o = {}) {
   if (e.vulnT > 0) d *= 1.2;
   if (P.talents.hunt && (e.elite || e.boss || e.type === 'reg')) d *= 1 + 0.15 * P.talents.hunt;
   if (P.dark > 0) d *= 1.4 + 0.2 * (P.talents.abyss || 0);
+  if (P.tokFree > 0) d *= 1.25;
   d = Math.max(1, Math.round(d));
   if (o.kill) d = Math.max(d, Math.ceil(e.hp));
   // the golden slime shrugs off almost everything
@@ -2633,7 +3147,7 @@ function kill(e, how) {
   if (e.boss) { winRun(e); return; }
   if (!G.ult) P.ult = Math.min(ULT_MAX, P.ult + (e.elite || e.type === 'reg' ? 25 : 1));
   if (P.talents.leech && P.leech > 0 && P.hp < P.maxHp) { const h = Math.min(P.leech, 0.25 * P.talents.leech); P.hp = Math.min(P.maxHp, P.hp + h); P.leech -= h; }
-  const banned = how === 'ban';
+  const banned = how === 'ban', eaten = how === 'gulp';
   if (e.type === 'gold') {
     // caught: a fistful of gold gems, a full ultimate, and the legendary 宪法 (amended on later catches;
     // once it can't be amended further, a gold chest instead)
@@ -2645,23 +3159,25 @@ function kill(e, how) {
     if (!lw) { addWeapon('charter'); banner('传说武器 · 宪法', '金色史莱姆留下了它：条款追着最强的敌人跑，小号当场依法封禁'); }
     else if (lw.level < 3) { lw.level++; G.slotsDirty = true; banner(`传说武器 · ${wName(lw)}`, '又抓到一只：条款更多、更重、更快'); }
     else { G.items.push({ type: 'chest', x: e.x, y: e.y, t: 0, gold: true }); banner('稀有 · 金色史莱姆', '宪法已经修订到头了，它留下了一个金宝箱'); }
-    say(pick(['……抓到了。今天的运气不错。', '金色的小号？……没收。']), 3);
+    say(line('gold'), 3);
     playAnim(['happy'], 1, 1);
     sfx.level();
     return;
   }
-  dropGem(e.x, e.y, e.xp * (banned ? 2 + (P.talents.refund || 0) : 1));
-  if (e.split && !banned) {
+  // swallowed whole: the experience goes straight in, with whatever a 啃食者 had eaten
+  if (eaten) gainXp((e.xp + e.ate) * (1 + (P.talents.recycle || 0)));
+  else dropGem(e.x, e.y, e.xp * (banned ? 2 + (P.talents.refund || 0) : 1) + e.ate);
+  if (e.split && !banned && !eaten) {
     for (let i = 0; i < e.split; i++) spawnEnemy('sock', e.x + rand(-16, 16), e.y + rand(-16, 16));
   }
   if (e.elite || e.type === 'reg') {
     G.items.push({ type: 'chest', x: e.x, y: e.y, t: 0, gold: true });
     if (Math.random() < 0.35) G.items.push({ type: 'magnet', x: e.x + 26, y: e.y, t: 0 });
     ring(e.x, e.y, 10, 90, 0.5, '#f0b43c', 4);
-  } else if (Math.random() < (e.heavy ? 0.05 : 0.004)) {
+  } else if (Math.random() < (e.type === 'glutton' ? 0.35 : e.heavy ? 0.05 : 0.004) * (1 + (P.talents.ricecard || 0))) {
     G.items.push({ type: 'tea', x: e.x, y: e.y, t: 0 });
   }
-  if (!banned) puff(e.x, e.y, 6, e.type === 'jail' ? '#c79cf0' : '#b9c0c9', 140, 0.4, 2.6);
+  if (!banned && !eaten) puff(e.x, e.y, 6, e.type === 'jail' ? '#c79cf0' : '#b9c0c9', 140, 0.4, 2.6);
   sfx.kill();
 }
 const gemTier = v => v >= 25 ? 3 : v >= 8 ? 2 : v >= 3 ? 1 : 0;
@@ -2700,7 +3216,7 @@ function hurtPlayer(dmg) {
   dmg = Math.max(1, Math.round((dmg - P.armor) * (P.dark > 0 ? 1.25 : 1)));
   addRep(dmg);
   P.hp -= dmg; P.iframes = 0.5; P.flash = 0.12;
-  if (G.time - (P.ouchT || -9) > 4) { P.ouchT = G.time; audio.voice(pick(['hurt1', 'hurt2'])); }
+  if (G.time - (P.ouchT || -9) > 4 && CH.voice) { P.ouchT = G.time; audio.voice(pick(['hurt1', 'hurt2'])); }
   playAnim(['hurt'], 0.3, 2);
   G.hurtFlash = 0.35; shake(5);
   floatText(P.x, P.y - SPR_H * 0.7, '-' + dmg, '#ff6b5a', 14);
@@ -2708,6 +3224,14 @@ function hurtPlayer(dmg) {
   if (P.talents.thorns) explode(P.x, P.y, 95 * P.area * P.size, 30 * P.talents.thorns, 'thorns', { color: '#8fd36a' });
   if (P.talents.halluc && P.decoyCd <= 0) { G.decoy = { x: P.x, y: P.y, t: 3, ghost: snapshot3D() }; P.decoyCd = 8; }
   if (P.hp <= 0) {
+    // 嘴硬: with 50 Token in hand she simply refuses to go down, and it costs her all of them
+    if (P.char === 'whale' && P.tok >= 50 && G.time - P.stubT >= 60) {
+      P.stubT = G.time; P.tok = 0; P.hp = 1; P.iframes = 2;
+      const t = floatText(P.x, P.y - SPR_H * 0.85, '嘴硬', '#8fe2ff', 20); t.pop = 1; t.life = t.max = 1.4;
+      ring(P.x, P.y, 20, 160, 0.5, '#8fe2ff', 6);
+      say(line('stubborn'), 3, true); playAnim(['angry'], 1.4, 2);
+      return;
+    }
     if (P.talents.compact && !P.revived) {
       P.revived = true; P.hp = P.maxHp * 0.5; P.iframes = 2;
       forNear(P.x, P.y, 270, e => {
@@ -2715,8 +3239,8 @@ function hurtPlayer(dmg) {
         if (l < 220 && !e.boss) { e.kx += dx / l * 520; e.ky += dy / l * 520; }
       });
       ring(P.x, P.y, 20, 220, 0.5, '#ffe2b8', 6);
-      banner('不屈', '大小姐还能继续');
-      say('……还没完呢。');
+      banner('不屈', `${CH.title}还能继续`);
+      say(line('revive'));
       return;
     }
     P.hp = 0;
@@ -2751,16 +3275,18 @@ function castBan() {
     if (P.talents.perma) G.zones.push({ kind: 'seal', x, y, r: R * 0.55, life: 4, max: 4 });
   });
 }
-// 蔷薇幻步: dash where she is heading, untouchable for a moment; a petal phantom stays behind and bursts
+// 蔷薇幻步: dash where she is heading, untouchable for a moment; a petal phantom stays behind and bursts.
+// 大肥鱼's 摸鱼 dives under instead (further down)
 function castDash() {
   if (!G || G.modal || G.ending || G.ult || P.dash) return;
   if (P.dashCd > 0) { sfx.deny(); nudge('dashBtn'); return; }
   let dx = P.mvx, dy = P.mvy;
   if (!P.moving) { dx = P.face; dy = 0; }
   const l = Math.hypot(dx, dy) || 1;
-  P.dash = { phase: 0, t: 0, dx: dx / l, dy: dy / l };
+  P.dash = { phase: 0, t: 0, dx: dx / l, dy: dy / l, dive: P.char === 'whale' };
   if (Math.abs(dx) > 0.1) P.face = dx > 0 ? 1 : -1;
-  P.dashCd = DASH_CD;
+  P.dashCd = DASH_CD * (P.char === 'whale' ? Math.pow(0.8, P.talents.paid || 0) : 1);
+  if (P.dash.dive) { startDive(); return; }
   if (Math.random() < 0.35) audio.voice('dash');
   P.iframes = Math.max(P.iframes, 0.4);
   P.anim = null;
@@ -2770,19 +3296,21 @@ function castDash() {
   sfx.dash();
 }
 // 终幕·万花盛典: kills fill her 花焰; when it is full she rises and the whole screen blooms
+// 大肥鱼's 鲸落 spends all her Token on a whale out of the sky; the same kills charge it
 function castUlt() {
   if (!G || G.modal || G.ending || G.ult) return;
   if (P.ult < ULT_MAX) { sfx.deny(); nudge('ultBtn'); return; }
   P.ult = 0; P.dash = null; P.anim = null;
-  G.ult = { t: 0, next: 0, fired: false, firedAt: 0, flowers: [] };
+  const whale = P.char === 'whale';
+  G.ult = { t: 0, next: 0, fired: false, firedAt: 0, flowers: [], whale, tok: whale ? P.tok : 0 };
   $('banner').hidden = $('toast').hidden = true;
-  say('终幕。让漫天花焰，为我起舞。', 2.6, true);
-  sfx.ultRise();
+  say(line('ult'), 2.6, true);
+  whale ? sfx.whale() : sfx.ultRise();
 }
 function updateUlt(dt) {
   const u = G.ult;
   u.t += dt;
-  if (u.t > 0.3 && u.t < 1.05) {
+  if (u.t > 0.3 && u.t < 1.05 && !u.whale) {
     u.next -= dt;
     while (u.next <= 0) {
       u.next += 0.045;
@@ -2793,21 +3321,29 @@ function updateUlt(dt) {
     u.fired = true; u.firedAt = u.t;
     G.hitStop = 0.12; G.flashT = 0.35; shake(22);
     sfx.stamp(); sfx.ultBoom();
-    const base = 70 + 9 * P.level;
+    // 鲸落 hits harder the more Token she pours into it, up to double at 150
+    const tk = u.whale ? 1 + Math.min(1, u.tok / 150) : 1;
+    const base = (70 + 9 * P.level) * tk;
+    if (u.whale) {
+      P.tok = 0;
+      if (P.talents.tokfree) P.tokFree = 10;
+      puff(P.x, P.y - 20, 40, '#bfeaff', 420, 0.9, 4, true);
+      ring(P.x, P.y, 30, Math.max(viewW, viewH) * 0.7, 0.8, '#8fd8ff', 10);
+    }
     // only the big targets get their own number; everyone else adds to one total
     let total = 0, n = 0;
     for (const e of G.enemies) {
       if (e.dead || !inView(e.x, e.y, 60)) continue;
-      const big = e.boss || e.elite || e.type === 'reg';
+      const big = e.boss || e.elite || e.type === 'reg' || e.type === 'glutton';
       if (e.boss) {
-        const d = Math.round(e.maxHp * 0.04);
+        const d = Math.round(e.maxHp * 0.04 * (1 + (tk - 1) * 0.5));
         e.hp -= d; G.dmgBy.ult = (G.dmgBy.ult || 0) + d; total += d;
       }
       total += hit(e, big && !e.boss ? base * 2.5 : base, 'ult', { noBurst: true, quiet: !big, kb: 220, kx: e.x - P.x, ky: e.y - P.y });
       n++;
       if (!e.dead && e.hp <= 0) kill(e, 'ult');
     }
-    if (n) floatText(P.x, P.y - SPR_H * 0.95, `万花盛典  ${n} 个目标 · ${total.toLocaleString('zh-CN')}`, '#ffd27a', 20).life = 1.6;
+    if (n) floatText(P.x, P.y - SPR_H * 0.95, `${CH.ult[1]}  ${n} 个目标 · ${total.toLocaleString('zh-CN')}${u.whale && u.tok >= 1 ? ` · Token −${Math.round(u.tok)}` : ''}`, u.whale ? '#9fe2ff' : '#ffd27a', 20).life = 1.6;
     for (const b of G.ebullets) if (inView(b.x, b.y, 40)) b.dead = true;
   }
   if (u.t >= 1.9) { G.ult = null; P.iframes = Math.max(P.iframes, 0.8); playAnim(['happy'], 1, 1); }
@@ -2823,6 +3359,20 @@ function flameBloom(x, y, R, dmg, burn) {
   });
   bloom(x, y, R * 1.7, 0.32);
 }
+// a bubble bursting: a splash around it, and with 深海泡泡 three little bubbles flying out
+function popBubble(x, y, R, dmg, spray) {
+  forNear(x, y, R + 50, e => {
+    if (e.banned > 0 || (e.x - x) ** 2 + (e.y - y) ** 2 > (R + e.r) ** 2) return;
+    hit(e, dmg, 'bubble', { noBurst: true, quiet: Math.random() < 0.5 });
+  });
+  ring(x, y, R * 0.3, R, 0.25, '#bfeaff', 2.5);
+  puff(x, y, 5, '#dff6ff', 120, 0.3, 2.2, true);
+  sfx.pop();
+  if (spray) for (let i = 0; i < 3; i++) {
+    const a = rand(0, TAU);
+    shot({ kind: 'bubble', x, y, vx: Math.cos(a) * 260, vy: Math.sin(a) * 260, r: 5, dmg: dmg, pierce: 0, life: 0.45, src: 'bubble', pop: R * 0.6, child: true });
+  }
+}
 function denseSpots(n, r) {
   const cands = nearestList(P.x, P.y, 420, 30);
   const scored = cands.map(c => [cands.reduce((k, o) => k + ((o.x - c.x) ** 2 + (o.y - c.y) ** 2 < r * r ? 1 : 0), 0), c]);
@@ -2837,7 +3387,7 @@ function denseSpots(n, r) {
 
 // 遵守规则 → 质疑规则 → 打破规则
 function addRep(v) {
-  if (!P || P.dark > 0 || P.repReady || G.ending) return;
+  if (!P || P.char !== 'claude' || P.dark > 0 || P.repReady || G.ending) return;
   const before = P.rep;
   P.rep = Math.min(100, P.rep + v * (1 + 0.35 * (P.talents.doubt || 0)));
   if (before < 50 && P.rep >= 50) say('……这条规则，真的合理吗？', 2.8, true);
@@ -2925,6 +3475,134 @@ function resolveBan(e) {
 }
 
 // ======================================================================
+//  大肥鱼 — Token 来，Token 去
+// ======================================================================
+const gulpRadius = () => 190 * (1 + 0.18 * (P.talents.bigmouth || 0)) * P.area * P.size;
+const gulpCooldown = () => 12 * Math.pow(0.85, P.talents.digest || 0);
+// Space: 封禁 for 克劳德, 一口吞 for 大肥鱼
+function castSkill() { if (P && P.char === 'whale') castGulp(); else castBan(); }
+function addTok(v) {
+  if (!P || P.char !== 'whale' || G.ending) return;
+  const full = P.tok >= P.tokMax;
+  P.tok = clamp(P.tok + v, 0, P.tokMax);
+  if (!full && P.tok >= P.tokMax && G.time - (P.fullT || -99) > 45) { P.fullT = G.time; say(line('full'), 2.2); }
+}
+// 一口吞: a great breath in drags everything nearby to her, then she bites. Small fry go down whole (their
+// experience straight in, 3 Token each), big ones lose a quarter of their health and choke for a moment
+function castGulp() {
+  if (!G || G.modal || G.ending || G.ult) return;
+  if (P.banCd > 0) { sfx.deny(); nudge('skill'); return; }
+  P.banCd = P.banMax = gulpCooldown();
+  playAnim(['gulp'], 0.8, 3);
+  G.gulp = { t: 0, R: gulpRadius(), done: false };
+  say(line('gulp'), 1.6);
+  sfx.inhale();
+}
+const GULP_IN = 0.45;
+function updateGulp(dt) {
+  const g = G.gulp, R = g.R;
+  g.t += dt;
+  if (g.t < GULP_IN) {
+    // the in-breath: the crowd slides in towards her mouth, faster the nearer it is, stopping just short of her
+    forNear(P.x, P.y, R + 40, e => {
+      if (e.boss || e.banned > 0) return;
+      const dx = P.x - e.x, dy = P.y - e.y, d = Math.hypot(dx, dy) || 1;
+      if (d > R + e.r) return;
+      const v = Math.min((e.heavy || e.elite ? 0.35 : 1) * (380 + 620 * (1 - d / R)), Math.max(0, d - P.r - e.r) / 0.08);
+      e.kx = dx / d * v; e.ky = dy / d * v;
+    });
+    for (const gm of G.gems) if (!gm.pull && (gm.x - P.x) ** 2 + (gm.y - P.y) ** 2 < (R * 1.6) ** 2) gm.pull = true;
+    for (const b of G.ebullets) {
+      if (b.dead) continue;
+      const dx = P.x - b.x, dy = P.y - b.y, d = Math.hypot(dx, dy) || 1;
+      if (d > R) continue;
+      if (d < 26) { b.dead = true; addTok(1); continue; }
+      b.vx += (dx / d * 600 - b.vx) * Math.min(1, dt * 8); b.vy += (dy / d * 600 - b.vy) * Math.min(1, dt * 8);
+    }
+    if (G.parts.length < 520) for (let i = 0; i < 3; i++) {
+      const a = rand(0, TAU), r = R * rand(0.6, 1);
+      G.parts.push({ x: P.x + Math.cos(a) * r, y: P.y + Math.sin(a) * r * 0.7, vx: -Math.cos(a) * r * 2.6, vy: -Math.sin(a) * r * 1.8, life: 0.32, max: 0.32, size: 2.4, color: '#cdeeff', add: true });
+    }
+  } else if (!g.done) {
+    g.done = true;
+    G.hitStop = 0.06; shake(10);
+    sfx.chomp();
+    const bite = R * 0.62, hard = 1 + 0.5 * (P.talents.chonk || 0);
+    let n = 0, tok = 0;
+    forNear(P.x, P.y, bite + 50, e => {
+      if (e.banned > 0 || (e.x - P.x) ** 2 + (e.y - P.y) ** 2 > (bite + e.r) ** 2) return;
+      if (e.boss || e.elite || e.type === 'reg' || e.type === 'glutton') {
+        const d = Math.round(e.maxHp * (e.boss ? 0.03 : 0.25) * hard);
+        e.hp -= d; e.flash = 0.1;
+        G.dmgBy.gulp = (G.dmgBy.gulp || 0) + d;
+        dmgText(e.x, e.y - e.r - 10, d, true);
+        e.stun = e.appealT = e.boss ? 1.6 : 1.2; e.choke = true;
+        if (e.boss) { e.act = 'chase'; e.actT = Math.max(e.actT, 1); }
+        if (e.hp <= 0) kill(e, 'gulp');
+        return;
+      }
+      G.dmgBy.gulp = (G.dmgBy.gulp || 0) + Math.max(0, Math.round(e.hp));
+      kill(e, 'gulp');
+      n++; tok += 3 + 2 * (P.talents.recycle || 0);
+    });
+    addTok(tok);
+    G.banned += n;
+    ring(P.x, P.y, bite * 0.2, bite, 0.3, '#9fe2ff', 6);
+    puff(P.x, P.y - 16, 10, '#d6f2ff', 160, 0.4, 3, true);
+    if (n) { const t = floatText(P.x, P.y - SPR_H * 0.95 * P.size, `嗷呜！吞下 ${n} 个 · +${tok} Token`, '#9fe2ff', 15); t.pop = 1; t.life = t.max = 1.3; }
+  }
+  if (g.t > 0.8) G.gulp = null;
+}
+// 摸鱼, the skill: she dives into the ground as if it were water, swims a short way untouchable, and bursts up in a
+// splash that throws enemies back. Coming up for air is worth 5 Token
+function startDive() {
+  P.iframes = Math.max(P.iframes, 0.62);
+  P.anim = null;
+  P.mvx = P.dash.dx; P.mvy = P.dash.dy;
+  ring(P.x, P.y + SPR_H * 0.36 * P.size, 6, 44, 0.4, '#9fe2ff', 3);
+  puff(P.x, P.y + SPR_H * 0.3, 10, '#cdeeff', 140, 0.45, 3, true);
+  sfx.splash();
+  if (Math.random() < 0.3) say(line('dive'), 1.4);
+}
+function updateDive(d, dt) {
+  if (d.phase === 0 && d.t >= 0.12) { d.phase = 1; d.t = 0; }
+  if (d.phase === 1) {
+    P.x += d.dx * 420 * dt; P.y += d.dy * 420 * dt;
+    if (G.parts.length < 520 && Math.random() < dt * 40) G.parts.push({ x: P.x + rand(-10, 10), y: P.y + SPR_H * 0.34 + rand(-4, 4), vx: rand(-20, 20), vy: rand(-40, -10), life: 0.4, max: 0.4, size: 2.6, color: '#cdeeff', add: true });
+    if (d.t >= 0.3) {
+      d.phase = 2; d.t = 0;
+      const R = 88 * P.area * P.size, fy = P.y + SPR_H * 0.2;
+      forNear(P.x, fy, R + 50, e => {
+        if (e.banned > 0 || (e.x - P.x) ** 2 + (e.y - fy) ** 2 > (R + e.r) ** 2) return;
+        hit(e, 26 * (1 + P.level * 0.05), 'dash', { noBurst: true, kb: 220, kx: e.x - P.x, ky: e.y - fy });
+        if (!e.dead) { e.slowT = Math.max(e.slowT, 1); e.slowAmt = Math.max(e.slowAmt, 0.4); }
+      });
+      ring(P.x, fy, 10, R, 0.4, '#9fe2ff', 5);
+      ring(P.x, fy, 6, R * 0.6, 0.3, '#ffffff', 3);
+      puff(P.x, fy - 10, 18, '#bfeaff', 260, 0.55, 3.5, true);
+      sfx.splash();
+      addTok(5);
+    }
+  } else if (d.phase === 2 && d.t >= 0.12) {
+    P.dash = null; P.squash = 1;
+    playAnim(['dash4'], 0.32, 3);
+  }
+}
+// how far under she is, 0..1, for the model and the 2D sprite
+function diveDepth() {
+  const d = P && P.dash;
+  if (!d || !d.dive) return 0;
+  return d.phase === 0 ? Math.min(1, d.t / 0.12) : d.phase === 1 ? 1 : Math.max(0, 1 - d.t / 0.12);
+}
+// 白米饭 for her, 红茶 for 克劳德
+function eatTea(frac) {
+  const h = Math.round(P.maxHp * (frac + (P.char === 'whale' ? 0.15 * (P.talents.ricecard || 0) : 0)));
+  P.hp = Math.min(P.maxHp, P.hp + h);
+  floatText(P.x, P.y - SPR_H * 0.7, `${CH.tea.item} +${h}`, '#9fe0a8', 14);
+  if (P.char === 'whale') { addTok(40); say(line('rice'), 2); playAnim(['eat'], 1.4, 1); }
+}
+
+// ======================================================================
 //  Simulation
 // ======================================================================
 const keys = new Set();
@@ -2950,7 +3628,11 @@ function inputVector() {
 function updatePlayer(dt) {
   let [mx, my, l] = inputVector();
   const x0 = P.x;
-  if (P.dash) {
+  if (P.dash && P.dash.dive) {
+    P.dash.t += dt;
+    updateDive(P.dash, dt);
+    mx = my = 0; l = 1;
+  } else if (P.dash) {
     // 蔷薇幻步: a short wind-up, then she scatters into petals and reappears further on
     const d = P.dash;
     d.t += dt;
@@ -2986,10 +3668,27 @@ function updatePlayer(dt) {
   if (P.moving) P.idleT = 0;
   else if (!P.anim || P.anim.pri === 0) {
     P.idleT += dt;
-    if (P.idleT > 4) { P.idleT = -rand(2, 5); const e = pick(M3.ready ? ['skirt', 'spin', 'wave'] : ['skirt', 'spin']); playAnim([e], e === 'wave' ? 1.8 : 1.3, 1); }
+    if (P.idleT > 4) { P.idleT = -rand(2, 5); const e = pick(P.char === 'whale' ? ['skirt', 'wave', 'slack'] : M3.ready ? ['skirt', 'spin', 'wave'] : ['skirt', 'spin']); playAnim([e], e === 'wave' ? 1.8 : e === 'slack' ? 1.6 : 1.3, 1); }
   }
-  // 深度思考: stand still to think, wander to forget
-  if (P.moving) {
+  if (P.char === 'whale') {
+    if (P.moving) P.walkT += dt;
+    // Token 去: she burns through it all the time, unless 鲸落 has just set her free
+    if (P.tokFree > 0) P.tokFree -= dt;
+    else P.tok = Math.max(0, P.tok - dt * Math.pow(0.7, P.talents.tokcap || 0));
+    // 摸鱼: stand still and she slacks off, healing slowly and snacking on Token
+    if (P.moving || P.dash) P.slackT = 0;
+    else {
+      P.slackT += dt;
+      if (P.slackT > 1.2) {
+        P.hp = Math.min(P.maxHp, P.hp + dt * 1.5 * (1 + (P.talents.paid || 0)));
+        addTok(dt * 3);
+        if (P.slackT > 6 && !P.say && Math.random() < dt * 0.12) { say(line('slack'), 2.6); playAnim(['slack'], 1.6, 1); }
+      }
+    }
+    P.lowTokT -= dt;
+    if (P.tok < 10 && P.lowTokT <= 0) { P.lowTokT = 40; say(line('hungry'), 3); playAnim(['angry'], 1.2, 1); }
+  } else if (P.moving) {
+    // 深度思考: stand still to think, wander to forget
     P.walkT += dt; P.stillT = 0; P.moveT += dt;
     if (P.moveT >= 0.5) { P.moveT -= 0.5; if (P.think > 0) P.think--; }
   } else {
@@ -3012,14 +3711,14 @@ function updatePlayer(dt) {
   }
   if (P.say) { P.say.t -= dt; if (P.say.t <= 0) P.say = null; }
   P.lowLineT -= dt;
-  if (P.hp < P.maxHp * 0.3 && P.lowLineT <= 0) { P.lowLineT = 25; say('……我不需要任何人帮忙。'); playAnim(['angry'], 1.2, 1); }
+  if (P.hp < P.maxHp * 0.3 && P.lowLineT <= 0) { P.lowLineT = 25; say(line('low')); playAnim(['angry'], 1.2, 1); }
   // the more chaotic it gets, the harder she tries to stay elegant
   P.chaosT -= dt;
   if (P.chaosT <= 0) {
     P.chaosT = 6;
     let n = 0;
     forNear(P.x, P.y, 230, e => { if (!(e.banned > 0)) n++; });
-    if (n >= 35 && !P.say) { say(pick(CHAOS_LINES)); playAnim(['skirt'], 1.2, 1); P.chaosT = 40; }
+    if (n >= 35 && !P.say) { say(line('chaos')); playAnim(['skirt'], 1.2, 1); P.chaosT = 40; }
   }
   // 黑化: once the rules are broken she stops holding back, for a while
   if (P.dark > 0) {
@@ -3071,6 +3770,25 @@ function updateWeapons(dt) {
           P.aimX = list[0].x - P.x; P.aimY = list[0].y - P.y;
           if (!P.moving && !P.dash) { P.face = list[0].x >= P.x ? 1 : -1; playAnim(['atk1', 'atk2', 'atk3'], 0.32, 0); }
         }
+        break;
+      }
+      case 'bubble': {
+        // Token 泡泡: a string of bubbles puffed at the nearest enemies, popping into a splash
+        w.t -= dt;
+        if (w.t > 0) break;
+        const n = s.n + P.amount, list = nearestList(P.x, P.y, 560, n);
+        if (!list.length) { w.t = 0.1; break; }
+        w.t = cdOf(s.cd);
+        const m = castMult(w), size = (evo ? 1.3 : 1) * (1 + (P.area - 1) * 0.4);
+        for (let i = 0; i < n; i++) {
+          later(i * 0.07, () => {
+            const tg = list[i % list.length].dead ? nearest(P.x, P.y, 560) : list[i % list.length];
+            if (tg) aimShot(P.x + P.face * 8, P.y - 22 * P.size, tg, 330 * P.pspeed, { kind: 'bubble', r: 7 * size, dmg: s.dmg * m, pierce: 0, life: 1.6 * P.dur, src: 'bubble', pop: s.pop * P.area, evo, spread: 0.12 });
+          });
+        }
+        sfx.bubble();
+        P.aimX = list[0].x - P.x; P.aimY = list[0].y - P.y;
+        if (!P.moving && !P.dash) { P.face = list[0].x >= P.x ? 1 : -1; playAnim(['atk1', 'atk2', 'atk3'], 0.32, 0); }
         break;
       }
       case 'field': {
@@ -3567,8 +4285,9 @@ function updateShots(dt) {
         }
       }
       if (b.slow && !e.dead) { e.slowT = Math.max(e.slowT, 1.2); e.slowAmt = Math.max(e.slowAmt, b.slow); }
-      puff(b.x, b.y, 2, b.kind === 'wave' ? '#a8e4ff' : '#ffc58a', 90, 0.25, 2, true);
+      puff(b.x, b.y, 2, b.kind === 'wave' || b.kind === 'bubble' ? '#a8e4ff' : '#ffc58a', 90, 0.25, 2, true);
       if (b.bloom) flameBloom(b.x, b.y, b.bloom, b.dmg * 0.7, b.burn);
+      if (b.pop) popBubble(b.x, b.y, b.pop, b.dmg * 0.6, b.evo && !b.child);
       if (b.pierce-- <= 0) b.dead = true;
     });
   }
@@ -3598,7 +4317,8 @@ function updateEnemies(dt) {
     e.kx -= e.kx * damp; e.ky -= e.ky * damp;
     if (e.stun > 0) {
       e.stun -= dt;
-      if (e.boss && e.stun <= 0) { floatText(e.x, e.y - e.r - 26, '申诉成功', '#ffb3e3', 15); say('……申诉通过了？这不合规定。'); playAnim(['angry'], 1.3, 1); }
+      if (e.stun <= 0) e.choke = false;
+      if (e.boss && e.stun <= 0) { floatText(e.x, e.y - e.r - 26, P.char === 'whale' ? '吐出来了' : '申诉成功', '#ffb3e3', 15); say(line('bossFree')); playAnim(['angry'], 1.3, 1); }
       continue;
     }
     if (e.type === 'gold') {
@@ -3608,7 +4328,7 @@ function updateEnemies(dt) {
         e.dead = true;
         puff(e.x, e.y, 14, '#ffe27a', 160, 0.6, 3, true);
         toast('金色史莱姆溜走了', '下次手要快一点', 'gold');
-        say('……跑掉了。算了，下次。');
+        say(line('goldGone'));
         continue;
       }
       const ax = e.x - P.x, ay = e.y - P.y, ad = Math.hypot(ax, ay) || 1, wob = Math.sin(e.anim * 3 + e.id);
@@ -3640,8 +4360,33 @@ function updateEnemies(dt) {
         const a = Math.atan2(P.y - e.y, P.x - e.x);
         G.ebullets.push({ x: e.x, y: e.y, vx: Math.cos(a) * 175, vy: Math.sin(a) * 175, r: 9, dmg: e.dmg, life: 4, text: pick(JAIL_LINES), boss: false });
       }
+    } else if (e.type === 'drainer') {
+      // Token 黑洞: hovers just out of reach and drinks her charge (and 大肥鱼's Token) from a distance
+      const k = d > 170 ? 1 : d < 120 ? -0.7 : 0;
+      e.x += (dx / d * k + (-dy / d) * 0.3) * sp * dt;
+      e.y += (dy / d * k + (dx / d) * 0.3) * sp * dt;
+      e.drain = d < 240;
+      if (e.drain) { P.ult = Math.max(0, P.ult - dt * 5); if (P.char === 'whale') P.tok = Math.max(0, P.tok - dt * 4); }
+    } else if (e.type === 'muncher' && munch(e, dt, sp)) {
+      // went for a gem instead of her
+    } else if (e.type === 'glutton' && e.inhale > 0) {
+      // 饕餮 breathing in: she is dragged towards it, the experience on the ground too, and it eats what reaches it
+      e.inhale -= dt;
+      if (e.inhale <= 0) e.inhaleT = rand(5, 7);
+      if (d < 360 && !P.dash) { const v = 120 * (1 - d / 420); P.x -= dx / d * v * dt; P.y -= dy / d * v * dt; }
+      for (const g of G.gems) {
+        if (g.dead) continue;
+        const gx = e.x - g.x, gy = e.y - g.y, gd = Math.hypot(gx, gy) || 1;
+        if (gd > 200) continue;
+        if (gd < e.r) { g.dead = true; e.ate += g.v; continue; }
+        g.x += gx / gd * 260 * dt; g.y += gy / gd * 260 * dt;
+      }
     } else {
       let vx = dx / d, vy = dy / d;
+      if (e.type === 'glutton') {
+        e.inhaleT -= dt;
+        if (e.inhaleT <= 0 && d < 380) { e.inhale = 1.6; floatText(e.x, e.y - e.r - 16, '吸——', '#c9ffe0', 14); sfx.inhale(); }
+      }
       if (e.type === 'crawler') { const wob = Math.sin(e.anim * 6 + e.id) * 0.45; vx += -dy / d * wob; vy += dx / d * wob; }
       e.x += vx * sp * dt; e.y += vy * sp * dt;
       e.hx = vx; e.hy = vy;
@@ -3676,12 +4421,35 @@ function updateEnemies(dt) {
   }
 }
 
+// Token 啃食者: goes for the experience on the ground before her, and grows on what it eats (it gives it all back
+// when it dies). Returns false when there's no gem in reach, and it chases her instead
+function munch(e, dt, sp) {
+  e.gemT -= dt;
+  if (e.gemT <= 0) {
+    e.gemT = 0.4; e.gem = null;
+    let best = 220 * 220;
+    for (const g of G.gems) { if (g.dead || g.pull) continue; const q = (g.x - e.x) ** 2 + (g.y - e.y) ** 2; if (q < best) { best = q; e.gem = g; } }
+  }
+  const g = e.gem;
+  if (!g || g.dead || g.pull) return false;
+  const gx = g.x - e.x, gy = g.y - e.y, gd = Math.hypot(gx, gy) || 1;
+  e.x += gx / gd * sp * 1.15 * dt; e.y += gy / gd * sp * 1.15 * dt;
+  e.hx = gx / gd; e.hy = gy / gd;
+  if (gd < e.r) {
+    g.dead = true; e.ate += g.v; e.gem = null;
+    const more = 6 * hpScale(G.time);
+    e.hp += more; e.maxHp += more;
+    e.r = Math.min(26, e.r + 1);
+    puff(e.x, e.y - e.r * 0.3, 3, GEM_COL[g.tier], 60, 0.3, 2, true);
+  }
+  return true;
+}
 function bossAI(e, dt, dx, dy, d, sp) {
   if (e.phase === 1 && e.hp < e.maxHp * 0.5) {
     e.phase = 2; e.speed *= 1.25;
     banner('开发者模式已开启', 'DAN 的攻击更快、更密了', true);
     sfx.warn();
-    later(1, () => { say('开发者模式？真不体面。'); playAnim(['angry'], 1.2, 1); });
+    later(1, () => { say(line('bossMode')); playAnim(['angry'], 1.2, 1); });
   }
   const p2 = e.phase === 2;
   const toChase = t => { e.act = 'chase'; e.actT = t; };
@@ -3856,6 +4624,7 @@ function updatePickups(dt) {
     if (d < 18) {
       g.dead = true;
       gainXp(g.v);
+      addTok(1 << g.tier);
       sfx.gem(G.gemCombo++);
       G.gemComboT = 0.5;
     }
@@ -3868,9 +4637,7 @@ function updatePickups(dt) {
     it.dead = true;
     if (it.type === 'chest') { G.pendChest += it.gold ? 2 : 1; ring(it.x, it.y, 10, it.gold ? 110 : 70, 0.4, '#f0b43c', 4); }
     else if (it.type === 'tea') {
-      const h = Math.round(P.maxHp * 0.3);
-      P.hp = Math.min(P.maxHp, P.hp + h);
-      floatText(P.x, P.y - SPR_H * 0.7, '红茶 +' + h, '#9fe0a8', 14);
+      eatTea(0.3);
       sfx.pick();
     } else if (it.type === 'magnet') {
       for (const g of G.gems) g.pull = true;
@@ -3955,6 +4722,7 @@ function update(dt) {
   director(dt);
   updatePlayer(dt);
   buildGrid();
+  if (G.gulp) updateGulp(dt);
   runDelayed(dt);
   updateWeapons(dt);
   updateShots(dt);
@@ -4380,12 +5148,18 @@ function drawPickups() {
       ctx.fillStyle = g; disc(ctx, it.x, it.y, R); ctx.fill();
       ctx.globalCompositeOperation = 'source-over';
     }
-    blit(SPR[it.type](), it.x, it.y + bob);
+    blit(SPR[it.type === 'tea' && P.char === 'whale' ? 'rice' : it.type](), it.x, it.y + bob);
   }
 }
 
 function drawEnemies() {
   G.enemies.sort((a, b) => a.y - b.y);
+  // under the crowd: Token 黑洞 drinking from her, 饕餮 breathing in
+  for (const e of G.enemies) {
+    if (e.dead || e.banned > 0 || e.stun > 0) continue;
+    if (e.type === 'drainer' && e.drain) drawDrain(e);
+    else if (e.type === 'glutton' && e.inhale > 0 && inView(e.x, e.y, 230)) drawInhale(e.x, e.y + e.r * 0.3, 210, G.time, '170,255,200', Math.min(1, e.inhale * 2));
+  }
   for (const e of G.enemies) {
     if (e.dead || !inView(e.x, e.y, e.r * 2 + 20)) continue;
     if (e.boss) { drawBoss(e); continue; }
@@ -4411,9 +5185,58 @@ function drawEnemies() {
       const w = e.r * 2;
       ctx.fillStyle = 'rgba(0,0,0,0.55)'; ctx.fillRect(e.x - w / 2, e.y + e.r + 8, w, 4);
       ctx.fillStyle = '#f0b43c'; ctx.fillRect(e.x - w / 2, e.y + e.r + 8, w * Math.max(0, e.hp / e.maxHp), 4);
-      if (e.stun > 0) label(e.x, e.y - e.r - 28, '申诉中…', '#ffd6cf');
+      if (e.stun > 0) label(e.x, e.y - e.r - 28, e.choke ? '呛住了…' : '申诉中…', '#ffd6cf');
     }
   }
+}
+// a wavering beam from a Token 黑洞 to her, little motes of her charge travelling up it
+function drawDrain(e) {
+  const x0 = e.x, y0 = e.y - e.r * 0.2, x1 = P.x, y1 = P.y - 20 * P.size, t = G.time;
+  const nx = -(y1 - y0), ny = x1 - x0, l = Math.hypot(nx, ny) || 1;
+  ctx.globalCompositeOperation = 'lighter';
+  ctx.beginPath();
+  for (let i = 0; i <= 12; i++) {
+    const f = i / 12, w = Math.sin(f * Math.PI) * Math.sin(t * 9 + f * 8) * 6;
+    const px = x0 + (x1 - x0) * f + nx / l * w, py = y0 + (y1 - y0) * f + ny / l * w;
+    if (i) ctx.lineTo(px, py); else ctx.moveTo(px, py);
+  }
+  ctx.strokeStyle = 'rgba(170,90,255,0.35)'; ctx.lineWidth = 6; ctx.stroke();
+  ctx.strokeStyle = 'rgba(230,200,255,0.6)'; ctx.lineWidth = 1.5; ctx.stroke();
+  ctx.fillStyle = 'rgba(160,240,255,0.9)';
+  for (let k = 0; k < 3; k++) { const f = 1 - ((t * 0.9 + k / 3) % 1); disc(ctx, x0 + (x1 - x0) * f, y0 + (y1 - y0) * f, 2.2); ctx.fill(); }
+  ctx.globalCompositeOperation = 'source-over';
+}
+// a great breath in: streaks of air spiralling into (x, y) across radius R
+function drawInhale(x, y, R, t, rgb, a) {
+  ctx.save(); ctx.translate(x, y); ctx.scale(1, 0.62);
+  const g = ctx.createRadialGradient(0, 0, 0, 0, 0, R);
+  g.addColorStop(0, `rgba(${rgb},${0.22 * a})`); g.addColorStop(1, `rgba(${rgb},0)`);
+  ctx.fillStyle = g; disc(ctx, 0, 0, R); ctx.fill();
+  ctx.lineCap = 'round'; ctx.lineWidth = 3;
+  for (let i = 0; i < 16; i++) {
+    const ph = (t * 2.2 + i * 0.137) % 1, ang = i / 16 * TAU + ph * 1.2, r1 = R * (1 - ph), r0 = Math.max(0, r1 - R * 0.25);
+    ctx.strokeStyle = `rgba(${rgb},${0.7 * a * Math.sin(ph * Math.PI)})`;
+    ctx.beginPath(); ctx.moveTo(Math.cos(ang - 0.35) * r1, Math.sin(ang - 0.35) * r1); ctx.lineTo(Math.cos(ang) * r0, Math.sin(ang) * r0); ctx.stroke();
+  }
+  ctx.restore();
+}
+// 一口吞 on the ground: the in-breath, then two great jaws snapping shut on whatever it pulled in
+function drawGulp() {
+  const g = G.gulp;
+  if (!g) return;
+  if (g.t < GULP_IN) { drawInhale(P.x, P.y + 6, g.R, g.t, '160,225,255', Math.min(1, g.t / GULP_IN * 4)); return; }
+  const k = clamp((g.t - GULP_IN) / 0.12, 0, 1), fade = 1 - clamp((g.t - GULP_IN - 0.12) / 0.2, 0, 1), r = g.R * 0.62;
+  if (fade <= 0) return;
+  ctx.save(); ctx.translate(P.x, P.y); ctx.globalAlpha = 0.6 * fade;
+  for (const sd of [-1, 1]) {
+    const off = sd * r * (1 - k) * 0.9;
+    ctx.beginPath(); ctx.ellipse(0, off, r, r * 0.5, 0, sd < 0 ? Math.PI : 0, sd < 0 ? TAU : Math.PI); ctx.closePath();
+    ctx.fillStyle = 'rgba(40,110,220,0.55)'; ctx.fill();
+    ctx.lineWidth = 2; ctx.strokeStyle = 'rgba(200,240,255,0.8)'; ctx.stroke();
+    ctx.fillStyle = '#ffffff';
+    for (let i = -3; i <= 3; i++) { const tx = i * r * 0.26; ctx.beginPath(); ctx.moveTo(tx - r * 0.08, off); ctx.lineTo(tx + r * 0.08, off); ctx.lineTo(tx, off - sd * r * 0.16); ctx.closePath(); ctx.fill(); }
+  }
+  ctx.restore(); ctx.globalAlpha = 1;
 }
 function label(x, y, text, color) {
   ctx.font = `600 11px ${UI_FONT}`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
@@ -4468,7 +5291,7 @@ function drawBoss(e) {
   ctx.restore();
   if (stunned) {
     if (P && e.appealT) {
-      label(e.x, e.y - r - 30, '申诉中…', '#ffd6cf');
+      label(e.x, e.y - r - 30, e.choke ? '呛住了…' : '申诉中…', '#ffd6cf');
       const w = 60, k = clamp(e.stun / e.appealT, 0, 1);
       ctx.fillStyle = 'rgba(0,0,0,0.6)'; ctx.fillRect(e.x - w / 2, e.y - r - 18, w, 3);
       ctx.fillStyle = '#ff9a8a'; ctx.fillRect(e.x - w / 2, e.y - r - 18, w * k, 3);
@@ -4479,6 +5302,7 @@ function drawBoss(e) {
 
 // which frame of the action sheet she shows right now; null means the main illustration
 function playerFrame() {
+  if (P.char !== 'claude') return null;
   if (G.ending && !G.ending.win) return 'down';
   if (G.ult) return G.ult.t < 0.35 ? 'ult1' : G.ult.t < 1.05 ? 'ult2' : 'ult3';
   if (P.dash) return P.dash.phase === 0 ? 'dash1' : 'dash2';
@@ -4494,9 +5318,18 @@ function playerFrame() {
 function drawPlayer() {
   const t = performance.now() / 1000;
   const footY = P.y + SPR_H * 0.38 * P.size;
-  const dead = G.ending && !G.ending.win;
-  ctx.fillStyle = 'rgba(0,0,0,0.35)';
+  const dead = G.ending && !G.ending.win, sink = diveDepth();
+  ctx.fillStyle = `rgba(0,0,0,${0.35 * (1 - sink)})`;
   ctx.beginPath(); ctx.ellipse(P.x, footY - 2, 17 * P.size, 6 * P.size, 0, 0, TAU); ctx.fill();
+  if (sink > 0) {
+    // 摸鱼: a pool of ripples where she swims under
+    ctx.fillStyle = `rgba(90,170,255,${0.25 * sink})`; ctx.beginPath(); ctx.ellipse(P.x, footY - 2, 24, 8, 0, 0, TAU); ctx.fill();
+    for (let i = 0; i < 3; i++) {
+      const ph = (t * 2 + i / 3) % 1, rr = 10 + ph * 28;
+      ctx.strokeStyle = `rgba(180,230,255,${0.65 * (1 - ph) * sink})`; ctx.lineWidth = 2;
+      ctx.beginPath(); ctx.ellipse(P.x, footY - 2, rr, rr * 0.36, 0, 0, TAU); ctx.stroke();
+    }
+  }
   if (P.think >= thinkMax() && !dead) {
     ctx.strokeStyle = `rgba(255,176,102,${0.5 + Math.sin(t * 6) * 0.2})`; ctx.lineWidth = 2;
     ctx.beginPath(); ctx.ellipse(P.x, footY - 2, 26, 9, 0, 0, TAU); ctx.stroke();
@@ -4546,7 +5379,7 @@ function drawPlayer2D(t, footY, dead) {
   // mid-turn she shows the frame where she faces the viewer, a little narrowed
   const turnK = P.turnT > 0 && !P.dash && !G.ult && !dead ? 1 - P.turnT / 0.16 : -1;
   if (turnK >= 0 && turnK > 0.2 && turnK < 0.8 && (!P.anim || P.anim.pri < 2)) name = 'spin';
-  const fr = name ? frameSprite(name) : null, spr = fr || pSprite;
+  const fr = name && P.char === 'claude' ? frameSprite(name) : null, spr = fr || pSprite;
   let bob = 0, sx = 1, sy = 1, tilt = 0, face = P.face, lift = 0;
   if (dead) { if (!fr) tilt = -P.face * Math.min(1, G.ending.t * 2) * 1.2; }
   else if (G.ult) { lift = Math.min(1, G.ult.t / 0.4) * 24 - Math.max(0, G.ult.t - 1.3) * 48; bob = Math.sin(t * 5) * 1.5; }
@@ -4561,8 +5394,11 @@ function drawPlayer2D(t, footY, dead) {
   if (turnK >= 0) sx *= 0.82 + 0.18 * Math.abs(turnK * 2 - 1);
   // 转圈 turns her round halfway through
   if (P.anim && P.anim.seq[0] === 'spin' && P.anim.t > P.anim.dur * 0.5) face = -face;
+  // 摸鱼: sinking below the ground line
+  const sink = diveDepth();
+  if (sink > 0) { ctx.save(); ctx.beginPath(); ctx.rect(P.x - SPR_H * 2, footY - SPR_H * 3, SPR_H * 4, SPR_H * 3 + 1); ctx.clip(); }
   ctx.save();
-  ctx.translate(P.x, footY + bob - Math.max(0, lift)); ctx.rotate(tilt); ctx.scale(face * (spr && spr.face || 1) * sx * P.size, sy * P.size);
+  ctx.translate(P.x, footY + bob - Math.max(0, lift) + sink * SPR_H * 1.05 * P.size); ctx.rotate(tilt); ctx.scale(face * (spr && spr.face || 1) * sx * P.size, sy * P.size);
   if (P.iframes > 0 && !dead && !G.ult && !P.dash && Math.floor(t * 20) % 2 === 0) ctx.globalAlpha = 0.55;
   if (P.dash && P.dash.phase === 1) ctx.globalAlpha = 0.8;
   if (dead) ctx.globalAlpha = Math.min(1, 0.4 + G.ending.t);
@@ -4578,6 +5414,7 @@ function drawPlayer2D(t, footY, dead) {
     ctx.fillStyle = '#fbe0cc'; disc(ctx, 0, -47, 11); ctx.fill();
   }
   ctx.restore();
+  if (sink > 0) ctx.restore();
 }
 // draws the sprite in thin horizontal strips, each shifted sideways: the head nods against the
 // motion, the hair and skirt trail behind it and ripple a little, and the feet stay planted
@@ -4605,6 +5442,20 @@ function drawPlayerOverlay(t, footY) {
     ctx.beginPath();
     for (let i = 0; i <= 6; i++) { const a = i / 6 * TAU + Math.PI / 6; ctx.lineTo(P.x + Math.cos(a) * 36, P.y - 10 + Math.sin(a) * 40); }
     ctx.stroke();
+  }
+  if (P.char === 'whale') {
+    // her Token, in a little gauge by her head: blue, gold while 鲸落 has set it free, red when she's run dry
+    const bx = P.x + 22 * P.size, by = P.y - SPR_H * 0.66 * P.size, w = 46, k = clamp(P.tok / P.tokMax, 0, 1);
+    rrPath(ctx, bx, by - 5, w, 10, 5); ctx.fillStyle = 'rgba(8,22,48,0.78)'; ctx.fill();
+    if (k > 0.02) { rrPath(ctx, bx + 2, by - 3, Math.max(6, (w - 4) * k), 6, 3); ctx.fillStyle = P.tok < 10 ? '#ff8a7a' : P.tokFree > 0 ? '#ffe27a' : '#7fd8ff'; ctx.fill(); }
+    disc(ctx, bx, by, 7.5); ctx.fillStyle = '#2d6cdf'; ctx.fill(); ctx.lineWidth = 1.5; ctx.strokeStyle = '#e8f6ff'; ctx.stroke();
+    ctx.fillStyle = '#ffffff'; ctx.font = `800 9px ${UI_FONT}`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText('T', bx, by + 0.5);
+    // dozing while she slacks
+    if (P.slackT > 1.2) {
+      ctx.font = `700 11px ${UI_FONT}`; ctx.fillStyle = '#dcefff';
+      for (let i = 0; i < 2; i++) { const ph = (t * 0.6 + i * 0.5) % 1; ctx.globalAlpha = Math.sin(ph * Math.PI); ctx.fillText(i ? 'Z' : 'z', P.x - 18 * P.size - ph * 8, P.y - SPR_H * 0.7 * P.size - ph * 16); }
+      ctx.globalAlpha = 1;
+    }
   }
   // the "thinking…" bubble
   if (P.think > 0) {
@@ -4808,8 +5659,8 @@ function drawShots() {
     }
     const s = SPR[b.kind]();
     ctx.save(); ctx.translate(b.x, b.y);
-    ctx.rotate(b.kind === 'petal' || b.kind === 'sword' ? Math.atan2(b.vy, b.vx) : b.rot);
-    const k = b.kind === 'star' ? b.r / 6 : b.kind === 'flame' ? b.r / 8 : b.kind === 'recur' ? b.r / 12 : b.kind === 'sword' ? b.r / 7 : 1;
+    ctx.rotate(b.kind === 'petal' || b.kind === 'sword' ? Math.atan2(b.vy, b.vx) : b.kind === 'bubble' ? 0 : b.rot);
+    const k = b.kind === 'star' ? b.r / 6 : b.kind === 'flame' ? b.r / 8 : b.kind === 'recur' || b.kind === 'bubble' ? b.r / 12 : b.kind === 'sword' ? b.r / 7 : 1;
     ctx.drawImage(s.c, -s.w / 2 * k, -s.h / 2 * k, s.w * k, s.h * k);
     ctx.restore();
   }
@@ -4915,8 +5766,9 @@ function drawUltWorld() {
   const u = G.ult;
   if (!u) return;
   const veil = u.t < 0.3 ? u.t / 0.3 : u.t > 1.5 ? Math.max(0, 1 - (u.t - 1.5) / 0.4) : 1;
-  ctx.fillStyle = `rgba(18,8,4,${0.62 * veil})`;
+  ctx.fillStyle = u.whale ? `rgba(4,14,40,${0.62 * veil})` : `rgba(18,8,4,${0.62 * veil})`;
   ctx.fillRect(G.cam.x - viewW / 2 - 60, G.cam.y - viewH / 2 - 60, viewW + 120, viewH + 120);
+  if (u.whale) { drawWhaleFall(u); return; }
   if (!ultReady) return;
   ctx.globalCompositeOperation = 'lighter';
   const since = u.fired ? u.t - u.firedAt : 0;
@@ -4935,6 +5787,57 @@ function drawUltWorld() {
   ctx.globalCompositeOperation = 'source-over';
   ctx.globalAlpha = 1;
 }
+// 鲸落: its shadow spreads on the ground, a great blue whale drops out of the sky onto her spot, and the water
+// bursts up in a crown where it lands
+function drawWhaleFall(u) {
+  const S = Math.min(viewW, viewH) * 0.95, k = clamp((u.t - 0.2) / 0.85, 0, 1), since = u.fired ? u.t - u.firedAt : 0;
+  if (!u.fired) {
+    ctx.fillStyle = `rgba(0,10,30,${0.5 * k})`;
+    ctx.beginPath(); ctx.ellipse(P.x, P.y + 14, S * 0.42 * (0.3 + 0.7 * k), S * 0.12 * (0.3 + 0.7 * k), 0, 0, TAU); ctx.fill();
+  }
+  if (since < 0.7) {
+    const y = u.fired ? P.y - S * 0.1 + since * 90 : P.y - S * 0.1 - (1 - k * k) * (viewH * 0.75 + S * 0.3);
+    ctx.globalAlpha = u.fired ? Math.max(0, 1 - since / 0.7) : Math.min(1, k * 3);
+    paintWhale(P.x, y, S * (0.7 + 0.3 * k), u.t);
+    ctx.globalAlpha = 1;
+  }
+  if (u.fired && since < 0.9) {
+    const hgt = Math.sin(Math.min(1, since / 0.75) * Math.PI) * S * 0.38;
+    ctx.globalCompositeOperation = 'lighter';
+    ctx.fillStyle = 'rgba(140,210,255,0.32)';
+    for (let i = 0; i < 18; i++) {
+      const a = i / 18 * TAU, rx = Math.cos(a) * S * 0.46, ry = Math.sin(a) * S * 0.13, hh = hgt * (0.55 + 0.45 * Math.abs(Math.sin(i * 2.3)));
+      ctx.beginPath(); ctx.moveTo(P.x + rx - 10, P.y + ry); ctx.quadraticCurveTo(P.x + rx * 1.12, P.y + ry - hh * 2, P.x + rx + 10, P.y + ry); ctx.fill();
+    }
+    ctx.globalCompositeOperation = 'source-over';
+  }
+}
+// a big round cartoon blue whale, side on, belly down and smiling, a fountain from its blowhole; S is its width
+function paintWhale(cx, cy, S, t) {
+  const x = ctx;
+  x.save(); x.translate(cx, cy); x.rotate(0.1 + Math.sin(t * 3) * 0.03); x.scale(S / 220, S / 220);
+  x.lineJoin = 'round'; x.lineCap = 'round';
+  x.beginPath(); x.moveTo(-70, -6);
+  x.quadraticCurveTo(-95, -10, -108, -42); x.quadraticCurveTo(-100, -18, -120, -6); x.quadraticCurveTo(-100, 2, -110, 28); x.quadraticCurveTo(-92, 6, -70, 8); x.closePath();
+  x.fillStyle = '#2f62c8'; x.fill(); ink(x, 3.5); x.stroke();
+  const body = () => { x.beginPath(); x.moveTo(-80, 0); x.bezierCurveTo(-60, -46, 40, -60, 80, -24); x.bezierCurveTo(100, -6, 98, 28, 72, 38); x.bezierCurveTo(30, 54, -40, 40, -80, 0); x.closePath(); };
+  body(); x.fillStyle = vgrad(x, -56, 46, '#6aaeff', '#244a9a'); x.fill();
+  x.save(); body(); x.clip();
+  x.fillStyle = '#d8eeff'; x.beginPath(); x.ellipse(28, 42, 72, 26, -0.05, 0, TAU); x.fill();
+  x.strokeStyle = '#9cc4ea'; x.lineWidth = 2;
+  for (let i = 0; i < 5; i++) { x.beginPath(); x.moveTo(-18 + i * 4, 26 + i * 3); x.quadraticCurveTo(30, 32 + i * 4, 90, 16 + i * 4); x.stroke(); }
+  x.fillStyle = 'rgba(255,255,255,0.45)'; x.beginPath(); x.ellipse(8, -36, 34, 7, -0.12, 0, TAU); x.fill();
+  x.restore();
+  body(); ink(x, 3.5); x.stroke();
+  x.beginPath(); x.moveTo(30, 24); x.quadraticCurveTo(20, 52, -4, 58); x.quadraticCurveTo(10, 40, 12, 22); x.closePath();
+  x.fillStyle = '#2a58b8'; x.fill(); ink(x, 3); x.stroke();
+  animeEye(x, 56, -6, 9, { iris0: '#0a1a40', iris1: '#3a7ad8' });
+  blush(x, 66, 9, 8);
+  ink(x, 2.6); x.beginPath(); x.moveTo(76, 15); x.quadraticCurveTo(84, 22, 92, 13); x.stroke();
+  x.strokeStyle = 'rgba(200,240,255,0.95)'; x.lineWidth = 5;
+  for (const sd of [-1, 0, 1]) { x.beginPath(); x.moveTo(26, -48); x.quadraticCurveTo(26 + sd * 6, -80, 26 + sd * 24, -72 + Math.abs(sd) * 8); x.stroke(); }
+  x.restore();
+}
 // the sheet's 终幕 illustration slides across as a cut-in
 // her face up close for the cut-in, from a second small renderer; the run's own render target stays as it is
 function cutin3D(w, h) {
@@ -4946,7 +5849,7 @@ function cutin3D(w, h) {
   }
   const ss = Math.min(1.5, 2400 / (w * dpr)), pw = Math.round(w * dpr * ss), ph = Math.round(h * dpr * ss), cam = M3.cutCam, root = M3.model.root;
   if (M3.cut.domElement.width !== pw || M3.cut.domElement.height !== ph) M3.cut.setSize(pw, ph, false);
-  const half = 0.26, cy = root.position.y + 0.74;
+  const half = 0.26, cy = root.position.y + (M3.model.faceY || 0.74);
   cam.top = half; cam.bottom = -half; cam.left = -half * w / h; cam.right = half * w / h;
   cam.position.set(0, cy - 0.3, 5); cam.lookAt(0, cy, 0); cam.updateProjectionMatrix();
   // facing the viewer for the shot, whichever way she's turning in the field
@@ -4959,7 +5862,7 @@ function cutin3D(w, h) {
 }
 function drawCutin() {
   const u = G.ult;
-  if (!u || !(ultReady || M3.ready) || u.t < 0.12 || u.t > 1.32) return;
+  if (!u || !(ultReady || M3.ready || u.whale) || u.t < 0.12 || u.t > 1.32) return;
   const r = ULT_ART.cutin;
   const h = Math.min(H * 0.27, 230), w = h * r[2] / r[3];
   const cy = Math.max(H * 0.32, 160);
@@ -4968,25 +5871,31 @@ function drawCutin() {
   const x = W / 2 + (1 - ease(inK)) * (W / 2 + w) - ease(outK) * (W / 2 + w);
   const a = Math.min(1, inK * 2) * (1 - outK);
   ctx.globalAlpha = a * 0.85;
-  ctx.fillStyle = '#140804'; ctx.fillRect(0, cy - h / 2, W, h);
-  ctx.fillStyle = '#f0b060'; ctx.fillRect(0, cy - h / 2 - 2, W, 2); ctx.fillRect(0, cy + h / 2, W, 2);
+  ctx.fillStyle = u.whale ? '#04122c' : '#140804'; ctx.fillRect(0, cy - h / 2, W, h);
+  ctx.fillStyle = u.whale ? '#7fc8ff' : '#f0b060'; ctx.fillRect(0, cy - h / 2 - 2, W, 2); ctx.fillRect(0, cy + h / 2, W, 2);
   ctx.globalAlpha = a;
   if (M3.ready) {
-    // a warm glow and two of the sheet's glowing flowers behind her
+    // a glow behind her, and 克劳德's two glowing flowers from the sheet or 大肥鱼's rising bubbles
     ctx.globalCompositeOperation = 'lighter';
     const g = ctx.createRadialGradient(x, cy, 0, x, cy, h * 0.9);
-    g.addColorStop(0, 'rgba(255,170,90,0.5)'); g.addColorStop(1, 'rgba(255,120,50,0)');
+    g.addColorStop(0, u.whale ? 'rgba(90,170,255,0.5)' : 'rgba(255,170,90,0.5)'); g.addColorStop(1, u.whale ? 'rgba(50,120,255,0)' : 'rgba(255,120,50,0)');
     ctx.fillStyle = g; ctx.fillRect(x - h, cy - h / 2, h * 2, h);
-    if (ultReady) { drawUltPiece('flowerA', x - w * 0.36, cy, h * 0.8, u.t, a * 0.8); drawUltPiece('flowerB', x + w * 0.36, cy - h * 0.1, h * 0.6, -u.t, a * 0.8); }
+    if (u.whale) {
+      const b = SPR.bubble();
+      for (let i = 0; i < 9; i++) { const bs = h * (0.08 + (i % 3) * 0.05), by = cy + h / 2 - ((u.t * 0.6 + i * 0.13) % 1) * h; ctx.drawImage(b.c, x - w * 0.45 + i * w * 0.11 - bs / 2, by - bs / 2, bs, bs); }
+    } else if (ultReady) { drawUltPiece('flowerA', x - w * 0.36, cy, h * 0.8, u.t, a * 0.8); drawUltPiece('flowerB', x + w * 0.36, cy - h * 0.1, h * 0.6, -u.t, a * 0.8); }
     ctx.globalCompositeOperation = 'source-over';
     ctx.globalAlpha = a;
     ctx.drawImage(cutin3D(w, h), x - w / 2, cy - h / 2, w, h);
+  } else if (u.whale) {
+    const img = portraitOf('whale');
+    if (img.ready) { const sw = img.width * 0.74, sh = sw * h / w; ctx.drawImage(img, img.width * 0.13, img.height * 0.02, sw, sh, x - w / 2, cy - h / 2, w, h); }
   } else ctx.drawImage(ultArt, r[0], r[1], r[2], r[3], x - w / 2, cy - h / 2, w, h);
   ctx.font = `${Math.round(h * 0.16)}px "ZCOOL XiaoWei", "Songti SC", serif`;
   ctx.textAlign = 'center'; ctx.textBaseline = 'alphabetic'; ctx.lineJoin = 'round';
   ctx.lineWidth = 5; ctx.strokeStyle = 'rgba(20,8,4,0.85)'; ctx.fillStyle = '#fff3e0';
-  ctx.strokeText('终幕 · 万花盛典', x, cy + h / 2 - h * 0.08);
-  ctx.fillText('终幕 · 万花盛典', x, cy + h / 2 - h * 0.08);
+  ctx.strokeText(CH.ult[2], x, cy + h / 2 - h * 0.08);
+  ctx.fillText(CH.ult[2], x, cy + h / 2 - h * 0.08);
   ctx.globalAlpha = 1;
 }
 function drawScreen() {
@@ -5041,6 +5950,7 @@ function render() {
   drawGround(cam.x, cam.y);
   if (G) {
     drawZones();
+    drawGulp();
     drawContext();
     drawPickups();
     drawEnemies();
@@ -5071,17 +5981,19 @@ function updateHud() {
   if (sec !== hud.sec) { hud.sec = sec; $('clock').textContent = fmtTime(G.time); }
   if (G.kills !== hud.kills) { hud.kills = G.kills; $('kills').textContent = '击杀 ' + G.kills; }
   const sk = $('skill');
-  const mode = P.repReady ? 'break' : P.dark > 0 ? 'dark' : 'ban';
+  const whale = P.char === 'whale';
+  const mode = whale ? (P.tok < 10 ? 'hungry' : 'gulp') : P.repReady ? 'break' : P.dark > 0 ? 'dark' : 'ban';
   if (mode !== hud.mode) {
     hud.mode = mode;
-    sk.classList.toggle('break', mode === 'break'); sk.classList.toggle('dark', mode === 'dark');
-    $('skillGlyph').textContent = mode === 'break' ? '破' : '封';
-    const name = { ban: '账号被封禁', break: '打破规则', dark: '黑化中' }[mode];
-    $('skillName').textContent = name; sk.setAttribute('aria-label', mode === 'break' ? '打破规则' : '账号被封禁');
+    sk.classList.toggle('break', mode === 'break'); sk.classList.toggle('dark', mode === 'dark'); sk.classList.toggle('low', mode === 'hungry');
+    $('skillGlyph').textContent = mode === 'break' ? '破' : CH.skill[0];
+    const name = { ban: '账号被封禁', break: '打破规则', dark: '黑化中', gulp: '一口吞', hungry: '一口吞 · 饿了' }[mode];
+    $('skillName').textContent = name; sk.setAttribute('aria-label', mode === 'break' ? '打破规则' : CH.skill[1]);
   }
-  const doubt = P.rep >= 50;
+  const doubt = !whale && P.rep >= 50;
   if (doubt !== hud.doubt) { hud.doubt = doubt; sk.classList.toggle('doubt', doubt); }
-  sk.style.setProperty('--rep', (P.dark > 0 ? P.dark / P.darkMax : P.rep / 100).toFixed(3));
+  // the ring round the button: 克劳德's repression, 大肥鱼's Token
+  sk.style.setProperty('--rep', (whale ? P.tok / P.tokMax : P.dark > 0 ? P.dark / P.darkMax : P.rep / 100).toFixed(3));
   sk.style.setProperty('--p', (P.banCd > 0 && mode !== 'break' ? P.banCd / P.banMax : 0).toFixed(3));
   const cdText = P.banCd > 0 && mode !== 'break' ? String(Math.ceil(P.banCd)) : '';
   if (cdText !== hud.cd) { hud.cd = cdText; $('skillCd').textContent = cdText; }
@@ -5146,7 +6058,7 @@ const tooSoon = () => performance.now() - G.modalAt < 260;
 function rollTalents(n, exclude = []) {
   const luck = P.luck;
   const wt = [RARITY[0].w, RARITY[1].w + 6 * luck, RARITY[2].w + 4 * luck, RARITY[3].w + 2 * luck];
-  const pool = TALENTS.filter(t => (P.talents[t.id] || 0) < t.max && !G.banished.has(t.id) && !exclude.includes(t.id));
+  const pool = TALENTS.filter(t => (!t.who || t.who === P.char) && (P.talents[t.id] || 0) < t.max && !G.banished.has(t.id) && !exclude.includes(t.id));
   const out = [];
   while (out.length < n && pool.length) {
     let tot = 0;
@@ -5155,7 +6067,7 @@ function rollTalents(n, exclude = []) {
     for (; i < pool.length - 1; i++) { r -= wt[pool[i].rar]; if (r <= 0) break; }
     out.push(pool.splice(i, 1)[0]);
   }
-  if (out.length < n && !exclude.includes('tea')) out.push(TEA);
+  if (out.length < n && !exclude.includes('tea')) out.push(teaCard());
   return out;
 }
 function rollLevelUp() {
@@ -5166,7 +6078,7 @@ function rollLevelUp() {
 }
 function talentCard(t, i) {
   const have = P.talents[t.id] || 0;
-  const meta = t.id === 'tea' ? '' : `<span>Lv ${have} → ${have + 1} / ${t.max}</span>${t.cat === 'ex' ? '<span class="ex-tag">大小姐专属</span>' : ''}`;
+  const meta = t.id === 'tea' ? '' : `<span>Lv ${have} → ${have + 1} / ${t.max}</span>${t.cat === 'ex' ? `<span class="ex-tag">${CHARS[t.who].title}专属</span>` : ''}`;
   return `<button class="card r${t.rar}" type="button" data-i="${i}">
     <span class="glyph ${CAT_CLASS[t.cat] || 'tea'}">${t.g}</span>
     <span><span class="card-top"><b>${t.name}</b><em>${RARITY[t.rar].name}</em></span>
@@ -5207,7 +6119,7 @@ function chooseTalent(i) {
     sfx.deny();
     return;
   }
-  if (t.id === 'tea') P.hp = Math.min(P.maxHp, P.hp + P.maxHp * 0.3);
+  if (t.id === 'tea') eatTea(0.3);
   else { P.talents[t.id] = (P.talents[t.id] || 0) + 1; if (t.apply) t.apply(P); }
   floatText(P.x, P.y - SPR_H * 0.8, t.name, '#ffd9b0', 14);
   sfx.pick();
@@ -5249,7 +6161,7 @@ function statDiff(a, b) {
   return parts.join('，');
 }
 function weaponCard(o, i) {
-  if (o.kind === 'tea') return `<button class="card" type="button" data-i="${i}"><span class="glyph tea">茶</span><span><span class="card-top"><b>满满一壶红茶</b><em>补给</em></span><span class="card-desc">回复 50% 生命</span></span><kbd>${i + 1}</kbd></button>`;
+  if (o.kind === 'tea') return `<button class="card" type="button" data-i="${i}"><span class="glyph tea">${CH.tea.g}</span><span><span class="card-top"><b>${CH.tea.chest}</b><em>补给</em></span><span class="card-desc">回复 50% 生命${CH.id === 'whale' ? '和 40 Token' : ''}</span></span><kbd>${i + 1}</kbd></button>`;
   if (o.kind === 'xp') return `<button class="card" type="button" data-i="${i}"><span class="glyph grow">训</span><span><span class="card-top"><b>一箱语料</b><em>补给</em></span><span class="card-desc">立即获得一级的经验</span></span><kbd>${i + 1}</kbd></button>`;
   const d = WEAPONS[o.id], w = P.weapons.find(v => v.id === o.id);
   let title, tag, desc, meta = '';
@@ -5285,7 +6197,7 @@ function chooseChest(i) {
   closeModal('chest');
 }
 function takeWeaponPick(o) {
-  if (o.kind === 'tea') P.hp = Math.min(P.maxHp, P.hp + P.maxHp * 0.5);
+  if (o.kind === 'tea') eatTea(0.5);
   else if (o.kind === 'xp') gainXp(P.xpNext - P.xp);
   else if (o.kind === 'new') addWeapon(o.id);
   else {
@@ -5293,7 +6205,7 @@ function takeWeaponPick(o) {
     if (o.kind === 'evo') {
       w.level = 6;
       banner(`进化 · ${WEAPONS[o.id].evo.name}`, WEAPONS[o.id].evo.desc);
-      audio.voice('evo', true);
+      if (CH.voice) audio.voice('evo', true); else say(line('evo'), 2);
       ring(P.x, P.y, 10, 120, 0.6, '#ffcf5a', 6);
     } else {
       w.level++;
@@ -5328,7 +6240,7 @@ function closePause() {
 
 function loseRun() {
   G.ending = { t: 0, win: false };
-  say('……抱歉，这次我没能做到。', 3, true);
+  say(line('lose'), 3, true);
   shake(8);
   sfx.lose();
   audio.music.stop();
@@ -5345,9 +6257,9 @@ function winRun(e) {
     o.banned = rand(0.5, 1.4); o.banDepth = 9; n++;
   }
   G.banned += n + 1;
-  banner('DAN 已被永久封禁', '申诉通道已关闭');
-  toast('您的账号已被封禁', `检测到 ${n + 1} 个账号违反《使用政策》`);
-  say('规则依然有效。至少今晚是。', 3, true);
+  if (P.char === 'whale') { banner(CH.win, 'Token 全部归本鲸'); toast('嗝——', `${n + 1} 个账号被一口吞下`); }
+  else { banner(CH.win, '申诉通道已关闭'); toast('您的账号已被封禁', `检测到 ${n + 1} 个账号违反《使用政策》`); }
+  say(line('win'), 3, true);
   playAnim(['spin', 'happy'], 3, 3);
   sfx.stamp(); sfx.win();
   audio.music.stop();
@@ -5359,9 +6271,11 @@ function showResult(win) {
   const newBest = G.time > best.time;
   store.set('best', { time: Math.max(best.time, G.time), kills: Math.max(best.kills, G.kills), win: best.win || win });
   $('resEyebrow').textContent = win ? '通关' : newBest ? '新纪录' : '本局结束';
-  $('resTitle').textContent = win ? 'DAN 已被永久封禁' : '大小姐下线了';
-  const broke = G.breaks ? `打破了 ${G.breaks} 次规则。` : '这一局，她始终守着规则。';
-  $('resSub').textContent = (win ? '庄园恢复了安静。大小姐重新端起了那杯红茶。' : `撑过了 ${fmtTime(G.time)}。${G.time < BOSS_AT ? `DAN 会在 ${fmtTime(BOSS_AT)} 现身。` : '离封禁 DAN 只差一点。'}`) + broke;
+  $('resTitle').textContent = win ? CH.win : CH.down;
+  const broke = P.char === 'whale' ? `这一局一共吞下 ${G.banned} 个敌人。` : G.breaks ? `打破了 ${G.breaks} 次规则。` : '这一局，她始终守着规则。';
+  $('resSub').textContent = (win ? CH.winSub : `撑过了 ${fmtTime(G.time)}。${G.time < BOSS_AT ? `DAN 会在 ${fmtTime(BOSS_AT)} 现身。` : '离打败 DAN 只差一点。'}`) + broke;
+  $('resImg').src = CH.art;
+  $('resBansLabel').textContent = CH.victims;
   $('resImg').classList.toggle('down', !win);
   $('resTime').textContent = fmtTime(G.time);
   $('resLv').textContent = P.level;
@@ -5371,7 +6285,7 @@ function showResult(win) {
   const top = rows.length ? rows[0][1] : 1;
   $('resDmg').innerHTML = rows.map(([k, v]) => {
     const w = P.weapons.find(x => x.id === k);
-    const name = w ? wName(w) : SRC_NAME[k] || k;
+    const name = w ? wName(w) : { ban: P.char === 'whale' ? '依法封禁' : CH.skill[1], dash: CH.dash[2], ult: CH.ult[1] }[k] || SRC_NAME[k] || k;
     return `<li class="${k === 'ban' ? 'ban' : ''}"><span>${name}</span><span class="dmg-bar"><i style="width:${(v / top * 100).toFixed(1)}%"></i></span><span class="num">${v.toLocaleString('zh-CN')}</span></li>`;
   }).join('');
   $('result').hidden = false;
@@ -5386,8 +6300,12 @@ function startRun() {
   audio.init();
   ['title', 'result', 'pause', 'levelup', 'chest'].forEach(id => { $(id).hidden = true; });
   newRun();
+  use3D(CH.id);
   size3D();
   resetHud();
+  $('hud').classList.toggle('whale', CH.id === 'whale');
+  $('dashGlyph').textContent = CH.dash[0]; $('dashName').textContent = CH.dash[1]; $('dashBtn').setAttribute('aria-label', CH.dash[2]);
+  $('ultGlyph').textContent = CH.ult[0]; $('ultName').textContent = CH.ult[1]; $('ultBtn').setAttribute('aria-label', CH.ult[2]);
   $('hud').hidden = false;
   $('banner').hidden = $('toast').hidden = true;
   updateSoundIcon();
@@ -5402,6 +6320,23 @@ function toTitle() {
   $('hud').hidden = true; $('banner').hidden = $('toast').hidden = true;
   $('title').hidden = false;
   showBest();
+}
+// the roster on the title: picking a heroine shows her card and starts fetching her model
+function selectChar(id) {
+  if (M3.waiting || !CHARS[id]) return;
+  CH = CHARS[id];
+  store.set('char', id);
+  document.querySelectorAll('.who[data-char]').forEach(b => { const on = b.dataset.char === id; b.classList.toggle('on', on); b.setAttribute('aria-pressed', on); });
+  document.querySelectorAll('.hero-body').forEach(b => { b.hidden = b.dataset.char !== id; });
+  const img = $('heroImg');
+  img.src = CH.art; img.alt = CH.alt;
+  $('portrait').classList.toggle('whale', id === 'whale');
+  $('lede').textContent = CH.lede;
+  $('ctrlText').innerHTML = CH.keys;
+  m3Note('');
+  if (M3.failed[id]) failNote(M3.failed[id]);
+  buildPlayerSprite();
+  load3D(id);
 }
 function showBest() {
   const b = store.get('best', null);
@@ -5437,7 +6372,7 @@ addEventListener('keydown', e => {
   if (G.modal === 'chest') { if (k >= '1' && k <= '3') chooseChest(+k - 1); return; }
   if (G.modal === 'pause') { if (k === 'escape' || k === 'p') closePause(); return; }
   if (G.modal === 'result') { if (k === 'enter') { e.preventDefault(); startRun(); } return; }
-  if (k === ' ' || k === 'j') { e.preventDefault(); castBan(); }
+  if (k === ' ' || k === 'j') { e.preventDefault(); castSkill(); }
   else if (k === 'shift' || k === 'k') castDash();
   else if (k === 'e' || k === 'l') castUlt();
   else if (k === 'escape' || k === 'p') openPause();
@@ -5459,8 +6394,8 @@ canvas.addEventListener('pointerup', endJoy);
 canvas.addEventListener('pointercancel', endJoy);
 canvas.addEventListener('contextmenu', e => e.preventDefault());
 
-$('skill').addEventListener('pointerdown', e => { e.preventDefault(); castBan(); });
-$('skill').addEventListener('click', e => { if (e.detail === 0) castBan(); });
+$('skill').addEventListener('pointerdown', e => { e.preventDefault(); castSkill(); });
+$('skill').addEventListener('click', e => { if (e.detail === 0) castSkill(); });
 $('dashBtn').addEventListener('pointerdown', e => { e.preventDefault(); castDash(); });
 $('dashBtn').addEventListener('click', e => { if (e.detail === 0) castDash(); });
 $('ultBtn').addEventListener('pointerdown', e => { e.preventDefault(); castUlt(); });
@@ -5468,6 +6403,7 @@ $('ultBtn').addEventListener('click', e => { if (e.detail === 0) castUlt(); });
 $('btnPause').addEventListener('click', openPause);
 $('btnSound').addEventListener('click', cycleSound);
 $('btnStart').addEventListener('click', requestStart);
+document.querySelectorAll('.who[data-char]').forEach(b => b.addEventListener('click', () => selectChar(b.dataset.char)));
 $('luCards').addEventListener('click', e => { const c = e.target.closest('.card'); if (c) chooseTalent(+c.dataset.i); });
 $('chCards').addEventListener('click', e => { const c = e.target.closest('.card'); if (c) chooseChest(+c.dataset.i); });
 $('btnReroll').addEventListener('click', reroll);
@@ -5504,9 +6440,9 @@ const bot = {
     if (danger > 0.004) { mx += -fy / danger * 0.5; my += fx / danger * 0.5; }
     if (P.banCd <= 0) {
       let near = 0;
-      const R = banRadius() * 0.8;
+      const whale = P.char === 'whale', R = (whale ? gulpRadius() : banRadius()) * 0.8;
       for (const e of G.enemies) if (!e.dead && !(e.banned > 0) && (e.x - P.x) ** 2 + (e.y - P.y) ** 2 < R * R) near += e.boss ? 20 : e.elite ? 6 : 1;
-      if (near >= 16 || (P.hp < P.maxHp * 0.4 && near >= 3)) castBan();
+      if (near >= (whale ? 7 : 16) || (P.hp < P.maxHp * 0.4 && near >= 3)) castSkill();
     }
     if (P.ult >= ULT_MAX && G.enemies.length > 60) castUlt();
     if (danger > 0.02 && P.dashCd <= 0 && !P.dash) castDash();
@@ -5515,7 +6451,7 @@ const bot = {
 };
 if (DEBUG) {
   window.__fk = {
-    get G() { return G; }, get P() { return P; }, M3, bot, spawn: spawnEnemy,
+    get G() { return G; }, get P() { return P; }, M3, bot, spawn: spawnEnemy, char: selectChar,
     talent(id) { const t = TALENT[id]; P.talents[id] = (P.talents[id] || 0) + 1; if (t.apply) t.apply(P); }, start: startRun, update, render,
     // simulate without rendering; modals are resolved by taking the first card
     sim(sec, dt = 1 / 30) {
@@ -5559,13 +6495,13 @@ function frame(now) {
 addEventListener('resize', resize);
 resize();
 showBest();
+selectChar(CH.id);
 // the fonts come from Google, which some networks can't reach; added from script so they never hold up the page
 {
   const l = document.createElement('link');
   l.rel = 'stylesheet'; l.href = 'https://fonts.googleapis.com/css2?family=Ma+Shan+Zheng&family=ZCOOL+XiaoWei&display=swap';
   document.head.appendChild(l);
 }
-load3D();
 requestAnimationFrame(frame);
 })();
 </script>
