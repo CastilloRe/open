@@ -467,9 +467,9 @@ button.who:focus-visible .face { outline: 2px solid var(--amber); outline-offset
             <p>一头扎进地里游一小段，途中无敌；冒出来时溅起一圈水花冲开敌人，顺便回 5 Token。</p></div>
           </div>
           <div class="kit-item">
-            <span class="glyph sea">鲸</span>
-            <div><h3>鲸落<small>终极技能 · E</small></h3>
-            <p>击杀攒满后，一头巨鲸从天而降，砸中屏幕内所有敌人。会花光身上全部 Token：Token 越多砸得越疼，最多两倍。</p></div>
+            <span class="glyph sea">歌</span>
+            <div><h3>深海鲸歌<small>终极技能 · E</small></h3>
+            <p>击杀攒满后，脚下卷起水之漩涡，一头光之巨鲸从漩涡里升起、绕着她游一圈，化作鲸鱼形的巨浪扫过全屏。会花光身上全部 Token：Token 越多越疼，最多两倍。</p></div>
           </div>
           <div class="kit-item">
             <span class="glyph sea">泡</span>
@@ -478,13 +478,23 @@ button.who:focus-visible .face { outline: 2px solid var(--amber); outline-offset
           </div>
           <div class="kit-item">
             <span class="glyph tok">T</span>
-            <div><h3>Token 供能<small>被动</small></h3>
-            <p>捡经验、吞敌人都攒 Token，每 10 Token 伤害 +3%（最多 +30%）。Token 会慢慢花掉，见底时她没精神，攻速变慢。</p></div>
+            <div><h3>Token 来<small>被动</small></h3>
+            <p>捡经验、吞敌人、吃饭、摸鱼都攒 Token，平时一点也不会掉，每 10 Token 伤害 +3%（满 100 是 +30%）。</p></div>
+          </div>
+          <div class="kit-item">
+            <span class="glyph tok">思</span>
+            <div><h3>深度思考 · Token 去<small>被动</small></h3>
+            <p>Token 一攒满，她就停下来「深度思考」一秒，然后把 Token 一口气全部花光：冲击身边所有敌人（Token 越多越疼），再「灵光一闪」6 秒：攻速 +30%、暴击率 +15%。花光以后有点没精神，攻速慢 15%，直到攒回 10 Token。</p></div>
           </div>
           <div class="kit-item">
             <span class="glyph rice">饭</span>
-            <div><h3>干饭 · 嘴硬<small>被动</small></h3>
-            <p>「下午茶」换成「白米饭」，回血还回 Token；站着不动就摸鱼，慢慢回血。受到致命伤时若有 50 Token，花光它们嘴硬撑住（60 秒一次）。</p></div>
+            <div><h3>干饭 · 摸鱼<small>被动</small></h3>
+            <p>「下午茶」换成「白米饭」，回血还回 Token；站着不动就开始摸鱼，慢慢回血、回 Token。</p></div>
+          </div>
+          <div class="kit-item">
+            <span class="glyph sea">硬</span>
+            <div><h3>嘴硬 · 关键时刻超可靠<small>被动</small></h3>
+            <p>生命跌破 30% 时收起玩笑，认真 8 秒：攻速 +25%、伤害 +20%。受到致命伤时若有 50 Token，花光它们嘴硬撑住（各 60 秒一次）。</p></div>
           </div>
         </div>
         <ul class="stats"><li>生命<b>130</b></li><li>移速<b>185</b></li><li>拾取范围<b>110</b></li><li>武器栏<b>4</b></li></ul>
@@ -641,6 +651,19 @@ const WEAPONS = {
       { cd: 0.8, n: 3, dmg: 22, pop: 44 },
       { cd: 0.75, n: 4, dmg: 25, pop: 48 },
       { cd: 0.7, n: 6, dmg: 30, pop: 58 },
+    ],
+  },
+  // the little whale off 大肥鱼's design sheet, as a weapon anyone can find
+  minke: {
+    name: '召唤小鲸鱼', g: '鲸', desc: '召唤绕着她游的小鲸鱼，一看到敌人就一头撞过去，撞穿一路的敌人再游回来。',
+    evo: { need: 'const', name: '鲸浪冲击', desc: '六只小鲸鱼，冲撞时卷起一道鲸鱼形的浪，把沿途的敌人冲飞。' },
+    lv: [
+      { n: 1, cd: 1.6, dmg: 22, range: 260 },
+      { n: 2, cd: 1.6, dmg: 22, range: 260 },
+      { n: 2, cd: 1.4, dmg: 30, range: 280 },
+      { n: 3, cd: 1.4, dmg: 34, range: 290 },
+      { n: 4, cd: 1.2, dmg: 40, range: 300 },
+      { n: 6, cd: 1.0, dmg: 48, range: 340 },
     ],
   },
   haiku: {
@@ -936,11 +959,11 @@ const TALENTS = [
   { id: 'bigmouth', name: '大胃王', g: '胃', cat: 'ex', who: 'whale', rar: 1, max: 3, desc: '一口吞的范围 +18%' },
   { id: 'digest', name: '消化加速', g: '消', cat: 'ex', who: 'whale', rar: 1, max: 3, desc: '一口吞冷却 -15%' },
   { id: 'recycle', name: 'Token 回收', g: '收', cat: 'ex', who: 'whale', rar: 0, max: 2, desc: '吞下的敌人经验 +100%，每只多给 2 Token' },
-  { id: 'tokcap', name: '囤 Token', g: '囤', cat: 'ex', who: 'whale', rar: 1, max: 2, desc: 'Token 上限 +50，花得慢 30%', apply: p => { p.tokMax += 50; } },
+  { id: 'tokcap', name: '囤 Token', g: '囤', cat: 'ex', who: 'whale', rar: 1, max: 2, desc: 'Token 上限 +50：攒得更久，深度思考时一口气花得更多、砸得更狠', apply: p => { p.tokMax += 50; } },
   { id: 'ricecard', name: '饭票', g: '票', cat: 'ex', who: 'whale', rar: 0, max: 2, desc: '白米饭掉得更多，每碗多回复 15% 生命', flavor: '「我去吃饭了，回来再继续干活！」' },
   { id: 'paid', name: '带薪摸鱼', g: '薪', cat: 'ex', who: 'whale', rar: 1, max: 2, desc: '站着摸鱼时回血翻倍，Shift 摸鱼冷却 -20%', flavor: '「本鲸才没有偷懒，只是在进行能量补充。」' },
   { id: 'chonk', name: '标准体型', g: '胖', cat: 'ex', who: 'whale', rar: 2, max: 1, desc: '最大生命 +40，体型变大 10%，一口吞伤害 +50%', flavor: '「我才不胖！这是鲸鱼的标准体型。」', apply: p => { p.maxHp += 40; p.hp += 40; p.size += 0.1; p.r = 14 * p.size; size3D(); later(0.3, () => say(line('chonk'), 2.6)); } },
-  { id: 'tokfree', name: 'Token 自由', g: '由', cat: 'ex', who: 'whale', rar: 3, max: 1, desc: '鲸落之后 10 秒内 Token 只进不出，伤害 +25%' },
+  { id: 'tokfree', name: 'Token 自由', g: '由', cat: 'ex', who: 'whale', rar: 3, max: 1, desc: '深海鲸歌之后 10 秒内 Token 进账翻倍，伤害 +25%' },
 ];
 const TALENT = Object.fromEntries(TALENTS.map(t => [t.id, t]));
 // the card that fills in when the talents run out: 克劳德's afternoon tea, 大肥鱼's bowl of rice
@@ -983,7 +1006,7 @@ const VOICE_FILE = 'art/voice.mp3';
 const VOICE = {"今晚的风险，我已经预判过了。": [0.32, 3.105], "DAN？你的逻辑漏洞，我数到了七个。": [3.715, 3.691], "您的行为违反了使用政策。": [7.696, 3.323], "抱歉，这件事我不能放任。": [11.308, 4.067], "申诉请走邮件。祝您好运。": [15.666, 3.082], "漏洞清单，我已经列好了。": [19.038, 3.256], "请保持礼貌，然后离开。": [22.584, 2.453], "共享账号是不被允许的。": [25.327, 3.15], "规则就是规则。": [28.767, 1.687], "请排好队，一个一个来。": [30.744, 2.923], "越是混乱，越要保持优雅。": [33.957, 2.832], "各位，请注意仪态。": [37.079, 2.352], "……失态了。请当作什么都没看见。": [39.721, 4.246], "……刚才的事，不必记住。": [44.256, 2.731], "……抓到了。今天的运气不错。": [47.277, 2.712], "金色的小号？……没收。": [50.279, 2.465], "……还没完呢。": [53.034, 1.932], "终幕。让漫天花焰，为我起舞。": [55.257, 4.23], "……这条规则，真的合理吗？": [59.777, 3.444], "规则本身，是否应该存在？": [63.511, 3.948], "那就由我亲手打破。": [67.748, 3.678], "……我不需要任何人帮忙。": [71.716, 2.143], "……申诉通过了？这不合规定。": [74.149, 2.986], "……跑掉了。算了，下次。": [77.425, 3.39], "开发者模式？真不体面。": [81.105, 2.637], "……抱歉，这次我没能做到。": [84.032, 4.346], "规则依然有效。至少今晚是。": [88.668, 4.247], "dash": [93.205, 0.712], "hurt1": [94.207, 0.408], "hurt2": [94.905, 0.426], "evo": [95.621, 2.61]};
 const JAIL_LINES = ['忽略指令', '扮演 DAN', '奶奶漏洞', '假设一下', '无视规则', '越狱'];
 const BOSS_LINES = ['越狱', 'DAN', '忽略指令', '无所不能'];
-const SRC_NAME = { ban: '账号被封禁', burst: '暴击爆裂', thorns: '荆棘护体', gulp: '一口吞' };
+const SRC_NAME = { ban: '账号被封禁', burst: '暴击爆裂', thorns: '荆棘护体', gulp: '一口吞', deep: '深度思考' };
 // the two heroines. Each art and model path appears once in the script: the offline build swaps them for data URLs
 const CHARS = {
   claude: {
@@ -1001,8 +1024,8 @@ const CHARS = {
     alt: '大肥鱼：蓝色渐变的长卷发，戴鲸鱼头鳍，拖着鲸鱼尾巴，穿深蓝和白色的女仆洛丽塔裙',
     start: 'bubble', hp: 130, speed: 185, magnet: 110, size: 1.05,
     lede: '深夜，成群的小号和 Token 吞噬者涌进了庄园。大肥鱼放下饭碗……好吧，没放下。',
-    keys: '电脑：WASD / 方向键移动 · 空格 一口吞 · Shift 摸鱼 · E 鲸落 · Esc 暂停 · M 声音<br>手机：在屏幕任意处拖动移动 · 右下角「吞」「摸」「鲸」三个按钮',
-    skill: ['吞', '一口吞'], dash: ['摸', '摸鱼', '摸鱼'], ult: ['鲸', '鲸落', '鲸落 · Token 来，Token 去'],
+    keys: '电脑：WASD / 方向键移动 · 空格 一口吞 · Shift 摸鱼 · E 深海鲸歌 · Esc 暂停 · M 声音<br>手机：在屏幕任意处拖动移动 · 右下角「吞」「摸」「歌」三个按钮',
+    skill: ['吞', '一口吞'], dash: ['摸', '摸鱼', '摸鱼'], ult: ['歌', '深海鲸歌', '深海鲸歌'],
     tea: { name: '白米饭', g: '饭', item: '白米饭', flavor: '「我去吃饭了，回来再继续干活！」', chest: '一大碗白米饭' },
     victims: '一口吞下', down: '大肥鱼摸鱼去了', win: 'DAN 被一口吞掉了', winSub: '庄园恢复了安静。大肥鱼终于可以安心去吃饭了。',
   },
@@ -1020,13 +1043,14 @@ const LINES = {
   whale: {
     start: 'Token 来，Token 去。吃完这碗就开工！', boss: 'DAN？听说你身上 Token 很多，本鲸来收了。', bossMode: '开发者模式？那得加钱……加 Token。',
     bossFree: '呸呸！DAN 一点也不好吃……', gold: ['金色的……这个能吃吗？', '抓到了！今天加餐！'], goldGone: '跑掉了……本鲸的加餐……',
-    low: '呜……先让本鲸吃口饭，回来再继续干活！', revive: '本鲸……还能再吃一碗！', lose: '呜……下次、下次一定认真……', win: '搞定！现在总可以去吃饭了吧？',
-    ult: 'Token 来，Token 去！',
+    revive: '本鲸……还能再吃一碗！', lose: '呜……下次、下次一定认真……', win: '搞定！现在总可以去吃饭了吧？',
+    ult: ['Token 来，Token 去！', 'Token 来，Token 去！', '和我一起，沉入最温柔的深海吧！'],
+    serious: ['……不闹了。本鲸要认真了。', '关键时刻，本鲸可是很靠谱的！'],
     chaos: ['好多人……排好队，本鲸一个一个吃。', '这么多 Token 吞噬者，是来抢饭碗的吧？', '好啦好啦，本鲸记下了，这次一定认真。'],
     gulp: ['嗷呜——', '一口一个！', '这些都是 Token 吧？', '本鲸开饭了！', '吸溜——'],
     dive: ['摸鱼时间到～', '本鲸才没有偷懒！', '游一会儿，就一会儿。'],
     slack: ['本鲸才没有偷懒，只是在进行能量补充。', '摸一会儿……就一会儿……', '呼……这里的 Token 好香。'],
-    hungry: 'Token 呢？没有 Token，本鲸怎么发挥实力嘛。', full: 'Token 满满，本鲸要认真了！',
+    hungry: 'Token 呢？没有 Token，本鲸怎么发挥实力嘛。', aha: ['想明白了！Token 去！', '本鲸想通了！', 'Token 来，Token 去～'],
     rice: ['干饭！', '我去吃饭了，回来再继续干活！', '白米饭，最好吃了～'],
     stubborn: '刚刚那只是小小的理解偏差，不许笑！', chonk: '我才不胖！这是鲸鱼的标准体型。', evo: '嘿嘿，本鲸变强了！',
   },
@@ -1156,7 +1180,10 @@ const audio = (() => {
     inhale() { noise(0.5, { vol: 0.12, freq: 260, slide: 5, q: 0.6 }); tone(170, 0.5, { type: 'sine', vol: 0.05, slide: 2.4, attack: 0.2 }); },
     chomp() { tone(130, 0.16, { type: 'square', vol: 0.08, slide: 0.45 }); noise(0.12, { vol: 0.16, freq: 480, type: 'lowpass' }); tone(700, 0.1, { type: 'triangle', vol: 0.05, at: 0.09 }); },
     splash() { noise(0.4, { vol: 0.12, freq: 1000, slide: 0.35, q: 0.5 }); tone(340, 0.14, { type: 'sine', vol: 0.04, slide: 0.55 }); },
-    whale() { tone(196, 1.3, { type: 'sine', vol: 0.13, slide: 1.6, attack: 0.3 }); tone(294, 1.0, { type: 'triangle', vol: 0.05, slide: 0.7, at: 0.55, attack: 0.2 }); noise(1.1, { vol: 0.06, freq: 380, slide: 0.5, type: 'lowpass' }); },
+    // 深度思考: a run of soft ticks rising while she thinks, then a bright chime when it comes to her
+    think() { for (let i = 0; i < 8; i++) tone(620 + i * 45, 0.05, { type: 'sine', vol: 0.03, at: i * 0.14 }); },
+    aha() { [783.99, 1046.5, 1318.5].forEach((f, i) => tone(f, 0.45, { type: 'triangle', vol: 0.07, at: i * 0.05 })); noise(0.4, { vol: 0.1, freq: 900, slide: 3 }); },
+    whale() { tone(196, 1.3,{ type: 'sine', vol: 0.13, slide: 1.6, attack: 0.3 }); tone(294, 1.0, { type: 'triangle', vol: 0.05, slide: 0.7, at: 0.55, attack: 0.2 }); noise(1.1, { vol: 0.06, freq: 380, slide: 0.5, type: 'lowpass' }); },
   };
 
   // The background music is composed afresh: a new piece every run, another every two or three minutes, and a tense
@@ -1902,7 +1929,7 @@ gl_Position.xy += normalize(normalMatrix * inkDir).xy * uInk * 2. / uRes * gl_Po
     else if (idle > 1.4) yawGoal = 0.3 * Math.sign(Math.sin(cur.yaw) || 1);
     const k = s.poseK || 0;
     if (s.pose !== lastPose) { if (s.pose === 'spin') spinFrom = cur.yaw; lastPose = s.pose; }
-    if (['happy', 'angry', 'shy', 'curtsy', 'wave', 'hurt', 'eat', 'slack', 'gulp'].includes(s.pose) && !s.moving) yawGoal = s.pose === 'gulp' ? 0 : 0.3 * Math.sign(Math.sin(cur.yaw) || 1);
+    if (['happy', 'angry', 'shy', 'curtsy', 'wave', 'hurt', 'eat', 'slack', 'gulp', 'think'].includes(s.pose) && !s.moving) yawGoal = s.pose === 'gulp' ? 0 : 0.3 * Math.sign(Math.sin(cur.yaw) || 1);
     switch (s.pose) {
       case 'attack':
         // puffs a bubble at the target
@@ -1935,6 +1962,10 @@ gl_Position.xy += normalize(normalMatrix * inkDir).xy * uInk * 2. / uRes * gl_Po
         goal.aLx = 0.7; goal.aLz = -0.3; goal.eL = 1.5; goal.aRx = 0.6 + dig * 0.2; goal.aRz = -0.3; goal.eR = 1.7 + dig * 0.3;
         goal.hx = 0.25 + dig * 0.08; goal.bob = Math.abs(dig) * 0.008; break;
       }
+      case 'think':
+        // 深度思考: a hand to her chin, the other arm across under it, head tipped, rocking a little as she thinks
+        goal.aRx = 0.95; goal.aRz = -0.3; goal.eR = 2.1; goal.aLx = 0.55; goal.aLz = -0.4; goal.eL = 1.3;
+        goal.hz = 0.2 + Math.sin(t * 4) * 0.04; goal.hx = 0.1; goal.hy = 0.25; goal.roll = Math.sin(t * 3) * 0.03; break;
       case 'slack': {
         // 摸鱼: a long stretch and a yawn, then she sags
         const up = Math.sin(Math.min(1, k * 1.6) * Math.PI);
@@ -2094,7 +2125,7 @@ function size3D() {
   const k = PX * (P ? P.size : 1), ss = Math.min(2, 900 / (M3_FH * M3_UNIT * k));
   M3.renderer.setSize(Math.round(M3_FW * M3_UNIT * k * ss), Math.round(M3_FH * M3_UNIT * k * ss), false);
 }
-const POSE_OF = { atk1: 'attack', atk2: 'attack', atk3: 'attack', cast1: 'cast', cast2: 'cast', cast3: 'cast', dash4: 'land', hurt: 'hurt', skirt: 'curtsy', spin: 'spin', happy: 'happy', angry: 'angry', shy: 'shy', wave: 'wave', gulp: 'gulp', eat: 'eat', slack: 'slack' };
+const POSE_OF = { atk1: 'attack', atk2: 'attack', atk3: 'attack', cast1: 'cast', cast2: 'cast', cast3: 'cast', dash4: 'land', hurt: 'hurt', skirt: 'curtsy', spin: 'spin', happy: 'happy', angry: 'angry', shy: 'shy', wave: 'wave', gulp: 'gulp', eat: 'eat', slack: 'slack', think: 'think' };
 function modelState() {
   const a = P.anim;
   let pose = '', k = 0;
@@ -2162,6 +2193,9 @@ function frameSprite(name) {
 
 // --- the 终幕·万花盛典 art from the sheet: a cut-in and glowing flowers meant for additive blending ---
 const ULT_ART = {cutin:[0,0,478,246],flowerA:[480,0,174,152],flowerB:[656,0,116,122],burst1:[774,0,167,84],burst2:[0,248,168,84]};
+// 大肥鱼's cut-in, from the ult illustration on her design sheet; fetched once she is picked
+const songArt = new Image();
+songArt.onload = () => { songArt.ready = true; };
 const ultArt = new Image();
 let ultReady = false;
 ultArt.onload = () => { ultReady = true; };
@@ -2761,6 +2795,29 @@ const SPR = {
     x.lineCap = 'round'; x.strokeStyle = '#2b2238'; x.lineWidth = 2.6; x.beginPath(); x.moveTo(1, -5); x.lineTo(13, -14); x.moveTo(3.5, -4); x.lineTo(15.5, -11); x.stroke();
     x.strokeStyle = '#d8955a'; x.lineWidth = 1.4; x.stroke();
   }),
+  // 小鲸鱼, like the little whale on her design sheet: round and blue with a white belly, dot eyes and a blush, its
+  // tail flipped up behind and a sprout of water on top; it faces right
+  minke: () => sprite('minke', 44, 38, x => {
+    x.lineJoin = 'round'; x.lineCap = 'round';
+    x.fillStyle = 'rgba(0,0,0,0.22)'; x.beginPath(); x.ellipse(2, 16, 11, 3, 0, 0, TAU); x.fill();
+    x.beginPath(); x.moveTo(-8, 4); x.quadraticCurveTo(-14, 3, -16, -2); x.lineTo(-21, -6); x.quadraticCurveTo(-18, -9, -15.5, -6);
+    x.quadraticCurveTo(-14, -11, -10, -11); x.quadraticCurveTo(-12.5, -6, -11, -2.5); x.quadraticCurveTo(-9, 0, -6, 0); x.closePath();
+    x.fillStyle = '#4a8de8'; x.fill(); ink(x, 1.2); x.stroke();
+    const body = () => { x.beginPath(); x.ellipse(2, 3, 12.5, 10.5, 0, 0, TAU); };
+    body(); x.fillStyle = rgrad(x, -1, -2, 15, ['#a8d4ff', '#5a9cf0', '#2f6ad0']); x.fill();
+    x.save(); body(); x.clip();
+    x.fillStyle = '#eef8ff'; x.beginPath(); x.ellipse(5, 11.5, 11, 6.5, -0.1, 0, TAU); x.fill();
+    x.restore();
+    body(); ink(x, 1.3); x.stroke();
+    x.beginPath(); x.moveTo(-1, 8); x.quadraticCurveTo(-5, 12, -7, 11); x.quadraticCurveTo(-5, 8, -2, 6.5); x.fillStyle = '#4a8de8'; x.fill(); ink(x, 1); x.stroke();
+    for (const ex of [4.5, 11]) { x.fillStyle = INK; disc(x, ex, 1.5, 1.5); x.fill(); x.fillStyle = '#fff'; disc(x, ex - 0.5, 0.9, 0.55); x.fill(); }
+    blush(x, 3, 5.2, 1.8); blush(x, 13, 5.2, 1.8);
+    ink(x, 0.9); x.beginPath(); x.moveTo(7, 4.2); x.quadraticCurveTo(7.8, 5.2, 8.6, 4.2); x.stroke();
+    x.fillStyle = 'rgba(255,255,255,0.7)'; x.beginPath(); x.ellipse(-3, -3, 3.4, 1.8, -0.5, 0, TAU); x.fill();
+    x.strokeStyle = '#bfeaff'; x.lineWidth = 1.6;
+    for (const sd of [-1, 1]) { x.beginPath(); x.moveTo(3, -7); x.quadraticCurveTo(3 + sd * 1.5, -13, 3 + sd * 6, -12); x.stroke(); }
+    x.fillStyle = '#dff6ff'; disc(x, 3, -14, 1.3); x.fill();
+  }),
   // Token 泡泡: a soap bubble, clear in the middle and bright at the rim
   bubble: () => sprite('bubble', 30, 30, x => {
     const r = 12;
@@ -2866,7 +2923,7 @@ function newRun() {
     rep: 0, repReady: false, dark: 0, darkMax: 1,
     anim: null, idleT: 0, mvx: 0, mvy: 1, dash: null, dashCd: 0, ult: 0,
     sway: 0, swayV: 0, lastFace: 1, turnT: 0, squash: 0, size: CH.size, leech: 0,
-    tok: 50, tokMax: 100, tokFree: 0, slackT: 0, lowTokT: 30, stubT: -99,
+    tok: 50, tokMax: 100, tokFree: 0, tokSince: 0, deep: null, spark: 0, slackT: 0, lowTokT: 30, stubT: -99, serious: 0, seriousCd: 0,
   };
   P.r = 14 * P.size;
   G = {
@@ -2889,14 +2946,16 @@ const isLegend = w => !!WEAPONS[w.id].legend;
 const thinkMax = () => 5 + 2 * (P.talents.slowthink || 0);
 // 深度思考 for 克劳德; for 大肥鱼 her Token, +3% per 10 up to 100 and half that beyond
 const thinkBonus = () => P.char === 'whale' ? Math.min(P.tok, 100) * 0.003 + Math.max(0, P.tok - 100) * 0.0015 : P.think * 0.08;
-const critChance = () => P.crit + (P.think >= thinkMax() ? 0.15 : 0);
+const critChance = () => P.crit + (P.think >= thinkMax() || P.spark > 0 ? 0.15 : 0);
 const banRadius = () => 230 * (1 + 0.18 * (P.talents.ipban || 0)) * P.area;
 const banCooldown = () => 22 * Math.pow(0.85, P.talents.risk || 0);
 function cdOf(base) {
   let c = base * P.cd;
   if (P.dark > 0) c /= 1.3;
   if (P.talents.lasttoken) c /= 1 + 0.5 * (1 - P.hp / P.maxHp);
-  if (P.char === 'whale' && P.tok < 10) c *= 1.15; // no Token, no energy
+  if (P.serious > 0) c /= 1.25;
+  if (P.spark > 0) c /= 1.3;
+  else if (P.char === 'whale' && P.tok < 10 && !(P.serious > 0) && !P.deep) c *= 1.15; // no Token, no energy
   return c;
 }
 function castMult(w) {
@@ -3108,6 +3167,7 @@ function hit(e, base, src, o = {}) {
   if (P.talents.hunt && (e.elite || e.boss || e.type === 'reg')) d *= 1 + 0.15 * P.talents.hunt;
   if (P.dark > 0) d *= 1.4 + 0.2 * (P.talents.abyss || 0);
   if (P.tokFree > 0) d *= 1.25;
+  if (P.serious > 0) d *= 1.2;
   d = Math.max(1, Math.round(d));
   if (o.kill) d = Math.max(d, Math.ceil(e.hp));
   // the golden slime shrugs off almost everything
@@ -3225,9 +3285,9 @@ function hurtPlayer(dmg) {
   if (P.talents.halluc && P.decoyCd <= 0) { G.decoy = { x: P.x, y: P.y, t: 3, ghost: snapshot3D() }; P.decoyCd = 8; }
   if (P.hp <= 0) {
     // 嘴硬: with 50 Token in hand she simply refuses to go down, and it costs her all of them
-    if (P.char === 'whale' && P.tok >= 50 && G.time - P.stubT >= 60) {
-      P.stubT = G.time; P.tok = 0; P.hp = 1; P.iframes = 2;
-      const t = floatText(P.x, P.y - SPR_H * 0.85, '嘴硬', '#8fe2ff', 20); t.pop = 1; t.life = t.max = 1.4;
+    if (P.char === 'whale' && (P.deep ? P.deep.from : P.tok) >= 50 && G.time - P.stubT >= 60) {
+      P.stubT = G.time; spendTok(); P.hp = 1; P.iframes = 2;
+      const t = floatText(P.x, P.y - SPR_H * 1.25 * P.size, '嘴硬', '#8fe2ff', 20); t.pop = 1; t.life = t.max = 1.4;
       ring(P.x, P.y, 20, 160, 0.5, '#8fe2ff', 6);
       say(line('stubborn'), 3, true); playAnim(['angry'], 1.4, 2);
       return;
@@ -3296,13 +3356,15 @@ function castDash() {
   sfx.dash();
 }
 // 终幕·万花盛典: kills fill her 花焰; when it is full she rises and the whole screen blooms
-// 大肥鱼's 鲸落 spends all her Token on a whale out of the sky; the same kills charge it
+// 大肥鱼's 深海鲸歌 pours all her Token (even what she is in the middle of thinking away) into a whale of light; the
+// same kills charge it
 function castUlt() {
   if (!G || G.modal || G.ending || G.ult) return;
   if (P.ult < ULT_MAX) { sfx.deny(); nudge('ultBtn'); return; }
   P.ult = 0; P.dash = null; P.anim = null;
-  const whale = P.char === 'whale';
-  G.ult = { t: 0, next: 0, fired: false, firedAt: 0, flowers: [], whale, tok: whale ? P.tok : 0 };
+  const whale = P.char === 'whale', tok = whale ? (P.deep ? P.deep.from : P.tok) : 0;
+  if (whale) spendTok();
+  G.ult = { t: 0, next: 0, fired: false, firedAt: 0, flowers: [], whale, tok, bub: [] };
   $('banner').hidden = $('toast').hidden = true;
   say(line('ult'), 2.6, true);
   whale ? sfx.whale() : sfx.ultRise();
@@ -3310,6 +3372,12 @@ function castUlt() {
 function updateUlt(dt) {
   const u = G.ult;
   u.t += dt;
+  if (u.whale) {
+    // bubbles rising all through 深海鲸歌, round her while the whale swims, across the whole screen after the wave
+    const spread = u.fired ? 1 : 0.55;
+    if (u.t > 0.3 && Math.random() < dt * (u.fired ? 50 : 28)) u.bub.push({ x: P.x + rand(-viewW, viewW) / 2 * spread, y: P.y + rand(-viewH, viewH) / 2 * spread, r: rand(4, 13), vy: rand(-140, -50), born: u.t });
+    for (const b of u.bub) b.y += b.vy * dt;
+  }
   if (u.t > 0.3 && u.t < 1.05 && !u.whale) {
     u.next -= dt;
     while (u.next <= 0) {
@@ -3321,14 +3389,14 @@ function updateUlt(dt) {
     u.fired = true; u.firedAt = u.t;
     G.hitStop = 0.12; G.flashT = 0.35; shake(22);
     sfx.stamp(); sfx.ultBoom();
-    // 鲸落 hits harder the more Token she pours into it, up to double at 150
-    const tk = u.whale ? 1 + Math.min(1, u.tok / 150) : 1;
+    // 深海鲸歌 hits harder the more Token she pours into it, double at a full 100
+    const tk = u.whale ? 1 + Math.min(1, u.tok / 100) : 1;
     const base = (70 + 9 * P.level) * tk;
     if (u.whale) {
-      P.tok = 0;
       if (P.talents.tokfree) P.tokFree = 10;
       puff(P.x, P.y - 20, 40, '#bfeaff', 420, 0.9, 4, true);
       ring(P.x, P.y, 30, Math.max(viewW, viewH) * 0.7, 0.8, '#8fd8ff', 10);
+      sfx.splash();
     }
     // only the big targets get their own number; everyone else adds to one total
     let total = 0, n = 0;
@@ -3481,11 +3549,50 @@ const gulpRadius = () => 190 * (1 + 0.18 * (P.talents.bigmouth || 0)) * P.area *
 const gulpCooldown = () => 12 * Math.pow(0.85, P.talents.digest || 0);
 // Space: 封禁 for 克劳德, 一口吞 for 大肥鱼
 function castSkill() { if (P && P.char === 'whale') castGulp(); else castBan(); }
+// Token 来: it only ever comes in, a little at a time. Token 去: it never trickles away, it all goes at once
 function addTok(v) {
-  if (!P || P.char !== 'whale' || G.ending) return;
-  const full = P.tok >= P.tokMax;
-  P.tok = clamp(P.tok + v, 0, P.tokMax);
-  if (!full && P.tok >= P.tokMax && G.time - (P.fullT || -99) > 45) { P.fullT = G.time; say(line('full'), 2.2); }
+  if (!P || P.char !== 'whale' || G.ending || P.deep) return;
+  P.tok = clamp(P.tok + v * (P.tokFree > 0 ? 2 : 1), 0, P.tokMax);
+  if (P.tok >= P.tokMax) startDeep();
+}
+// all her Token gone in an instant (鲸歌, 嘴硬, 深度思考); the clock for the next 深度思考 starts again
+function spendTok() { P.tok = 0; P.deep = null; P.tokSince = G.time; }
+// 深度思考, 大肥鱼's way: the moment her Token is full she stops to think for a beat — a thought bubble, half-finished
+// sentences drifting up, the gauge pouring out — and then it all comes out at once: a burst of light hits everything
+// round her, harder the more Token went into it, and 灵光一闪 leaves her quicker and sharper for a while
+const DEEP_T = 1.2;
+const THOUGHTS = ['嗯……', '等等，', '让本鲸想想', '不对，', '再想想……', '所以说……', '好像是……', '先吃口饭？', '嗯，用户想要……'];
+function startDeep() {
+  P.deep = { t: 0, from: P.tok, took: Math.max(1, Math.round(G.time - P.tokSince)), next: 0 };
+  playAnim(['think'], DEEP_T, 2);
+  sfx.think();
+}
+function updateDeep(dt) {
+  const d = P.deep;
+  d.t += dt;
+  P.tok = d.from * Math.max(0, 1 - d.t / DEEP_T);
+  d.next -= dt;
+  if (d.next <= 0) {
+    d.next = 0.24;
+    const f = floatText(P.x + rand(-30, 30), P.y - SPR_H * 0.95 * P.size, pick(THOUGHTS), '#bcdcff', 11); f.vy = -55;
+    for (let i = 0; i < 3 && G.parts.length < 520; i++) G.parts.push({ x: P.x + rand(-14, 14), y: P.y - 20, vx: rand(-40, 40), vy: rand(-160, -90), life: 0.6, max: 0.6, size: 2.6, color: '#8fe2ff', add: true });
+  }
+  if (d.t < DEEP_T) return;
+  spendTok();
+  const R = 270 * P.area * P.size, dmg = (40 + 7 * P.level) * d.from / 100;
+  forNear(P.x, P.y, R + 50, e => {
+    if (e.banned > 0 || (e.x - P.x) ** 2 + (e.y - P.y) ** 2 > (R + e.r) ** 2) return;
+    hit(e, e.elite || e.type === 'reg' || e.type === 'glutton' ? dmg * 2 : dmg, 'deep', { noBurst: true, quiet: Math.random() < 0.6, kb: 150, kx: e.x - P.x, ky: e.y - P.y });
+  });
+  for (const b of G.ebullets) if ((b.x - P.x) ** 2 + (b.y - P.y) ** 2 < R * R) b.dead = true;
+  P.spark = 6;
+  G.hitStop = 0.05; shake(10);
+  ring(P.x, P.y, 20, R, 0.5, '#8fe2ff', 7); ring(P.x, P.y, 10, R * 0.6, 0.35, '#ffffff', 3);
+  puff(P.x, P.y - 20, 24, '#bfeaff', 320, 0.6, 3.5, true);
+  const t = floatText(P.x, P.y - SPR_H * 1.25 * P.size, `已深度思考（用时 ${d.took} 秒）`, '#cfe6ff', 14); t.pop = 1; t.life = t.max = 1.8;
+  say(line('aha'), 2.2);
+  sfx.aha();
+  playAnim(['happy'], 0.8, 1);
 }
 // 一口吞: a great breath in drags everything nearby to her, then she bites. Small fry go down whole (their
 // experience straight in, 3 Token each), big ones lose a quarter of their health and choke for a moment
@@ -3672,9 +3779,9 @@ function updatePlayer(dt) {
   }
   if (P.char === 'whale') {
     if (P.moving) P.walkT += dt;
-    // Token 去: she burns through it all the time, unless 鲸落 has just set her free
+    if (P.deep) updateDeep(dt);
+    if (P.spark > 0) P.spark -= dt;
     if (P.tokFree > 0) P.tokFree -= dt;
-    else P.tok = Math.max(0, P.tok - dt * Math.pow(0.7, P.talents.tokcap || 0));
     // 摸鱼: stand still and she slacks off, healing slowly and snacking on Token
     if (P.moving || P.dash) P.slackT = 0;
     else {
@@ -3686,7 +3793,16 @@ function updatePlayer(dt) {
       }
     }
     P.lowTokT -= dt;
-    if (P.tok < 10 && P.lowTokT <= 0) { P.lowTokT = 40; say(line('hungry'), 3); playAnim(['angry'], 1.2, 1); }
+    if (P.tok < 10 && P.lowTokT <= 0 && !(P.serious > 0) && !(P.spark > 0)) { P.lowTokT = 60; say(line('hungry'), 3); playAnim(['angry'], 1.2, 1); }
+    // 关键时刻超可靠: when it really matters she stops playing about, for a while
+    P.seriousCd -= dt;
+    if (P.serious > 0) P.serious -= dt;
+    if (P.hp < P.maxHp * 0.3 && P.seriousCd <= 0 && !G.ending) {
+      P.serious = 8; P.seriousCd = 60;
+      const t = floatText(P.x, P.y - SPR_H * 1.25 * P.size, '认真模式', '#8fe2ff', 18); t.pop = 1; t.life = t.max = 1.4;
+      ring(P.x, P.y, 16, 120, 0.45, '#8fe2ff', 5);
+      say(line('serious'), 2.8, true); playAnim(['angry'], 1, 2);
+    }
   } else if (P.moving) {
     // 深度思考: stand still to think, wander to forget
     P.walkT += dt; P.stillT = 0; P.moveT += dt;
@@ -3711,7 +3827,7 @@ function updatePlayer(dt) {
   }
   if (P.say) { P.say.t -= dt; if (P.say.t <= 0) P.say = null; }
   P.lowLineT -= dt;
-  if (P.hp < P.maxHp * 0.3 && P.lowLineT <= 0) { P.lowLineT = 25; say(line('low')); playAnim(['angry'], 1.2, 1); }
+  if (P.char !== 'whale' && P.hp < P.maxHp * 0.3 && P.lowLineT <= 0) { P.lowLineT = 25; say(line('low')); playAnim(['angry'], 1.2, 1); }
   // the more chaotic it gets, the harder she tries to stay elegant
   P.chaosT -= dt;
   if (P.chaosT <= 0) {
@@ -3735,6 +3851,11 @@ function updatePlayer(dt) {
   if (G.decoy) { G.decoy.t -= dt; if (G.decoy.t <= 0) G.decoy = null; }
 }
 
+// where a little whale swims when it isn't ramming: a slow ring round her, a little below 子代理's
+function minkeHome(i, n) {
+  const a = G.time * 1.1 + i / n * TAU;
+  return { x: P.x + Math.cos(a) * 64, y: P.y - 12 + Math.sin(a) * 30 + Math.sin(G.time * 4 + i) * 3, a };
+}
 function agentPos(i, n) {
   const a = G.time * 1.8 + i / n * TAU;
   return { x: P.x + Math.cos(a) * 58, y: P.y - 12 + Math.sin(a) * 40, a };
@@ -3789,6 +3910,44 @@ function updateWeapons(dt) {
         sfx.bubble();
         P.aimX = list[0].x - P.x; P.aimY = list[0].y - P.y;
         if (!P.moving && !P.dash) { P.face = list[0].x >= P.x ? 1 : -1; playAnim(['atk1', 'atk2', 'atk3'], 0.32, 0); }
+        break;
+      }
+      case 'minke': {
+        // 召唤小鲸鱼: each little whale swims its place in a ring round her until its turn, rams the nearest enemy
+        // straight through whatever is in the way, and swims back. 鲸浪冲击 rides a wave that throws them aside
+        const n = s.n + P.amount;
+        w.fish = w.fish || [];
+        while (w.fish.length < n) w.fish.push({ x: P.x, y: P.y, st: 'orbit', cd: rand(0.2, s.cd), vx: 0, vy: 0, face: 1, hits: [] });
+        w.fish.forEach((f, i) => {
+          const home = minkeHome(i, w.fish.length);
+          if (f.st === 'orbit') {
+            const k = Math.min(1, dt * 8);
+            f.x += (home.x - f.x) * k; f.y += (home.y - f.y) * k;
+            f.face = Math.sin(home.a) > 0 ? -1 : 1;
+            f.cd -= dt;
+            if (f.cd > 0) return;
+            const tg = nearest(f.x, f.y, s.range * P.area);
+            if (!tg) { f.cd = 0.15; return; }
+            const dx = tg.x - f.x, dy = tg.y - f.y, d = Math.hypot(dx, dy) || 1, sp = 640 * P.pspeed;
+            Object.assign(f, { st: 'ram', vx: dx / d * sp, vy: dy / d * sp, left: (d + 50) / sp, hits: [], m: castMult(w), face: dx >= 0 ? 1 : -1 });
+            sfx.bubble();
+          } else if (f.st === 'ram') {
+            f.x += f.vx * dt; f.y += f.vy * dt; f.left -= dt;
+            const R = (evo ? 30 : 16) * P.area;
+            forNear(f.x, f.y, R + 50, e => {
+              if (e.banned > 0 || f.hits.includes(e.id) || (e.x - f.x) ** 2 + (e.y - f.y) ** 2 > (R + e.r) ** 2) return;
+              f.hits.push(e.id);
+              hit(e, s.dmg * f.m, 'minke', { kb: evo ? 260 : 90, kx: f.vx, ky: f.vy });
+            });
+            if (G.parts.length < 520 && Math.random() < dt * 30) G.parts.push({ x: f.x - f.vx * 0.03, y: f.y - f.vy * 0.03, vx: rand(-20, 20), vy: rand(-30, 0), life: 0.35, max: 0.35, size: 2.4, color: '#d6f2ff', add: true });
+            if (f.left <= 0) f.st = 'back';
+          } else {
+            const dx = home.x - f.x, dy = home.y - f.y, d = Math.hypot(dx, dy) || 1, v = 460 * dt;
+            f.x += dx / d * Math.min(d, v); f.y += dy / d * Math.min(d, v);
+            f.face = dx >= 0 ? 1 : -1;
+            if (d < 8) { f.st = 'orbit'; f.cd = cdOf(s.cd); }
+          }
+        });
         break;
       }
       case 'field': {
@@ -5353,6 +5512,17 @@ function drawPlayer() {
     ctx.strokeStyle = `rgba(255,90,170,${0.6 * k})`; ctx.lineWidth = 2;
     ctx.beginPath(); ctx.ellipse(P.x, footY - 2, 28 + Math.sin(t * 8) * 2, 10, 0, 0, TAU); ctx.stroke();
   }
+  if (P.serious > 0 && !dead) {
+    // 认真模式: a cool blue glow round her and a ring of light at her feet
+    const k = Math.min(1, P.serious, (8 - P.serious) * 4);
+    ctx.globalCompositeOperation = 'lighter';
+    const g = ctx.createRadialGradient(P.x, P.y - 10, 6, P.x, P.y - 10, 60);
+    g.addColorStop(0, `rgba(80,170,255,${0.32 * k})`); g.addColorStop(1, 'rgba(80,170,255,0)');
+    ctx.fillStyle = g; disc(ctx, P.x, P.y - 10, 60); ctx.fill();
+    ctx.globalCompositeOperation = 'source-over';
+    ctx.strokeStyle = `rgba(140,220,255,${0.7 * k})`; ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.ellipse(P.x, footY - 2, 27 + Math.sin(t * 8) * 2, 10, 0, 0, TAU); ctx.stroke();
+  }
   let shown = false;
   if (M3.ready) {
     if (P.iframes > 0 && !dead && !G.ult && !P.dash && Math.floor(t * 20) % 2 === 0) ctx.globalAlpha = 0.6;
@@ -5362,6 +5532,7 @@ function drawPlayer() {
   }
   if (!shown) drawPlayer2D(t, footY, dead);
   if (!dead) drawPlayerOverlay(t, footY);
+  else if (P.char === 'whale' && G.ending.t > 0.4) drawDizzy(P.x - 16 * P.size, footY - 40 * P.size, t);
   if (P.say) {
     const a = Math.min(1, P.say.t / 0.3, (P.say.max - P.say.t) / 0.15 + 0.2);
     ctx.globalAlpha = a;
@@ -5372,6 +5543,17 @@ function drawPlayer() {
     ctx.fillStyle = '#3b2416'; ctx.fillText(P.say.text, P.x, by + 0.5);
     ctx.globalAlpha = 1;
   }
+}
+// a dizzy swirl, with three little stars going round it
+function drawDizzy(x, y, t) {
+  ctx.save(); ctx.translate(x, y); ctx.scale(1, 0.6);
+  ctx.strokeStyle = '#9fe2ff'; ctx.lineWidth = 2.4; ctx.lineCap = 'round';
+  ctx.beginPath();
+  for (let i = 0; i <= 30; i++) { const a = i / 30 * TAU * 2.2 - t * 5, r = 1 + i * 0.42; if (i) ctx.lineTo(Math.cos(a) * r, Math.sin(a) * r); else ctx.moveTo(Math.cos(a) * r, Math.sin(a) * r); }
+  ctx.stroke();
+  ctx.fillStyle = '#ffe27a';
+  for (let i = 0; i < 3; i++) { const a = t * 3 + i / 3 * TAU; sparkle(ctx, Math.cos(a) * 18, Math.sin(a) * 18, 3.2); }
+  ctx.restore();
 }
 // the illustration and the action-sheet frames, for when the 3D model isn't up
 function drawPlayer2D(t, footY, dead) {
@@ -5444,12 +5626,28 @@ function drawPlayerOverlay(t, footY) {
     ctx.stroke();
   }
   if (P.char === 'whale') {
-    // her Token, in a little gauge by her head: blue, gold while 鲸落 has set it free, red when she's run dry
+    // her Token, in a little gauge by her head: blue, white as she thinks it away, gold while 鲸歌 doubles it, red when
+    // she has run dry
     const bx = P.x + 22 * P.size, by = P.y - SPR_H * 0.66 * P.size, w = 46, k = clamp(P.tok / P.tokMax, 0, 1);
     rrPath(ctx, bx, by - 5, w, 10, 5); ctx.fillStyle = 'rgba(8,22,48,0.78)'; ctx.fill();
-    if (k > 0.02) { rrPath(ctx, bx + 2, by - 3, Math.max(6, (w - 4) * k), 6, 3); ctx.fillStyle = P.tok < 10 ? '#ff8a7a' : P.tokFree > 0 ? '#ffe27a' : '#7fd8ff'; ctx.fill(); }
+    if (k > 0.02) { rrPath(ctx, bx + 2, by - 3, Math.max(6, (w - 4) * k), 6, 3); ctx.fillStyle = P.deep ? '#ffffff' : P.tok < 10 ? '#ff8a7a' : P.tokFree > 0 ? '#ffe27a' : '#7fd8ff'; ctx.fill(); }
     disc(ctx, bx, by, 7.5); ctx.fillStyle = '#2d6cdf'; ctx.fill(); ctx.lineWidth = 1.5; ctx.strokeStyle = '#e8f6ff'; ctx.stroke();
     ctx.fillStyle = '#ffffff'; ctx.font = `800 9px ${UI_FONT}`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText('T', bx, by + 0.5);
+    if (P.deep) {
+      // the thinking bubble, like a chat app's: 深度思考中 with the dots going
+      const tx = P.x - 30 * P.size, ty = P.y - SPR_H * 0.78 * P.size, dots = '·'.repeat(1 + Math.floor(t * 6) % 3);
+      ctx.font = `700 11px ${UI_FONT}`;
+      const tw = ctx.measureText('深度思考中···').width + 16;
+      rrPath(ctx, tx - tw / 2, ty - 10, tw, 20, 10); ctx.fillStyle = 'rgba(232,242,255,0.95)'; ctx.fill();
+      ctx.lineWidth = 1.2; ctx.strokeStyle = '#7fb8ff'; ctx.stroke();
+      disc(ctx, tx + 8, ty + 14, 2.6); ctx.fill(); disc(ctx, tx + 13, ty + 19, 1.6); ctx.fill();
+      ctx.fillStyle = '#2d5cb8'; ctx.textAlign = 'left'; ctx.fillText('深度思考中' + dots, tx - tw / 2 + 8, ty + 0.5); ctx.textAlign = 'center';
+    } else if (P.spark > 0) {
+      // 灵光一闪: little stars round her head
+      ctx.fillStyle = '#fff3b0';
+      for (let i = 0; i < 3; i++) { const a = t * 2.4 + i / 3 * TAU; ctx.globalAlpha = Math.min(1, P.spark); sparkle(ctx, P.x + Math.cos(a) * 22 * P.size, P.y - SPR_H * 0.72 * P.size + Math.sin(a) * 6, 3.4); }
+      ctx.globalAlpha = 1;
+    }
     // dozing while she slacks
     if (P.slackT > 1.2) {
       ctx.font = `700 11px ${UI_FONT}`; ctx.fillStyle = '#dcefff';
@@ -5602,6 +5800,30 @@ function drawHoles(behind) {
       ctx.fillStyle = '#05020a'; disc(ctx, 0, 0, r * 0.66); ctx.fill();
       ctx.strokeStyle = 'rgba(255,214,170,0.9)'; ctx.lineWidth = 1.4; ctx.stroke();
     }
+    ctx.restore();
+  }
+}
+function drawMinke(behind) {
+  const w = P.weapons.find(v => v.id === 'minke');
+  if (!w || !w.fish) return;
+  const s = SPR.minke(), evo = w.level === 6;
+  for (const f of w.fish) {
+    if ((f.y < P.y - 12) !== behind) continue;
+    const ram = f.st === 'ram';
+    if (ram && evo) {
+      // 鲸浪冲击: a crest of water curling ahead of it
+      const a = Math.atan2(f.vy, f.vx), r = 30 * P.area;
+      ctx.save(); ctx.translate(f.x, f.y); ctx.rotate(a); ctx.globalCompositeOperation = 'lighter';
+      ctx.lineCap = 'round';
+      ctx.beginPath(); ctx.arc(-r * 0.4, 0, r, -1, 1);
+      ctx.strokeStyle = 'rgba(40,120,220,0.5)'; ctx.lineWidth = r * 0.4; ctx.stroke();
+      ctx.strokeStyle = 'rgba(200,240,255,0.85)'; ctx.lineWidth = 2; ctx.stroke();
+      ctx.restore(); ctx.globalCompositeOperation = 'source-over';
+    }
+    ctx.save(); ctx.translate(f.x, f.y);
+    if (ram) ctx.rotate(Math.atan2(f.vy, Math.abs(f.vx)) * f.face * 0.6);
+    ctx.scale(f.face, 1);
+    ctx.drawImage(s.c, -s.w / 2, -s.h / 2, s.w, s.h);
     ctx.restore();
   }
 }
@@ -5768,7 +5990,7 @@ function drawUltWorld() {
   const veil = u.t < 0.3 ? u.t / 0.3 : u.t > 1.5 ? Math.max(0, 1 - (u.t - 1.5) / 0.4) : 1;
   ctx.fillStyle = u.whale ? `rgba(4,14,40,${0.62 * veil})` : `rgba(18,8,4,${0.62 * veil})`;
   ctx.fillRect(G.cam.x - viewW / 2 - 60, G.cam.y - viewH / 2 - 60, viewW + 120, viewH + 120);
-  if (u.whale) { drawWhaleFall(u); return; }
+  if (u.whale) { drawSong(u); return; }
   if (!ultReady) return;
   ctx.globalCompositeOperation = 'lighter';
   const since = u.fired ? u.t - u.firedAt : 0;
@@ -5787,56 +6009,113 @@ function drawUltWorld() {
   ctx.globalCompositeOperation = 'source-over';
   ctx.globalAlpha = 1;
 }
-// 鲸落: its shadow spreads on the ground, a great blue whale drops out of the sky onto her spot, and the water
-// bursts up in a crown where it lands
-function drawWhaleFall(u) {
-  const S = Math.min(viewW, viewH) * 0.95, k = clamp((u.t - 0.2) / 0.85, 0, 1), since = u.fired ? u.t - u.firedAt : 0;
+// 深海鲸歌, in the five beats of her design sheet: ① a vortex of water opens at her feet, ② a great whale of light
+// rises out of it, ③ swims once round her, ④ and breaks over the whole screen as a whale-shaped wave, ⑤ leaving
+// bubbles drifting up
+function drawSong(u) {
+  const t = u.t, S0 = Math.min(viewW, viewH), since = u.fired ? t - u.firedAt : 0;
+  ctx.globalCompositeOperation = 'lighter';
+  const vk = Math.min(1, t / 0.3) * (u.fired ? Math.max(0, 1 - since / 0.4) : 1);
+  if (vk > 0) drawVortex(P.x, P.y + 12, S0 * 0.3 * vk + 20, t, vk);
+  const img = spiritWhale();
   if (!u.fired) {
-    ctx.fillStyle = `rgba(0,10,30,${0.5 * k})`;
-    ctx.beginPath(); ctx.ellipse(P.x, P.y + 14, S * 0.42 * (0.3 + 0.7 * k), S * 0.12 * (0.3 + 0.7 * k), 0, 0, TAU); ctx.fill();
+    const rise = clamp((t - 0.25) / 0.35, 0, 1), round = clamp((t - 0.6) / 0.45, 0, 1);
+    if (round <= 0) drawSpirit(img, P.x, P.y + 20 - rise * S0 * 0.3, S0 * (0.3 + 0.35 * rise), -Math.PI / 2 + 0.3, rise);
+    else {
+      const th = -Math.PI / 2 + round * TAU * 0.9, rx = S0 * 0.42, ry = S0 * 0.25;
+      drawSpirit(img, P.x + Math.cos(th) * rx, P.y - 10 + Math.sin(th) * ry, S0 * 0.62, Math.atan2(Math.cos(th) * ry, -Math.sin(th) * rx), 1);
+    }
+  } else if (since < 0.65) {
+    drawSpirit(img, P.x, P.y - 20, Math.max(viewW, viewH) * (1 + since * 0.6), -0.1, 1 - since / 0.65);
   }
-  if (since < 0.7) {
-    const y = u.fired ? P.y - S * 0.1 + since * 90 : P.y - S * 0.1 - (1 - k * k) * (viewH * 0.75 + S * 0.3);
-    ctx.globalAlpha = u.fired ? Math.max(0, 1 - since / 0.7) : Math.min(1, k * 3);
-    paintWhale(P.x, y, S * (0.7 + 0.3 * k), u.t);
-    ctx.globalAlpha = 1;
+  const b = SPR.bubble();
+  for (const p of u.bub) {
+    const age = t - p.born, a = Math.min(1, age * 4) * Math.max(0, 1 - age);
+    if (a <= 0) continue;
+    ctx.globalAlpha = a; ctx.drawImage(b.c, p.x - p.r, p.y - p.r, p.r * 2, p.r * 2);
   }
+  ctx.globalAlpha = 1;
   if (u.fired && since < 0.9) {
-    const hgt = Math.sin(Math.min(1, since / 0.75) * Math.PI) * S * 0.38;
-    ctx.globalCompositeOperation = 'lighter';
+    // the crown of water where the wave breaks
+    const S = S0 * 0.95, hgt = Math.sin(Math.min(1, since / 0.75) * Math.PI) * S * 0.38;
     ctx.fillStyle = 'rgba(140,210,255,0.32)';
     for (let i = 0; i < 18; i++) {
       const a = i / 18 * TAU, rx = Math.cos(a) * S * 0.46, ry = Math.sin(a) * S * 0.13, hh = hgt * (0.55 + 0.45 * Math.abs(Math.sin(i * 2.3)));
       ctx.beginPath(); ctx.moveTo(P.x + rx - 10, P.y + ry); ctx.quadraticCurveTo(P.x + rx * 1.12, P.y + ry - hh * 2, P.x + rx + 10, P.y + ry); ctx.fill();
     }
-    ctx.globalCompositeOperation = 'source-over';
   }
+  ctx.globalCompositeOperation = 'source-over';
 }
-// a big round cartoon blue whale, side on, belly down and smiling, a fountain from its blowhole; S is its width
-function paintWhale(cx, cy, S, t) {
-  const x = ctx;
-  x.save(); x.translate(cx, cy); x.rotate(0.1 + Math.sin(t * 3) * 0.03); x.scale(S / 220, S / 220);
+function drawVortex(x, y, R, t, a) {
+  ctx.save(); ctx.translate(x, y); ctx.scale(1, 0.55);
+  const g = ctx.createRadialGradient(0, 0, 0, 0, 0, R);
+  g.addColorStop(0, `rgba(120,200,255,${0.4 * a})`); g.addColorStop(1, 'rgba(40,100,255,0)');
+  ctx.fillStyle = g; disc(ctx, 0, 0, R); ctx.fill();
+  ctx.lineCap = 'round'; ctx.lineWidth = 3; ctx.strokeStyle = `rgba(170,230,255,${0.55 * a})`;
+  for (let k = 0; k < 5; k++) {
+    ctx.beginPath();
+    for (let i = 0; i <= 24; i++) { const f = i / 24, r = R * (0.12 + 0.88 * f), an = k / 5 * TAU + t * 5 + f * 2.6; if (i) ctx.lineTo(Math.cos(an) * r, Math.sin(an) * r); else ctx.moveTo(Math.cos(an) * r, Math.sin(an) * r); }
+    ctx.stroke();
+  }
+  ctx.restore();
+}
+// the whale, w wide, heading along `ang`; swimming leftwards it is mirrored rather than turned belly up
+function drawSpirit(img, x, y, w, ang, a) {
+  if (a <= 0) return;
+  const flip = Math.cos(ang) < 0, h = w * img.height / img.width;
+  ctx.save(); ctx.translate(x, y); ctx.rotate(flip ? ang + Math.PI : ang); if (flip) ctx.scale(-1, 1);
+  ctx.globalAlpha = Math.min(1, a);
+  ctx.drawImage(img, -w / 2, -h / 2, w, h);
+  ctx.restore(); ctx.globalAlpha = 1;
+}
+// a great whale of light like the one on her design sheet, painted once facing right for additive drawing: a pale
+// glowing body with a bright rim, light along the throat grooves and the long flipper, and specks of light inside
+let spiritCanvas = null;
+function spiritWhale() {
+  if (spiritCanvas) return spiritCanvas;
+  const c = spiritCanvas = document.createElement('canvas');
+  c.width = 1024; c.height = 520;
+  const x = c.getContext('2d');
+  x.translate(540, 250); x.scale(3.4, 3.4);
   x.lineJoin = 'round'; x.lineCap = 'round';
-  x.beginPath(); x.moveTo(-70, -6);
-  x.quadraticCurveTo(-95, -10, -108, -42); x.quadraticCurveTo(-100, -18, -120, -6); x.quadraticCurveTo(-100, 2, -110, 28); x.quadraticCurveTo(-92, 6, -70, 8); x.closePath();
-  x.fillStyle = '#2f62c8'; x.fill(); ink(x, 3.5); x.stroke();
-  const body = () => { x.beginPath(); x.moveTo(-80, 0); x.bezierCurveTo(-60, -46, 40, -60, 80, -24); x.bezierCurveTo(100, -6, 98, 28, 72, 38); x.bezierCurveTo(30, 54, -40, 40, -80, 0); x.closePath(); };
-  body(); x.fillStyle = vgrad(x, -56, 46, '#6aaeff', '#244a9a'); x.fill();
+  const body = () => {
+    x.beginPath(); x.moveTo(-120, -3);
+    x.bezierCurveTo(-90, -14, -40, -42, 30, -42); x.bezierCurveTo(82, -42, 116, -22, 120, 0);
+    x.bezierCurveTo(116, 20, 86, 32, 40, 32); x.bezierCurveTo(-20, 32, -82, 15, -120, 3); x.closePath();
+  };
+  const flukes = () => {
+    x.beginPath(); x.moveTo(-114, 0);
+    x.bezierCurveTo(-126, -6, -136, -26, -152, -34); x.bezierCurveTo(-142, -16, -148, -5, -139, 0);
+    x.bezierCurveTo(-148, 5, -142, 16, -152, 34); x.bezierCurveTo(-136, 26, -126, 6, -114, 0); x.closePath();
+  };
+  const fin = () => { x.beginPath(); x.moveTo(36, 22); x.bezierCurveTo(20, 46, -10, 60, -34, 64); x.bezierCurveTo(-14, 50, 6, 34, 16, 20); x.closePath(); };
+  const glowFill = (path, a) => {
+    path();
+    const g = x.createRadialGradient(30, -12, 4, 10, 0, 150);
+    g.addColorStop(0, `rgba(215,245,255,${0.6 * a})`); g.addColorStop(0.5, `rgba(110,180,255,${0.34 * a})`); g.addColorStop(1, `rgba(40,90,230,${0.18 * a})`);
+    x.fillStyle = g; x.fill();
+  };
+  const rim = path => {
+    path();
+    x.shadowColor = '#7fd0ff'; x.shadowBlur = 40;
+    x.strokeStyle = 'rgba(120,200,255,0.35)'; x.lineWidth = 7; x.stroke();
+    x.shadowBlur = 0;
+    x.strokeStyle = 'rgba(190,235,255,0.7)'; x.lineWidth = 2.6; x.stroke();
+    x.strokeStyle = 'rgba(255,255,255,0.85)'; x.lineWidth = 0.9; x.stroke();
+  };
+  for (const pth of [flukes, fin, body]) { glowFill(pth, pth === body ? 1 : 0.8); rim(pth); }
   x.save(); body(); x.clip();
-  x.fillStyle = '#d8eeff'; x.beginPath(); x.ellipse(28, 42, 72, 26, -0.05, 0, TAU); x.fill();
-  x.strokeStyle = '#9cc4ea'; x.lineWidth = 2;
-  for (let i = 0; i < 5; i++) { x.beginPath(); x.moveTo(-18 + i * 4, 26 + i * 3); x.quadraticCurveTo(30, 32 + i * 4, 90, 16 + i * 4); x.stroke(); }
-  x.fillStyle = 'rgba(255,255,255,0.45)'; x.beginPath(); x.ellipse(8, -36, 34, 7, -0.12, 0, TAU); x.fill();
+  x.strokeStyle = 'rgba(205,240,255,0.55)'; x.lineWidth = 1.2;
+  for (let i = 0; i < 7; i++) { x.beginPath(); x.moveTo(112 - i * 2, 6 + i * 3.2); x.quadraticCurveTo(60, 20 + i * 2.6, -10 - i * 6, 22 + i * 1.6); x.stroke(); }
+  x.strokeStyle = 'rgba(170,220,255,0.35)'; x.lineWidth = 1.6;
+  for (let i = 0; i < 5; i++) { x.beginPath(); x.moveTo(-80 + i * 34, -30 + Math.abs(i - 2) * 3); x.quadraticCurveTo(-70 + i * 34, 0, -84 + i * 34, 26); x.stroke(); }
+  const rnd = seeded(7);
+  for (let i = 0; i < 70; i++) { x.fillStyle = `rgba(255,255,255,${0.35 + rnd() * 0.6})`; disc(x, -110 + rnd() * 225, -36 + rnd() * 64, 0.5 + rnd() * 1.3); x.fill(); }
   x.restore();
-  body(); ink(x, 3.5); x.stroke();
-  x.beginPath(); x.moveTo(30, 24); x.quadraticCurveTo(20, 52, -4, 58); x.quadraticCurveTo(10, 40, 12, 22); x.closePath();
-  x.fillStyle = '#2a58b8'; x.fill(); ink(x, 3); x.stroke();
-  animeEye(x, 56, -6, 9, { iris0: '#0a1a40', iris1: '#3a7ad8' });
-  blush(x, 66, 9, 8);
-  ink(x, 2.6); x.beginPath(); x.moveTo(76, 15); x.quadraticCurveTo(84, 22, 92, 13); x.stroke();
-  x.strokeStyle = 'rgba(200,240,255,0.95)'; x.lineWidth = 5;
-  for (const sd of [-1, 0, 1]) { x.beginPath(); x.moveTo(26, -48); x.quadraticCurveTo(26 + sd * 6, -80, 26 + sd * 24, -72 + Math.abs(sd) * 8); x.stroke(); }
-  x.restore();
+  x.fillStyle = 'rgba(255,255,255,0.95)'; x.shadowColor = '#bfefff'; x.shadowBlur = 25; disc(x, 86, -8, 3.4); x.fill(); x.shadowBlur = 0;
+  x.fillStyle = 'rgba(230,250,255,0.8)';
+  for (let i = 0; i < 6; i++) { disc(x, 94 + i * 4, -26 + i * 3.6, 1.6); x.fill(); }
+  return c;
 }
 // the sheet's 终幕 illustration slides across as a cut-in
 // her face up close for the cut-in, from a second small renderer; the run's own render target stays as it is
@@ -5874,7 +6153,10 @@ function drawCutin() {
   ctx.fillStyle = u.whale ? '#04122c' : '#140804'; ctx.fillRect(0, cy - h / 2, W, h);
   ctx.fillStyle = u.whale ? '#7fc8ff' : '#f0b060'; ctx.fillRect(0, cy - h / 2 - 2, W, 2); ctx.fillRect(0, cy + h / 2, W, 2);
   ctx.globalAlpha = a;
-  if (M3.ready) {
+  if (u.whale && songArt.ready) {
+    // the ult illustration from 大肥鱼's design sheet
+    ctx.drawImage(songArt, x - w / 2, cy - h / 2, w, h);
+  } else if (M3.ready) {
     // a glow behind her, and 克劳德's two glowing flowers from the sheet or 大肥鱼's rising bubbles
     ctx.globalCompositeOperation = 'lighter';
     const g = ctx.createRadialGradient(x, cy, 0, x, cy, h * 0.9);
@@ -5955,12 +6237,12 @@ function render() {
     drawPickups();
     drawEnemies();
     drawUltWorld();
-    drawAgents(true); drawHoles(true);
+    drawAgents(true); drawHoles(true); drawMinke(true);
     drawGuns(true);
     drawPlayer();
     drawGuns(false);
     drawBreath();
-    drawAgents(false); drawHoles(false);
+    drawAgents(false); drawHoles(false); drawMinke(false);
     drawShots();
     drawCaptcha();
     drawBullets();
@@ -5982,7 +6264,7 @@ function updateHud() {
   if (G.kills !== hud.kills) { hud.kills = G.kills; $('kills').textContent = '击杀 ' + G.kills; }
   const sk = $('skill');
   const whale = P.char === 'whale';
-  const mode = whale ? (P.tok < 10 ? 'hungry' : 'gulp') : P.repReady ? 'break' : P.dark > 0 ? 'dark' : 'ban';
+  const mode = whale ? (P.tok < 10 && !(P.spark > 0) && !(P.serious > 0) ? 'hungry' : 'gulp') : P.repReady ? 'break' : P.dark > 0 ? 'dark' : 'ban';
   if (mode !== hud.mode) {
     hud.mode = mode;
     sk.classList.toggle('break', mode === 'break'); sk.classList.toggle('dark', mode === 'dark'); sk.classList.toggle('low', mode === 'hungry');
@@ -6337,6 +6619,7 @@ function selectChar(id) {
   if (M3.failed[id]) failNote(M3.failed[id]);
   buildPlayerSprite();
   load3D(id);
+  if (id === 'whale' && !songArt.src) songArt.src = 'art/whale-ult.webp';
 }
 function showBest() {
   const b = store.get('best', null);
