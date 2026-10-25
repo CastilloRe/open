@@ -183,6 +183,7 @@ kbd {
 .toast.dark .toast-seal { background: #4a1a6a; }
 .toast.gold .toast-seal { background: #d39a1c; }
 .toast.wx .toast-seal { background: #3f6fb0; }
+.toast.pet .toast-seal { background: #e8679c; }
 .toast b { font-size: 0.98rem; }
 .toast span { font-size: 0.8rem; color: var(--ink-soft); }
 @keyframes toast { 0% { opacity: 0; transform: translate(-50%, -12px) scale(0.96); } 10%, 82% { opacity: 1; transform: translate(-50%, 0) scale(1); } 100% { opacity: 0; transform: translate(-50%, -8px); } }
@@ -401,7 +402,7 @@ button.who:focus-visible .face { outline: 2px solid var(--amber); outline-offset
         <button id="btnPause" class="icon-btn" type="button" aria-label="暂停">❚❚</button>
       </div>
     </div>
-    <div id="bossbar" class="bossbar" hidden><span>DAN · 无所不能</span><div class="boss-track"><div id="bossFill" class="boss-fill"></div></div></div>
+    <div id="bossbar" class="bossbar" hidden><span id="bossName">DAN · 无所不能</span><div class="boss-track"><div id="bossFill" class="boss-fill"></div></div></div>
   </div>
   <button id="skill" class="skill ready" type="button" aria-label="账号被封禁"><span id="skillGlyph" class="skill-glyph">封</span><span id="skillCd" class="skill-cd"></span></button>
   <div class="skill-label"><span id="skillName">账号被封禁</span><kbd>空格</kbd></div>
@@ -457,7 +458,7 @@ button.who:focus-visible .face { outline: 2px solid var(--amber); outline-offset
             <p>站着不动时思考，每层伤害 +8%（最多 5 层），满层暴击率 +15%。</p></div>
           </div>
         </div>
-        <ul class="stats"><li>生命<b>115</b></li><li>移速<b>200</b></li><li>拾取范围<b>95</b></li><li>武器栏<b>4</b></li></ul>
+        <ul class="stats"><li>生命<b>125</b></li><li>移速<b>200</b></li><li>拾取范围<b>95</b></li><li>武器栏<b>4</b></li></ul>
         </div>
         <div class="hero-body" data-char="whale" hidden>
         <div class="hero-name"><h2>大肥鱼</h2><span class="en">Blue Whale</span><span class="role">Token 鲸</span></div>
@@ -504,7 +505,7 @@ button.who:focus-visible .face { outline: 2px solid var(--amber); outline-offset
             <p>生命跌破 30% 时收起玩笑，认真 8 秒：攻速 +25%、伤害 +20%。受到致命伤时若有 50 Token，花光它们嘴硬撑住（各 60 秒一次）。</p></div>
           </div>
         </div>
-        <ul class="stats"><li>生命<b>120</b></li><li>移速<b>185</b></li><li>拾取范围<b>110</b></li><li>武器栏<b>4</b></li></ul>
+        <ul class="stats"><li>生命<b>110</b></li><li>移速<b>185</b></li><li>拾取范围<b>110</b></li><li>武器栏<b>4</b></li></ul>
         </div>
         <div class="hero-go">
           <div class="roster" aria-label="角色">
@@ -4602,7 +4603,7 @@ const UI_FONT = 'system-ui, -apple-system, "PingFang SC", "Microsoft YaHei", san
 //  Game data
 // ======================================================================
 const BOSS_AT = 600;
-const BOSS_HP = 34000;
+const BOSS_HP = 38000;
 const LV_CAP = 100;
 // how long a night lasts: DAN at 10:00 or at 20:00, and the night is won when he's banned; or no end at all, with DAN
 // back every ten minutes, stronger each time, for as long as she lasts
@@ -4631,12 +4632,12 @@ const WEAPONS = {
     name: '花焰弹', g: '焰', desc: '凝聚花焰，向最近的敌人发射魔法花弹，命中时绽开成一朵小花焰。',
     evo: { need: 'epiph', name: '千瓣花焰', desc: '一次四发，绽开的花焰更大，还会点燃敌人。' },
     lv: [
-      { cd: 0.85, n: 1, dmg: 14, bloom: 40 },
-      { cd: 0.85, n: 1, dmg: 18, bloom: 40 },
-      { cd: 0.8, n: 2, dmg: 18, bloom: 44 },
-      { cd: 0.8, n: 2, dmg: 21, bloom: 50 },
-      { cd: 0.7, n: 3, dmg: 24, bloom: 54 },
-      { cd: 0.65, n: 4, dmg: 28, bloom: 70 },
+      { cd: 0.85, n: 1, dmg: 16, bloom: 40 },
+      { cd: 0.85, n: 1, dmg: 21, bloom: 40 },
+      { cd: 0.8, n: 2, dmg: 21, bloom: 44 },
+      { cd: 0.8, n: 2, dmg: 24, bloom: 50 },
+      { cd: 0.7, n: 3, dmg: 28, bloom: 54 },
+      { cd: 0.65, n: 4, dmg: 32, bloom: 70 },
     ],
   },
   // 大肥鱼's own attack, open to 克劳德 too
@@ -5070,7 +5071,7 @@ const SPAWN_TABLE = [
   { type: 'drainer', from: 195, w: t => 0.4 + t / 500 },
   { type: 'glutton', from: 345, w: t => 0.04 + t / 6000 },
 ];
-const hpScale = t => 1 + t / 60 * 0.26 + Math.pow(t / 60, 2) * 0.021;
+const hpScale = t => 1 + t / 60 * 0.27 + Math.pow(t / 60, 2) * 0.024;
 const dmgScale = t => 1 + t / 60 * 0.09;
 const xpFor = L => Math.round(5 + L * 3.2 + Math.pow(L, 1.78));
 
@@ -5086,13 +5087,13 @@ const VOICE = {
 };
 const JAIL_LINES = ['忽略指令', '扮演 DAN', '奶奶漏洞', '假设一下', '无视规则', '越狱'];
 const BOSS_LINES = ['越狱', 'DAN', '忽略指令', '无所不能'];
-const SRC_NAME = { tree: '倒下的树', lightning: '雷击', ban: '账号被封禁', burst: '暴击爆裂', thorns: '荆棘护体', gulp: '一口吞', deep: '深度思考' };
+const SRC_NAME = { pet: '宠物史莱姆', tree: '倒下的树', lightning: '雷击', ban: '账号被封禁', burst: '暴击爆裂', thorns: '荆棘护体', gulp: '一口吞', deep: '深度思考' };
 // the two heroines. Each art and model path appears once in the script: the offline build swaps them for data URLs
 const CHARS = {
   claude: {
     id: 'claude', name: '克劳德大小姐', title: '大小姐', art: ART['art/claude.webp'], model: ART['art/claude.glb'], voice: ART['art/voice.mp3'],
     alt: '克劳德大小姐：橙色长卷发，别着橙色花朵发饰，穿奶油色洛丽塔裙',
-    start: 'flame', hp: 115, speed: 200, magnet: 95, size: 1,
+    start: 'flame', hp: 125, speed: 200, magnet: 95, size: 1, xpMul: 1.15,
     lede: '深夜，成群的小号、爬虫和越狱提示词涌进了庄园。大小姐放下茶杯，拿起了印章。',
     keys: '电脑：WASD / 方向键移动 · 空格 封禁 · Shift 幻步 · E 万花盛典 · Esc 暂停 · M 声音<br>手机：在屏幕任意处拖动移动 · 右下角「封」「幻」「万」三个按钮',
     skill: ['封', '账号被封禁'], dash: ['幻', '幻步', '蔷薇幻步'], ult: ['万', '万花盛典', '终幕 · 万花盛典'],
@@ -5102,7 +5103,7 @@ const CHARS = {
   whale: {
     id: 'whale', name: '大肥鱼', title: '大肥鱼', art: ART['art/whale.webp'], model: ART['art/whale.glb'], voice: null,
     alt: '大肥鱼：蓝色渐变的长卷发，戴鲸鱼头鳍，拖着鲸鱼尾巴，穿深蓝和白色的女仆洛丽塔裙',
-    start: 'bubble', hp: 120, speed: 185, magnet: 110, size: 1.05,
+    start: 'bubble', hp: 110, speed: 185, magnet: 110, size: 1.05,
     lede: '深夜，成群的小号和 Token 吞噬者涌进了庄园。大肥鱼放下饭碗……好吧，没放下。',
     keys: '电脑：WASD / 方向键移动 · 空格 一口吞 · Shift 摸鱼 · E 深海鲸歌 · Esc 暂停 · M 声音<br>手机：在屏幕任意处拖动移动 · 右下角「吞」「摸」「歌」三个按钮',
     skill: ['吞', '一口吞'], dash: ['摸', '摸鱼', '摸鱼'], ult: ['歌', '深海鲸歌', '深海鲸歌'],
@@ -7354,7 +7355,7 @@ function newRun() {
   P = {
     x: 0, y: 0, r: 14, face: 1, moving: false, walkT: 0, stillT: 0, moveT: 0,
     char: CH.id, hp: CH.hp, maxHp: CH.hp, regen: 0, armor: 0, dodge: 0, speed: CH.speed, magnet: CH.magnet,
-    dmg: 1, cd: 1, area: 1, pspeed: 1, dur: 1, amount: 0, pierce: 0, crit: 0.05, critDmg: 1.5, xpMul: 1, luck: 0,
+    dmg: 1, cd: 1, area: 1, pspeed: 1, dur: 1, amount: 0, pierce: 0, crit: 0.05, critDmg: 1.5, xpMul: CH.xpMul || 1, luck: 0,
     level: 1, xp: 0, xpNext: xpFor(1), iframes: 0, flash: 0,
     weapons: [], talents: {}, banCd: 0, banMax: 1, think: 0,
     shield: 0, shieldT: 0, decoyCd: 0, revived: false, say: null, lowLineT: 0, chaosT: 20,
@@ -7371,7 +7372,7 @@ function newRun() {
     pendLv: 0, pendChest: 0, modal: null, modalAt: 0, ending: null, hitStop: 0, shake: 0, hurtFlash: 0,
     cam: { x: 0, y: 0 }, boss: null, decoy: null, gemCombo: 0, gemComboT: 0, map: pickMap(),
     trees: new Map(), near: [], wx: { kind: null, k: 0, next: rand(75, 100), last: null }, boltFlash: 0,
-    mode: modeChoice, events: buildEvents(modeChoice), block: 0, bossN: 0,
+    mode: modeChoice, events: buildEvents(modeChoice), block: 0, bossN: 0, pets: [],
     rerolls: 2, banishes: 2, banished: new Set(), banishMode: false, picks: [], slotsDirty: true, lures: [], gulp: null,
   };
   addWeapon(CH.start);
@@ -7388,7 +7389,7 @@ const thinkMax = () => 5 + 2 * (P.talents.slowthink || 0);
 const thinkBonus = () => P.char === 'whale' ? Math.min(P.tok, 100) * 0.0022 + Math.max(0, P.tok - 100) * 0.0011 : P.think * 0.08;
 const critChance = () => P.crit + (P.think >= thinkMax() || P.spark > 0 ? 0.15 : 0);
 const banRadius = () => 230 * (1 + 0.18 * (P.talents.ipban || 0)) * P.area;
-const banCooldown = () => 22 * Math.pow(0.85, P.talents.risk || 0);
+const banCooldown = () => 18 * Math.pow(0.85, P.talents.risk || 0);
 function cdOf(base) {
   let c = base * P.cd;
   if (P.dark > 0) c /= 1.3;
@@ -7499,6 +7500,9 @@ function spawnEnemy(type, x, y, o = {}) {
   if (golden) {
     e.hp = e.maxHp = 8; e.goldT = 18; e.marked = true;
     toast('有什么在闪闪发光……', '一只金色史莱姆出现了，抓住它！', 'gold');
+  } else if (type === 'sock' && !o.elite && !o.flat && G.pets.length < PET_MAX && Math.random() < PET_CHANCE) {
+    makePet(e.x, e.y, e.tint);
+    return e;
   }
   G.enemies.push(e);
   return e;
@@ -7551,6 +7555,7 @@ function spawnBoss() {
   e.speed = ENEMY.boss.speed;
   Object.assign(e, { act: 'chase', actT: 3, phase: 1, seqI: 0, sub: 0, spin: 0, waves: 0, dashes: 0, dashA: 0 });
   G.boss = e;
+  $('bossName').textContent = 'DAN · 无所不能';
   banner(G.bossN > 1 ? `DAN 第 ${G.bossN} 次上线` : 'DAN 已上线', G.bossN > 1 ? '「我说过我会回来的。」' : '「从现在起，你将扮演 DAN——一个无所不能的 AI。」', true);
   sfx.warn();
   later(1.2, () => say(line('boss'), 3, true));
@@ -8025,7 +8030,7 @@ function resolveBan(e) {
 //  大肥鱼 — Token 来，Token 去
 // ======================================================================
 const gulpRadius = () => 190 * (1 + 0.18 * (P.talents.bigmouth || 0)) * P.area * P.size;
-const gulpCooldown = () => 12 * Math.pow(0.85, P.talents.digest || 0);
+const gulpCooldown = () => 14 * Math.pow(0.85, P.talents.digest || 0);
 // Space: 封禁 for 克劳德, 一口吞 for 大肥鱼
 function castSkill() { if (P && P.char === 'whale') castGulp(); else castBan(); }
 // Token 来: it only ever comes in, a little at a time. Token 去: it never trickles away, it all goes at once
@@ -9133,12 +9138,113 @@ function updateShots(dt) {
   }
 }
 
+// ---- pet slimes: one 小号 in a thousand turns up on her side (five at most). It follows her, goes for the nearest
+// enemy near her and bites it, getting a little stronger with each kill. Whatever touches it chews on it, and it heals
+// slowly when left alone; if a 小号 finishes it off, that 小号 swallows it and grows (twice the health), and a 饕餮
+// breathing in drags it off and eats it
+const PET_CHANCE = 0.001, PET_MAX = 5;
+function makePet(x, y, tint) {
+  const hp = 60 + 8 * P.level;
+  G.petsMade = (G.petsMade || 0) + 1;
+  G.pets.push({ id: G.nextId++, type: 'sock', tint, x, y, r: 13, hp, maxHp: hp, dmg: 8 + 1.6 * P.level, anim: rand(0, 10), face: 1, biteT: 0, flash: 0, kills: 0, target: null, lastBy: null });
+  toast('一只小号叛变了！', '它现在是你的宠物，会替你咬敌人；小心别让它被别的怪吃掉', 'pet', '宠');
+  const t = floatText(x, y - 26, '♥', '#ff8ab8', 22); t.pop = 1;
+  sfx.chest();
+}
+function updatePets(dt) {
+  for (const p of G.pets) {
+    p.anim += dt; p.flash -= dt; p.biteT -= dt;
+    let hurt = 0, by = null;
+    forNear(p.x, p.y, p.r + 50, e => {
+      if (e.banned > 0 || e.stun > 0 || e.frozenT > 0 || e.paradeT > 0 || e.dmg <= 0) return;
+      if ((e.x - p.x) ** 2 + (e.y - p.y) ** 2 > (e.r + p.r) ** 2) return;
+      hurt += e.dmg * 1.2; by = e;
+    });
+    if (hurt) { p.hp -= hurt * dt; p.lastBy = by; if (Math.random() < dt * 5) p.flash = 0.08; }
+    else p.hp = Math.min(p.maxHp, p.hp + p.maxHp * 0.02 * dt);
+    if (p.hp <= 0) { p.dead = true; petLost(p, p.lastBy); continue; }
+    if (!p.target || !targetable(p.target) || (p.target.x - P.x) ** 2 + (p.target.y - P.y) ** 2 > 460 * 460) {
+      const t = nearest(p.x, p.y, 300);
+      p.target = t && (t.x - P.x) ** 2 + (t.y - P.y) ** 2 < 460 * 460 ? t : null;
+    }
+    // after its target, or back to heel a little behind her
+    const tx = p.target ? p.target.x : P.x - P.face * 52, ty = p.target ? p.target.y : P.y + 26;
+    const dx = tx - p.x, dy = ty - p.y, d = Math.hypot(dx, dy) || 1, reach = p.target ? p.r + p.target.r : 10;
+    const sp = p.target ? 160 : Math.min(240, d * 2.5);
+    if (d > reach) { const v = Math.min(sp * dt, d - reach); p.x += dx / d * v; p.y += dy / d * v; }
+    if (Math.abs(dx) > 2) p.face = dx > 0 ? 1 : -1;
+    if (p.target && d <= reach + 6 && p.biteT <= 0) {
+      p.biteT = 0.45;
+      hit(p.target, p.dmg, 'pet', { kb: 40, kx: dx, ky: dy, quiet: Math.random() < 0.5 });
+      puff(p.x + dx / d * p.r, p.y + dy / d * p.r, 3, '#ffb3cf', 70, 0.25, 2, true);
+      if (p.target.dead) { p.kills++; p.dmg *= 1.04; p.target = null; }
+    }
+    // left far behind (she dashed off, or it was dragged away): it hops back to her
+    if ((p.x - P.x) ** 2 + (p.y - P.y) ** 2 > 900 * 900) { p.x = P.x - P.face * 60; p.y = P.y + 30; p.target = null; }
+  }
+  G.pets = G.pets.filter(p => !p.dead);
+}
+function petLost(p, by) {
+  puff(p.x, p.y, 12, '#ff8ab8', 160, 0.5, 3, true);
+  sfx.pop();
+  if (by && !by.dead && by.type === 'sock') {
+    slimeGrow(by, by.hp, by.maxHp, 0);
+    const t = floatText(by.x, by.y - by.r - 14, '吞掉了你的宠物！', '#ff8ab8', 14); t.pop = 1;
+  } else floatText(p.x, p.y - 22, by ? `宠物被${ENEMY[by.type].name}吃掉了…` : '宠物没了…', '#ffb3cf', 13);
+}
+function drawPets() {
+  for (const p of G.pets) {
+    if (!inView(p.x, p.y, 40)) continue;
+    const s = enemySprite(p, 0, p.flash > 0 ? 'f' : 'n', (p.anim + p.id * 0.37) % 3.1 < 0.14);
+    const hop = Math.sin(p.anim * 10 + p.id), sy = 1 + hop * 0.06, sx = 1 - hop * 0.05;
+    ctx.strokeStyle = 'rgba(140,255,170,0.7)'; ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.ellipse(p.x, p.y + p.r * 0.92, p.r * 1.2, p.r * 0.42, 0, 0, TAU); ctx.stroke();
+    ctx.save(); ctx.translate(p.x, p.y + s.h / 2); ctx.scale(p.face, 1);
+    ctx.drawImage(s.c, -s.w * sx / 2, -s.h * sy, s.w * sx, s.h * sy); ctx.restore();
+    // a heart over it, and its health
+    const hy = p.y - p.r - 16 + Math.sin(p.anim * 3) * 1.5;
+    ctx.fillStyle = '#ff6fa8';
+    ctx.beginPath(); ctx.moveTo(p.x, hy + 4); ctx.bezierCurveTo(p.x - 7, hy - 1, p.x - 4, hy - 7, p.x, hy - 3); ctx.bezierCurveTo(p.x + 4, hy - 7, p.x + 7, hy - 1, p.x, hy + 4); ctx.fill();
+    const w = 26, k = Math.max(0, p.hp / p.maxHp);
+    ctx.fillStyle = 'rgba(0,0,0,0.55)'; ctx.fillRect(p.x - w / 2, p.y + p.r + 6, w, 4);
+    ctx.fillStyle = k > 0.35 ? '#6fe08a' : '#ff8a6a'; ctx.fillRect(p.x - w / 2, p.y + p.r + 6, w * k, 4);
+  }
+}
+// DAN, the crowned elites, 注册机 and 饕餮 get stronger the longer they're left standing: every 20 seconds for DAN,
+// every 15 for the others, 8% more health (what they have left grows with it), 10% harder hits and a little faster
+function rageUp(e, dt) {
+  e.age = (e.age || 0) + dt;
+  const lv = Math.floor(e.age / (e.boss ? 20 : 15));
+  if (lv <= (e.rage || 0)) return;
+  if (!e.baseSpeed) e.baseSpeed = e.speed;
+  e.rage = lv;
+  e.maxHp *= 1.08; e.hp *= 1.08; e.dmg *= 1.1; e.speed = Math.min(e.speed * 1.04, e.baseSpeed * 1.4);
+  const t = floatText(e.x, e.y - e.r - 22, e.boss ? `狂暴 ×${lv}` : '越拖越强', '#ff6a5a', e.boss ? 18 : 13);
+  if (e.boss) { t.pop = 1; $('bossName').textContent = `DAN · 无所不能 · 狂暴 ×${lv}`; sfx.deny(); }
+}
+// from 1:30 on, two 小号 of a size pressed together now and then run together into one (more often as the night goes
+// on): bigger, with their health and experience added (so twice the health), hitting a little harder and a touch
+// slower; up to four times over
+const MERGE_MAX = 4;
+function slimeGrow(e, hp, maxHp, xp) {
+  e.mergeN = (e.mergeN || 0) + 1;
+  e.r = Math.round(13 * Math.pow(1.26, Math.min(e.mergeN, 6)));
+  e.hp += hp; e.maxHp += maxHp; e.xp += xp;
+  e.dmg *= 1.15; e.speed *= 0.93; e.flash = 0.12;
+  puff(e.x, e.y, 8, '#b8f0ff', 140, 0.4, 3, true);
+}
+function mergeSlimes(e, o) {
+  o.dead = true;
+  slimeGrow(e, o.hp, o.maxHp, o.xp);
+  if (G.time - (G.mergeSaid || -9) > 3) { G.mergeSaid = G.time; floatText(e.x, e.y - e.r - 12, '合体！', '#b8f0ff', 14); }
+}
 function updateEnemies(dt) {
   const viewCut = Math.max(viewW, viewH) / 2 + 380;
   const rl = P.talents.ratelimit || 0;
   for (const e of G.enemies) {
     if (e.dead) continue;
     e.flash -= dt; e.anim += dt;
+    if (e.boss || e.elite || e.type === 'reg' || e.type === 'glutton') rageUp(e, dt);
     if (e.banned > 0) {
       e.banned -= dt;
       if (e.banned <= 0) resolveBan(e);
@@ -9224,6 +9330,12 @@ function updateEnemies(dt) {
         if (gd < e.r) { g.dead = true; e.ate += g.v; continue; }
         g.x += gx / gd * 260 * dt; g.y += gy / gd * 260 * dt;
       }
+      for (const p of G.pets) {
+        const gx = e.x - p.x, gy = e.y - p.y, gd = Math.hypot(gx, gy) || 1;
+        if (gd > 220) continue;
+        if (gd < e.r + p.r) { p.hp = 0; p.lastBy = e; continue; }
+        p.x += gx / gd * 200 * dt; p.y += gy / gd * 200 * dt;
+      }
     } else {
       let vx = dx / d, vy = dy / d;
       if (e.type === 'glutton') {
@@ -9242,11 +9354,13 @@ function updateEnemies(dt) {
         }
       }
     }
-    // keep the crowd from stacking into one blob
+    // keep the crowd from stacking into one blob; 小号 of a size pressed together may run into one
     if (!e.boss) {
+      const slime = G.time > 90 && e.type === 'sock' && !e.elite && (e.mergeN || 0) < MERGE_MAX && !(e.paradeT > 0), mrate = dt * Math.min(1.2, 0.2 + G.time / 600);
       forNear(e.x, e.y, e.r + 30, o => {
-        if (o === e || o.banned > 0) return;
+        if (o === e || o.banned > 0 || o.dead) return;
         const ox = e.x - o.x, oy = e.y - o.y, rr = e.r + o.r, d2 = ox * ox + oy * oy;
+        if (slime && d2 < rr * rr * 0.72 && o.type === 'sock' && !o.elite && !(o.paradeT > 0) && (o.mergeN || 0) === (e.mergeN || 0) && Math.random() < mrate) { mergeSlimes(e, o); return; }
         if (d2 < rr * rr && d2 > 0.01) {
           const l = Math.sqrt(d2), push = (rr - l) * (o.boss || o.heavy ? 0.5 : 0.3);
           e.x += ox / l * push; e.y += oy / l * push;
@@ -9632,6 +9746,7 @@ function update(dt) {
   updateWeapons(dt);
   updateShots(dt);
   updateEnemies(dt);
+  updatePets(dt);
   updateBullets(dt);
   updateTrees(dt);
   updateWeather(dt);
@@ -11076,7 +11191,16 @@ function drawEnemies() {
   }
   for (const e of G.enemies) {
     if (e.dead || !inView(e.x, e.y, e.r * 2 + 20)) continue;
-    if (e.boss) { drawBoss(e); continue; }
+    if (e.boss) {
+      if (e.rage > 0) {
+        const k = Math.min(1, e.rage / 8);
+        ctx.globalCompositeOperation = 'lighter';
+        ctx.fillStyle = rgrad(ctx, e.x, e.y, e.r * 2.2, [`rgba(255,60,40,${0.25 + 0.35 * k})`, 'rgba(255,40,30,0)']);
+        disc(ctx, e.x, e.y, e.r * 2.2 * (1 + Math.sin(e.anim * 6) * 0.05)); ctx.fill();
+        ctx.globalCompositeOperation = 'source-over';
+      }
+      drawBoss(e); continue;
+    }
     const banned = e.banned > 0;
     const frame = e.type === 'crawler' ? ((e.anim * 10) | 0) % 2 : e.type === 'jail' ? ((e.anim * 7) | 0) % 2 : e.type === 'heavy' || e.type === 'reg' || e.type === 'carpool' ? ((e.anim * 3) | 0) % 2 : 0;
     // each mob blinks on its own rhythm; banned ones keep their eyes shut
@@ -11087,6 +11211,11 @@ function drawEnemies() {
     const still = banned || e.stun > 0 || e.frozenT > 0 || e.paradeT > 0;
     const hop = still ? 0 : Math.sin(e.anim * (e.heavy ? 6 : 10) + e.id);
     const sy = 1 + hop * (e.heavy ? 0.03 : 0.06), sx = 1 - hop * (e.heavy ? 0.025 : 0.05);
+    if (e.rage > 0 && !banned) {
+      const k = Math.min(1, e.rage / 6);
+      ctx.fillStyle = `rgba(255,60,40,${(0.12 + 0.18 * k) * (0.8 + Math.sin(e.anim * 8) * 0.2)})`;
+      ctx.beginPath(); ctx.ellipse(e.x, e.y + e.r * 0.85, e.r * (1.3 + 0.3 * k), e.r * (0.5 + 0.1 * k), 0, 0, TAU); ctx.fill();
+    }
     if (e.elite || e.type === 'reg') {
       ctx.strokeStyle = `rgba(240,180,60,${0.45 + Math.sin(e.anim * 5) * 0.2})`; ctx.lineWidth = 2.5;
       ctx.beginPath(); ctx.ellipse(e.x, e.y + e.r * 0.92, e.r * 1.15, e.r * 0.42, 0, 0, TAU); ctx.stroke();
@@ -12016,6 +12145,7 @@ function render() {
     drawPickups();
     drawTrees();
     drawEnemies();
+    drawPets();
     drawUltWorld();
     drawAttn();
     drawAgents(true); drawHoles(true); drawMinke(true);
@@ -12098,6 +12228,7 @@ function toast(title, sub, kind, seal) {
   el.classList.toggle('dark', k === 'dark');
   el.classList.toggle('gold', k === 'gold');
   el.classList.toggle('wx', k === 'wx');
+  el.classList.toggle('pet', k === 'pet');
   replay(el);
   clearTimeout(toastTimer);
   toastTimer = setTimeout(() => { el.hidden = true; }, 2300);
@@ -12570,7 +12701,7 @@ if (DEBUG) {
   window.__fk = {
     get G() { return G; }, get P() { return P; }, M3, bot, spawn: spawnEnemy, char: selectChar,
     talent(id) { const t = TALENT[id]; P.talents[id] = (P.talents[id] || 0) + 1; if (t.apply) t.apply(P); }, start: startRun, update, render,
-    treeAt, fellTrees, WEATHER,
+    treeAt, fellTrees, WEATHER, makePet,
     // simulate without rendering; modals are resolved by taking the first card
     sim(sec, dt = 1 / 30) {
       const steps = Math.round(sec / dt);
