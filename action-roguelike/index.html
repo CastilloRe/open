@@ -693,17 +693,19 @@ const WEAPONS = {
       { cd: 1.6, n: 8, dmg: 46, r: 72 },
     ],
   },
-  // AK-47: rifles that float around her, one more each level up to five; each aims at its own enemy and fires single shots
+  // AK-47: one rifle in her hand, single aimed shots; each level hits harder and earns a better finish, like a rank:
+  // 普通, 白银, 黄金, 铂金, 钻石, and 星耀 once evolved
   ak47: {
-    name: 'AK-47', g: '枪', desc: '悬浮在身边的步枪，每把各自瞄准一个敌人单发点射；每升一级多一把，最多 5 把。',
-    evo: { need: 'hunt', name: 'AK-47 · 枪阵', desc: '五把枪镀上金，射得更快、更狠，子弹能穿透更多敌人。' },
+    name: 'AK-47', g: '枪', skins: ['普通', '白银', '黄金', '铂金', '钻石', '星耀'],
+    desc: '握在手里的步枪，向最近的敌人单发点射。每升一级伤害更高，外观也跟着升级：普通、白银、黄金、铂金、钻石。',
+    evo: { need: 'hunt', name: 'AK-47 · 星耀', desc: '星耀外观：子弹拖着星光，伤害再提升，还能穿透两个敌人。' },
     lv: [
-      { n: 1, cd: 0.7, dmg: 22, pierce: 0 },
-      { n: 2, cd: 0.7, dmg: 22, pierce: 0 },
-      { n: 3, cd: 0.65, dmg: 24, pierce: 1 },
-      { n: 4, cd: 0.6, dmg: 26, pierce: 1 },
-      { n: 5, cd: 0.55, dmg: 28, pierce: 1 },
-      { n: 5, cd: 0.4, dmg: 36, pierce: 3 },
+      { cd: 0.55, dmg: 30 },
+      { cd: 0.55, dmg: 42 },
+      { cd: 0.55, dmg: 56 },
+      { cd: 0.55, dmg: 72 },
+      { cd: 0.55, dmg: 92 },
+      { cd: 0.5, dmg: 125, pierce: 2 },
     ],
   },
   // legendary: only the golden slime gives it, it takes no weapon slot, and each further catch amends it
@@ -1975,6 +1977,16 @@ function enemySprite(e, frame, kind, blink) {
 
 // --- everything else ---
 const GEM_COL = ['#7fe0c8', '#6aa8ff', '#c38cff', '#ffcf5a'];
+// AK-47's finishes, one per level: wood and metal colours (highlight, body, shadow), the tracer colour, and for the
+// higher ranks a glow and twinkling
+const AK_SKINS = [
+  { wood: ['#d8925a', '#a85e2c', '#6e3818'], metal: ['#7a7c8a', '#44464f', '#24252c'], tracer: '255,170,70' },
+  { wood: ['#ffffff', '#d4d8e2', '#8e94a6'], metal: ['#f4f6fb', '#aab2c2', '#5e6678'], tracer: '214,226,255' },
+  { wood: ['#fff2b8', '#e8b030', '#8e5c10'], metal: ['#fff8d8', '#f2c444', '#a06c10'], tracer: '255,212,90' },
+  { wood: ['#f2fdff', '#a6e0ea', '#4e8e9c'], metal: ['#ffffff', '#d2ecf2', '#7ea6b0'], tracer: '150,240,255', glow: '#9af0ff' },
+  { wood: ['#e6f4ff', '#82c0ff', '#2e5ec0'], metal: ['#ffffff', '#b8dcff', '#4e80d8'], tracer: '130,196,255', glow: '#7ab8ff', twinkle: '#ffffff' },
+  { wood: ['#c4b0ff', '#5e40c0', '#22125a'], metal: ['#eee4ff', '#9070e8', '#3a2484'], tracer: '255,224,130', glow: '#b48cff', twinkle: '#ffe27a' },
+];
 const SPR = {
   gem: t => sprite('gem' + t, 30 + t * 6, 30 + t * 6, x => {
     const s = 5 + t * 1.6;
@@ -2056,10 +2068,10 @@ const SPR = {
     x.fill(); x.stroke();
     x.fillStyle = '#ff6a4a'; disc(x, 0, 1.5, 1.8); x.fill();
   }),
-  // AK-47, side on: wooden stock, grip and handguard, a dark receiver (gold once evolved), a curved magazine, a gas
-  // tube over the barrel, and an orange flower charm tied to the stock
-  ak: gold => sprite(gold ? 'akGold' : 'ak', 76, 42, x => {
-    const wood = ['#d8925a', '#a85e2c', '#6e3818'], metal = gold ? ['#fff4b0', '#e0a828', '#8a5a10'] : ['#7a7c8a', '#44464f', '#24252c'];
+  // AK-47, side on: stock, grip and handguard, the receiver, a curved magazine, a gas tube over the barrel, and an
+  // orange flower charm tied to the stock, in each finish's colours; 钻石 adds facets and 星耀 little gold stars
+  ak: sk => sprite('ak' + sk, 76, 42, x => {
+    const { wood, metal } = AK_SKINS[sk];
     const part = (path, [hi, mid, lo]) => { path(); x.fillStyle = vgrad(x, -8, 10, hi, lo); x.fill(); x.fillStyle = mid; x.globalAlpha = 0.45; x.fill(); x.globalAlpha = 1; ink(x, 1.3); x.stroke(); };
     part(() => { x.beginPath(); x.moveTo(-14, -4); x.lineTo(-32, -2); x.lineTo(-34, 6); x.lineTo(-14, 3); x.closePath(); }, wood);
     part(() => { x.beginPath(); x.moveTo(-9, 2); x.lineTo(-5, 2); x.lineTo(-8, 12); x.lineTo(-13, 11); x.closePath(); }, wood);
@@ -2070,11 +2082,29 @@ const SPR = {
     part(() => rrPath(x, 6, -6, 13, 8, 2.5), wood);
     part(() => { x.beginPath(); x.moveTo(35, -6.5); x.lineTo(35, -11); x.lineTo(37, -11); x.lineTo(37, -5); x.closePath(); }, metal);
     part(() => { x.beginPath(); x.moveTo(2, -6); x.lineTo(3, -9); x.lineTo(6, -9); x.lineTo(6, -6); x.closePath(); }, metal);
-    x.fillStyle = 'rgba(255,255,255,0.35)'; x.fillRect(-13, -5, 18, 1.4); x.fillRect(7, -5, 10, 1.2);
+    x.fillStyle = 'rgba(255,255,255,0.4)'; x.fillRect(-13, -5, 18, 1.4); x.fillRect(7, -5, 10, 1.2);
+    if (sk === 4) {
+      // diamond facets across the stock, receiver and handguard
+      x.strokeStyle = 'rgba(255,255,255,0.75)'; x.lineWidth = 0.8; x.beginPath();
+      for (const [x0, y0, x1, y1] of [[-31, -1, -25, 4], [-27, -2, -19, 3], [-21, -3, -16, 2], [-13, -5, -7, 2], [-7, -5, -1, 2], [8, -5, 12, 1], [13, -5, 17, 1]]) { x.moveTo(x0, y0); x.lineTo(x1, y1); }
+      x.stroke();
+      x.fillStyle = '#ffffff'; sparkle(x, -4, -2, 2.4); sparkle(x, 12, -2, 1.8);
+    }
+    if (sk === 5) {
+      // 星耀: little gold stars on the stock and handguard
+      x.fillStyle = '#ffe27a';
+      for (const [sx, sy, r] of [[-27, 1, 2.6], [-20, 0, 1.8], [-10, -1.5, 2], [12, -2, 2.2]]) sparkle(x, sx, sy, r);
+    }
     // the charm: a cord from the stock and a little orange flower
     x.strokeStyle = '#ffd6a0'; x.lineWidth = 1; x.beginPath(); x.moveTo(-26, 3); x.quadraticCurveTo(-27, 8, -25, 11); x.stroke();
     x.fillStyle = '#ff9a4a'; for (let i = 0; i < 5; i++) { const a = i / 5 * TAU; disc(x, -25 + Math.cos(a) * 2.2, 12.5 + Math.sin(a) * 2.2, 1.7); x.fill(); }
     x.fillStyle = '#fff1c9'; disc(x, -25, 12.5, 1.2); x.fill();
+  }),
+  akGlow: sk => sprite('akGlow' + sk, 110, 60, x => {
+    x.scale(1, 0.45);
+    const g = x.createRadialGradient(0, 0, 0, 0, 0, 50);
+    g.addColorStop(0, hexA(AK_SKINS[sk].glow, 0.55)); g.addColorStop(1, hexA(AK_SKINS[sk].glow, 0));
+    x.fillStyle = g; disc(x, 0, 0, 50); x.fill();
   }),
   muzzle: () => sprite('muzzle', 34, 28, x => {
     glow(x, 13, '#ffb050', 0.75);
@@ -2205,7 +2235,7 @@ function addWeapon(id) {
   G.slotsDirty = true;
 }
 const wStats = w => WEAPONS[w.id].lv[w.level - 1];
-const wName = w => { const d = WEAPONS[w.id]; return d.legend ? d.names[w.level - 1] : w.level === 6 ? d.evo.name : d.name; };
+const wName = w => { const d = WEAPONS[w.id]; return d.legend ? d.names[w.level - 1] : w.level === 6 ? d.evo.name : d.skins && w.level > 1 ? `${d.name} · ${d.skins[w.level - 1]}` : d.name; };
 const isLegend = w => !!WEAPONS[w.id].legend;
 const thinkMax = () => 5 + 2 * (P.talents.slowthink || 0);
 const thinkBonus = () => P.think * 0.08;
@@ -2907,30 +2937,25 @@ function updateWeapons(dt) {
         break;
       }
       case 'ak47': {
-        // each rifle takes its own target among the nearest enemies and fires single aimed shots on its own beat,
-        // one more bullet per 多重施法
-        const list = nearestList(P.x, P.y, 620, s.n);
-        if (!w.guns) { w.guns = []; w.fan = P.face > 0 ? 0 : Math.PI; }
-        // the fan turns toward the nearest enemy
-        if (list.length) { const d = Math.atan2(list[0].y - P.y, list[0].x - P.x) - w.fan; w.fan += Math.atan2(Math.sin(d), Math.cos(d)) * Math.min(1, dt * 6); }
-        for (let i = 0; i < s.n; i++) {
-          const gun = w.guns[i] || (w.guns[i] = { t: 0.2 + i * 0.13, aim: P.face > 0 ? 0 : Math.PI, kick: 0, flash: 0 });
-          gun.kick = Math.max(0, gun.kick - dt * 10); gun.flash = Math.max(0, gun.flash - dt);
-          const tg = list.length ? list[i % list.length] : null;
-          if (tg) { const p = gunPose(w, i); gun.aim = Math.atan2(tg.y - p.y, tg.x - p.x); }
-          gun.t -= dt;
-          if (gun.t > 0 || !tg) { if (gun.t < 0) gun.t = 0; continue; }
-          gun.t = cdOf(s.cd) * rand(0.9, 1.1);
-          const m = castMult(w), mz = gunMuzzle(w, i), k = 1 + P.amount;
-          for (let j = 0; j < k; j++) {
-            const a = gun.aim + (j - (k - 1) / 2) * 0.08 + rand(-0.02, 0.02), sp = 1000 * P.pspeed;
-            shot({ kind: 'bullet', x: mz.x, y: mz.y, vx: Math.cos(a) * sp, vy: Math.sin(a) * sp, r: 4.5, dmg: s.dmg * m, pierce: s.pierce + P.pierce, life: 0.65 * P.dur, src: 'ak47', kb: 40 });
-          }
-          // a brass casing flicks out of the side
-          if (G.parts.length < 520) G.parts.push({ x: mz.bx, y: mz.by, vx: -Math.cos(gun.aim) * 60 + rand(-30, 30), vy: -110 + rand(-30, 20), life: 0.35, max: 0.35, size: 2.2, color: '#e8b84a', add: false });
-          gun.kick = 1; gun.flash = 0.06;
-          sfx.gun();
+        // one rifle in her hand: single aimed shots at the nearest enemy, one more bullet per 多重施法
+        w.kick = Math.max(0, (w.kick || 0) - dt * 10); w.flash = Math.max(0, (w.flash || 0) - dt);
+        const tg = nearest(P.x, P.y, 640);
+        if (tg) w.aim = Math.atan2(tg.y - (P.y - 10 * P.size), tg.x - P.x);
+        else if (w.aim == null) w.aim = P.face > 0 ? 0 : Math.PI;
+        w.t -= dt;
+        if (w.t > 0 || !tg) { if (w.t < 0) w.t = 0; break; }
+        w.t = cdOf(s.cd);
+        const m = castMult(w), mz = gunMuzzle(w), k = 1 + P.amount, skin = AK_SKINS[w.level - 1];
+        for (let j = 0; j < k; j++) {
+          const a = w.aim + (j - (k - 1) / 2) * 0.08, sp = 1050 * P.pspeed;
+          shot({ kind: 'bullet', x: mz.x, y: mz.y, vx: Math.cos(a) * sp, vy: Math.sin(a) * sp, r: 4.5, dmg: s.dmg * m, pierce: (s.pierce || 0) + P.pierce, life: 0.65 * P.dur, src: 'ak47', kb: 50, tint: skin.tracer, star: w.level === 6 });
         }
+        // a brass casing flicks out of the side
+        if (G.parts.length < 520) G.parts.push({ x: mz.bx, y: mz.by, vx: -Math.cos(w.aim) * 60 + rand(-30, 30), vy: -110 + rand(-30, 20), life: 0.35, max: 0.35, size: 2.2, color: '#e8b84a', add: false });
+        w.kick = 1; w.flash = 0.07;
+        sfx.gun();
+        P.aimX = tg.x - P.x; P.aimY = tg.y - P.y;
+        if (!P.moving && !P.dash) { P.face = tg.x >= P.x ? 1 : -1; playAnim(['atk1', 'atk2', 'atk3'], 0.32, 0); }
         break;
       }
       case 'haiku': {
@@ -4308,43 +4333,49 @@ function drawPlayerOverlay(t, footY) {
 
 // 黑白洞: a black hole is a dark core in a swirling ring of light that's being pulled in; a white hole is
 // a bright core throwing rays outward
-// where a rifle floats: the rifles stand in two rows beside her, on the side she's shooting toward, tilted a little
-// up or down with the aim but never in front of or above her, so none fires across her or hides her: a front row
-// (three at Lv 5) and, closer to her and set between them, a back row drawn behind her. They change sides only once
-// the target is clearly on the other side
-function gunPose(w, i) {
-  const gun = w.guns[i], n = wStats(w).n, k = P.size * (n >= 4 ? 0.85 : 1);
-  const front = Math.ceil(n / 2), row = i < front ? 0 : 1, m = row ? n - front : front, j = row ? i - front : i;
-  const lat = ((j - (m - 1) / 2) * 24 + (row && m === front ? 12 : 0)) * P.size, fwd = (row ? 26 : 48) * P.size;
-  if (!w.side || Math.cos(w.fan) * w.side < -0.25) w.side = Math.cos(w.fan) >= 0 ? 1 : -1;
-  const fy = clamp(Math.sin(w.fan), -0.55, 0.55), fx = w.side * Math.sqrt(1 - fy * fy);
-  let x = P.x + fx * fwd - fy * lat * w.side, y = P.y - 24 * P.size + fy * fwd * 0.62 + Math.abs(fx) * lat;
-  x -= Math.cos(gun.aim) * gun.kick * 4;
-  y += Math.sin(G.time * 3 + i) * 2 - Math.sin(gun.aim) * gun.kick * 4;
-  return { x, y, a: gun.aim, k, behind: row === 1 || fy < -0.3 };
+// the rifle in her hand: held at hip height on the side she's aiming, kicking back with each shot; aimed up it goes
+// behind her. The muzzle and the ejection port follow its aim and recoil
+function gunPose(w) {
+  const c = Math.cos(w.aim), s = Math.sin(w.aim), k = P.size * 0.8;
+  const x = P.x + c * 12 * P.size - c * w.kick * 4, y = P.y - 10 * P.size + s * 6 * P.size - s * w.kick * 4;
+  return { x, y, a: w.aim, k, behind: s < -0.45 };
 }
-function gunMuzzle(w, i) {
-  const p = gunPose(w, i), c = Math.cos(p.a), s = Math.sin(p.a);
-  return { x: p.x + c * 38 * p.k, y: p.y + s * 38 * p.k, bx: p.x + c * 2 * p.k, by: p.y + s * 2 * p.k };
+function gunMuzzle(w) {
+  const p = gunPose(w), c = Math.cos(p.a), s = Math.sin(p.a);
+  return { x: p.x + c * 44 * p.k, y: p.y + s * 44 * p.k - 3 * p.k, bx: p.x + c * 2 * p.k, by: p.y + s * 2 * p.k };
 }
 function drawGuns(behind) {
   const w = P.weapons.find(v => v.id === 'ak47');
-  if (!w || !w.guns) return;
-  const n = Math.min(wStats(w).n, w.guns.length), spr = SPR.ak(w.level === 6);
-  for (let i = 0; i < n; i++) {
-    const p = gunPose(w, i), gun = w.guns[i];
-    if (p.behind !== behind) continue;
-    ctx.save(); ctx.translate(p.x, p.y); ctx.rotate(p.a);
-    if (Math.cos(p.a) < 0) ctx.scale(1, -1);
-    ctx.scale(p.k, p.k);
-    blit(spr, 0, 0);
-    if (gun.flash > 0) {
-      ctx.globalCompositeOperation = 'lighter';
-      blit(SPR.muzzle(), 44, -3);
-      ctx.globalCompositeOperation = 'source-over';
-    }
-    ctx.restore();
+  if (!w || w.aim == null) return;
+  const p = gunPose(w), sk = w.level - 1, skin = AK_SKINS[sk], t = G.time;
+  if (p.behind !== behind) return;
+  ctx.save(); ctx.translate(p.x, p.y); ctx.rotate(p.a);
+  if (Math.cos(p.a) < 0) ctx.scale(1, -1);
+  ctx.scale(p.k, p.k);
+  // 铂金 and up glow; 钻石 and 星耀 twinkle
+  if (skin.glow) {
+    ctx.globalCompositeOperation = 'lighter';
+    ctx.globalAlpha = 0.75 + Math.sin(t * 3) * 0.2;
+    blit(SPR.akGlow(sk), 4, 0);
+    ctx.globalAlpha = 1; ctx.globalCompositeOperation = 'source-over';
   }
+  blit(SPR.ak(sk), 0, 0);
+  if (skin.twinkle) {
+    ctx.fillStyle = skin.twinkle;
+    for (let i = 0; i < 4; i++) {
+      const a = Math.sin(t * 4 + i * 1.7);
+      if (a < 0.3) continue;
+      ctx.globalAlpha = a;
+      sparkle(ctx, -24 + i * 18, (i % 2 ? -9 : 7), 2.5 + a * 2);
+    }
+    ctx.globalAlpha = 1;
+  }
+  if (w.flash > 0) {
+    ctx.globalCompositeOperation = 'lighter';
+    blit(SPR.muzzle(), 44, -3);
+    ctx.globalCompositeOperation = 'source-over';
+  }
+  ctx.restore();
 }
 function drawHoles(behind) {
   const w = P.weapons.find(v => v.id === 'hole');
@@ -4414,8 +4445,9 @@ function drawShots() {
       const sp = Math.hypot(b.vx, b.vy) || 1, tx = b.vx / sp * 18, ty = b.vy / sp * 18;
       ctx.lineCap = 'round';
       ctx.beginPath(); ctx.moveTo(b.x - tx, b.y - ty); ctx.lineTo(b.x, b.y);
-      ctx.strokeStyle = 'rgba(255,170,70,0.5)'; ctx.lineWidth = 4.5; ctx.stroke();
+      ctx.strokeStyle = `rgba(${b.tint || '255,170,70'},0.55)`; ctx.lineWidth = 4.5; ctx.stroke();
       ctx.strokeStyle = 'rgba(255,248,224,0.95)'; ctx.lineWidth = 1.6; ctx.stroke();
+      if (b.star) { ctx.fillStyle = '#fff3c4'; sparkle(ctx, b.x, b.y, 5 + Math.sin(b.rot * 3) * 1.5); }
       continue;
     }
     if (b.kind === 'orb') {
@@ -4881,7 +4913,8 @@ function weaponCard(o, i) {
     title = d.name; tag = '新武器'; desc = d.desc;
     meta = `<span>进化：Lv 5 + 「${TALENT[d.evo.need].name}」→ ${d.evo.name}</span>`;
   } else {
-    title = `${d.name} Lv ${w.level + 1}`; tag = '升级'; desc = statDiff(d.lv[w.level - 1], d.lv[w.level]);
+    title = d.skins ? `${d.name} · ${d.skins[w.level]}` : `${d.name} Lv ${w.level + 1}`; tag = '升级'; desc = statDiff(d.lv[w.level - 1], d.lv[w.level]);
+    if (d.skins) desc += `，换上「${d.skins[w.level]}」外观`;
     meta = w.level + 1 === 5 ? `<span>满级后带上「${TALENT[d.evo.need].name}」再开宝箱即可进化</span>` : '';
   }
   return `<button class="card ${o.kind === 'evo' ? 'evo' : o.kind === 'new' ? 'r1' : ''}" type="button" data-i="${i}">
@@ -4913,7 +4946,10 @@ function takeWeaponPick(o) {
       w.level = 6;
       banner(`进化 · ${WEAPONS[o.id].evo.name}`, WEAPONS[o.id].evo.desc);
       ring(P.x, P.y, 10, 120, 0.6, '#ffcf5a', 6);
-    } else w.level++;
+    } else {
+      w.level++;
+      if (WEAPONS[o.id].skins) toast(`${wName(w)}`, `换上了「${WEAPONS[o.id].skins[w.level - 1]}」外观`, w.level >= 3 ? 'gold' : undefined);
+    }
     w.ts = [];
   }
   G.slotsDirty = true;
