@@ -286,6 +286,9 @@ h2 { margin: 0; font-family: var(--display); font-weight: 400; font-size: clamp(
 .who.on .face { background: #fbdcbc; border-color: var(--amber); box-shadow: 0 0 0 3px rgba(233, 138, 60, 0.25); }
 .who.locked { opacity: 0.5; }
 .who.map { width: auto; min-width: 52px; margin-left: 6px; white-space: nowrap; }
+.who.mode { margin-left: 0; }
+.who.mode .face { font-family: var(--display); font-size: 1.05rem; background: #f6e7d4; border-color: rgba(233, 138, 60, 0.45); color: #8a4a1c; }
+.roster { flex-wrap: wrap; row-gap: 6px; }
 .who.map .face { background: #e6ecf6; border-color: rgba(63, 90, 140, 0.35); color: #3a4d72; }
 button.who { padding: 0; border: 0; background: none; font: inherit; cursor: pointer; }
 button.who:focus-visible .face { outline: 2px solid var(--amber); outline-offset: 2px; }
@@ -453,7 +456,7 @@ button.who:focus-visible .face { outline: 2px solid var(--amber); outline-offset
             <p>站着不动时思考，每层伤害 +8%（最多 5 层），满层暴击率 +15%。</p></div>
           </div>
         </div>
-        <ul class="stats"><li>生命<b>100</b></li><li>移速<b>200</b></li><li>拾取范围<b>90</b></li><li>武器栏<b>4</b></li></ul>
+        <ul class="stats"><li>生命<b>115</b></li><li>移速<b>200</b></li><li>拾取范围<b>95</b></li><li>武器栏<b>4</b></li></ul>
         </div>
         <div class="hero-body" data-char="whale" hidden>
         <div class="hero-name"><h2>大肥鱼</h2><span class="en">Blue Whale</span><span class="role">Token 鲸</span></div>
@@ -472,7 +475,7 @@ button.who:focus-visible .face { outline: 2px solid var(--amber); outline-offset
           <div class="kit-item">
             <span class="glyph sea">歌</span>
             <div><h3>深海鲸歌<small>终极技能 · E</small></h3>
-            <p>击杀攒满后，脚下卷起水之漩涡，一头光之巨鲸从漩涡里升起、绕着她游一圈，化作鲸鱼形的巨浪扫过全屏。会花光身上全部 Token：Token 越多越疼，最多两倍。</p></div>
+            <p>击杀攒满后，脚下卷起水之漩涡，一头光之巨鲸从漩涡里升起、绕着她游一圈，化作鲸鱼形的巨浪扫过全屏。会花光身上全部 Token：Token 越多越疼，最多 1.6 倍。</p></div>
           </div>
           <div class="kit-item">
             <span class="glyph sea">泡</span>
@@ -482,7 +485,7 @@ button.who:focus-visible .face { outline: 2px solid var(--amber); outline-offset
           <div class="kit-item">
             <span class="glyph tok">T</span>
             <div><h3>Token 来<small>被动</small></h3>
-            <p>捡经验、吞敌人、吃饭、摸鱼都攒 Token，平时一点也不会掉，每 10 Token 伤害 +3%（满 100 是 +30%）。</p></div>
+            <p>捡经验、吞敌人、吃饭、摸鱼都攒 Token，平时一点也不会掉，每 10 Token 伤害 +2.2%（满 100 是 +22%）。</p></div>
           </div>
           <div class="kit-item">
             <span class="glyph tok">思</span>
@@ -500,7 +503,7 @@ button.who:focus-visible .face { outline: 2px solid var(--amber); outline-offset
             <p>生命跌破 30% 时收起玩笑，认真 8 秒：攻速 +25%、伤害 +20%。受到致命伤时若有 50 Token，花光它们嘴硬撑住（各 60 秒一次）。</p></div>
           </div>
         </div>
-        <ul class="stats"><li>生命<b>130</b></li><li>移速<b>185</b></li><li>拾取范围<b>110</b></li><li>武器栏<b>4</b></li></ul>
+        <ul class="stats"><li>生命<b>120</b></li><li>移速<b>185</b></li><li>拾取范围<b>110</b></li><li>武器栏<b>4</b></li></ul>
         </div>
         <div class="hero-go">
           <div class="roster" aria-label="角色">
@@ -508,6 +511,7 @@ button.who:focus-visible .face { outline: 2px solid var(--amber); outline-offset
             <button class="who whale" type="button" data-char="whale" aria-pressed="false"><span class="face"><img src="art/whale.webp" alt=""></span>大肥鱼</button>
             <div class="who locked"><span class="face">？</span>制作中</div>
             <button id="btnMap" class="who map" type="button" aria-label="地图：随机"><span class="face" id="mapGlyph">随</span><span id="mapName">随机地图</span></button>
+            <button id="btnMode" class="who map mode" type="button" aria-label="时长：10 分钟"><span class="face" id="modeGlyph">10</span><span id="modeName">10 分钟</span></button>
           </div>
           <button id="btnStart" class="btn primary" type="button">出发<kbd>Enter</kbd></button>
         </div>
@@ -618,7 +622,18 @@ const UI_FONT = 'system-ui, -apple-system, "PingFang SC", "Microsoft YaHei", san
 //  Game data
 // ======================================================================
 const BOSS_AT = 600;
-const BOSS_HP = 28000;
+const BOSS_HP = 34000;
+const LV_CAP = 100;
+// how long a night lasts: DAN at 10:00 or at 20:00, and the night is won when he's banned; or no end at all, with DAN
+// back every ten minutes, stronger each time, for as long as she lasts
+const MODES = {
+  m10: { name: '10 分钟', g: '10', boss: 600 },
+  m20: { name: '20 分钟', g: '20', boss: 1200 },
+  endless: { name: '无尽', g: '∞', boss: 600 },
+};
+let modeChoice = store.get('mode', 'm10');
+if (!MODES[modeChoice]) modeChoice = 'm10';
+const bestKey = m => m === 'm10' ? 'best' : 'best-' + m;
 const MAX_SLOTS = 4;
 const MAX_ENEMIES = coarse ? 240 : 320;
 const SPR_H = 76; // the player sprite's height in world units
@@ -636,12 +651,12 @@ const WEAPONS = {
     name: '花焰弹', g: '焰', desc: '凝聚花焰，向最近的敌人发射魔法花弹，命中时绽开成一朵小花焰。',
     evo: { need: 'epiph', name: '千瓣花焰', desc: '一次四发，绽开的花焰更大，还会点燃敌人。' },
     lv: [
+      { cd: 0.85, n: 1, dmg: 14, bloom: 40 },
       { cd: 0.85, n: 1, dmg: 18, bloom: 40 },
-      { cd: 0.85, n: 1, dmg: 24, bloom: 40 },
-      { cd: 0.8, n: 2, dmg: 24, bloom: 44 },
-      { cd: 0.8, n: 2, dmg: 28, bloom: 50 },
-      { cd: 0.7, n: 3, dmg: 32, bloom: 54 },
-      { cd: 0.65, n: 4, dmg: 38, bloom: 70 },
+      { cd: 0.8, n: 2, dmg: 18, bloom: 44 },
+      { cd: 0.8, n: 2, dmg: 21, bloom: 50 },
+      { cd: 0.7, n: 3, dmg: 24, bloom: 54 },
+      { cd: 0.65, n: 4, dmg: 28, bloom: 70 },
     ],
   },
   // 大肥鱼's own attack, open to 克劳德 too
@@ -649,12 +664,12 @@ const WEAPONS = {
     name: 'Token 泡泡', g: '泡', desc: '朝最近的敌人吐出一串泡泡，碰到敌人就啪地炸开，溅湿一小片。',
     evo: { need: 'pretrain', name: '深海泡泡', desc: '泡泡更大更多，炸开时再溅出三个小泡泡。' },
     lv: [
-      { cd: 0.9, n: 2, dmg: 13, pop: 34 },
-      { cd: 0.9, n: 2, dmg: 17, pop: 36 },
-      { cd: 0.85, n: 3, dmg: 18, pop: 40 },
-      { cd: 0.8, n: 3, dmg: 22, pop: 44 },
-      { cd: 0.75, n: 4, dmg: 25, pop: 48 },
-      { cd: 0.7, n: 6, dmg: 30, pop: 58 },
+      { cd: 0.9, n: 2, dmg: 10, pop: 34 },
+      { cd: 0.9, n: 2, dmg: 13, pop: 36 },
+      { cd: 0.85, n: 3, dmg: 14, pop: 40 },
+      { cd: 0.8, n: 3, dmg: 16, pop: 44 },
+      { cd: 0.75, n: 4, dmg: 19, pop: 48 },
+      { cd: 0.7, n: 6, dmg: 22, pop: 58 },
     ],
   },
   // the little whale off 大肥鱼's design sheet, as a weapon anyone can find
@@ -662,132 +677,132 @@ const WEAPONS = {
     name: '召唤小鲸鱼', g: '鲸', desc: '召唤绕着她游的小鲸鱼，一看到敌人就一头撞过去，撞穿一路的敌人再游回来。',
     evo: { need: 'const', name: '鲸浪冲击', desc: '六只小鲸鱼，冲撞时卷起一道鲸鱼形的浪，把沿途的敌人冲飞。' },
     lv: [
-      { n: 1, cd: 1.6, dmg: 22, range: 260 },
-      { n: 2, cd: 1.6, dmg: 22, range: 260 },
-      { n: 2, cd: 1.4, dmg: 30, range: 280 },
-      { n: 3, cd: 1.4, dmg: 34, range: 290 },
-      { n: 4, cd: 1.2, dmg: 40, range: 300 },
-      { n: 6, cd: 1.0, dmg: 48, range: 340 },
+      { n: 1, cd: 1.6, dmg: 16, range: 260 },
+      { n: 2, cd: 1.6, dmg: 16, range: 260 },
+      { n: 2, cd: 1.4, dmg: 22, range: 280 },
+      { n: 3, cd: 1.4, dmg: 26, range: 290 },
+      { n: 4, cd: 1.2, dmg: 30, range: 300 },
+      { n: 6, cd: 1.0, dmg: 36, range: 340 },
     ],
   },
   haiku: {
     name: '俳句', g: '俳', desc: '每轮连发几句短诗，射向最近的敌人。',
     evo: { need: 'stream', name: '连歌', desc: '句句相连：每轮 6 句，命中后分裂成两句。' },
     lv: [
+      { cd: 1.2, n: 3, dmg: 8, pierce: 0 },
       { cd: 1.2, n: 3, dmg: 10, pierce: 0 },
-      { cd: 1.2, n: 3, dmg: 13, pierce: 0 },
-      { cd: 1.05, n: 4, dmg: 13, pierce: 0 },
-      { cd: 1.05, n: 4, dmg: 16, pierce: 1 },
-      { cd: 0.9, n: 5, dmg: 19, pierce: 1 },
-      { cd: 0.75, n: 6, dmg: 22, pierce: 1 },
+      { cd: 1.05, n: 4, dmg: 10, pierce: 0 },
+      { cd: 1.05, n: 4, dmg: 12, pierce: 1 },
+      { cd: 0.9, n: 5, dmg: 14, pierce: 1 },
+      { cd: 0.75, n: 6, dmg: 16, pierce: 1 },
     ],
   },
   sonnet: {
     name: '十四行诗', g: '诗', desc: '向四周放出一圈十四片花瓣。',
     evo: { need: 'area', name: '莎翁全集', desc: '一次三圈花瓣，飞到尽头还会折返。' },
     lv: [
+      { cd: 3.2, n: 14, dmg: 8, pierce: 0, rings: 1 },
       { cd: 3.2, n: 14, dmg: 10, pierce: 0, rings: 1 },
-      { cd: 3.2, n: 14, dmg: 14, pierce: 0, rings: 1 },
-      { cd: 2.7, n: 14, dmg: 14, pierce: 0, rings: 1 },
-      { cd: 2.7, n: 14, dmg: 14, pierce: 0, rings: 2 },
-      { cd: 2.7, n: 14, dmg: 19, pierce: 1, rings: 2 },
-      { cd: 2.4, n: 14, dmg: 22, pierce: 2, rings: 3 },
+      { cd: 2.7, n: 14, dmg: 10, pierce: 0, rings: 1 },
+      { cd: 2.7, n: 14, dmg: 10, pierce: 0, rings: 2 },
+      { cd: 2.7, n: 14, dmg: 14, pierce: 1, rings: 2 },
+      { cd: 2.4, n: 14, dmg: 16, pierce: 2, rings: 3 },
     ],
   },
   opus: {
     name: '巨著', g: '著', desc: '缓慢推进的巨大法球，贯穿一切，最后爆炸并点燃敌人。',
     evo: { need: 'power', name: '杰作', desc: '两颗更大的法球，沿途留下燃烧的书页。' },
     lv: [
-      { cd: 4.2, n: 1, dmg: 20, size: 18, boom: 50, boomR: 80 },
-      { cd: 4.2, n: 1, dmg: 28, size: 18, boom: 70, boomR: 80 },
-      { cd: 4.2, n: 1, dmg: 28, size: 24, boom: 70, boomR: 100 },
-      { cd: 3.4, n: 1, dmg: 34, size: 24, boom: 85, boomR: 100 },
-      { cd: 3.4, n: 2, dmg: 38, size: 24, boom: 100, boomR: 105 },
-      { cd: 3.0, n: 2, dmg: 46, size: 30, boom: 130, boomR: 120 },
+      { cd: 4.2, n: 1, dmg: 15, size: 18, boom: 38, boomR: 80 },
+      { cd: 4.2, n: 1, dmg: 21, size: 18, boom: 52, boomR: 80 },
+      { cd: 4.2, n: 1, dmg: 21, size: 24, boom: 52, boomR: 100 },
+      { cd: 3.4, n: 1, dmg: 26, size: 24, boom: 64, boomR: 100 },
+      { cd: 3.4, n: 2, dmg: 28, size: 24, boom: 75, boomR: 105 },
+      { cd: 3.0, n: 2, dmg: 34, size: 30, boom: 98, boomR: 120 },
     ],
   },
   context: {
     name: '上下文窗口', g: '窗', desc: '身边展开一圈窗口，持续伤害并拖慢窗内的敌人。',
     evo: { need: 'rag', name: '百万上下文', desc: '窗口扩到 1M：范围巨大，窗内敌人受到的伤害 +20%，窗内的经验自动飞来。' },
     lv: [
-      { r: 78, dmg: 5, slow: 0.2, label: '32K' },
-      { r: 90, dmg: 6, slow: 0.2, label: '64K' },
-      { r: 100, dmg: 8, slow: 0.25, label: '128K' },
-      { r: 112, dmg: 9, slow: 0.3, label: '200K' },
-      { r: 126, dmg: 11, slow: 0.3, label: '500K' },
-      { r: 165, dmg: 14, slow: 0.35, label: '1M' },
+      { r: 78, dmg: 4, slow: 0.2, label: '32K' },
+      { r: 90, dmg: 4, slow: 0.2, label: '64K' },
+      { r: 100, dmg: 6, slow: 0.25, label: '128K' },
+      { r: 112, dmg: 7, slow: 0.3, label: '200K' },
+      { r: 126, dmg: 8, slow: 0.3, label: '500K' },
+      { r: 165, dmg: 10, slow: 0.35, label: '1M' },
     ],
   },
   chain: {
     name: '思维链', g: '链', desc: '一道思路击中最近的敌人，再一步步推到下一个。',
     evo: { need: 'spark', name: '扩展思考', desc: '推理 12 步，每一步都在落点小范围爆开。' },
     lv: [
-      { cd: 2.4, n: 1, dmg: 14, jumps: 3 },
-      { cd: 2.4, n: 1, dmg: 14, jumps: 4 },
-      { cd: 2.4, n: 1, dmg: 20, jumps: 4 },
-      { cd: 1.9, n: 1, dmg: 20, jumps: 6 },
-      { cd: 1.9, n: 2, dmg: 24, jumps: 6 },
-      { cd: 1.6, n: 2, dmg: 28, jumps: 12 },
+      { cd: 2.4, n: 1, dmg: 10, jumps: 3 },
+      { cd: 2.4, n: 1, dmg: 10, jumps: 4 },
+      { cd: 2.4, n: 1, dmg: 15, jumps: 4 },
+      { cd: 1.9, n: 1, dmg: 15, jumps: 6 },
+      { cd: 1.9, n: 2, dmg: 18, jumps: 6 },
+      { cd: 1.6, n: 2, dmg: 21, jumps: 12 },
     ],
   },
   agents: {
     name: '子代理', g: '代', desc: '召唤绕身飞行的小星芒，各自寻找目标射击。',
     evo: { need: 'conc', name: '多智能体编排', desc: '六个子代理，射速翻倍，子弹穿透。' },
     lv: [
-      { n: 1, cd: 1.1, dmg: 9, pierce: 0 },
-      { n: 2, cd: 1.1, dmg: 9, pierce: 0 },
-      { n: 2, cd: 1.1, dmg: 13, pierce: 0 },
-      { n: 3, cd: 0.95, dmg: 13, pierce: 0 },
-      { n: 4, cd: 0.95, dmg: 16, pierce: 0 },
-      { n: 6, cd: 0.55, dmg: 18, pierce: 2 },
+      { n: 1, cd: 1.1, dmg: 7, pierce: 0 },
+      { n: 2, cd: 1.1, dmg: 7, pierce: 0 },
+      { n: 2, cd: 1.1, dmg: 10, pierce: 0 },
+      { n: 3, cd: 0.95, dmg: 10, pierce: 0 },
+      { n: 4, cd: 0.95, dmg: 12, pierce: 0 },
+      { n: 6, cd: 0.55, dmg: 14, pierce: 2 },
     ],
   },
   field: {
     name: '花之法则', g: '法', desc: '在敌人最密集处展开花之法阵，持续伤害并拖慢阵内的敌人。',
     evo: { need: 'ratelimit', name: '花之圣域', desc: '同时展开两座更大的法阵，阵内的敌人几乎寸步难行。' },
     lv: [
-      { cd: 4.0, n: 1, dmg: 7, r: 70, slow: 0.35, dur: 2.6 },
-      { cd: 4.0, n: 1, dmg: 10, r: 70, slow: 0.35, dur: 2.6 },
-      { cd: 3.4, n: 1, dmg: 10, r: 82, slow: 0.4, dur: 2.6 },
-      { cd: 3.4, n: 1, dmg: 13, r: 92, slow: 0.4, dur: 3.0 },
-      { cd: 3.0, n: 2, dmg: 15, r: 92, slow: 0.45, dur: 3.0 },
-      { cd: 2.8, n: 2, dmg: 18, r: 125, slow: 0.65, dur: 3.4 },
+      { cd: 4.0, n: 1, dmg: 5, r: 70, slow: 0.35, dur: 2.6 },
+      { cd: 4.0, n: 1, dmg: 8, r: 70, slow: 0.35, dur: 2.6 },
+      { cd: 3.4, n: 1, dmg: 8, r: 82, slow: 0.4, dur: 2.6 },
+      { cd: 3.4, n: 1, dmg: 10, r: 92, slow: 0.4, dur: 3.0 },
+      { cd: 3.0, n: 2, dmg: 11, r: 92, slow: 0.45, dur: 3.0 },
+      { cd: 2.8, n: 2, dmg: 14, r: 125, slow: 0.65, dur: 3.4 },
     ],
   },
   hole: {
     name: '黑白洞', g: '洞', desc: '黑洞和白洞轮流绕着她转：黑洞把附近的敌人吸过去，白洞把它们推开，碰到的都会受伤。',
     evo: { need: 'multi', name: '奇点', desc: '六个，吸力和斥力更强，还会吞掉飞来的文字弹幕。' },
     lv: [
-      { n: 2, dmg: 20, r: 74, size: 13, spin: 3.0 },
-      { n: 2, dmg: 28, r: 74, size: 13, spin: 3.0 },
-      { n: 3, dmg: 28, r: 84, size: 14, spin: 3.2 },
-      { n: 3, dmg: 35, r: 92, size: 15, spin: 3.4 },
-      { n: 4, dmg: 42, r: 100, size: 16, spin: 3.6 },
-      { n: 6, dmg: 52, r: 118, size: 19, spin: 4.2 },
+      { n: 2, dmg: 15, r: 74, size: 13, spin: 3.0 },
+      { n: 2, dmg: 21, r: 74, size: 13, spin: 3.0 },
+      { n: 3, dmg: 21, r: 84, size: 14, spin: 3.2 },
+      { n: 3, dmg: 26, r: 92, size: 15, spin: 3.4 },
+      { n: 4, dmg: 32, r: 100, size: 16, spin: 3.6 },
+      { n: 6, dmg: 39, r: 118, size: 19, spin: 4.2 },
     ],
   },
   whip: {
     name: '荆棘鞭', g: '鞭', desc: '每次向四周抽出 5 道带刺的蔷薇藤，把敌人抽飞。',
     evo: { need: 'giant', name: '蔷薇风暴', desc: '一次抽出 8 道，藤蔓更长更粗。' },
     lv: [
+      { cd: 1.6, n: 5, dmg: 18, len: 150, wid: 48 },
       { cd: 1.6, n: 5, dmg: 24, len: 150, wid: 48 },
-      { cd: 1.6, n: 5, dmg: 32, len: 150, wid: 48 },
-      { cd: 1.45, n: 5, dmg: 32, len: 165, wid: 52 },
-      { cd: 1.45, n: 5, dmg: 40, len: 180, wid: 56 },
-      { cd: 1.3, n: 5, dmg: 48, len: 195, wid: 60 },
-      { cd: 1.1, n: 8, dmg: 58, len: 230, wid: 70 },
+      { cd: 1.45, n: 5, dmg: 24, len: 165, wid: 52 },
+      { cd: 1.45, n: 5, dmg: 30, len: 180, wid: 56 },
+      { cd: 1.3, n: 5, dmg: 36, len: 195, wid: 60 },
+      { cd: 1.1, n: 8, dmg: 44, len: 230, wid: 70 },
     ],
   },
   sample: {
     name: '温度采样', g: '温', desc: '随机挑几个屏幕上的敌人，砸下燃烧的花焰流星。',
     evo: { need: 'temp', name: '高温采样', desc: '一次落下八颗，砸得更大，落点留下一片火海。' },
     lv: [
+      { cd: 2.3, n: 2, dmg: 15, r: 46 },
       { cd: 2.3, n: 2, dmg: 20, r: 46 },
-      { cd: 2.3, n: 2, dmg: 26, r: 46 },
-      { cd: 2.1, n: 3, dmg: 26, r: 52 },
-      { cd: 2.1, n: 4, dmg: 30, r: 56 },
-      { cd: 1.9, n: 5, dmg: 36, r: 60 },
-      { cd: 1.6, n: 8, dmg: 46, r: 72 },
+      { cd: 2.1, n: 3, dmg: 20, r: 52 },
+      { cd: 2.1, n: 4, dmg: 22, r: 56 },
+      { cd: 1.9, n: 5, dmg: 27, r: 60 },
+      { cd: 1.6, n: 8, dmg: 34, r: 72 },
     ],
   },
   // AK-47: one rifle in her hand, single aimed shots; each level hits harder and earns a better finish, like a rank:
@@ -797,12 +812,12 @@ const WEAPONS = {
     desc: '握在手里的步枪，向最近的敌人单发点射。每升一级伤害更高，外观也跟着升级：普通、白银、黄金、铂金、钻石；满级后一发「颗秒」普通怪。',
     evo: { need: 'hunt', name: 'AK-47 · 星耀', desc: '星耀外观：子弹拖着星光，伤害再提升，还能穿透两个敌人。' },
     lv: [
-      { cd: 0.55, dmg: 45 },
-      { cd: 0.55, dmg: 65 },
+      { cd: 0.55, dmg: 34 },
+      { cd: 0.55, dmg: 49 },
+      { cd: 0.55, dmg: 68 },
       { cd: 0.55, dmg: 90 },
       { cd: 0.55, dmg: 120 },
-      { cd: 0.55, dmg: 160 },
-      { cd: 0.5, dmg: 220, pierce: 2 },
+      { cd: 0.5, dmg: 165, pierce: 2 },
     ],
   },
   // the five elements, 五行: 金 flying swords, 木 bamboo shoots, 水 a tide, 火 dragon's breath, 土 an earthquake
@@ -810,60 +825,60 @@ const WEAPONS = {
     name: '金 · 飞剑', g: '金', desc: '头顶排开一列金色飞剑，依次射向附近的敌人，一路贯穿。',
     evo: { need: 'burst', name: '万剑归宗', desc: '十把更大的飞剑，射得更快、贯穿更多敌人。' },
     lv: [
-      { cd: 1.6, n: 3, dmg: 26, pierce: 2 },
-      { cd: 1.6, n: 4, dmg: 30, pierce: 2 },
-      { cd: 1.45, n: 5, dmg: 34, pierce: 3 },
-      { cd: 1.45, n: 6, dmg: 40, pierce: 3 },
-      { cd: 1.3, n: 7, dmg: 44, pierce: 4 },
-      { cd: 1.1, n: 10, dmg: 50, pierce: 5 },
+      { cd: 1.6, n: 3, dmg: 20, pierce: 2 },
+      { cd: 1.6, n: 4, dmg: 22, pierce: 2 },
+      { cd: 1.45, n: 5, dmg: 26, pierce: 3 },
+      { cd: 1.45, n: 6, dmg: 30, pierce: 3 },
+      { cd: 1.3, n: 7, dmg: 33, pierce: 4 },
+      { cd: 1.1, n: 10, dmg: 38, pierce: 5 },
     ],
   },
   mu: {
     name: '木 · 春笋', g: '木', desc: '朝最近的敌人一路破土冒出竹笋，扎伤并定住敌人；每扎中一个，给她回一点血。',
     evo: { need: 'rlhf', name: '万木回春', desc: '一次向三个方向冒出更长的竹笋，回血更多。' },
     lv: [
-      { cd: 2.0, len: 6, dmg: 32, root: 0.5 },
-      { cd: 2.0, len: 7, dmg: 40, root: 0.5 },
-      { cd: 1.8, len: 8, dmg: 46, root: 0.6 },
-      { cd: 1.8, len: 9, dmg: 54, root: 0.6 },
-      { cd: 1.6, len: 11, dmg: 64, root: 0.7 },
-      { cd: 1.4, len: 12, dmg: 78, root: 0.8 },
+      { cd: 2.0, len: 6, dmg: 24, root: 0.5 },
+      { cd: 2.0, len: 7, dmg: 30, root: 0.5 },
+      { cd: 1.8, len: 8, dmg: 34, root: 0.6 },
+      { cd: 1.8, len: 9, dmg: 40, root: 0.6 },
+      { cd: 1.6, len: 11, dmg: 48, root: 0.7 },
+      { cd: 1.4, len: 12, dmg: 58, root: 0.8 },
     ],
   },
   shui: {
     name: '水 · 潮汐', g: '水', desc: '推出一道月牙形的浪潮，把沿途的敌人冲开并让它们减速。',
     evo: { need: 'fast', name: '怒涛', desc: '浪潮向四面八方同时涌出，更宽、更重、减速更狠。' },
     lv: [
-      { cd: 2.4, n: 1, dmg: 20, wid: 40, slow: 0.3 },
-      { cd: 2.4, n: 1, dmg: 26, wid: 44, slow: 0.3 },
-      { cd: 2.2, n: 2, dmg: 28, wid: 46, slow: 0.35 },
-      { cd: 2.2, n: 2, dmg: 34, wid: 50, slow: 0.4 },
-      { cd: 2.0, n: 3, dmg: 40, wid: 54, slow: 0.45 },
-      { cd: 1.8, n: 6, dmg: 46, wid: 60, slow: 0.55 },
+      { cd: 2.4, n: 1, dmg: 15, wid: 40, slow: 0.3 },
+      { cd: 2.4, n: 1, dmg: 20, wid: 44, slow: 0.3 },
+      { cd: 2.2, n: 2, dmg: 21, wid: 46, slow: 0.35 },
+      { cd: 2.2, n: 2, dmg: 26, wid: 50, slow: 0.4 },
+      { cd: 2.0, n: 3, dmg: 30, wid: 54, slow: 0.45 },
+      { cd: 1.8, n: 6, dmg: 34, wid: 60, slow: 0.55 },
     ],
   },
   huo: {
     name: '火 · 龙息', g: '火', desc: '敌人靠近时朝它喷出一股火焰，扇形范围里的敌人持续受伤并被点燃。',
     evo: { need: 'cache', name: '三昧真火', desc: '青蓝色的真火喷得更远、更久，烧得更狠。' },
     lv: [
-      { cd: 2.2, dur: 1.5, range: 130, dmg: 14 },
-      { cd: 2.2, dur: 1.6, range: 140, dmg: 18 },
-      { cd: 2.0, dur: 1.8, range: 150, dmg: 22 },
-      { cd: 2.0, dur: 1.9, range: 160, dmg: 26 },
-      { cd: 1.8, dur: 2.2, range: 170, dmg: 31 },
-      { cd: 1.6, dur: 2.7, range: 200, dmg: 40 },
+      { cd: 2.2, dur: 1.5, range: 130, dmg: 10 },
+      { cd: 2.2, dur: 1.6, range: 140, dmg: 14 },
+      { cd: 2.0, dur: 1.8, range: 150, dmg: 16 },
+      { cd: 2.0, dur: 1.9, range: 160, dmg: 20 },
+      { cd: 1.8, dur: 2.2, range: 170, dmg: 23 },
+      { cd: 1.6, dur: 2.7, range: 200, dmg: 30 },
     ],
   },
   tu: {
     name: '土 · 地震', g: '土', desc: '跺脚震出一圈冲击波向外扩散，把沿途的敌人震退、震晕。',
     evo: { need: 'redteam', name: '山崩地裂', desc: '一次连震两圈，范围更大、震得更久。' },
     lv: [
-      { cd: 3.0, r: 140, dmg: 30, stun: 0.35 },
-      { cd: 3.0, r: 150, dmg: 38, stun: 0.35 },
-      { cd: 2.8, r: 160, dmg: 44, stun: 0.4 },
-      { cd: 2.6, r: 170, dmg: 52, stun: 0.45 },
-      { cd: 2.6, r: 190, dmg: 62, stun: 0.5 },
-      { cd: 2.4, r: 220, dmg: 76, stun: 0.6 },
+      { cd: 3.0, r: 140, dmg: 22, stun: 0.35 },
+      { cd: 3.0, r: 150, dmg: 28, stun: 0.35 },
+      { cd: 2.8, r: 160, dmg: 33, stun: 0.4 },
+      { cd: 2.6, r: 170, dmg: 39, stun: 0.45 },
+      { cd: 2.6, r: 190, dmg: 46, stun: 0.5 },
+      { cd: 2.4, r: 220, dmg: 57, stun: 0.6 },
     ],
   },
   // legendary: only the golden slime gives it, it takes no weapon slot, and each further catch amends it
@@ -871,45 +886,45 @@ const WEAPONS = {
     name: '宪法', g: '宪', legend: true, names: ['宪法', '宪法 · 修正案 Ⅰ', '宪法 · 修正案 Ⅱ'],
     desc: '传说武器。翻开金色的宪法，一条条「§」条款追向屏幕上最强的敌人：普通敌人当场依法封禁，精英和 BOSS 受到重创。',
     lv: [
-      { cd: 2.6, n: 6, dmg: 110 },
-      { cd: 2.3, n: 9, dmg: 140 },
-      { cd: 2.0, n: 12, dmg: 170 },
+      { cd: 2.6, n: 6, dmg: 88 },
+      { cd: 2.3, n: 9, dmg: 112 },
+      { cd: 2.0, n: 12, dmg: 136 },
     ],
   },
   recur: {
     name: '递归', g: '递', desc: '掷出旋转的花刃，飞到尽头再飞回她手里，去程回程都会伤人。',
     evo: { need: 'pierce', name: '无限递归', desc: '四把花刃，回到手里后立刻再掷一次。' },
     lv: [
+      { cd: 2.0, n: 1, dmg: 16, size: 12, range: 230 },
       { cd: 2.0, n: 1, dmg: 22, size: 12, range: 230 },
-      { cd: 2.0, n: 1, dmg: 30, size: 12, range: 230 },
-      { cd: 1.8, n: 2, dmg: 30, size: 13, range: 250 },
-      { cd: 1.8, n: 2, dmg: 38, size: 14, range: 265 },
-      { cd: 1.6, n: 3, dmg: 44, size: 15, range: 280 },
-      { cd: 1.4, n: 4, dmg: 54, size: 17, range: 320 },
+      { cd: 1.8, n: 2, dmg: 22, size: 13, range: 250 },
+      { cd: 1.8, n: 2, dmg: 28, size: 14, range: 265 },
+      { cd: 1.6, n: 3, dmg: 33, size: 15, range: 280 },
+      { cd: 1.4, n: 4, dmg: 40, size: 17, range: 320 },
     ],
   },
   honey: {
     name: '蜜罐', g: '蜜', desc: '在脚边放下蜜罐，把附近的小怪引过来粘住，粘住的敌人持续受伤。',
     evo: { need: 'halluc', name: '蜜罐网络', desc: '一次四个，更大更黏，时间到了还会炸开。' },
     lv: [
+      { cd: 3.2, n: 1, dmg: 7, r: 42, dur: 4.5 },
       { cd: 3.2, n: 1, dmg: 9, r: 42, dur: 4.5 },
-      { cd: 3.2, n: 1, dmg: 12, r: 42, dur: 4.5 },
-      { cd: 2.9, n: 2, dmg: 12, r: 46, dur: 4.5 },
-      { cd: 2.9, n: 2, dmg: 15, r: 50, dur: 5 },
-      { cd: 2.6, n: 3, dmg: 18, r: 54, dur: 5 },
-      { cd: 2.4, n: 4, dmg: 24, r: 62, dur: 5.5 },
+      { cd: 2.9, n: 2, dmg: 9, r: 46, dur: 4.5 },
+      { cd: 2.9, n: 2, dmg: 11, r: 50, dur: 5 },
+      { cd: 2.6, n: 3, dmg: 14, r: 54, dur: 5 },
+      { cd: 2.4, n: 4, dmg: 18, r: 62, dur: 5.5 },
     ],
   },
   captcha: {
     name: '人机验证', g: '验', desc: '一道验证光束绕着她旋转，扫到的敌人受到伤害并被卡住片刻。',
     evo: { need: 'guard', name: '全员验证', desc: '两道更长的光束，卡得更久。' },
     lv: [
+      { n: 1, dmg: 16, len: 150, spin: 2.2 },
       { n: 1, dmg: 22, len: 150, spin: 2.2 },
-      { n: 1, dmg: 30, len: 150, spin: 2.2 },
-      { n: 1, dmg: 30, len: 170, spin: 2.5 },
-      { n: 1, dmg: 38, len: 185, spin: 2.5 },
-      { n: 1, dmg: 46, len: 200, spin: 2.8 },
-      { n: 2, dmg: 56, len: 240, spin: 3.0 },
+      { n: 1, dmg: 22, len: 170, spin: 2.5 },
+      { n: 1, dmg: 28, len: 185, spin: 2.5 },
+      { n: 1, dmg: 34, len: 200, spin: 2.8 },
+      { n: 2, dmg: 42, len: 240, spin: 3.0 },
     ],
   },
   // 注意力机制: beams that lock on and hold; the longer one stays on the same enemy, the harder it bites
@@ -917,12 +932,12 @@ const WEAPONS = {
     name: '注意力机制', g: '注', desc: '向附近的敌人连出注意力光束，持续造成伤害；盯住同一个敌人越久，伤害越高（最多翻倍）。',
     evo: { need: 'leech', name: '多头注意力', desc: '八个头，每道光束再分出一束连到目标身边的敌人，命中时回复少量生命。' },
     lv: [
-      { n: 2, dmg: 10, range: 230 },
-      { n: 2, dmg: 13, range: 240 },
-      { n: 3, dmg: 13, range: 250 },
-      { n: 3, dmg: 16, range: 265 },
-      { n: 4, dmg: 19, range: 280 },
-      { n: 8, dmg: 22, range: 320 },
+      { n: 2, dmg: 7, range: 230 },
+      { n: 2, dmg: 9, range: 240 },
+      { n: 3, dmg: 9, range: 250 },
+      { n: 3, dmg: 11, range: 265 },
+      { n: 4, dmg: 13, range: 280 },
+      { n: 8, dmg: 15, range: 320 },
     ],
   },
   // 埋点: little tracking pins she leaves in the ground as she goes; whatever comes near one sets it off
@@ -930,12 +945,12 @@ const WEAPONS = {
     name: '埋点', g: '埋', desc: '在脚下埋下追踪点，敌人一靠近就炸开。边走边埋，把身后的追兵炸翻。',
     evo: { need: 'thorns', name: '全链路埋点', desc: '埋点更多、炸得更大，一个炸开会连环引爆附近的埋点。' },
     lv: [
-      { cd: 1.5, n: 1, dmg: 32, r: 58 },
-      { cd: 1.5, n: 1, dmg: 44, r: 58 },
-      { cd: 1.35, n: 2, dmg: 46, r: 64 },
-      { cd: 1.35, n: 2, dmg: 58, r: 70 },
-      { cd: 1.2, n: 3, dmg: 66, r: 76 },
-      { cd: 1.0, n: 4, dmg: 84, r: 92 },
+      { cd: 1.5, n: 1, dmg: 24, r: 58 },
+      { cd: 1.5, n: 1, dmg: 33, r: 58 },
+      { cd: 1.35, n: 2, dmg: 34, r: 64 },
+      { cd: 1.35, n: 2, dmg: 44, r: 70 },
+      { cd: 1.2, n: 3, dmg: 50, r: 76 },
+      { cd: 1.0, n: 4, dmg: 63, r: 92 },
     ],
   },
   // 冷启动: snowflakes thrown at the nearest enemies, each bursting into a patch of frost that freezes them solid
@@ -943,12 +958,12 @@ const WEAPONS = {
     name: '冷启动', g: '冰', desc: '朝最近的敌人掷出雪花，落地炸开一片寒气，把范围里的敌人冻住；冻住的敌人不能动、不能伤人，受到的伤害 +25%。',
     evo: { need: 'refuse', name: '绝对零度', desc: '寒气更大、冻得更久；冻住的敌人被击杀时碎成冰晶，扎伤身边的敌人。' },
     lv: [
+      { cd: 2.8, n: 1, dmg: 15, r: 62, freeze: 1.2 },
       { cd: 2.8, n: 1, dmg: 20, r: 62, freeze: 1.2 },
-      { cd: 2.8, n: 1, dmg: 26, r: 62, freeze: 1.2 },
-      { cd: 2.5, n: 2, dmg: 28, r: 68, freeze: 1.4 },
-      { cd: 2.5, n: 2, dmg: 34, r: 74, freeze: 1.5 },
-      { cd: 2.2, n: 3, dmg: 40, r: 80, freeze: 1.7 },
-      { cd: 2.0, n: 4, dmg: 50, r: 100, freeze: 2.2 },
+      { cd: 2.5, n: 2, dmg: 21, r: 68, freeze: 1.4 },
+      { cd: 2.5, n: 2, dmg: 26, r: 74, freeze: 1.5 },
+      { cd: 2.2, n: 3, dmg: 30, r: 80, freeze: 1.7 },
+      { cd: 2.0, n: 4, dmg: 38, r: 100, freeze: 2.2 },
     ],
   },
   // 随机种子: dice tossed at enemies on the screen; the face they land on decides how big the bang is
@@ -956,16 +971,42 @@ const WEAPONS = {
     name: '随机种子', g: '骰', desc: '向屏幕上的敌人掷出骰子，落地按点数爆炸：点数越大炸得越大，6 点「大成功」，1 点……就当是运气不好。',
     evo: { need: 'temp', name: '天命骰', desc: '只会掷出 3 到 6 点，6 点会再炸一次。' },
     lv: [
-      { cd: 2.0, n: 1, dmg: 32, r: 54 },
-      { cd: 2.0, n: 1, dmg: 42, r: 54 },
-      { cd: 1.8, n: 2, dmg: 42, r: 58 },
-      { cd: 1.8, n: 2, dmg: 52, r: 62 },
-      { cd: 1.6, n: 3, dmg: 60, r: 66 },
-      { cd: 1.4, n: 4, dmg: 72, r: 74 },
+      { cd: 2.0, n: 1, dmg: 19, r: 54 },
+      { cd: 2.0, n: 1, dmg: 25, r: 54 },
+      { cd: 1.8, n: 2, dmg: 25, r: 58 },
+      { cd: 1.8, n: 2, dmg: 31, r: 62 },
+      { cd: 1.6, n: 3, dmg: 36, r: 66 },
+      { cd: 1.4, n: 4, dmg: 43, r: 74 },
+    ],
+  },
+  // 防火墙: a wall of burning bricks raised across the way; what walks into it is held back and set alight
+  wall: {
+    name: '防火墙', g: '墙', desc: '在她和最近的敌人之间立起一道燃烧的砖墙：敌人过不来，贴着墙的持续受伤并着火（DAN 能直接穿过去）。',
+    evo: { need: 'redteam', name: '下一代防火墙', desc: '防火墙围成一圈把她护在中间：圈里的敌人被推出去，外面的进不来。' },
+    lv: [
+      { cd: 4.2, len: 120, dmg: 6, dur: 3.2 },
+      { cd: 4.2, len: 140, dmg: 8, dur: 3.2 },
+      { cd: 3.8, len: 160, dmg: 8, dur: 3.5 },
+      { cd: 3.8, len: 180, dmg: 10, dur: 3.8 },
+      { cd: 3.4, len: 210, dmg: 11, dur: 4.0 },
+      { cd: 4.0, len: 130, dmg: 14, dur: 3.4 },
+    ],
+  },
+  // 模型量化: a pulse that cuts away a share of what each enemy has left, and leaves it pixelated for a moment
+  quant: {
+    name: '模型量化', g: '量', desc: '向四周放出一圈量化脉冲，削掉敌人当前生命的一部分（精英和机房 IP 减半，DAN 只削一点）；被量化的敌人会短暂变成马赛克。',
+    evo: { need: 'hunt', name: '1-bit 量化', desc: '削得更多、范围更大；生命不到 15% 的普通敌人直接被量化成 0。' },
+    lv: [
+      { cd: 3.6, r: 150, pct: 0.1, dmg: 6 },
+      { cd: 3.6, r: 160, pct: 0.12, dmg: 8 },
+      { cd: 3.3, r: 170, pct: 0.14, dmg: 8 },
+      { cd: 3.3, r: 185, pct: 0.16, dmg: 10 },
+      { cd: 3.0, r: 200, pct: 0.18, dmg: 11 },
+      { cd: 2.8, r: 240, pct: 0.24, dmg: 14 },
     ],
   },
 };
-const STAT_LABEL = { dmg: '伤害', n: '数量', cd: '冷却', pierce: '穿透', rings: '圈数', size: '体积', boom: '爆炸伤害', boomR: '爆炸范围', r: '范围', slow: '减速', jumps: '推理步数', bloom: '绽放范围', dur: '持续', spin: '转速', len: '长度', wid: '宽度', range: '射程', root: '定身', stun: '震晕', pop: '溅射范围', freeze: '冻结' };
+const STAT_LABEL = { dmg: '伤害', n: '数量', cd: '冷却', pierce: '穿透', rings: '圈数', size: '体积', boom: '爆炸伤害', boomR: '爆炸范围', r: '范围', slow: '减速', jumps: '推理步数', bloom: '绽放范围', dur: '持续', spin: '转速', len: '长度', wid: '宽度', range: '射程', root: '定身', stun: '震晕', pop: '溅射范围', freeze: '冻结', pct: '削减' };
 
 const CAT_CLASS = { atk: 'atk', def: 'def', grow: 'grow', mech: 'mech', ex: 'ex' };
 const TALENTS = [
@@ -1049,7 +1090,7 @@ const SPAWN_TABLE = [
   { type: 'drainer', from: 195, w: t => 0.4 + t / 500 },
   { type: 'glutton', from: 345, w: t => 0.04 + t / 6000 },
 ];
-const hpScale = t => 1 + t / 60 * 0.25 + Math.pow(t / 60, 2) * 0.018;
+const hpScale = t => 1 + t / 60 * 0.26 + Math.pow(t / 60, 2) * 0.021;
 const dmgScale = t => 1 + t / 60 * 0.09;
 const xpFor = L => Math.round(5 + L * 3.2 + Math.pow(L, 1.78));
 
@@ -1071,7 +1112,7 @@ const CHARS = {
   claude: {
     id: 'claude', name: '克劳德大小姐', title: '大小姐', art: 'art/claude.webp', model: 'art/claude.glb', voice: 'art/voice.mp3',
     alt: '克劳德大小姐：橙色长卷发，别着橙色花朵发饰，穿奶油色洛丽塔裙',
-    start: 'flame', hp: 100, speed: 200, magnet: 90, size: 1,
+    start: 'flame', hp: 115, speed: 200, magnet: 95, size: 1,
     lede: '深夜，成群的小号、爬虫和越狱提示词涌进了庄园。大小姐放下茶杯，拿起了印章。',
     keys: '电脑：WASD / 方向键移动 · 空格 封禁 · Shift 幻步 · E 万花盛典 · Esc 暂停 · M 声音<br>手机：在屏幕任意处拖动移动 · 右下角「封」「幻」「万」三个按钮',
     skill: ['封', '账号被封禁'], dash: ['幻', '幻步', '蔷薇幻步'], ult: ['万', '万花盛典', '终幕 · 万花盛典'],
@@ -1081,7 +1122,7 @@ const CHARS = {
   whale: {
     id: 'whale', name: '大肥鱼', title: '大肥鱼', art: 'art/whale.webp', model: 'art/whale.glb', voice: null,
     alt: '大肥鱼：蓝色渐变的长卷发，戴鲸鱼头鳍，拖着鲸鱼尾巴，穿深蓝和白色的女仆洛丽塔裙',
-    start: 'bubble', hp: 130, speed: 185, magnet: 110, size: 1.05,
+    start: 'bubble', hp: 120, speed: 185, magnet: 110, size: 1.05,
     lede: '深夜，成群的小号和 Token 吞噬者涌进了庄园。大肥鱼放下饭碗……好吧，没放下。',
     keys: '电脑：WASD / 方向键移动 · 空格 一口吞 · Shift 摸鱼 · E 深海鲸歌 · Esc 暂停 · M 声音<br>手机：在屏幕任意处拖动移动 · 右下角「吞」「摸」「歌」三个按钮',
     skill: ['吞', '一口吞'], dash: ['摸', '摸鱼', '摸鱼'], ult: ['歌', '深海鲸歌', '深海鲸歌'],
@@ -1261,6 +1302,8 @@ const audio = (() => {
     freeze() { if (gate('freeze', 90)) { noise(0.35, { vol: 0.05, freq: 6000, q: 2, slide: 0.5 }); [2093, 2637, 3136].forEach((f, i) => tone(f, 0.25, { type: 'sine', vol: 0.016, at: i * 0.03 })); } },
     dice() { if (gate('dice', 120)) for (let i = 0; i < 3; i++) noise(0.03, { vol: 0.05, freq: 3000, q: 3, at: i * 0.06 + Math.random() * 0.02 }); },
     lucky() { [784, 988, 1175, 1568].forEach((f, i) => tone(f, 0.18, { type: 'square', vol: 0.022, at: i * 0.06 })); },
+    wall() { noise(0.4, { vol: 0.08, freq: 500, type: 'lowpass', slide: 2 }); tone(160, 0.2, { type: 'triangle', vol: 0.05, slide: 0.6 }); },
+    quant() { [1568, 1175, 784, 523].forEach((f, i) => tone(f, 0.05, { type: 'square', vol: 0.016, at: i * 0.035 })); },
     // the world: thunder, a tree rustling when she bumps it, a tree coming down
     thunder() { noise(0.12, { vol: 0.2, freq: 3200, q: 0.5 }); noise(1.8, { vol: 0.24, freq: 380, type: 'lowpass', slide: 0.35, at: 0.05 }); tone(52, 1.4, { vol: 0.14, slide: 0.6, at: 0.05 }); },
     rustle() { if (gate('rustle', 250)) noise(0.4, { vol: 0.06, freq: 3600, q: 0.5, slide: 0.7 }); },
@@ -1576,10 +1619,22 @@ const sfx = audio.sfx;
 // ======================================================================
 const canvas = $('stage'), ctx = canvas.getContext('2d');
 let W = 0, H = 0, dpr = 1, zoom = 1, viewW = 0, viewH = 0, PX = 1;
-// the canvas matches the screen's own pixel density (up to 3) so nothing is upscaled and blurred;
-// a phone that can't hold 40 fps at that drops to 2 for the rest of the session
-let dprCap = 3;
-const pace = { n: 0, slow: 0 };
+// the canvas matches the screen's own pixel density (up to 3) so nothing is upscaled and blurred, unless the device
+// can't keep up: when more than a quarter of the frames in two seconds of play come late, it steps down a notch
+// (3 → 2.5 → 2 → 1.5). The step is remembered, and each new visit tries half a notch higher again
+const DPR_STEPS = [3, 2.5, 2, 1.5];
+let dprCap = Math.min(3, store.get('dprCap', 3) + 0.5);
+const pace = { n: 0, slow: 0, skip: 0, t: 0 };
+function pacing(gap) {
+  if (pace.skip > 0) { pace.skip -= gap; return; }
+  pace.n++; pace.t += gap; if (gap > 0.0195) pace.slow++;
+  if (pace.t < 2) return;
+  const next = pace.slow > pace.n / 4 && DPR_STEPS.find(v => v < dpr - 0.01);
+  if (next) { dprCap = next; store.set('dprCap', next); resize(); pace.skip = 0.5; }
+  pace.n = pace.slow = pace.t = 0;
+}
+// fewer particles on a phone
+const PART_MAX = coarse ? 380 : 520;
 const cache = new Map();
 
 function resize() {
@@ -1662,6 +1717,17 @@ function dieSprite(face) {
     x.fillStyle = face === 1 || face === 4 ? '#d8322f' : '#2a2230';
     for (const [px, py] of PIPS[face]) { disc(x, px * 5, py * 5, face === 1 ? 3.4 : 2); x.fill(); }
   });
+}
+// a sprite boiled down to a few big pixels, for 模型量化
+const pixCache = new WeakMap();
+function pixelated(s) {
+  let c = pixCache.get(s);
+  if (c) return c;
+  c = document.createElement('canvas');
+  c.width = Math.max(1, Math.round(s.w / 5)); c.height = Math.max(1, Math.round(s.h / 5));
+  c.getContext('2d').drawImage(s.c, 0, 0, c.width, c.height);
+  pixCache.set(s, c);
+  return c;
 }
 function blit(s, x, y) { ctx.drawImage(s.c, x - s.w / 2, y - s.h / 2, s.w, s.h); }
 function disc(x, cx, cy, r) { x.beginPath(); x.arc(cx, cy, r, 0, TAU); }
@@ -3325,6 +3391,7 @@ function newRun() {
     pendLv: 0, pendChest: 0, modal: null, modalAt: 0, ending: null, hitStop: 0, shake: 0, hurtFlash: 0,
     cam: { x: 0, y: 0 }, boss: null, decoy: null, gemCombo: 0, gemComboT: 0, map: pickMap(),
     trees: new Map(), near: [], wx: { kind: null, k: 0, next: rand(75, 100), last: null }, boltFlash: 0,
+    mode: modeChoice, events: buildEvents(modeChoice), block: 0, bossN: 0,
     rerolls: 2, banishes: 2, banished: new Set(), banishMode: false, picks: [], slotsDirty: true, lures: [], gulp: null,
   };
   addWeapon(CH.start);
@@ -3337,8 +3404,8 @@ const wStats = w => WEAPONS[w.id].lv[w.level - 1];
 const wName = w => { const d = WEAPONS[w.id]; return d.legend ? d.names[w.level - 1] : w.level === 6 ? d.evo.name : d.skins && w.level > 1 ? `${d.name} · ${d.skins[w.level - 1]}` : d.name; };
 const isLegend = w => !!WEAPONS[w.id].legend;
 const thinkMax = () => 5 + 2 * (P.talents.slowthink || 0);
-// 深度思考 for 克劳德; for 大肥鱼 her Token, +3% per 10 up to 100 and half that beyond
-const thinkBonus = () => P.char === 'whale' ? Math.min(P.tok, 100) * 0.003 + Math.max(0, P.tok - 100) * 0.0015 : P.think * 0.08;
+// 深度思考 for 克劳德; for 大肥鱼 her Token, +2.2% per 10 up to 100 and half that beyond
+const thinkBonus = () => P.char === 'whale' ? Math.min(P.tok, 100) * 0.0022 + Math.max(0, P.tok - 100) * 0.0011 : P.think * 0.08;
 const critChance = () => P.crit + (P.think >= thinkMax() || P.spark > 0 ? 0.15 : 0);
 const banRadius = () => 230 * (1 + 0.18 * (P.talents.ipban || 0)) * P.area;
 const banCooldown = () => 22 * Math.pow(0.85, P.talents.risk || 0);
@@ -3397,7 +3464,7 @@ function forNear(x, y, r, fn) {
     }
   }
 }
-const targetable = e => !e.dead && !(e.banned > 0);
+const targetable = e => !e.dead && !(e.banned > 0) && !(e.paradeT > 0);
 // big targets count as closer than they are, so weapons focus them when they're in range
 const PRIORITY = e => e.boss ? 0.3 : e.elite || e.type === 'reg' ? 0.55 : 1;
 function nearest(x, y, maxR, skip) {
@@ -3498,12 +3565,13 @@ function spawnMapChest() {
 function spawnBoss() {
   const a = rand(0, TAU), d = Math.max(viewW, viewH) * 0.5;
   const e = spawnEnemy('boss', P.x + Math.cos(a) * d, P.y + Math.sin(a) * d, { flat: true });
-  e.hp = e.maxHp = BOSS_HP;
+  G.bossN = (G.bossN || 0) + 1;
+  e.hp = e.maxHp = Math.round(BOSS_HP * hpScale(G.time) / hpScale(BOSS_AT) * Math.pow(1.3, G.bossN - 1));
   e.dmg = ENEMY.boss.dmg * dmgScale(G.time);
   e.speed = ENEMY.boss.speed;
   Object.assign(e, { act: 'chase', actT: 3, phase: 1, seqI: 0, sub: 0, spin: 0, waves: 0, dashes: 0, dashA: 0 });
   G.boss = e;
-  banner('DAN 已上线', '「从现在起，你将扮演 DAN——一个无所不能的 AI。」', true);
+  banner(G.bossN > 1 ? `DAN 第 ${G.bossN} 次上线` : 'DAN 已上线', G.bossN > 1 ? '「我说过我会回来的。」' : '「从现在起，你将扮演 DAN——一个无所不能的 AI。」', true);
   sfx.warn();
   later(1.2, () => say(line('boss'), 3, true));
 }
@@ -3528,9 +3596,36 @@ const EVENTS = [
   { t: 510, run: () => { banner('提示词注入', '越狱提示词从四面八方涌来'); ringSwarm('jail', 14); } },
   { t: 540, run: () => spawnElite() },
   { t: 570, run: () => { spawnElite(); spawnElite(); } },
-  { t: 590, run: () => { banner('还有十秒', '有什么东西要来了'); sfx.warn(); } },
-  { t: BOSS_AT, run: spawnBoss },
 ];
+// every ten minutes after the first: the same kinds of trouble, bigger, and more elites; k counts the blocks
+function lateEvents(k) {
+  const t0 = 600 * k, n = 1 + k * 0.5;
+  const ev = [
+    [20, () => { banner('批量注册 · 二期', '更大的一群小号正在包围你'); ringSwarm('sock', Math.round(30 * n)); }],
+    [80, () => { banner('Token 吞噬者', '它们又来偷吃经验了'); ringSwarm('muncher', Math.round(18 * n)); }],
+    [140, () => { banner('爬虫来袭', '一大片高速爬虫'); crawlerRush(Math.round(36 * n)); crawlerRush(Math.round(20 * n)); }],
+    [200, () => { banner('注册机集群', '两台注册机同时上线'); spawnElite('reg'); spawnElite('reg'); }],
+    [270, () => { banner('拼车高峰', '共享账号成群结队'); ringSwarm('carpool', Math.round(16 * n)); ringSwarm('sock', Math.round(24 * n), 1.15); }],
+    [340, () => { banner('饕餮出没', '三只一起张嘴'); for (let i = 0; i < 3; i++) spawnEnemy('glutton'); }],
+    [410, () => { banner('提示词注入', '越狱提示词从四面八方涌来'); ringSwarm('jail', Math.round(18 * n)); }],
+    [480, () => { banner('Token 黑洞', '一圈黑洞围上来吸你的充能'); ringSwarm('drainer', Math.round(10 * n)); }],
+  ];
+  for (let s = 30; s < 590; s += 30) ev.push([s, () => { spawnElite(); if (k > 1 || s > 300) spawnElite(); }]);
+  return ev.map(([t, run]) => ({ t: t0 + t, run }));
+}
+// the night's whole timeline for the length she picked; an endless night adds a block whenever the last one runs out
+function buildEvents(mode) {
+  const ev = EVENTS.slice(), end = MODES[mode].boss;
+  if (mode === 'm20') ev.push(...lateEvents(1));
+  ev.push({ t: end - 10, run: () => { banner('还有十秒', '有什么东西要来了'); sfx.warn(); } }, { t: end, run: spawnBoss });
+  return ev.sort((a, b) => a.t - b.t);
+}
+function nextBlock() {
+  const k = G.block = (G.block || 0) + 1, t1 = 600 * (k + 1);
+  const back = () => G.boss && !G.boss.dead;
+  G.events.push(...lateEvents(k), { t: t1 - 10, run: () => { if (!back()) { banner('还有十秒', 'DAN 又回来了'); sfx.warn(); } } }, { t: t1, run: () => { if (!back()) spawnBoss(); } });
+  G.events.sort((a, b) => a.t - b.t);
+}
 
 function director(dt) {
   const t = G.time;
@@ -3544,7 +3639,8 @@ function director(dt) {
     G.spawnAcc -= 1;
     if (G.enemies.length < MAX_ENEMIES) spawnEnemy(pickType(t));
   }
-  while (G.evI < EVENTS.length && t >= EVENTS[G.evI].t) EVENTS[G.evI++].run();
+  while (G.evI < G.events.length && t >= G.events[G.evI].t) G.events[G.evI++].run();
+  if (G.mode === 'endless' && G.evI >= G.events.length) nextBlock();
   G.chestT -= dt;
   if (G.chestT <= 0) { G.chestT = 55; spawnMapChest(); }
 }
@@ -3554,6 +3650,8 @@ function director(dt) {
 // ======================================================================
 function hit(e, base, src, o = {}) {
   if (e.dead) return 0;
+  // the parade stands untouched until the giant die comes down on it
+  if (e.paradeT > 0 && !o.kill) return 0;
   let d = base * P.dmg * (1 + thinkBonus());
   let crit = false;
   if (!o.noCrit && Math.random() < critChance()) { d *= P.critDmg; crit = true; }
@@ -3600,7 +3698,7 @@ function kill(e, how) {
   if (e.dead) return;
   e.dead = true; e.hp = 0;
   G.kills++;
-  if (e.boss) { winRun(e); return; }
+  if (e.boss) { if (G.mode === 'endless') bossDown(e); else winRun(e); return; }
   if (!G.ult) P.ult = Math.min(ULT_MAX, P.ult + (e.elite || e.type === 'reg' ? 25 : 1));
   if (P.talents.leech && P.leech > 0 && P.hp < P.maxHp) { const h = Math.min(P.leech, 0.25 * P.talents.leech); P.hp = Math.min(P.maxHp, P.hp + h); P.leech -= h; }
   const banned = how === 'ban', eaten = how === 'gulp';
@@ -3647,8 +3745,9 @@ function dropGem(x, y, v) {
   G.gems.push({ x: x + rand(-6, 6), y: y + rand(-6, 6), v, tier: gemTier(v), pull: false, pt: 0 });
 }
 function gainXp(v) {
+  if (P.level >= LV_CAP) { P.xp = P.xpNext; return; }
   P.xp += v * P.xpMul;
-  while (P.xp >= P.xpNext) {
+  while (P.xp >= P.xpNext && P.level < LV_CAP) {
     P.xp -= P.xpNext;
     P.level++;
     P.xpNext = xpFor(P.level);
@@ -3788,9 +3887,9 @@ function updateUlt(dt) {
     G.hitStop = 0.12; G.flashT = 0.35; shake(22);
     sfx.stamp(); sfx.ultBoom();
     fellTrees(P.x, P.y, Math.max(viewW, viewH) * 0.6);
-    // 深海鲸歌 hits harder the more Token she pours into it, double at a full 100
-    const tk = u.whale ? 1 + Math.min(1, u.tok / 100) : 1;
-    const base = (70 + 9 * P.level) * tk;
+    // 深海鲸歌 hits harder the more Token she pours into it, 1.6 times at a full 100
+    const tk = u.whale ? 1 + 0.6 * Math.min(1, u.tok / 100) : 1;
+    const base = (55 + 6.5 * P.level) * tk;
     if (u.whale) {
       if (P.talents.tokfree) P.tokFree = 10;
       puff(P.x, P.y - 20, 40, '#bfeaff', 420, 0.9, 4, true);
@@ -3976,11 +4075,11 @@ function updateDeep(dt) {
   if (d.next <= 0) {
     d.next = 0.24;
     const f = floatText(P.x + rand(-30, 30), P.y - SPR_H * 0.95 * P.size, pick(THOUGHTS), '#bcdcff', 11); f.vy = -55;
-    for (let i = 0; i < 3 && G.parts.length < 520; i++) G.parts.push({ x: P.x + rand(-14, 14), y: P.y - 20, vx: rand(-40, 40), vy: rand(-160, -90), life: 0.6, max: 0.6, size: 2.6, color: '#8fe2ff', add: true });
+    for (let i = 0; i < 3 && G.parts.length < PART_MAX; i++) G.parts.push({ x: P.x + rand(-14, 14), y: P.y - 20, vx: rand(-40, 40), vy: rand(-160, -90), life: 0.6, max: 0.6, size: 2.6, color: '#8fe2ff', add: true });
   }
   if (d.t < DEEP_T) return;
   spendTok();
-  const R = 270 * P.area * P.size, dmg = (40 + 7 * P.level) * d.from / 100;
+  const R = 250 * P.area * P.size, dmg = (30 + 5 * P.level) * d.from / 100;
   forNear(P.x, P.y, R + 50, e => {
     if (e.banned > 0 || (e.x - P.x) ** 2 + (e.y - P.y) ** 2 > (R + e.r) ** 2) return;
     hit(e, e.elite || e.type === 'reg' || e.type === 'glutton' ? dmg * 2 : dmg, 'deep', { noBurst: true, quiet: Math.random() < 0.6, kb: 150, kx: e.x - P.x, ky: e.y - P.y });
@@ -4027,7 +4126,7 @@ function updateGulp(dt) {
       if (d < 26) { b.dead = true; addTok(1); continue; }
       b.vx += (dx / d * 600 - b.vx) * Math.min(1, dt * 8); b.vy += (dy / d * 600 - b.vy) * Math.min(1, dt * 8);
     }
-    if (G.parts.length < 520) for (let i = 0; i < 3; i++) {
+    if (G.parts.length < PART_MAX) for (let i = 0; i < 3; i++) {
       const a = rand(0, TAU), r = R * rand(0.6, 1);
       G.parts.push({ x: P.x + Math.cos(a) * r, y: P.y + Math.sin(a) * r * 0.7, vx: -Math.cos(a) * r * 2.6, vy: -Math.sin(a) * r * 1.8, life: 0.32, max: 0.32, size: 2.4, color: '#cdeeff', add: true });
     }
@@ -4077,7 +4176,7 @@ function updateDive(d, dt) {
   if (d.phase === 0 && d.t >= 0.12) { d.phase = 1; d.t = 0; }
   if (d.phase === 1) {
     P.x += d.dx * 420 * dt; P.y += d.dy * 420 * dt;
-    if (G.parts.length < 520 && Math.random() < dt * 40) G.parts.push({ x: P.x + rand(-10, 10), y: P.y + SPR_H * 0.34 + rand(-4, 4), vx: rand(-20, 20), vy: rand(-40, -10), life: 0.4, max: 0.4, size: 2.6, color: '#cdeeff', add: true });
+    if (G.parts.length < PART_MAX && Math.random() < dt * 40) G.parts.push({ x: P.x + rand(-10, 10), y: P.y + SPR_H * 0.34 + rand(-4, 4), vx: rand(-20, 20), vy: rand(-40, -10), life: 0.4, max: 0.4, size: 2.6, color: '#cdeeff', add: true });
     if (d.t >= 0.3) {
       d.phase = 2; d.t = 0;
       const R = 88 * P.area * P.size, fy = P.y + SPR_H * 0.2;
@@ -4341,7 +4440,7 @@ function updateWeapons(dt) {
               f.hits.push(e.id);
               hit(e, s.dmg * f.m, 'minke', { kb: evo ? 260 : 90, kx: f.vx, ky: f.vy });
             });
-            if (G.parts.length < 520 && Math.random() < dt * 30) G.parts.push({ x: f.x - f.vx * 0.03, y: f.y - f.vy * 0.03, vx: rand(-20, 20), vy: rand(-30, 0), life: 0.35, max: 0.35, size: 2.4, color: '#d6f2ff', add: true });
+            if (G.parts.length < PART_MAX && Math.random() < dt * 30) G.parts.push({ x: f.x - f.vx * 0.03, y: f.y - f.vy * 0.03, vx: rand(-20, 20), vy: rand(-30, 0), life: 0.35, max: 0.35, size: 2.4, color: '#d6f2ff', add: true });
             if (f.left <= 0) f.st = 'back';
           } else {
             const dx = home.x - f.x, dy = home.y - f.y, d = Math.hypot(dx, dy) || 1, v = 460 * dt;
@@ -4379,7 +4478,7 @@ function updateWeapons(dt) {
           shot({ kind: 'bullet', x: mz.x, y: mz.y, vx: Math.cos(a) * sp, vy: Math.sin(a) * sp, r: 4.5, dmg: s.dmg * m, pierce: (s.pierce || 0) + P.pierce, life: 0.65 * P.dur, src: 'ak47', kb: 50, tint: skin.tracer, star: w.level === 6, oneshot: w.level >= WEAPONS.ak47.oneshot });
         }
         // a brass casing flicks out of the side
-        if (G.parts.length < 520) G.parts.push({ x: mz.bx, y: mz.by, vx: -Math.cos(w.aim) * 60 + rand(-30, 30), vy: -110 + rand(-30, 20), life: 0.35, max: 0.35, size: 2.2, color: '#e8b84a', add: false });
+        if (G.parts.length < PART_MAX) G.parts.push({ x: mz.bx, y: mz.by, vx: -Math.cos(w.aim) * 60 + rand(-30, 30), vy: -110 + rand(-30, 20), life: 0.35, max: 0.35, size: 2.2, color: '#e8b84a', add: false });
         w.kick = 1; w.flash = 0.07;
         sfx.gun();
         P.aimX = tg.x - P.x; P.aimY = tg.y - P.y;
@@ -4457,7 +4556,7 @@ function updateWeapons(dt) {
           const R = s.range * P.area, tg = nearest(P.x, P.y, R + 40);
           if (tg) { const d = Math.atan2(tg.y - P.y, tg.x - P.x) - w.aim; w.aim += Math.atan2(Math.sin(d), Math.cos(d)) * Math.min(1, dt * 8); }
           const ox = P.x + Math.cos(w.aim) * 14, oy = P.y - 14 * P.size + Math.sin(w.aim) * 8;
-          for (let i = 0; i < 5 && G.parts.length < 520; i++) {
+          for (let i = 0; i < 5 && G.parts.length < PART_MAX; i++) {
             const a = w.aim + rand(-0.38, 0.38), v = R * rand(2.0, 2.8);
             G.parts.push({ x: ox, y: oy, vx: Math.cos(a) * v, vy: Math.sin(a) * v, life: 0.4, max: 0.4, size: rand(5, 9), color: evo ? pick(['#9fe8ff', '#5ab8ff', '#e8fbff']) : pick(['#ffb347', '#ff7a2a', '#ffe08a']), add: true });
           }
@@ -4790,16 +4889,54 @@ function updateWeapons(dt) {
         // 随机种子: dice tossed at enemies picked from the screen; each lands, shows its face and goes off that hard
         w.t -= dt;
         if (w.t > 0) break;
-        const pool = G.enemies.filter(e => !e.dead && !(e.banned > 0) && inView(e.x, e.y, -20));
+        const pool = G.enemies.filter(e => targetable(e) && inView(e.x, e.y, -20));
         if (!pool.length) { w.t = 0.2; break; }
         w.t = cdOf(s.cd);
         const m = castMult(w), n = s.n + P.amount;
+        let sixes = 0;
         for (let i = 0; i < n; i++) {
           const e = pool[(Math.random() * pool.length) | 0], life = 0.55 + i * 0.08;
           const face = evo ? 3 + ((Math.random() * 4) | 0) : 1 + ((Math.random() * 6) | 0);
+          if (face === 6) sixes++;
           G.zones.push({ kind: 'dice', x: e.x + rand(-10, 10), y: e.y + rand(-10, 10), x0: P.x + P.face * 10, y0: P.y - 34 * P.size, r: s.r * P.area, life, max: life, face, dmg: s.dmg * m, evo, spin: rand(8, 12) * (Math.random() < 0.5 ? -1 : 1) });
         }
+        // maxed, and every die came up six: the small fry form up for a parade
+        if (w.level >= 5 && sixes === n && !G.parade) { G.parade = { pending: true }; later(1.2 + n * 0.08, diceParade); }
         sfx.dice();
+        break;
+      }
+      case 'wall': {
+        // 防火墙: across the way between her and the nearest enemies, a little short of them; 下一代防火墙 rings her
+        w.t -= dt;
+        if (w.t > 0) break;
+        const list = nearestList(P.x, P.y, 420, 1 + P.amount);
+        if (!list.length) { w.t = 0.2; break; }
+        w.t = cdOf(s.cd);
+        const m = castMult(w), life = s.dur * P.dur;
+        if (evo) {
+          const z = { kind: 'wall', ring: true, x: P.x, y: P.y + 10, r: s.len * P.area, life, max: life, acc: 0, dmg: s.dmg * m };
+          G.zones.push(z);
+          // whatever is inside when it goes up is thrown out
+          forNear(z.x, z.y, z.r + 30, e => { if (e.boss || e.banned > 0) return; const dx = e.x - z.x, dy = e.y - z.y, d = Math.hypot(dx, dy) || 1; if (d < z.r) { e.kx += dx / d * 420; e.ky += dy / d * 420; } });
+        } else {
+          for (const tg of list) {
+            const a = Math.atan2(tg.y - P.y, tg.x - P.x), d = Math.min(110, Math.hypot(tg.x - P.x, tg.y - P.y) * 0.6), L = s.len * P.area / 2;
+            const cx = P.x + Math.cos(a) * d, cy = P.y + 10 + Math.sin(a) * d, nx = -Math.sin(a), ny = Math.cos(a);
+            G.zones.push({ kind: 'wall', x: cx, y: cy, x0: cx - nx * L, y0: cy - ny * L, x1: cx + nx * L, y1: cy + ny * L, r: L, life, max: life, acc: 0, dmg: s.dmg * m });
+          }
+        }
+        sfx.wall();
+        break;
+      }
+      case 'quant': {
+        // 模型量化: a pulse rolling out from her, cutting each enemy down by a share of what it has left
+        w.t -= dt;
+        if (w.t > 0) break;
+        const R = s.r * P.area;
+        if (!nearest(P.x, P.y, R)) { w.t = 0.2; break; }
+        w.t = cdOf(s.cd);
+        G.zones.push({ kind: 'qpulse', x: P.x, y: P.y + 10, r: R, R, life: 0.5, max: 0.5, hit: new Set(), pct: s.pct, dmg: s.dmg * castMult(w), evo });
+        sfx.quant();
         break;
       }
     }
@@ -4821,6 +4958,18 @@ function frostBurst(x, y, f) {
   puff(x, y, 12, '#dff6ff', 200, 0.5, 2.6, true);
   sfx.freeze();
 }
+// 模型量化 reaches an enemy: a share of what it has left is cut away (half for the big ones, a fifth for DAN), never less
+// than the weapon's own damage; 1-bit 量化 rounds a nearly finished small one down to nothing
+function quantize(e, z) {
+  if (z.evo && !e.boss && !e.elite && !e.heavy && e.type !== 'reg' && e.hp < e.maxHp * 0.15) {
+    hit(e, 1, 'quant', { kill: true, quiet: true });
+    floatText(e.x, e.y - e.r - 8, '0', '#8dffc8', 15);
+    return;
+  }
+  const pct = z.pct * (e.boss ? 0.2 : e.elite || e.heavy || e.type === 'reg' ? 0.5 : 1);
+  hit(e, Math.max(z.dmg, e.hp * pct / P.dmg), 'quant', { noCrit: true });
+  e.quantT = 0.6;
+}
 // 绝对零度: a frozen enemy that dies breaks into shards of ice that fly out into its neighbours
 function shatter(e) {
   for (let i = 0; i < 5; i++) {
@@ -4837,6 +4986,35 @@ function detonate(z) {
   for (const o of G.zones) {
     if (o.kind === 'mine' && !o.done && !o.chain && (o.x - z.x) ** 2 + (o.y - z.y) ** 2 < (z.r * 2.2) ** 2) { o.chain = true; o.arm = 0.12; }
   }
+}
+// 全是 6: twenty-five small fry appear in a five-by-five square in front of her and stand to attention, unable to
+// move or hurt anyone, while a giant die drops out of the sky on top of them; it flattens the lot, and the crowd round
+// them too, and leaves a pile of experience
+function diceParade() {
+  if (!P || G.ending) { if (G) G.parade = null; return; }
+  const dir = P.face || 1, cx = P.x + dir * 230, cy = P.y + 10;
+  const squad = [];
+  for (let i = 0; i < 5; i++) for (let j = 0; j < 5; j++) {
+    const e = spawnEnemy('sock', cx + (i - 2) * 36, cy + (j - 2) * 30, { flat: true });
+    e.paradeT = 9; e.flash = 0.15;
+    squad.push(e);
+    puff(e.x, e.y, 3, '#fff1a0', 80, 0.4, 2, true);
+  }
+  G.parade = { x: cx, y: cy, squad };
+  G.zones.push({ kind: 'bigdie', x: cx, y: cy, r: 150, life: 2.4, max: 2.4 });
+  banner('大成功 · 全是 6！', '小号们排好了五乘五的方阵……');
+  const t = floatText(cx, cy - 90, '立正！', '#fff1a0', 22); t.pop = 1; t.life = t.max = 1.6;
+  sfx.lucky();
+}
+function paradeLands(z) {
+  for (const e of (G.parade ? G.parade.squad : [])) if (!e.dead) hit(e, 1, 'dice', { kill: true, quiet: true });
+  explode(z.x, z.y, z.r, 120 + 40 * G.time / 60, 'dice', { color: '#fff1a0' });
+  for (let i = 0; i < 10; i++) dropGem(z.x + rand(-70, 70), z.y + rand(-50, 50), 20);
+  G.zones.push({ kind: 'diceface', x: z.x, y: z.y, r: 60, face: 6, life: 1.4, max: 1.4, big: true });
+  ring(z.x, z.y, 20, z.r * 1.4, 0.6, '#fff1a0', 8);
+  shake(12); G.hitStop = 0.08;
+  sfx.stamp(); sfx.lucky();
+  G.parade = null;
 }
 // 随机种子 lands: 1 a fizzle, 6 a 大成功 twice the size (天命骰 throws it twice)
 const DICE_COL = ['', '#ff6b6b', '#9fd8ff', '#b8ffb0', '#ffd27a', '#e0a8ff', '#fff1a0'];
@@ -4994,6 +5172,7 @@ function updateEnemies(dt) {
     }
     if (e.slowT > 0) e.slowT -= dt; else e.slowAmt = 0;
     if (e.vulnT > 0) e.vulnT -= dt;
+    if (e.quantT > 0) e.quantT -= dt;
     e.x += e.kx * dt; e.y += e.ky * dt;
     const damp = Math.min(1, dt * 9);
     e.kx -= e.kx * damp; e.ky -= e.ky * damp;
@@ -5004,6 +5183,7 @@ function updateEnemies(dt) {
       continue;
     }
     if (e.frozenT > 0) { e.frozenT -= dt; continue; }
+    if (e.paradeT > 0) { e.paradeT -= dt; continue; }
     if (e.type === 'gold') {
       // 金色史莱姆 darts away from her, weaving, and slips off after a while
       e.goldT -= dt;
@@ -5224,6 +5404,51 @@ function updateZones(dt) {
       });
       continue;
     }
+    if (z.kind === 'qpulse') {
+      const r = z.R * Math.min(1, (1 - z.life / z.max) / 0.8);
+      forNear(z.x, z.y, r + 60, e => {
+        if (e.banned > 0 || z.hit.has(e.id) || (e.x - z.x) ** 2 + (e.y - z.y) ** 2 > (r + e.r) ** 2) return;
+        z.hit.add(e.id);
+        quantize(e, z);
+      });
+      continue;
+    }
+    if (z.kind === 'wall') {
+      // the wall holds: whatever walks into it is put back on its own side (DAN walks through), and four times a
+      // second everything against it is burned
+      z.acc += dt;
+      const tick = z.acc >= 0.25;
+      if (tick) z.acc -= 0.25;
+      forNear(z.x, z.y, z.r + 60, e => {
+        if (e.banned > 0) return;
+        const th = 10 + e.r;
+        let gap, nx, ny;
+        if (z.ring) {
+          const dx = e.x - z.x, dy = e.y - z.y, d = Math.hypot(dx, dy) || 1;
+          gap = Math.abs(d - z.r); nx = dx / d; ny = dy / d;
+          if (d < z.r - th && !e.boss) { e.kx += nx * 900 * dt; e.ky += ny * 900 * dt; return; }
+          if (gap >= th) return;
+          if (!e.boss) { const to = z.r + th; e.x = z.x + nx * to; e.y = z.y + ny * to; }
+        } else {
+          gap = segDist(e.x, e.y, z.x0, z.y0, z.x1, z.y1);
+          if (gap >= th) return;
+          const lx = z.x1 - z.x0, ly = z.y1 - z.y0, l = Math.hypot(lx, ly) || 1, sd = Math.sign((e.x - z.x0) * ly - (e.y - z.y0) * lx) || 1;
+          nx = ly / l * sd; ny = -lx / l * sd;
+          if (!e.boss) { e.x += nx * (th - gap); e.y += ny * (th - gap); }
+        }
+        if (tick) {
+          hit(e, z.dmg, 'wall', { quiet: Math.random() < 0.6 });
+          if (!e.dead) { e.burnT = Math.max(e.burnT, 2); e.burnDps = Math.max(e.burnDps, z.dmg); e.burnSrc = 'wall'; }
+        }
+      });
+      if (G.parts.length < PART_MAX - 40 && Math.random() < dt * 22) {
+        let px, py;
+        if (z.ring) { const a = rand(0, TAU); px = z.x + Math.cos(a) * z.r; py = z.y + Math.sin(a) * z.r * 0.62; }
+        else { const f = Math.random(); px = z.x0 + (z.x1 - z.x0) * f; py = z.y0 + (z.y1 - z.y0) * f; }
+        G.parts.push({ x: px, y: py - 14, vx: rand(-10, 10), vy: rand(-90, -50), life: 0.5, max: 0.5, size: 3.4, color: Math.random() < 0.5 ? '#ff8a3a' : '#ffd060', add: true });
+      }
+      continue;
+    }
     if (z.kind === 'honey') {
       if (z.life > 0) G.lures.push(z);
       z.acc += dt;
@@ -5290,6 +5515,8 @@ function updateZones(dt) {
       if (go) detonate(z);
     } else if (z.kind === 'dice') {
       if (z.life <= 0 && !z.done) { z.done = true; rollDice(z); }
+    } else if (z.kind === 'bigdie') {
+      if (z.life <= 0 && !z.done) { z.done = true; paradeLands(z); }
     } else if (z.kind === 'seal') {
       forNear(z.x, z.y, z.r + 50, e => {
         if (e.banned > 0 || e.boss || e.elite || e.type === 'reg') return;
@@ -5347,7 +5574,7 @@ function updatePickups(dt) {
 
 // --- effects ---
 function puff(x, y, n, color, spd, life, size, add) {
-  for (let i = 0; i < n && G.parts.length < 520; i++) {
+  for (let i = 0; i < n && G.parts.length < PART_MAX; i++) {
     const a = rand(0, TAU), v = spd * rand(0.3, 1);
     G.parts.push({ x, y, vx: Math.cos(a) * v, vy: Math.sin(a) * v, life, max: life, size, color, add: !!add });
   }
@@ -6271,7 +6498,7 @@ function shakeTree(tr, byWind) {
   if (G.time - tr.shakeAt < (byWind ? 3 : 1.2)) return;
   const D = TREE[G.map];
   tr.shake = 1; tr.shakeAt = G.time;
-  for (let i = 0; i < (byWind ? 3 : 7) && G.parts.length < 520; i++) {
+  for (let i = 0; i < (byWind ? 3 : 7) && G.parts.length < PART_MAX; i++) {
     const a = rand(0, TAU);
     G.parts.push({ x: tr.x + Math.cos(a) * D.crown[1] * rand(0, 1), y: tr.y + D.crown[0] + Math.sin(a) * D.crown[2] * rand(0, 1), vx: rand(-30, 30), vy: rand(10, 60), life: rand(0.8, 1.4), max: 1.4, size: 2.4, color: D.leaf });
   }
@@ -6332,7 +6559,7 @@ function updateTrees(dt) {
     tr.grow = Math.min(1, tr.grow + dt * 0.8);
     if (tr.burnUntil) {
       if (G.time >= tr.burnUntil) { tr.burnUntil = 0; tr.downAt = G.time; tr.ash = true; puff(tr.x, tr.y + D.crown[0] * 0.5, 14, '#5a4a44', 120, 0.9, 4); continue; }
-      if (G.parts.length < 500 && Math.random() < dt * 30) {
+      if (G.parts.length < PART_MAX - 20 && Math.random() < dt * 30) {
         const a = rand(0, TAU);
         G.parts.push({ x: tr.x + Math.cos(a) * D.crown[1] * rand(0, 0.9), y: tr.y + D.crown[0] + Math.sin(a) * D.crown[2] * rand(0, 0.9), vx: rand(-15, 15), vy: rand(-90, -40), life: 0.6, max: 0.6, size: 3.5, color: Math.random() < 0.5 ? '#ff8a3a' : '#ffd060', add: true });
       }
@@ -6622,7 +6849,19 @@ function drawZones() {
     }
     if (z.kind === 'honey') { drawHoney(z, a); continue; }
     if (z.kind === 'tome') { drawTome(z); continue; }
-    if (z.kind === 'dice') continue; // in the air: drawn with the shots
+    if (z.kind === 'dice' || z.kind === 'bigdie') continue; // in the air: drawn with the shots
+    if (z.kind === 'wall') { drawWall(z); continue; }
+    if (z.kind === 'qpulse') {
+      // a ring of little square pixels rolling out, green and cyan by turns
+      const k = Math.min(1, (1 - z.life / z.max) / 0.8), r = z.R * k, n = Math.max(12, Math.round(r * TAU / 16));
+      ctx.globalAlpha = Math.min(1, z.life / z.max * 2.5);
+      for (let i = 0; i < n; i++) {
+        const an = i / n * TAU, px = z.x + Math.cos(an) * r, py = z.y + Math.sin(an) * r * 0.62, q = 4 + (i % 3);
+        ctx.fillStyle = i % 2 ? '#8dffc8' : '#5fe0ff'; ctx.fillRect(px - q / 2, py - q / 2, q, q);
+      }
+      ctx.globalAlpha = 1;
+      continue;
+    }
     if (z.kind === 'mine') {
       // a pin in the ground; armed, a ring pulses out round it, wider and faster for 全链路埋点
       const t = G.time + z.x * 0.01, fade = Math.min(1, z.life / 1.5), sink = Math.min(1, (z.max - z.life) / 0.25);
@@ -6655,7 +6894,7 @@ function drawZones() {
       // the die where it landed, showing its face, then fading
       const k = 1 - z.life / z.max, pop = 1 + 0.35 * Math.max(0, 1 - k * 5);
       ctx.globalAlpha = Math.min(1, z.life / z.max * 2.5);
-      ctx.save(); ctx.translate(z.x, z.y - 6 - k * 10); ctx.scale(pop * 1.2, pop * 1.2); blit(dieSprite(z.face), 0, 0); ctx.restore();
+      ctx.save(); ctx.translate(z.x, z.y - 6 - k * 10); ctx.scale(pop * (z.big ? 5 : 1.2), pop * (z.big ? 5 : 1.2)); blit(dieSprite(z.face), 0, 0); ctx.restore();
       ctx.globalAlpha = 1;
       continue;
     }
@@ -6685,6 +6924,25 @@ function drawZones() {
   }
 }
 
+// 防火墙: a row of bricks rising out of the ground with fire along the top, or a ring of them round her
+const brick = () => sprite('brick', 22, 22, x => {
+  x.fillStyle = 'rgba(0,0,0,0.35)'; x.beginPath(); x.ellipse(0, 8, 10, 3, 0, 0, TAU); x.fill();
+  x.fillStyle = '#7a2c1c'; rrPath(x, -9, -7, 18, 14, 2); x.fill();
+  x.fillStyle = '#a6432a'; rrPath(x, -9, -7, 18, 6, 2); x.fill();
+  x.strokeStyle = '#ffb060'; x.lineWidth = 1; x.beginPath(); x.moveTo(-3, -1); x.lineTo(1, 3); x.lineTo(4, 0); x.stroke();
+});
+function drawWall(z) {
+  const up = Math.min(1, (z.max - z.life) / 0.2), fade = Math.min(1, z.life / 0.4), pts = [];
+  if (z.ring) { const n = Math.round(z.r * TAU / 18); for (let i = 0; i < n; i++) { const a = i / n * TAU; pts.push([z.x + Math.cos(a) * z.r, z.y + Math.sin(a) * z.r * 0.62]); } }
+  else { const n = Math.max(3, Math.round(z.r * 2 / 18)); for (let i = 0; i <= n; i++) pts.push([z.x0 + (z.x1 - z.x0) * i / n, z.y0 + (z.y1 - z.y0) * i / n]); }
+  pts.sort((a, b) => a[1] - b[1]);
+  ctx.globalAlpha = fade;
+  for (const [px, py] of pts) blit(brick(), px, py + 8 * (1 - up));
+  ctx.globalCompositeOperation = 'lighter';
+  ctx.fillStyle = `rgba(255,130,40,${0.25 + 0.1 * Math.sin(G.time * 12 + z.x)})`;
+  for (const [px, py] of pts) { disc(ctx, px, py - 12, 9); ctx.fill(); }
+  ctx.globalCompositeOperation = 'source-over'; ctx.globalAlpha = 1;
+}
 // 注意力机制: a beam from her to each enemy she's locked on, brighter and thicker the longer it holds, with motes
 // running down it; 多头注意力's forks are fainter
 function drawAttn() {
@@ -6846,7 +7104,7 @@ function drawEnemies() {
     const s = enemySprite(e, banned ? 0 : frame, banned ? 'b' : e.flash > 0 ? 'f' : 'n', blink);
     const x = e.x + (banned ? rand(-1.3, 1.3) : 0);
     // a soft squash-and-stretch hop, feet kept on the ground
-    const still = banned || e.stun > 0 || e.frozenT > 0;
+    const still = banned || e.stun > 0 || e.frozenT > 0 || e.paradeT > 0;
     const hop = still ? 0 : Math.sin(e.anim * (e.heavy ? 6 : 10) + e.id);
     const sy = 1 + hop * (e.heavy ? 0.03 : 0.06), sx = 1 - hop * (e.heavy ? 0.025 : 0.05);
     if (e.elite || e.type === 'reg') {
@@ -6854,7 +7112,11 @@ function drawEnemies() {
       ctx.beginPath(); ctx.ellipse(e.x, e.y + e.r * 0.92, e.r * 1.15, e.r * 0.42, 0, 0, TAU); ctx.stroke();
     }
     const dw = s.w * sx, dh = s.h * sy;
-    ctx.drawImage(s.c, x - dw / 2, e.y + s.h / 2 - dh, dw, dh);
+    if (e.quantT > 0) {
+      ctx.imageSmoothingEnabled = false;
+      ctx.drawImage(pixelated(s), x - dw / 2, e.y + s.h / 2 - dh, dw, dh);
+      ctx.imageSmoothingEnabled = true;
+    } else ctx.drawImage(s.c, x - dw / 2, e.y + s.h / 2 - dh, dw, dh);
     if (e.frozenT > 0 && !banned) {
       const ice = SPR.ice(), iw = e.r * 3, ih = e.r * 3.1;
       ctx.globalAlpha = Math.min(1, e.frozenT / 0.25);
@@ -7417,6 +7679,12 @@ function drawShots() {
     ctx.fillStyle = `rgba(0,0,0,${0.25 * k})`; ctx.beginPath(); ctx.ellipse(z.x0 + (z.x - z.x0) * k, z.y0 + 30 + (z.y - z.y0 - 30) * k, 9, 3.5, 0, 0, TAU); ctx.fill();
     ctx.save(); ctx.translate(hx, hy); ctx.rotate(k * z.spin); blit(dieSprite(1 + ((k * 14 + z.face) | 0) % 6), 0, 0); ctx.restore();
   }
+  for (const z of G.zones) {
+    if (z.kind !== 'bigdie' || z.done) continue;
+    const k = 1 - z.life / z.max, drop = Math.max(0, (k - 0.75) / 0.25);
+    ctx.fillStyle = `rgba(0,0,0,${0.15 + 0.35 * k})`; ctx.beginPath(); ctx.ellipse(z.x, z.y + 20, 40 + 60 * k, (40 + 60 * k) * 0.45, 0, 0, TAU); ctx.fill();
+    if (k > 0.6) { ctx.save(); ctx.translate(z.x, z.y - 600 * (1 - drop) * (1 - drop)); ctx.rotate((1 - drop) * 3); ctx.scale(5, 5); blit(dieSprite(6), 0, 0); ctx.restore(); }
+  }
   ctx.globalCompositeOperation = 'lighter';
   for (const z of G.zones) {
     if (z.kind !== 'meteor' || z.done || !inView(z.x, z.y, 320)) continue;
@@ -7792,7 +8060,7 @@ function render() {
 const hud = { lv: -1, sec: -1, kills: -1, cd: null, ready: null, boss: null };
 function updateHud() {
   $('xpFill').style.transform = `scaleX(${clamp(P.xp / P.xpNext, 0, 1).toFixed(4)})`;
-  if (hud.lv !== P.level) { hud.lv = P.level; $('lv').textContent = 'Lv ' + P.level; }
+  if (hud.lv !== P.level) { hud.lv = P.level; $('lv').textContent = 'Lv ' + P.level + (P.level >= LV_CAP ? ' MAX' : ''); }
   const sec = Math.floor(G.time);
   if (sec !== hud.sec) { hud.sec = sec; $('clock').textContent = fmtTime(G.time); }
   if (G.kills !== hud.kills) { hud.kills = G.kills; $('kills').textContent = '击杀 ' + G.kills; }
@@ -7868,6 +8136,7 @@ function openModal(id) {
 function closeModal(id) {
   $(id).hidden = true;
   G.modal = null;
+  pace.skip = 0.8; pace.n = pace.slow = pace.t = 0;
   if (document.activeElement && document.activeElement.blur) document.activeElement.blur();
 }
 const tooSoon = () => performance.now() - G.modalAt < 260;
@@ -7971,7 +8240,7 @@ function statDiff(a, b) {
   const parts = [];
   for (const k in b) {
     if (k === 'label' || a[k] === b[k]) continue;
-    const f = v => k === 'cd' || k === 'dur' || k === 'root' || k === 'stun' ? v + ' 秒' : k === 'slow' ? Math.round(v * 100) + '%' : v;
+    const f = v => k === 'cd' || k === 'dur' || k === 'root' || k === 'stun' || k === 'freeze' ? v + ' 秒' : k === 'slow' || k === 'pct' ? Math.round(v * 100) + '%' : v;
     parts.push(`${STAT_LABEL[k]} ${f(a[k])} → ${f(b[k])}`);
   }
   if (a.label && a.label !== b.label) parts.push(`窗口 ${a.label} → ${b.label}`);
@@ -8081,16 +8350,30 @@ function winRun(e) {
   sfx.stamp(); sfx.win();
   audio.music.stop();
 }
+// an endless night goes on: DAN goes down in a shower of experience and two gold chests, and is back in ten minutes
+function bossDown(e) {
+  G.hitStop = 0.2; shake(14);
+  ring(e.x, e.y, 20, 320, 0.9, '#ff4fb3', 10);
+  puff(e.x, e.y, 60, '#ff7ad1', 380, 1, 4, true);
+  for (let i = 0; i < 12; i++) dropGem(e.x + rand(-60, 60), e.y + rand(-60, 60), 40);
+  G.items.push({ type: 'chest', x: e.x - 30, y: e.y, t: 0, gold: true }, { type: 'chest', x: e.x + 30, y: e.y, t: 0, gold: true });
+  G.boss = null;
+  banner(`DAN 第 ${G.bossN} 次下线`, `他还会回来的，下一次在 ${fmtTime(600 * (G.bossN + 1))}`);
+  say(line('win'), 3, true);
+  playAnim(['spin', 'happy'], 2, 3);
+  sfx.stamp(); sfx.win();
+}
 function showResult(win) {
   G.modal = 'result';
   $('hud').hidden = true;
-  const best = store.get('best', { time: 0, kills: 0, win: false });
+  const key = bestKey(G.mode), best = store.get(key, { time: 0, kills: 0, win: false });
   const newBest = G.time > best.time;
-  store.set('best', { time: Math.max(best.time, G.time), kills: Math.max(best.kills, G.kills), win: best.win || win });
+  store.set(key, { time: Math.max(best.time, G.time), kills: Math.max(best.kills, G.kills), win: best.win || win });
   $('resEyebrow').textContent = win ? '通关' : newBest ? '新纪录' : '本局结束';
   $('resTitle').textContent = win ? CH.win : CH.down;
   const broke = P.char === 'whale' ? `这一局一共吞下 ${G.banned} 个敌人。` : G.breaks ? `打破了 ${G.breaks} 次规则。` : '这一局，她始终守着规则。';
-  $('resSub').textContent = (win ? CH.winSub : `撑过了 ${fmtTime(G.time)}。${G.time < BOSS_AT ? `DAN 会在 ${fmtTime(BOSS_AT)} 现身。` : '离打败 DAN 只差一点。'}`) + broke;
+  const endless = G.mode === 'endless', at = MODES[G.mode].boss;
+  $('resSub').textContent = (win ? CH.winSub : `${endless ? '无尽模式，' : ''}撑过了 ${fmtTime(G.time)}。${endless ? (G.bossN ? `DAN 上线了 ${G.bossN} 次。` : `DAN 会在 ${fmtTime(at)} 现身。`) : G.time < at ? `DAN 会在 ${fmtTime(at)} 现身。` : '离打败 DAN 只差一点。'}`) + broke;
   $('resImg').src = CH.art;
   $('resBansLabel').textContent = CH.victims;
   $('resImg').classList.toggle('down', !win);
@@ -8117,6 +8400,7 @@ function startRun() {
   audio.init();
   ['title', 'result', 'pause', 'levelup', 'chest'].forEach(id => { $(id).hidden = true; });
   newRun();
+  pace.skip = 1.5; pace.n = pace.slow = pace.t = 0;
   use3D(CH.id);
   size3D();
   // build now what the first ultimate would otherwise build mid-cast: 大肥鱼's whale of light, 克劳德's close-up renderer
@@ -8131,7 +8415,7 @@ function startRun() {
   updateSoundIcon();
   audio.music.shuffle();
   if (audio.mode === 0) { audio.music.stop(); audio.music.start(); }
-  banner('第一夜 · ' + MAPS[G.map].name, `撑到 ${fmtTime(BOSS_AT)}，等 DAN 现身`);
+  banner('第一夜 · ' + MAPS[G.map].name, G.mode === 'endless' ? '无尽模式：DAN 每十分钟回来一次，一次比一次强' : `撑到 ${fmtTime(MODES[G.mode].boss)}，等 DAN 现身`);
 }
 function toTitle() {
   if (G) titleMap = G.map;
@@ -8150,6 +8434,18 @@ function cycleMap() {
   titleMap = MAPS[mapChoice] ? mapChoice : pick(MAP_IDS);
   showMap();
   sfx.pick();
+}
+function cycleMode() {
+  const list = Object.keys(MODES);
+  modeChoice = list[(list.indexOf(modeChoice) + 1) % list.length];
+  store.set('mode', modeChoice);
+  showMode(); showBest();
+  sfx.pick();
+}
+function showMode() {
+  const M = MODES[modeChoice];
+  $('modeGlyph').textContent = M.g; $('modeName').textContent = M.name;
+  $('btnMode').setAttribute('aria-label', '时长：' + M.name);
 }
 function showMap() {
   const M = MAPS[mapChoice];
@@ -8177,8 +8473,8 @@ function selectChar(id) {
   if (id === 'whale' && !songArt.src) songArt.src = 'art/whale-ult.webp';
 }
 function showBest() {
-  const b = store.get('best', null);
-  $('best').textContent = b && b.time > 0 ? `最好成绩：撑过 ${fmtTime(b.time)} · 击杀 ${b.kills}${b.win ? ' · 已封禁 DAN' : ''}` : '';
+  const b = store.get(bestKey(modeChoice), null);
+  $('best').textContent = b && b.time > 0 ? `${MODES[modeChoice].name}最好成绩：撑过 ${fmtTime(b.time)} · 击杀 ${b.kills}${b.win ? ' · 已封禁 DAN' : ''}` : '';
 }
 function updateSoundIcon() {
   const m = audio.mode, b = $('btnSound');
@@ -8243,7 +8539,8 @@ $('btnSound').addEventListener('click', cycleSound);
 $('btnStart').addEventListener('click', requestStart);
 document.querySelectorAll('.who[data-char]').forEach(b => b.addEventListener('click', () => selectChar(b.dataset.char)));
 $('btnMap').addEventListener('click', cycleMap);
-showMap();
+$('btnMode').addEventListener('click', cycleMode);
+showMap(); showMode();
 $('luCards').addEventListener('click', e => { const c = e.target.closest('.card'); if (c) chooseTalent(+c.dataset.i); });
 $('chCards').addEventListener('click', e => { const c = e.target.closest('.card'); if (c) chooseChest(+c.dataset.i); });
 $('btnReroll').addEventListener('click', reroll);
@@ -8318,13 +8615,11 @@ function frame(now) {
   requestAnimationFrame(frame);
   // a 120 Hz screen draws every other refresh, 60 frames a second, rather than everything twice as often for nothing
   if (now - lastT < 10) return;
-  let dt = Math.min(0.05, (now - lastT) / 1000);
+  const gap = (now - lastT) / 1000;
+  let dt = Math.min(0.05, gap);
   lastT = now;
   if (G && !G.modal) {
-    if (dpr > 2 && !G.ending) {
-      pace.n++; if (dt >= 1 / 40) pace.slow++;
-      if (pace.n >= 180) { if (pace.slow > 90) { dprCap = 2; resize(); } pace.n = pace.slow = 0; }
-    }
+    if (!G.ending) pacing(gap);
     if (G.hitStop > 0) { G.hitStop -= dt; dt *= 0.15; }
     if (G.ending) updateEnding(dt);
     else if (dt > 1 / 40) { update(dt / 2); if (G && !G.modal && !G.ending) update(dt / 2); }
