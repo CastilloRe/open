@@ -4946,9 +4946,9 @@ const SPAWN_TABLE = [
   { type: 'carpool', from: 110, w: t => 1.5 + t / 100 },
   { type: 'jail', from: 165, w: t => 0.8 + t / 240 },
   { type: 'heavy', from: 225, w: t => 0.8 + t / 160 },
-  { type: 'muncher', from: 75, w: t => 1 + t / 150 },
-  { type: 'drainer', from: 195, w: t => 0.5 + t / 400 },
-  { type: 'glutton', from: 345, w: t => 0.12 + t / 2400 },
+  { type: 'muncher', from: 75, w: t => 0.6 + t / 250 },
+  { type: 'drainer', from: 195, w: t => 0.4 + t / 500 },
+  { type: 'glutton', from: 345, w: t => 0.04 + t / 6000 },
 ];
 const hpScale = t => 1 + t / 60 * 0.25 + Math.pow(t / 60, 2) * 0.018;
 const dmgScale = t => 1 + t / 60 * 0.09;
@@ -8352,8 +8352,8 @@ function updateEnemies(dt) {
     } else if (e.type === 'glutton' && e.inhale > 0) {
       // 饕餮 breathing in: she is dragged towards it, the experience on the ground too, and it eats what reaches it
       e.inhale -= dt;
-      if (e.inhale <= 0) e.inhaleT = rand(5, 7);
-      if (d < 360 && !P.dash) { const v = 120 * (1 - d / 420); P.x -= dx / d * v * dt; P.y -= dy / d * v * dt; }
+      if (e.inhale <= 0) e.inhaleT = rand(6, 8);
+      if (d < 320 && !P.dash) { const v = 85 * (1 - d / 380); P.x -= dx / d * v * dt; P.y -= dy / d * v * dt; }
       for (const g of G.gems) {
         if (g.dead) continue;
         const gx = e.x - g.x, gy = e.y - g.y, gd = Math.hypot(gx, gy) || 1;
@@ -8365,7 +8365,7 @@ function updateEnemies(dt) {
       let vx = dx / d, vy = dy / d;
       if (e.type === 'glutton') {
         e.inhaleT -= dt;
-        if (e.inhaleT <= 0 && d < 380) { e.inhale = 1.6; floatText(e.x, e.y - e.r - 16, '吸——', '#c9ffe0', 14); sfx.inhale(); }
+        if (e.inhaleT <= 0 && d < 340) { e.inhale = 1.4; floatText(e.x, e.y - e.r - 16, '吸——', '#c9ffe0', 14); sfx.inhale(); }
       }
       if (e.type === 'crawler') { const wob = Math.sin(e.anim * 6 + e.id) * 0.45; vx += -dy / d * wob; vy += dx / d * wob; }
       e.x += vx * sp * dt; e.y += vy * sp * dt;
