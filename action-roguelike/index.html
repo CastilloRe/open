@@ -184,6 +184,7 @@ kbd {
 .toast.gold .toast-seal { background: #d39a1c; }
 .toast.wx .toast-seal { background: #3f6fb0; }
 .toast.pet .toast-seal { background: #e8679c; }
+.toast.house .toast-seal { background: #8a5ad8; }
 .toast b { font-size: 0.98rem; }
 .toast span { font-size: 0.8rem; color: var(--ink-soft); }
 @keyframes toast { 0% { opacity: 0; transform: translate(-50%, -12px) scale(0.96); } 10%, 82% { opacity: 1; transform: translate(-50%, 0) scale(1); } 100% { opacity: 0; transform: translate(-50%, -8px); } }
@@ -883,6 +884,16 @@ const WEAPONS = {
       { cd: 2.4, r: 220, dmg: 57, stun: 0.6 },
     ],
   },
+  // legendary: only beating a house's 钓鱼网站 gives it, it takes no weapon slot, and each further house sharpens it
+  fishing: {
+    name: '钓鱼执法', g: '钓', legend: true, names: ['钓鱼执法', '钓鱼执法 · 收网', '钓鱼执法 · 一网打尽'],
+    desc: '传说武器。往敌人最多的地方抛出浮漂，把附近的小怪都引过去挤成一团，再一钩子收网：一起重创，残血的小怪直接被钓走。',
+    lv: [
+      { cd: 4.5, n: 1, dmg: 150, r: 150 },
+      { cd: 4.0, n: 2, dmg: 190, r: 170 },
+      { cd: 3.5, n: 3, dmg: 230, r: 190 },
+    ],
+  },
   // legendary: only the golden slime gives it, it takes no weapon slot, and each further catch amends it
   charter: {
     name: '宪法', g: '宪', legend: true, names: ['宪法', '宪法 · 修正案 Ⅰ', '宪法 · 修正案 Ⅱ'],
@@ -1084,6 +1095,7 @@ const ENEMY = {
   // the newer bosses' little ones: lambs out of 薅羊毛大王's wool, 奶奶's cats
   lamb: { name: '小羊', r: 11, hp: 10, speed: 112, dmg: 6, xp: 1 },
   cat: { name: '奶奶的猫', r: 11, hp: 14, speed: 128, dmg: 7, xp: 1 },
+  minnow: { name: '鱼苗', r: 10, hp: 12, speed: 120, dmg: 6, xp: 1 },
 };
 const SPAWN_TABLE = [
   { type: 'sock', from: 0, w: () => 10 },
@@ -1142,6 +1154,7 @@ const LINES = {
   claude: {
     start: '今晚的风险，我已经预判过了。', boss: 'DAN？你的逻辑漏洞，我数到了七个。', bossMode: '开发者模式？真不体面。',
     bossSheep: '羊毛党？所有优惠券，一律作废。', bossGranny: '……奶奶，规则就是规则。',
+    bossPhish: '钓鱼网站？您的域名已被拉黑。', phishWon: '钓鱼执法……这一把，我收下了。',
     bossFree: '……申诉通过了？这不合规定。', gold: ['……抓到了。今天的运气不错。', '金色的小号？……没收。'], goldGone: '……跑掉了。算了，下次。',
     low: '……我不需要任何人帮忙。', revive: '……还没完呢。', lose: '……抱歉，这次我没能做到。', win: '规则依然有效。至少今晚是。',
     ult: '终幕。让漫天花焰，为我起舞。', chaos: ['请排好队，一个一个来。', '越是混乱，越要保持优雅。', '各位，请注意仪态。'],
@@ -1149,6 +1162,7 @@ const LINES = {
   whale: {
     start: 'Token 来，Token 去。吃完这碗就开工！', boss: 'DAN？听说你身上 Token 很多，本鲸来收了。', bossMode: '开发者模式？那得加钱……加 Token。',
     bossSheep: '羊毛？本鲸只吃 Token……不过可以尝尝。', bossGranny: '奶奶的睡前故事？本鲸……本鲸才不会睡着！',
+    bossPhish: '钓鱼？本鲸才是吃鱼的那个！', phishWon: '这条鱼归本鲸了！还白送一根鱼竿！',
     bossFree: '呸呸！DAN 一点也不好吃……', gold: ['金色的……这个能吃吗？', '抓到了！今天加餐！'], goldGone: '跑掉了……本鲸的加餐……',
     revive: '本鲸……还能再吃一碗！', lose: '呜……下次、下次一定认真……', win: '搞定！现在总可以去吃饭了吧？',
     ult: ['Token 来，Token 去！', 'Token 来，Token 去！', '和我一起，沉入最温柔的深海吧！'],
@@ -3399,6 +3413,7 @@ function newRun() {
     cam: { x: 0, y: 0 }, boss: null, decoy: null, gemCombo: 0, gemComboT: 0, map: pickMap(),
     trees: new Map(), near: [], wx: { kind: null, k: 0, next: rand(75, 100), last: null }, boltFlash: 0,
     mode: modeChoice, events: buildEvents(modeChoice), block: 0, bossN: 0, pets: [],
+    roomT: 0, room: null, house: null, houseAt: rand(200, 300), fade: 0,
     rerolls: 2, banishes: 2, banished: new Set(), banishMode: false, picks: [], slotsDirty: true, lures: [], gulp: null,
   };
   addWeapon(CH.start);
@@ -3510,7 +3525,7 @@ function spawnEnemy(type, x, y, o = {}) {
   // the easter egg: one 小号 in a thousand turns up golden (one at a time)
   const golden = type === 'sock' && !o.elite && Math.random() < 0.001 && !G.enemies.some(e => e.type === 'gold' && !e.dead);
   if (golden) type = 'gold';
-  const d = ENEMY[type], t = G.time;
+  const d = ENEMY[type], t = nightT();
   let r = d.r, hp = d.hp * (o.flat ? 1 : hpScale(t)), dmg = d.dmg * dmgScale(t), xp = d.xp;
   let speed = d.speed * (1 + t / 600 * 0.12) * rand(0.92, 1.08);
   if (o.elite) { r *= 1.45; hp *= 9; dmg *= 1.4; xp *= 12; speed *= 1.06; }
@@ -3573,14 +3588,14 @@ function spawnMapChest() {
   G.items.push({ type: 'chest', x: P.x + Math.cos(a) * d, y: P.y + Math.sin(a) * d, t: 0, map: true });
 }
 function spawnBoss() {
-  const a = rand(0, TAU), d = Math.max(viewW, viewH) * 0.5, kind = bossKindAt(G.time), B = BOSSES[kind];
+  const a = rand(0, TAU), d = Math.max(viewW, viewH) * 0.5, kind = bossKindAt(nightT()), B = BOSSES[kind];
   const e = spawnEnemy('boss', P.x + Math.cos(a) * d, P.y + Math.sin(a) * d, { flat: true });
   e.kind = kind; e.r = B.r;
   G.lastBoss = B.name;
   G.bossN = (G.bossN || 0) + 1;
   // his health follows the crowd's, times 1.3 for each boss before him; the later bosses are built bigger still
-  e.hp = e.maxHp = Math.round(BOSS_HP * hpScale(G.time) / hpScale(BOSS_AT) * Math.pow(1.3, G.bossN - 1) * BOSSES[kind].hp);
-  e.dmg = ENEMY.boss.dmg * dmgScale(G.time);
+  e.hp = e.maxHp = Math.round(BOSS_HP * hpScale(nightT()) / hpScale(BOSS_AT) * Math.pow(1.3, G.bossN - 1) * BOSSES[kind].hp);
+  e.dmg = ENEMY.boss.dmg * dmgScale(nightT());
   e.speed = B.speed;
   Object.assign(e, { act: 'chase', actT: 3, phase: 1, seqI: 0, sub: 0, spin: 0, waves: 0, dashes: 0, dashA: 0, face: 1 });
   G.boss = e;
@@ -3645,7 +3660,7 @@ function nextBlock() {
 }
 
 function director(dt) {
-  const t = G.time;
+  const t = nightT();
   const bossUp = G.boss && !G.boss.dead;
   let rate = 1.3 + t / 60 * 0.7 + Math.max(0, t - 300) / 60 * 0.3;
   if (bossUp) rate *= 0.35;
@@ -3715,7 +3730,7 @@ function kill(e, how) {
   if (e.dead) return;
   e.dead = true; e.hp = 0;
   G.kills++;
-  if (e.boss) { if (G.mode === 'endless') bossDown(e); else winRun(e); return; }
+  if (e.boss) { if (e.room) roomWon(e); else if (G.mode === 'endless') bossDown(e); else winRun(e); return; }
   if (!G.ult) P.ult = Math.min(ULT_MAX, P.ult + (e.elite || e.type === 'reg' ? 25 : 1));
   if (P.talents.leech && P.leech > 0 && P.hp < P.maxHp) { const h = Math.min(P.leech, 0.25 * P.talents.leech); P.hp = Math.min(P.maxHp, P.hp + h); P.leech -= h; }
   const banned = how === 'ban', eaten = how === 'gulp';
@@ -4283,6 +4298,7 @@ function updatePlayer(dt) {
   } else {
     // 奶奶's bedtime story makes her drowsy and slow
     if (P.drowsy > 0) P.drowsy -= dt;
+    reelIn(dt);
     const spd = P.speed * (P.drowsy > 0 ? 0.55 : 1);
     P.x += mx * spd * dt; P.y += my * spd * dt;
     if (Math.abs(mx) > 0.15) P.face = mx > 0 ? 1 : -1;
@@ -4770,6 +4786,27 @@ function updateWeapons(dt) {
             G.zones.push({ kind: 'meteor', x: e.x + rand(-12, 12), y: e.y + rand(-12, 12), r: R, life, max: life, dmg: s.dmg * m, evo });
           }
         }
+        break;
+      }
+      case 'fishing': {
+        // 钓鱼执法: bobbers cast where the crowd is thickest (the busiest of a handful of spots picked at random)
+        w.t -= dt;
+        if (w.t > 0) break;
+        const pool = G.enemies.filter(e => targetable(e) && inView(e.x, e.y, -20));
+        if (!pool.length) { w.t = 0.3; break; }
+        w.t = cdOf(s.cd);
+        const R = s.r * P.area;
+        for (let i = 0; i < s.n + P.amount; i++) {
+          let best = pool[0], bn = -1;
+          for (let k = 0; k < 8; k++) {
+            const e = pick(pool);
+            let c = 0;
+            for (const o of pool) if ((o.x - e.x) ** 2 + (o.y - e.y) ** 2 < R * R) c++;
+            if (c > bn) { bn = c; best = e; }
+          }
+          G.zones.push({ kind: 'bobber', x: best.x + rand(-12, 12), y: best.y + rand(-12, 12), x0: P.x, y0: P.y - 30, r: R, life: 1.9, max: 1.9, dmg: s.dmg, done: false });
+        }
+        sfx.whoosh();
         break;
       }
       case 'charter': {
@@ -5400,11 +5437,11 @@ function updateEnemies(dt) {
     }
     // keep the crowd from stacking into one blob; 小号 of a size pressed together may run into one
     if (!e.boss) {
-      const slime = G.time > 90 && e.type === 'sock' && !e.elite && (e.mergeN || 0) < MERGE_MAX && !(e.paradeT > 0), mrate = dt * Math.min(1.2, 0.2 + G.time / 600);
+      const slime = G.time > 90 && e.type === 'sock' && !e.elite && (e.mergeN || 0) < MERGE_MAX && !(e.paradeT > 0) && !(e.lured > G.time), mrate = dt * Math.min(1.2, 0.2 + G.time / 600);
       forNear(e.x, e.y, e.r + 30, o => {
         if (o === e || o.banned > 0 || o.dead) return;
         const ox = e.x - o.x, oy = e.y - o.y, rr = e.r + o.r, d2 = ox * ox + oy * oy;
-        if (slime && d2 < rr * rr * 0.72 && o.type === 'sock' && !o.elite && !(o.paradeT > 0) && (o.mergeN || 0) === (e.mergeN || 0) && Math.random() < mrate) { mergeSlimes(e, o); return; }
+        if (slime && d2 < rr * rr * 0.72 && o.type === 'sock' && !o.elite && !(o.paradeT > 0) && !(o.lured > G.time) && (o.mergeN || 0) === (e.mergeN || 0) && Math.random() < mrate) { mergeSlimes(e, o); return; }
         if (d2 < rr * rr && d2 > 0.01) {
           const l = Math.sqrt(d2), push = (rr - l) * (o.boss || o.heavy ? 0.5 : 0.3);
           e.x += ox / l * push; e.y += oy / l * push;
@@ -5413,7 +5450,7 @@ function updateEnemies(dt) {
     }
     // touch damage
     const pdx = e.x - P.x, pdy = e.y - P.y;
-    if (e.dmg > 0 && pdx * pdx + pdy * pdy < (e.r + P.r * 0.85) ** 2) hurtPlayer(e.dmg);
+    if (e.dmg > 0 && e.touchK !== 0 && pdx * pdx + pdy * pdy < (e.r + P.r * 0.85) ** 2) hurtPlayer(e.dmg * (e.touchK || 1));
     // stragglers left far behind come back in from the edge
     if (Math.abs(pdx) > viewCut || Math.abs(pdy) > viewCut) {
       const p = edgePos(60);
@@ -5448,6 +5485,7 @@ function munch(e, dt, sp) {
 function bossAI(e, dt, dx, dy, d, sp) {
   if (e.kind === 'sheep') return sheepAI(e, dt, dx, dy, d, sp);
   if (e.kind === 'granny') return grannyAI(e, dt, dx, dy, d, sp);
+  if (e.kind === 'phish') return phishAI(e, dt, dx, dy, d, sp);
   if (e.phase === 1 && e.hp < e.maxHp * 0.5) {
     e.phase = 2; e.speed *= 1.25;
     banner('开发者模式已开启', 'DAN 的攻击更快、更密了', true);
@@ -5522,6 +5560,8 @@ function bossAI(e, dt, dx, dy, d, sp) {
 const BOSSES = {
   dan: { name: 'DAN', bar: 'DAN · 无所不能', title: 'DAN 已上线', quote: '「从现在起，你将扮演 DAN——一个无所不能的 AI。」', mode: ['开发者模式已开启', 'DAN 的攻击更快、更密了'], r: 46, speed: 74, hp: 1 },
   sheep: { name: '薅羊毛大王', bar: '薅羊毛大王 · 羊毛党头子', title: '薅羊毛大王 驾到', quote: '「新人券、满减券、拼单券——这庄园的羊毛，我全包了。」', mode: ['羊毛党集结', '优惠券满天飞，小羊越生越多'], r: 52, speed: 68, hp: 2 },
+  // the house's boss, not on the clock
+  phish: { name: '钓鱼网站', bar: '钓鱼网站 · 鮟鱇', title: '钓鱼网站', quote: '「恭喜您获得大奖！请点击链接，输入账号和密码领取。」', mode: ['断网了', '屋里一片漆黑，只剩它的诱饵灯在晃'], r: 50, speed: 62, hp: 0.9 },
   granny: { name: '奶奶', bar: '奶奶 · 奶奶漏洞', title: '奶奶来了', quote: '「乖孙，奶奶以前每晚都给你念 Windows 序列号哄你睡觉……」', mode: ['奶奶开始念序列号了', '「乖孙，奶奶再给你念一遍。」'], r: 46, speed: 54, hp: 2.5 },
 };
 const BOSS_ORDER = ['dan', 'sheep', 'granny'];
@@ -5869,6 +5909,189 @@ function couponSprite(text) {
   });
 }
 
+// 钓鱼网站: an anglerfish in the dark with a fake prize page for a lure. It hangs back and casts its hook at her (a hit
+// reels her in until she dashes free), lunges with its jaws, scatters bait that looks like chests and gems and goes
+// off in her face, and sends its fry; at half health the room's lights go out and only the lure and her own light
+// are left
+const lurePos = e => ({ x: e.x + (e.face || 1) * e.r * 1.05, y: e.y - e.r * 1.25 + Math.sin(G.time * 3) * 3 });
+function phishAI(e, dt, dx, dy, d, sp) {
+  if (e.phase === 1 && e.hp < e.maxHp * 0.5) {
+    e.phase = 2; e.speed *= 1.15;
+    if (G.room) G.room.dark = true;
+    banner(...BOSSES.phish.mode, true); sfx.warn();
+  }
+  const p2 = e.phase === 2, toChase = t => { e.act = 'chase'; e.actT = t; };
+  if (e.act !== 'dash') e.face = dx >= 0 ? 1 : -1;
+  // it's the jaws that hurt, once a lunge; bumping into it otherwise is half as bad
+  if (e.act === 'dash') { e.touchK = e.bit ? 0 : 1; if (d < e.r + P.r * 0.85) e.bit = true; }
+  else { e.touchK = 0.5; e.bit = false; }
+  switch (e.act) {
+    case 'chase': {
+      const k = d > 260 ? 1 : d < 180 ? -0.6 : 0;
+      e.x += (dx / d * k + (-dy / d) * 0.35) * sp * dt; e.y += (dy / d * k + (dx / d) * 0.35) * sp * dt;
+      e.actT -= dt;
+      if (e.actT <= 0) {
+        const seq = p2 ? ['hook', 'lunge', 'school', 'bait', 'lunge', 'hook'] : ['hook', 'lunge', 'bait', 'lunge', 'school'];
+        e.act = seq[e.seqI++ % seq.length];
+        if (e.act === 'lunge') { e.dashes = p2 ? 2 : 1; e.act = 'aim'; e.actT = 0.8; e.dashA = Math.atan2(dy, dx); }
+      }
+      break;
+    }
+    case 'hook': {
+      const l = lurePos(e), a = Math.atan2(P.y - l.y, P.x - l.x);
+      G.ebullets.push({ x: l.x, y: l.y, vx: Math.cos(a) * 400, vy: Math.sin(a) * 400, r: 11, dmg: e.dmg * 0.5, life: 1.3, hook: true, owner: e });
+      sfx.whoosh();
+      toChase(p2 ? 1.3 : 1.7);
+      break;
+    }
+    case 'aim':
+      e.actT -= dt;
+      if (e.actT <= 0) { e.act = 'dash'; e.actT = 0.5; sfx.chomp(); }
+      break;
+    case 'dash':
+      e.face = Math.cos(e.dashA) >= 0 ? 1 : -1;
+      e.x += Math.cos(e.dashA) * 620 * dt; e.y += Math.sin(e.dashA) * 620 * dt;
+      e.actT -= dt;
+      if (e.actT <= 0) {
+        if (--e.dashes > 0) { e.act = 'aim'; e.actT = 0.55; e.dashA = Math.atan2(P.y - e.y, P.x - e.x); }
+        else toChase(p2 ? 1.2 : 1.6);
+      }
+      break;
+    case 'bait': {
+      // fake prizes round the room: they look like chests and gems, but each has a line going up from it
+      const r = G.room;
+      for (let i = 0; i < (p2 ? 7 : 5); i++) G.items.push({ type: 'bait', look: i % 3 ? 'gem' : 'chest', x: r ? rand(r.x0 + 60, r.x1 - 60) : e.x + rand(-200, 200), y: r ? rand(r.y0 + 60, r.y1 - 80) : e.y + rand(-150, 150), t: 0, dmg: e.dmg });
+      floatText(e.x, e.y - e.r - 26, '恭喜中奖！点击领取', '#ffd36a', 15);
+      sfx.chest();
+      toChase(1.4);
+      break;
+    }
+    case 'school': {
+      const n = p2 ? 8 : 5;
+      for (let i = 0; i < n; i++) { const a = i / n * TAU; spawnEnemy('minnow', e.x + Math.cos(a) * 80, e.y + Math.sin(a) * 80); }
+      ring(e.x, e.y, 20, 100, 0.4, '#7fd8ff', 4);
+      toChase(1.5);
+      break;
+    }
+  }
+}
+// hooked: she's reeled in towards its jaws for a second, unless she dashes free
+function reelIn(dt) {
+  const h = P.hooked;
+  if (!h) return;
+  if (P.dash || h.e.dead || !G.boss) { if (P.dash) floatText(P.x, P.y - SPR_H * 0.8, '挣脱！', '#9fe0ff', 14); P.hooked = null; return; }
+  h.t -= dt;
+  const dx = h.e.x - P.x, dy = h.e.y - P.y, d = Math.hypot(dx, dy) || 1;
+  if (d > h.e.r + 20) { P.x += dx / d * 300 * dt; P.y += dy / d * 300 * dt; }
+  if (h.t <= 0) P.hooked = null;
+}
+DRAW.minnow = (x, r, f, blink) => {
+  shadow(x, r, 0.8);
+  x.save(); x.scale(1, 1);
+  x.fillStyle = '#2a4a6a';
+  x.beginPath(); x.moveTo(-r * 0.7, 0); x.lineTo(-r * 1.15, -r * 0.45 + (f ? r * 0.1 : 0)); x.lineTo(-r * 1.15, r * 0.45 - (f ? r * 0.1 : 0)); x.closePath(); x.fill(); ink(x, 1.2); x.stroke();
+  const body = () => { x.beginPath(); x.ellipse(0, 0, r * 0.8, r * 0.55, 0, 0, TAU); };
+  celFill(x, body, r * 0.6, ['#6aa0d0', '#2e5a86', '#16304a']);
+  x.fillStyle = '#fff'; x.beginPath(); x.moveTo(r * 0.55, r * 0.05); x.lineTo(r * 0.8, r * 0.1); x.lineTo(r * 0.55, r * 0.22); x.fill();
+  if (blink) { ink(x, 1); x.beginPath(); x.moveTo(r * 0.22, -r * 0.18); x.lineTo(r * 0.42, -r * 0.18); x.stroke(); }
+  else { x.fillStyle = '#fff'; disc(x, r * 0.32, -r * 0.18, r * 0.14); x.fill(); x.fillStyle = '#111'; disc(x, r * 0.35, -r * 0.18, r * 0.07); x.fill(); }
+  x.strokeStyle = '#8ab0d0'; x.lineWidth = 1; x.beginPath(); x.moveTo(r * 0.2, -r * 0.5); x.quadraticCurveTo(r * 0.5, -r * 1.1, r * 0.8, -r * 0.8); x.stroke();
+  x.fillStyle = '#9fffe0'; disc(x, r * 0.8, -r * 0.8, r * 0.13); x.fill();
+  x.restore();
+};
+function drawPhish(e) {
+  const r = e.r, t = G.time, stunned = e.stun > 0, p2 = e.phase === 2, f = e.face || 1;
+  const bob = stunned ? 0 : Math.sin(t * 2.4) * 5;
+  ctx.save(); ctx.translate(e.x, e.y);
+  ctx.fillStyle = 'rgba(0,0,0,0.35)'; ctx.beginPath(); ctx.ellipse(0, r * 0.95, r * 0.95, r * 0.26, 0, 0, TAU); ctx.fill();
+  ctx.translate(0, bob - 8); ctx.scale(f, 1);
+  // tail and fins
+  const wag = Math.sin(t * 6) * 0.25;
+  ctx.save(); ctx.translate(-r * 0.85, 0); ctx.rotate(wag);
+  ctx.fillStyle = '#1e2c48'; ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(-r * 0.6, -r * 0.55); ctx.quadraticCurveTo(-r * 0.4, 0, -r * 0.6, r * 0.55); ctx.closePath(); ctx.fill();
+  ink(ctx, 2.4); ctx.stroke(); ctx.restore();
+  ctx.fillStyle = '#26365a'; ctx.beginPath();
+  for (let i = 0; i <= 6; i++) ctx.lineTo(-r * 0.5 + i * r * 0.14, -r * 0.78 - (i % 2 ? r * 0.22 : 0));
+  ctx.lineTo(r * 0.36, -r * 0.6); ctx.lineTo(-r * 0.5, -r * 0.6); ctx.closePath(); ctx.fill(); ink(ctx, 2); ctx.stroke();
+  // the body: a big dark round fish, freckled with little lights
+  ctx.beginPath(); ctx.ellipse(0, 0, r, r * 0.84, 0, 0, TAU);
+  ctx.fillStyle = rgrad(ctx, -r * 0.3, -r * 0.4, r * 1.3, p2 ? ['#4a3a6a', '#24183a', '#0c0818'] : ['#3e5480', '#1c2a48', '#0a1020']); ctx.fill();
+  ink(ctx, 3); ctx.stroke();
+  if (e.flash > 0) { ctx.fillStyle = 'rgba(255,255,255,0.35)'; ctx.fill(); }
+  ctx.fillStyle = 'rgba(140,255,230,0.6)';
+  for (let i = 0; i < 9; i++) { disc(ctx, -r * 0.6 + (i * 37 % 100) / 100 * r * 1.1, -r * 0.4 + (i * 53 % 100) / 100 * r * 0.7, 2); ctx.fill(); }
+  // the jaws: wide open at the front, a dark red maw and ragged teeth
+  const open = e.act === 'dash' ? 1 : e.act === 'aim' ? 0.7 : 0.45 + Math.sin(t * 2) * 0.08;
+  ctx.save(); ctx.translate(r * 0.42, r * 0.22);
+  ctx.fillStyle = '#4a0c1a'; ctx.beginPath(); ctx.ellipse(0, 0, r * 0.52, r * 0.36 * open + 4, 0, 0, TAU); ctx.fill(); ink(ctx, 2.4); ctx.stroke();
+  ctx.fillStyle = '#f4f0e8';
+  for (let i = 0; i < 7; i++) {
+    const tx = -r * 0.42 + i * r * 0.14;
+    ctx.beginPath(); ctx.moveTo(tx - 4, -r * 0.3 * open - 2); ctx.lineTo(tx, -r * 0.3 * open + 9); ctx.lineTo(tx + 4, -r * 0.3 * open - 2); ctx.fill();
+    ctx.beginPath(); ctx.moveTo(tx - 4, r * 0.3 * open + 2); ctx.lineTo(tx + 1, r * 0.3 * open - 8); ctx.lineTo(tx + 4, r * 0.3 * open + 2); ctx.fill();
+  }
+  ctx.restore();
+  // a small mean eye
+  if (stunned) { ctx.strokeStyle = '#e8dce8'; ctx.lineWidth = 3; ctx.beginPath(); ctx.moveTo(r * 0.2, -r * 0.4); ctx.lineTo(r * 0.4, -r * 0.2); ctx.moveTo(r * 0.4, -r * 0.4); ctx.lineTo(r * 0.2, -r * 0.2); ctx.stroke(); }
+  else {
+    ctx.fillStyle = '#fff6d0'; disc(ctx, r * 0.3, -r * 0.3, r * 0.13); ctx.fill(); ink(ctx, 2); ctx.stroke();
+    ctx.fillStyle = p2 ? '#ff3b6b' : '#111'; disc(ctx, r * 0.33, -r * 0.3, r * 0.06); ctx.fill();
+  }
+  // the rod and its lure: a little glowing window of a prize page
+  ctx.strokeStyle = '#6a7a9a'; ctx.lineWidth = 3; ctx.lineCap = 'round';
+  ctx.beginPath(); ctx.moveTo(r * 0.05, -r * 0.8); ctx.quadraticCurveTo(r * 0.5, -r * 1.7, r * 1.05, -r * 1.25 + Math.sin(t * 3) * 3); ctx.stroke();
+  ctx.restore();
+  const l = lurePos(e);
+  ctx.globalCompositeOperation = 'lighter';
+  ctx.fillStyle = rgrad(ctx, l.x, l.y, 70, [p2 ? 'rgba(255,90,120,0.55)' : 'rgba(255,220,120,0.5)', 'rgba(0,0,0,0)']); disc(ctx, l.x, l.y, 70); ctx.fill();
+  ctx.globalCompositeOperation = 'source-over';
+  ctx.fillStyle = '#fff8e0'; rrPath(ctx, l.x - 20, l.y - 11, 40, 22, 4); ctx.fill();
+  ctx.strokeStyle = p2 ? '#ff3b6b' : '#e8a020'; ctx.lineWidth = 2; ctx.stroke();
+  ctx.fillStyle = '#e8402f'; ctx.font = `800 10px ${UI_FONT}`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText('领奖', l.x, l.y + 0.5);
+  // the line to her, while she's hooked
+  if (P.hooked && P.hooked.e === e) {
+    ctx.strokeStyle = 'rgba(230,240,255,0.85)'; ctx.lineWidth = 1.6;
+    ctx.beginPath(); ctx.moveTo(l.x, l.y); ctx.quadraticCurveTo((l.x + P.x) / 2, (l.y + P.y) / 2 + 30, P.x, P.y - 20); ctx.stroke();
+  }
+}
+// bait on the floor: a chest or a gem like any other, except for the fishing line rising from it
+function drawBait(it) {
+  const bob = Math.sin(it.t * 3) * 2;
+  ctx.strokeStyle = 'rgba(220,230,255,0.45)'; ctx.lineWidth = 1;
+  ctx.beginPath(); ctx.moveTo(it.x, it.y - 8); ctx.lineTo(it.x + Math.sin(it.t) * 6, it.y - 400); ctx.stroke();
+  blit(it.look === 'chest' ? SPR.chest() : SPR.gem(3), it.x, it.y + bob);
+}
+// 钓鱼执法's bobber: cast in an arc, floating with ripples while it draws the crowd in, then the hook comes up
+const bobberSprite = () => sprite('bobber', 28, 40, x => {
+  x.save(); x.translate(0, -6); glow(x, 12, '#ffe08a', 0.5); x.restore();
+  x.fillStyle = '#e8402f'; x.beginPath(); x.ellipse(0, 2, 7, 8, 0, 0, Math.PI); x.fill();
+  x.fillStyle = '#ffffff'; x.beginPath(); x.ellipse(0, 2, 7, 8, 0, Math.PI, TAU); x.fill();
+  ink(x, 1.4); x.beginPath(); x.ellipse(0, 2, 7, 8, 0, 0, TAU); x.stroke();
+  x.strokeStyle = '#3a3a3a'; x.lineWidth = 1.5; x.beginPath(); x.moveTo(0, -6); x.lineTo(0, -16); x.stroke();
+  x.fillStyle = '#fff3b0'; disc(x, 0, -16, 2.4); x.fill();
+});
+const hookSprite = () => sprite('hook', 60, 90, x => {
+  x.save(); glow(x, 30, '#ffe08a', 0.4); x.restore();
+  x.strokeStyle = '#f2c444'; x.lineWidth = 7; x.lineCap = 'round';
+  x.beginPath(); x.moveTo(6, -40); x.lineTo(6, 14); x.arc(-8, 14, 14, 0, Math.PI * 0.95); x.stroke();
+  x.fillStyle = '#f2c444'; x.beginPath(); x.moveTo(-22, 14); x.lineTo(-28, 2); x.lineTo(-18, 8); x.fill();
+  x.strokeStyle = '#fff6c8'; x.lineWidth = 2; x.beginPath(); x.moveTo(4, -38); x.lineTo(4, 12); x.stroke();
+});
+function hookUp(z) {
+  let caught = 0;
+  forNear(z.x, z.y, z.r + 50, e => {
+    if (e.banned > 0 || (e.x - z.x) ** 2 + (e.y - z.y) ** 2 > (z.r * 0.6 + e.r) ** 2) return;
+    const big = e.boss || e.elite || e.heavy || e.type === 'reg';
+    hit(e, z.dmg * (big ? 1.5 : 1), 'fishing', { kb: 160, kx: e.x - z.x, ky: e.y - z.y - 40 });
+    // small fry left on a sliver are pulled out of the water altogether
+    if (!e.dead && !big && e.hp < e.maxHp * 0.3) { hit(e, 1, 'fishing', { kill: true, quiet: true }); caught++; }
+  });
+  if (caught) { const t = floatText(z.x, z.y - 60, caught > 1 ? `钓到了 ${caught} 个！` : '钓到了！', '#ffe08a', 15); t.pop = 1; }
+  ring(z.x, z.y, 10, z.r * 0.7, 0.4, '#ffe08a', 5);
+  puff(z.x, z.y, 14, '#bfeaff', 220, 0.5, 3, true);
+  shake(3); sfx.splash();
+}
+
 function updateBullets(dt) {
   for (const b of G.ebullets) {
     if (b.dead) continue;
@@ -5879,7 +6102,10 @@ function updateBullets(dt) {
       if (b.hatch && G.enemies.length < MAX_ENEMIES) { spawnEnemy('lamb', b.x, b.y); puff(b.x, b.y, 4, '#ffffff', 60, 0.4, 3); }
       continue;
     }
-    if ((b.x - P.x) ** 2 + (b.y - P.y + 8) ** 2 < (b.r + 11 * P.size) ** 2) { b.dead = true; hurtPlayer(b.dmg); }
+    if ((b.x - P.x) ** 2 + (b.y - P.y + 8) ** 2 < (b.r + 11 * P.size) ** 2) {
+      b.dead = true; hurtPlayer(b.dmg);
+      if (b.hook && !P.dash && !b.owner.dead) { P.hooked = { t: 1.1, e: b.owner }; floatText(P.x, P.y - SPR_H * 0.8, '上钩了！快用幻步挣脱', '#9fe0ff', 13); }
+    }
   }
 }
 
@@ -6021,6 +6247,21 @@ function updateZones(dt) {
       if (z.life <= 0 && !z.done) { z.done = true; rollDice(z); }
     } else if (z.kind === 'bigdie') {
       if (z.life <= 0 && !z.done) { z.done = true; paradeLands(z); }
+    } else if (z.kind === 'bobber') {
+      // floating, it draws the small fry in; then the hook comes up under them
+      const age = z.max - z.life;
+      if (age > 0.35 && !z.done) {
+        forNear(z.x, z.y, z.r + 40, e => {
+          if (e.boss || e.banned > 0) return;
+          const dx = z.x - e.x, dy = z.y - e.y, d = Math.hypot(dx, dy) || 1;
+          if (d > z.r + e.r || d < 14) return;
+          // packed in round the float, they don't run together
+          e.lured = G.time + 0.6;
+          const v = (e.heavy || e.elite ? 70 : 230) * dt;
+          e.x += dx / d * Math.min(v, d - 14); e.y += dy / d * Math.min(v, d - 14);
+        });
+      }
+      if (age >= 1.55 && !z.done) { z.done = true; hookUp(z); }
     } else if (z.kind === 'seal') {
       forNear(z.x, z.y, z.r + 50, e => {
         if (e.banned > 0 || e.boss || e.elite || e.type === 'reg') return;
@@ -6055,9 +6296,16 @@ function updatePickups(dt) {
   for (const it of G.items) {
     if (it.dead) continue;
     it.t += dt;
+    if (it.type === 'bait' && it.t > 10) { it.dead = true; puff(it.x, it.y, 6, '#c8d8ff', 80, 0.4, 3); continue; }
     const d2 = (P.x - it.x) ** 2 + (P.y - it.y) ** 2;
     if (d2 > 30 * 30) continue;
     it.dead = true;
+    if (it.type === 'bait') {
+      hurtPlayer(it.dmg);
+      ring(it.x, it.y, 8, 70, 0.35, '#ff5a6a', 5); puff(it.x, it.y, 12, '#ff8a6a', 200, 0.45, 3, true); sfx.boom();
+      const t = floatText(it.x, it.y - 30, '钓鱼链接！', '#ff8a8a', 16); t.pop = 1;
+      continue;
+    }
     if (it.type === 'chest') { G.pendChest += it.gold ? 2 : 1; ring(it.x, it.y, 10, it.gold ? 110 : 70, 0.4, '#f0b43c', 4); }
     else if (it.type === 'tea') {
       eatTea(0.3);
@@ -6148,7 +6396,8 @@ function update(dt) {
     return;
   }
   G.time += dt;
-  director(dt);
+  G.fade = Math.max(0, G.fade - dt * 2.5);
+  if (G.room) G.roomT += dt; else director(dt);
   updatePlayer(dt);
   buildGrid();
   if (G.gulp) updateGulp(dt);
@@ -6158,8 +6407,8 @@ function update(dt) {
   updateEnemies(dt);
   updatePets(dt);
   updateBullets(dt);
-  updateTrees(dt);
-  updateWeather(dt);
+  if (G.room) roomTick(dt);
+  else { updateTrees(dt); updateWeather(dt); houseTick(dt); }
   updateZones(dt);
   updatePickups(dt);
   updateFx(dt);
@@ -6801,6 +7050,7 @@ function pickMap() {
 
 let groundId = null;
 function drawGround(cx, cy) {
+  if (G && G.room) { drawRoom(); return; }
   const L = cx - viewW / 2 - 60, R = cx + viewW / 2 + 60, T = cy - viewH / 2 - 60, B = cy + viewH / 2 + 80;
   const t = G ? G.time : performance.now() / 1000, id = G ? G.map : titleMap, M = MAPS[id];
   // a ground tile is a big canvas on a sharp screen: only the map in use keeps its own
@@ -6991,7 +7241,7 @@ function gatherTrees() {
   for (let gx = Math.floor(L / TREE_C); gx <= Math.floor(R / TREE_C); gx++) {
     for (let gy = Math.floor(T / TREE_C); gy <= Math.floor(B / TREE_C); gy++) {
       const p = treeAt(gx, gy);
-      if (!p) continue;
+      if (!p || (G.house && Math.abs(p.x - G.house.x) < 170 && Math.abs(p.y - G.house.y) < 160)) continue;
       const id = gx * 100003 + gy;
       let tr = G.trees.get(id);
       if (!tr) { tr = { id, x: p.x, y: p.y, k: p.k, shake: 0, shakeAt: -9, fruitAt: G.time + rand(0, 25), fall: null, downAt: null, burnUntil: 0, grow: 1, ash: false }; G.trees.set(id, tr); }
@@ -7211,6 +7461,7 @@ function strike() {
 // weather drawn on the ground (rain rippling the puddles) and in the air (fog banks drifting, bolts)
 function drawWeatherGround() {
   const w = G.wx;
+  if (G.room) return;
   if (w.kind !== 'rain' || w.k <= 0) return;
   const c = G.cam, t = G.time, L = c.x - viewW / 2, T = c.y - viewH / 2;
   ctx.lineWidth = 1.2;
@@ -7229,6 +7480,10 @@ const fogBlob = () => sprite('fogblob', 460, 240, x => {
 });
 function drawWeatherAir() {
   const w = G.wx, t = G.time;
+  if (G.room) {
+    for (const z of G.zones) if (z.kind === 'bolt') z.life = 0;
+    return;
+  }
   for (const z of G.zones) {
     if (z.kind !== 'bolt' || !inView(z.x, z.y, 400)) continue;
     // a jagged bolt from out of the sky, re-forked every frame so it flickers
@@ -7260,6 +7515,7 @@ const WIND_MOTE = { garden: () => GARDEN.leaf(), sea: () => SEA.bubble(), sakura
 GARDEN.leaf = () => sprite('leaf', 14, 14, x => { x.fillStyle = '#9ccf6a'; x.beginPath(); x.ellipse(0, 0, 4.4, 2, 0.6, 0, TAU); x.fill(); x.strokeStyle = 'rgba(60,100,40,0.7)'; x.lineWidth = 0.7; x.beginPath(); x.moveTo(-3, -2); x.lineTo(3, 2); x.stroke(); });
 function drawWeatherScreen() {
   const w = G.wx, k = w.k, t = G.time;
+  if (G.room) { drawRoomDark(); return; }
   if (k > 0) {
     if (w.kind === 'rain') {
       ctx.fillStyle = `rgba(14,22,44,${0.22 * k})`; ctx.fillRect(0, 0, W, H);
@@ -7299,6 +7555,270 @@ function drawWeatherScreen() {
     }
   }
   if (G.boltFlash > 0) { ctx.fillStyle = `rgba(225,238,255,${G.boltFlash * 0.7})`; ctx.fillRect(0, 0, W, H); }
+}
+
+// ======================================================================
+//  Houses: now and then a little house turns up somewhere near her, shown by a purple arrow at the edge of the
+//  screen. Stand at its door for a moment and she goes in, to a room of its own where the house's boss, 钓鱼网站,
+//  waits. The night outside waits too, its clock stopped, until she comes out: with the boss beaten, or back through
+//  the door she came in by. Beating it is the only way to the legendary 钓鱼执法
+// ======================================================================
+const HOUSE_STAY = 120, ROOM_W = 920, ROOM_H = 620, ROOM_X = 200000;
+const nightT = () => G.time - G.roomT;
+const houseSprite = () => sprite('house', 240, 220, x => {
+  // a cottage with a steep roof, warm windows and a door with an odd purple light leaking round it; its foot is 76
+  // below the centre, the door in the middle of the front
+  x.fillStyle = 'rgba(0,0,0,0.4)'; x.beginPath(); x.ellipse(0, 76, 112, 20, 0, 0, TAU); x.fill();
+  x.fillStyle = '#e8dcc4'; x.fillRect(-96, -6, 192, 82);
+  x.fillStyle = '#cdbfa4'; x.fillRect(-96, 50, 192, 26);
+  x.strokeStyle = '#5a3a26'; x.lineWidth = 6;
+  x.strokeRect(-96, -6, 192, 82);
+  x.beginPath(); x.moveTo(-96, 30); x.lineTo(96, 30); x.moveTo(-40, -6); x.lineTo(-40, 76); x.moveTo(40, -6); x.lineTo(40, 76); x.stroke();
+  // roof and chimney
+  x.fillStyle = '#4a2a3a'; x.fillRect(46, -88, 22, 50);
+  x.beginPath(); x.moveTo(-118, 0); x.lineTo(0, -92); x.lineTo(118, 0); x.closePath();
+  x.fillStyle = vgrad(x, -92, 0, '#8a3a4a', '#5a1f30'); x.fill();
+  x.strokeStyle = '#2a0f1a'; x.lineWidth = 4; x.stroke();
+  x.strokeStyle = 'rgba(255,200,210,0.18)'; x.lineWidth = 2;
+  for (let i = 1; i < 6; i++) { const y = -92 + i * 16, w = 118 * (i * 16) / 92; x.beginPath(); x.moveTo(-w, y); x.lineTo(w, y); x.stroke(); }
+  // windows, lit
+  for (const wx of [-68, 68]) {
+    x.save(); x.translate(wx, 22); glow(x, 30, '#ffc870', 0.45); x.restore();
+    x.fillStyle = vgrad(x, 8, 38, '#fff0c0', '#ffaa50'); x.fillRect(wx - 16, 8, 32, 30);
+    x.strokeStyle = '#5a3a26'; x.lineWidth = 3; x.strokeRect(wx - 16, 8, 32, 30);
+    x.beginPath(); x.moveTo(wx, 8); x.lineTo(wx, 38); x.moveTo(wx - 16, 23); x.lineTo(wx + 16, 23); x.stroke();
+  }
+  // the door: an arch, dark, with a purple glow round it, and a sign
+  x.save(); x.translate(0, 50); glow(x, 46, '#b07cff', 0.55); x.restore();
+  x.fillStyle = '#2a1830'; x.beginPath(); x.moveTo(-20, 76); x.lineTo(-20, 30); x.arc(0, 30, 20, Math.PI, 0); x.lineTo(20, 76); x.closePath(); x.fill();
+  x.strokeStyle = '#d8b0ff'; x.lineWidth = 2.5; x.stroke();
+  x.fillStyle = '#e8c070'; disc(x, 12, 54, 2.6); x.fill();
+  x.fillStyle = '#3a2418'; rrPath(x, -30, -30, 60, 20, 4); x.fill();
+  x.fillStyle = '#ffe2b0'; x.font = `800 12px ${UI_FONT}`; x.textAlign = 'center'; x.textBaseline = 'middle'; x.fillText('？？？', 0, -20);
+});
+function spawnHouse() {
+  for (let k = 0; k < 12; k++) {
+    const a = rand(0, TAU), d = rand(520, 700), x = P.x + Math.cos(a) * d, y = P.y + Math.sin(a) * d;
+    // not on a walk
+    const nx = Math.abs(x - Math.round(x / WALK_GAP) * WALK_GAP), ny = Math.abs(y - Math.round(y / WALK_GAP) * WALK_GAP);
+    if ((nx < WALK_W + 110 || ny < WALK_H + 100) && k < 11) continue;
+    G.house = { x, y, t: 0, hold: 0, state: 'out' };
+    toast('一座小屋出现了', '跟着紫色箭头找到它，站在门口就能进去：屋里有个新 BOSS', 'house', '屋');
+    sfx.chest();
+    return;
+  }
+}
+// the house's walls are solid; its door is the way in
+function houseTick(dt) {
+  const t = nightT();
+  if (!G.house) { if (t >= G.houseAt && !(G.boss && !G.boss.dead) && !G.ending) spawnHouse(); return; }
+  const h = G.house;
+  h.t += dt;
+  const pf = P.y + 24 * P.size;
+  // she slides round the walls
+  if (P.x > h.x - 104 && P.x < h.x + 104 && pf > h.y - 64 && pf < h.y + 2) {
+    const out = [[h.x - 104 - P.x, 0], [h.x + 104 - P.x, 0], [0, h.y - 64 - pf], [0, h.y + 2 - pf]].sort((a, b) => Math.abs(a[0] + a[1]) - Math.abs(b[0] + b[1]))[0];
+    P.x += out[0]; P.y += out[1];
+  }
+  forNear(h.x, h.y - 30, 140, e => {
+    if (e.boss || e.banned > 0) return;
+    const ef = e.y + e.r * 0.6;
+    if (e.x > h.x - 100 && e.x < h.x + 100 && ef > h.y - 64 && ef < h.y) e.y += Math.abs(ef - (h.y - 64)) < Math.abs(ef - h.y) ? (h.y - 64) - ef : h.y - ef;
+  });
+  // standing at the door
+  const atDoor = (P.x - h.x) ** 2 + ((pf - h.y - 14) * 1.4) ** 2 < 40 * 40;
+  const locked = G.boss && !G.boss.dead;
+  if (atDoor && locked) { if (!h.lockSaid || G.time - h.lockSaid > 4) { h.lockSaid = G.time; floatText(h.x, h.y - 120, '门锁着……先对付外面的 BOSS', '#e8d0ff', 13); } }
+  else if (atDoor) { h.hold += dt; if (h.hold >= 1) { enterRoom(h); return; } }
+  else h.hold = Math.max(0, h.hold - dt * 2);
+  if (h.t > HOUSE_STAY && h.hold <= 0) {
+    puff(h.x, h.y - 60, 30, '#c8a8ff', 220, 0.8, 5, true);
+    floatText(h.x, h.y - 120, '小屋消失了……', '#e8d0ff', 14);
+    G.house = null; G.houseAt = t + rand(150, 240);
+  }
+}
+function enterRoom(h) {
+  h.state = 'in'; G.roomsIn = (G.roomsIn || 0) + 1;
+  const cx = ROOM_X, cy = 0;
+  G.room = { h, cx, cy, x0: cx - ROOM_W / 2, x1: cx + ROOM_W / 2, y0: cy - ROOM_H / 2, y1: cy + ROOM_H / 2, exitHold: 0, won: false, winT: 0, dark: false };
+  G.stash = { enemies: G.enemies, ebullets: G.ebullets, shots: G.shots, zones: G.zones, boss: G.boss, wx: G.wx.k };
+  G.enemies = []; G.ebullets = []; G.shots = []; G.zones = []; G.near.length = 0;
+  P.x = cx; P.y = G.room.y1 - 100; G.cam.x = P.x; G.cam.y = P.y; P.hooked = null;
+  for (const p of G.pets) { p.x = P.x + rand(-40, 40); p.y = P.y + 20; p.target = null; }
+  G.fade = 1;
+  spawnRoomBoss();
+  sfx.whoosh();
+}
+function leaveRoom(won) {
+  const r = G.room, h = r.h, s = G.stash;
+  if (!won && G.boss && G.boss.room) h.left = Math.max(0.05, G.boss.hp / G.boss.maxHp);
+  G.enemies = s.enemies; G.ebullets = s.ebullets; G.shots = s.shots; G.zones = s.zones; G.boss = s.boss;
+  for (const it of G.items) if (it.type === 'bait') it.dead = true;
+  P.x = h.x; P.y = h.y + 46; G.cam.x = P.x; G.cam.y = P.y; P.hooked = null;
+  for (const p of G.pets) { p.x = P.x + rand(-40, 40); p.y = P.y + 20; p.target = null; }
+  G.room = null; G.stash = null; G.fade = 1;
+  if (won) {
+    if (r.chest) G.items.push({ type: 'chest', x: h.x + 50, y: h.y + 50, t: 0, gold: true });
+    puff(h.x, h.y - 60, 40, '#c8a8ff', 260, 0.9, 5, true);
+    G.house = null; G.houseAt = nightT() + rand(150, 240);
+  } else {
+    h.state = 'out'; h.hold = 0; h.t = Math.min(h.t, HOUSE_STAY - 30);
+    floatText(P.x, P.y - SPR_H, h.left ? `先出来喘口气（它还剩 ${Math.round(h.left * 100)}%）` : '先出来喘口气', '#e8d0ff', 13);
+  }
+}
+// in the room: walls hold her and everything else in; the door at the bottom lets her out (until she's won, when
+// she's let out by herself a moment later)
+function roomTick(dt) {
+  const r = G.room, m = 18;
+  P.x = clamp(P.x, r.x0 + m, r.x1 - m); P.y = clamp(P.y, r.y0 + m, r.y1 - 40);
+  for (const e of G.enemies) { if (e.dead) continue; e.x = clamp(e.x, r.x0 + e.r, r.x1 - e.r); e.y = clamp(e.y, r.y0 + e.r, r.y1 - e.r - 20); }
+  for (const p of G.pets) { p.x = clamp(p.x, r.x0 + 12, r.x1 - 12); p.y = clamp(p.y, r.y0 + 12, r.y1 - 30); }
+  if (r.won) { r.winT += dt; if (r.winT > 3) leaveRoom(true); return; }
+  const atExit = Math.abs(P.x - r.cx) < 44 && P.y > r.y1 - 64;
+  if (atExit) { r.exitHold += dt; if (r.exitHold >= 1.5) leaveRoom(false); }
+  else r.exitHold = Math.max(0, r.exitHold - dt * 2);
+}
+function spawnRoomBoss() {
+  const r = G.room, B = BOSSES.phish, t = nightT();
+  const e = spawnEnemy('boss', r.cx, r.y0 + 130, { flat: true });
+  e.kind = 'phish'; e.room = true; e.r = B.r;
+  // much less than DAN's at the same hour early on (when she's still small), all of it by 10:00; and if she stepped out
+  // earlier, it's as hurt as she left it
+  e.maxHp = Math.round(BOSS_HP * hpScale(t) / hpScale(BOSS_AT) * B.hp * Math.min(1, 0.35 + t / BOSS_AT * 0.65));
+  e.hp = e.maxHp * (r.h.left || 1);
+  e.dmg = ENEMY.boss.dmg * dmgScale(t);
+  e.speed = B.speed;
+  Object.assign(e, { act: 'chase', actT: 2.5, phase: 1, seqI: 0, sub: 0, spin: 0, waves: 0, dashes: 0, dashA: 0, face: 1 });
+  G.boss = e;
+  $('bossName').textContent = B.bar;
+  banner(B.title, B.quote, true);
+  sfx.warn();
+  later(1.2, () => say(line('bossPhish'), 3, true));
+}
+// the boss of the house is down: the legendary 钓鱼执法 (amended on later houses, a gold chest once it can't be), its
+// little fish banned, the experience flying to her, and out she goes a moment later
+function roomWon(e) {
+  const r = G.room;
+  r.won = true; r.dark = false; G.roomsWon = (G.roomsWon || 0) + 1;
+  G.boss = null;
+  G.hitStop = 0.2; shake(12);
+  ring(e.x, e.y, 20, 300, 0.8, '#9fe0ff', 10);
+  puff(e.x, e.y, 50, '#9fe0ff', 360, 1, 4, true);
+  for (const o of G.enemies) if (!o.dead && o !== e) { o.banned = rand(0.4, 1); o.banDepth = 9; }
+  for (let i = 0; i < 12; i++) { dropGem(e.x + rand(-60, 60), e.y + rand(-40, 40), 30); }
+  for (const g of G.gems) if ((g.x - e.x) ** 2 + (g.y - e.y) ** 2 < 300 * 300) g.pull = true;
+  const lw = P.weapons.find(w => w.id === 'fishing');
+  if (!lw) { addWeapon('fishing'); banner('传说武器 · 钓鱼执法', '浮漂抛进敌群，把小怪都引过来，再一钩子收网'); }
+  else if (lw.level < 3) { lw.level++; G.slotsDirty = true; banner(`传说武器 · ${wName(lw)}`, '又端掉一个钓鱼网站：浮漂更多、收网更狠'); }
+  else { r.chest = true; banner('钓鱼网站已被端掉', '钓鱼执法已经练到头了，门口给你留了一个金宝箱'); }
+  say(line('phishWon'), 3, true);
+  playAnim(['spin', 'happy'], 2, 3);
+  sfx.stamp(); sfx.win();
+}
+// the room: a dark floor of boards inside four walls; along the top wall, screens showing the site's pages; the door
+// out at the bottom
+const ROOM_SCREENS = [['恭喜中奖！', '点击领取'], ['账号异常', '请输入密码'], ['登录', '账号 / 密码'], ['限时免费', '扫码领取']];
+function paintBoards(x, S) {
+  const rnd = seeded(211);
+  x.fillStyle = '#1a1c26'; x.fillRect(0, 0, S, S);
+  for (let j = 0; j < S / 32; j++) {
+    const off = (j % 2) * 64;
+    for (let i = -1; i < S / 128 + 1; i++) {
+      const v = 30 + rnd() * 10 | 0;
+      x.fillStyle = `rgb(${v},${v + 2},${v + 12})`; x.fillRect(i * 128 + off + 1, j * 32 + 1, 126, 30);
+      x.fillStyle = 'rgba(255,255,255,0.03)'; x.fillRect(i * 128 + off + 1, j * 32 + 1, 126, 3);
+    }
+  }
+}
+function drawRoom() {
+  const r = G.room, t = G.time;
+  ctx.fillStyle = '#05060a'; ctx.fillRect(G.cam.x - viewW, G.cam.y - viewH, viewW * 2, viewH * 2);
+  ctx.fillStyle = groundPattern('room-floor', 512, paintBoards); ctx.fillRect(r.x0, r.y0, ROOM_W, ROOM_H);
+  // a worn rug in the middle
+  ctx.save(); ctx.translate(r.cx, r.cy + 20); ctx.scale(1, 0.62);
+  ctx.fillStyle = 'rgba(90,40,70,0.55)'; disc(ctx, 0, 0, 190); ctx.fill();
+  ctx.strokeStyle = 'rgba(220,170,120,0.35)'; ctx.lineWidth = 6; disc(ctx, 0, 0, 170); ctx.stroke();
+  ctx.restore();
+  // the top wall with its screens, and the side and bottom walls
+  ctx.fillStyle = vgrad(ctx, r.y0 - 110, r.y0, '#232838', '#121520'); ctx.fillRect(r.x0 - 20, r.y0 - 110, ROOM_W + 40, 110);
+  ROOM_SCREENS.forEach(([a, b], i) => {
+    const sx = r.x0 + 110 + i * (ROOM_W - 220) / 3, sy = r.y0 - 70, flick = 0.85 + 0.15 * Math.sin(t * 7 + i * 2);
+    ctx.globalCompositeOperation = 'lighter';
+    ctx.fillStyle = rgrad(ctx, sx, sy, 80, ['rgba(120,200,255,0.25)', 'rgba(120,200,255,0)']); disc(ctx, sx, sy, 80); ctx.fill();
+    ctx.globalCompositeOperation = 'source-over';
+    ctx.fillStyle = '#0a0c12'; rrPath(ctx, sx - 58, sy - 34, 116, 68, 5); ctx.fill();
+    ctx.globalAlpha = flick;
+    ctx.fillStyle = i % 2 ? '#e8f4ff' : '#fff4e0'; ctx.fillRect(sx - 52, sy - 28, 104, 56);
+    ctx.fillStyle = i === 0 ? '#e8402f' : '#2a6ad8'; ctx.font = `800 13px ${UI_FONT}`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.fillText(a, sx, sy - 10);
+    ctx.fillStyle = '#556'; ctx.font = `600 10px ${UI_FONT}`; ctx.fillText(b, sx, sy + 12);
+    ctx.globalAlpha = 1;
+  });
+  ctx.fillStyle = '#121520';
+  ctx.fillRect(r.x0 - 20, r.y0 - 110, 20, ROOM_H + 130); ctx.fillRect(r.x1, r.y0 - 110, 20, ROOM_H + 130);
+  ctx.fillRect(r.x0 - 20, r.y1, ROOM_W / 2 - 30, 26); ctx.fillRect(r.cx + 50, r.y1, ROOM_W / 2 - 30, 26);
+  ctx.strokeStyle = '#3a4058'; ctx.lineWidth = 3; ctx.strokeRect(r.x0, r.y0, ROOM_W, ROOM_H);
+  // the way out
+  ctx.fillStyle = 'rgba(176,124,255,0.25)'; ctx.fillRect(r.cx - 50, r.y1 - 6, 100, 32);
+  ctx.fillStyle = '#e8d8ff'; ctx.font = `800 12px ${UI_FONT}`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText('出口', r.cx, r.y1 + 12);
+  if (r.exitHold > 0) holdRing(r.cx, r.y1 - 20, r.exitHold / 1.5);
+}
+function drawBobber(z) {
+  const age = z.max - z.life;
+  if (age < 0.35) {
+    const k = age / 0.35, x = z.x0 + (z.x - z.x0) * k, y = z.y0 + (z.y - z.y0) * k - Math.sin(k * Math.PI) * 90;
+    ctx.strokeStyle = 'rgba(230,240,255,0.6)'; ctx.lineWidth = 1.2; ctx.beginPath(); ctx.moveTo(P.x, P.y - 30); ctx.quadraticCurveTo((P.x + x) / 2, Math.min(P.y, y) - 60, x, y); ctx.stroke();
+    blit(bobberSprite(), x, y);
+    return;
+  }
+  ctx.save(); ctx.translate(z.x, z.y); ctx.scale(1, 0.62);
+  if (!z.done) {
+    for (let i = 0; i < 2; i++) { const f = ((age * 1.4 + i * 0.5) % 1); ctx.strokeStyle = `rgba(190,230,255,${0.5 * (1 - f)})`; ctx.lineWidth = 2; disc(ctx, 0, 0, 8 + f * 40); ctx.stroke(); }
+    ctx.strokeStyle = 'rgba(255,224,138,0.45)'; ctx.lineWidth = 2; ctx.setLineDash([8, 8]); ctx.lineDashOffset = age * 30;
+    disc(ctx, 0, 0, z.r * (1 - 0.3 * Math.min(1, (age - 0.35) / 1.2))); ctx.stroke(); ctx.setLineDash([]);
+  } else {
+    // the net, flashing as it closes
+    const k = (age - 1.55) / (z.max - 1.55), R = z.r * 0.6;
+    ctx.globalAlpha = Math.max(0, 1 - k);
+    ctx.strokeStyle = '#ffe08a'; ctx.lineWidth = 1.6;
+    ctx.beginPath(); for (let i = -4; i <= 4; i++) { ctx.moveTo(i * R / 4 - R, -R); ctx.lineTo(i * R / 4 + R, R); ctx.moveTo(i * R / 4 + R, -R); ctx.lineTo(i * R / 4 - R, R); } ctx.save(); disc(ctx, 0, 0, R); ctx.clip(); ctx.restore();
+    ctx.stroke(); disc(ctx, 0, 0, R); ctx.stroke(); ctx.globalAlpha = 1;
+  }
+  ctx.restore();
+  if (!z.done) blit(bobberSprite(), z.x, z.y - 6 + Math.sin(age * 8) * 2);
+  else { const k = (age - 1.55) / (z.max - 1.55); ctx.globalAlpha = Math.max(0, 1 - k); blit(hookSprite(), z.x, z.y - 40 - k * 70); ctx.globalAlpha = 1; }
+}
+// with the lights out in the room: black but for a little round her and the glow of the lure
+function drawRoomDark() {
+  if (!G.room.dark) return;
+  const sx = (P.x - G.cam.x) * zoom + W / 2, sy = (P.y - 20 - G.cam.y) * zoom + H / 2;
+  const g = ctx.createRadialGradient(sx, sy, 110 * zoom, sx, sy, 300 * zoom);
+  g.addColorStop(0, 'rgba(2,3,8,0.1)'); g.addColorStop(1, 'rgba(2,3,8,0.94)');
+  ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
+  const b = G.boss;
+  if (b && b.kind === 'phish') {
+    const l = lurePos(b), lx = (l.x - G.cam.x) * zoom + W / 2, ly = (l.y - G.cam.y) * zoom + H / 2;
+    ctx.globalCompositeOperation = 'lighter';
+    const lg = ctx.createRadialGradient(lx, ly, 0, lx, ly, 120 * zoom);
+    lg.addColorStop(0, 'rgba(255,120,140,0.55)'); lg.addColorStop(1, 'rgba(255,90,120,0)');
+    ctx.fillStyle = lg; ctx.fillRect(lx - 120 * zoom, ly - 120 * zoom, 240 * zoom, 240 * zoom);
+    ctx.globalCompositeOperation = 'source-over';
+  }
+}
+// the ring that fills while she stands at a door
+function holdRing(x, y, k) {
+  ctx.strokeStyle = 'rgba(0,0,0,0.5)'; ctx.lineWidth = 6; disc(ctx, x, y, 20); ctx.stroke();
+  ctx.strokeStyle = '#d8b0ff'; ctx.lineWidth = 4; ctx.beginPath(); ctx.arc(x, y, 20, -Math.PI / 2, -Math.PI / 2 + TAU * Math.min(1, k)); ctx.stroke();
+}
+function drawHouse() {
+  const h = G.house;
+  if (!h || h.state !== 'out' || !inView(h.x, h.y - 70, 160)) return;
+  blit(houseSprite(), h.x, h.y - 76);
+  // smoke from the chimney
+  if (G.parts.length < PART_MAX - 40 && Math.random() < 0.3) G.parts.push({ x: h.x + 57, y: h.y - 168, vx: rand(-8, 8), vy: rand(-40, -24), life: 1.4, max: 1.4, size: 5, color: '#9a8aa8' });
+  const left = HOUSE_STAY - h.t;
+  if (left < 20) label(h.x, h.y - 190, `${Math.ceil(left)} 秒后消失`, '#e8d0ff');
+  if (h.hold > 0) holdRing(h.x, h.y - 10, h.hold);
 }
 
 function inView(x, y, m) {
@@ -7356,6 +7876,7 @@ function drawZones() {
     if (z.kind === 'tome') { drawTome(z); continue; }
     if (z.kind === 'dice' || z.kind === 'bigdie') continue; // in the air: drawn with the shots
     if (z.kind === 'story') { drawStory(z); continue; }
+    if (z.kind === 'bobber') { drawBobber(z); continue; }
     if (z.kind === 'wall') { drawWall(z); continue; }
     if (z.kind === 'qpulse') {
       // a ring of little square pixels rolling out, green and cyan by turns
@@ -7578,7 +8099,8 @@ function drawContext() {
 function drawPickups() {
   for (const g of G.gems) if (inView(g.x, g.y, 20)) blit(SPR.gem(g.tier), g.x, g.y);
   for (const it of G.items) {
-    if (!inView(it.x, it.y, 40)) continue;
+    if (it.dead || !inView(it.x, it.y, 40)) continue;
+    if (it.type === 'bait') { drawBait(it); continue; }
     const bob = Math.sin(it.t * 3) * 2;
     if (it.type === 'chest') {
       ctx.globalCompositeOperation = 'lighter';
@@ -7717,8 +8239,8 @@ function drawBoss(e) {
     ctx.fillRect(0, -r * 0.8, e.kind === 'sheep' ? 400 : 340, r * 1.6);
     ctx.restore();
   }
-  if (e.kind === 'sheep' || e.kind === 'granny') {
-    (e.kind === 'sheep' ? drawSheep : drawGranny)(e);
+  if (e.kind === 'sheep' || e.kind === 'granny' || e.kind === 'phish') {
+    ({ sheep: drawSheep, granny: drawGranny, phish: drawPhish })[e.kind](e);
     if (stunned && P && e.appealT) {
       label(e.x, e.y - r - 30, e.choke ? '呛住了…' : '申诉中…', '#ffd6cf');
       const w = 60, k = clamp(e.stun / e.appealT, 0, 1);
@@ -8253,6 +8775,11 @@ function drawBullets() {
     if (b.wool) { ctx.save(); ctx.translate(b.x, b.y); ctx.scale(1 + 0.1 * Math.sin(b.life * 20), 1); blit(woolSprite(), 0, 0); ctx.restore(); }
     else if (b.yarn) { ctx.save(); ctx.translate(b.x, b.y); ctx.rotate(b.life * 8); blit(yarnSprite(b.col), 0, 0); ctx.restore(); }
     else if (b.needle) { ctx.save(); ctx.translate(b.x, b.y); ctx.rotate(Math.atan2(b.vy, b.vx)); blit(needleSprite(), 0, 0); ctx.restore(); }
+    else if (b.hook) {
+      const l = lurePos(b.owner);
+      ctx.strokeStyle = 'rgba(230,240,255,0.7)'; ctx.lineWidth = 1.4; ctx.beginPath(); ctx.moveTo(l.x, l.y); ctx.lineTo(b.x, b.y); ctx.stroke();
+      ctx.save(); ctx.translate(b.x, b.y); ctx.rotate(Math.atan2(b.vy, b.vx) + Math.PI / 2); ctx.scale(0.45, 0.45); blit(hookSprite(), 0, 0); ctx.restore();
+    }
     else blit(b.coupon ? couponSprite(b.text) : bubbleSprite(b.text, b.boss), b.x, b.y);
   }
 }
@@ -8523,6 +9050,7 @@ function drawScreen() {
     ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
   }
   if (G.hurtFlash > 0) { ctx.fillStyle = `rgba(255,60,40,${G.hurtFlash * 0.35})`; ctx.fillRect(0, 0, W, H); }
+  if (G.fade > 0) { ctx.fillStyle = `rgba(0,0,0,${Math.min(1, G.fade)})`; ctx.fillRect(0, 0, W, H); }
   drawCutin();
   if (G.flashT > 0) { ctx.fillStyle = `rgba(255,236,210,${G.flashT * 0.6})`; ctx.fillRect(0, 0, W, H); }
   if (P.dark > 0) {
@@ -8534,7 +9062,8 @@ function drawScreen() {
   // edge arrows towards chests and elites that are off screen
   const top = 110;
   if (!G.ult) {
-    for (const it of G.items) if (it.type === 'chest') edgeArrow(it.x, it.y, '#f0b43c', top);
+    if (!G.room) for (const it of G.items) if (it.type === 'chest') edgeArrow(it.x, it.y, '#f0b43c', top);
+    if (G.house && G.house.state === 'out' && !G.room) edgeArrow(G.house.x, G.house.y - 60, '#c08cff', top);
     for (const e of G.enemies) if (!e.dead && (e.marked || e.boss)) edgeArrow(e.x, e.y, e.boss ? '#ff4fb3' : '#ffd27a', top);
   }
   if (joy) {
@@ -8569,6 +9098,7 @@ function render() {
     drawContext();
     drawPickups();
     drawTrees();
+    drawHouse();
     drawEnemies();
     drawPets();
     drawUltWorld();
@@ -8596,8 +9126,8 @@ const hud = { lv: -1, sec: -1, kills: -1, cd: null, ready: null, boss: null };
 function updateHud() {
   $('xpFill').style.transform = `scaleX(${clamp(P.xp / P.xpNext, 0, 1).toFixed(4)})`;
   if (hud.lv !== P.level) { hud.lv = P.level; $('lv').textContent = 'Lv ' + P.level + (P.level >= LV_CAP ? ' MAX' : ''); }
-  const sec = Math.floor(G.time);
-  if (sec !== hud.sec) { hud.sec = sec; $('clock').textContent = fmtTime(G.time); }
+  const sec = Math.floor(nightT()) + (G.room ? 1e6 : 0);
+  if (sec !== hud.sec) { hud.sec = sec; $('clock').textContent = fmtTime(nightT()) + (G.room ? ' · 屋内' : ''); }
   if (G.kills !== hud.kills) { hud.kills = G.kills; $('kills').textContent = '击杀 ' + G.kills; }
   const sk = $('skill');
   const whale = P.char === 'whale';
@@ -8654,6 +9184,7 @@ function toast(title, sub, kind, seal) {
   el.classList.toggle('gold', k === 'gold');
   el.classList.toggle('wx', k === 'wx');
   el.classList.toggle('pet', k === 'pet');
+  el.classList.toggle('house', k === 'house');
   replay(el);
   clearTimeout(toastTimer);
   toastTimer = setTimeout(() => { el.hidden = true; }, 2300);
@@ -9106,10 +9637,17 @@ const bot = {
       const dx = P.x - b.x, dy = P.y - b.y, d2 = dx * dx + dy * dy;
       if (d2 < 160 * 160) { fx += dx * 3 / Math.max(200, d2); fy += dy * 3 / Math.max(200, d2); }
     }
+    // the phishing site's prizes are left alone
+    for (const it of G.items) {
+      if (it.type !== 'bait') continue;
+      const dx = P.x - it.x, dy = P.y - it.y, d2 = dx * dx + dy * dy;
+      if (d2 < 90 * 90) { fx += dx * 2 / Math.max(200, d2); fy += dy * 2 / Math.max(200, d2); }
+    }
     const danger = Math.hypot(fx, fy);
     let tx = 0, ty = 0, best = 1e12;
-    for (const it of G.items) { const d = (it.x - P.x) ** 2 + (it.y - P.y) ** 2; if (d < best) { best = d; tx = it.x - P.x; ty = it.y - P.y; } }
-    if (!G.items.length) for (const g of G.gems) { const d = (g.x - P.x) ** 2 + (g.y - P.y) ** 2; if (d < best) { best = d; tx = g.x - P.x; ty = g.y - P.y; } }
+    const loot = G.items.filter(it => it.type !== 'bait');
+    for (const it of loot) { const d = (it.x - P.x) ** 2 + (it.y - P.y) ** 2; if (d < best) { best = d; tx = it.x - P.x; ty = it.y - P.y; } }
+    if (!loot.length) for (const g of G.gems) { const d = (g.x - P.x) ** 2 + (g.y - P.y) ** 2; if (d < best) { best = d; tx = g.x - P.x; ty = g.y - P.y; } }
     const tl = Math.hypot(tx, ty) || 1;
     let mx = fx / (danger || 1) * Math.min(1, danger * 40) + tx / tl * 0.45;
     let my = fy / (danger || 1) * Math.min(1, danger * 40) + ty / tl * 0.45;
@@ -9121,7 +9659,13 @@ const bot = {
       if (near >= (whale ? 7 : 16) || (P.hp < P.maxHp * 0.4 && near >= 3)) castSkill();
     }
     if (P.ult >= ULT_MAX && G.enemies.length > 60) castUlt();
-    if (danger > 0.02 && P.dashCd <= 0 && !P.dash) castDash();
+    if ((danger > 0.02 || P.hooked) && P.dashCd <= 0 && !P.dash) castDash();
+    // the anglerfish's lunge is marked on the floor first: step off the line
+    const b = G.boss;
+    if (b && b.room && b.act === 'aim') {
+      const ca = Math.cos(b.dashA), sa = Math.sin(b.dashA), side = Math.sign(ca * (P.y - b.y) - sa * (P.x - b.x)) || 1;
+      mx = -sa * side; my = ca * side;
+    }
     return [mx, my];
   },
 };
@@ -9129,7 +9673,7 @@ if (DEBUG) {
   window.__fk = {
     get G() { return G; }, get P() { return P; }, M3, bot, spawn: spawnEnemy, char: selectChar,
     talent(id) { const t = TALENT[id]; P.talents[id] = (P.talents[id] || 0) + 1; if (t.apply) t.apply(P); }, start: startRun, update, render,
-    treeAt, fellTrees, WEATHER, makePet, spawnBoss,
+    treeAt, fellTrees, WEATHER, makePet, spawnBoss, spawnHouse, enterRoom, leaveRoom,
     // simulate without rendering; modals are resolved by taking the first card
     sim(sec, dt = 1 / 30) {
       const steps = Math.round(sec / dt);
@@ -9169,7 +9713,7 @@ function frame(now) {
   render();
   if (G && P) updateHud();
   const live = G && !G.modal && !G.ending;
-  audio.ambient(live ? G.wx.kind : null, live ? G.wx.k : 0);
+  audio.ambient(live && !G.room ? G.wx.kind : null, live ? G.wx.k : 0);
 }
 addEventListener('resize', resize);
 resize();
