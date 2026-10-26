@@ -5028,15 +5028,15 @@ const WEAPONS = {
   },
   // 锁链: a dart on a chain that hooks one enemy; it runs from her for all it's worth and drags her along behind it
   shackle: {
-    name: '锁链', g: '锁', desc: '朝敌人甩出带铁镖的锁链，直接拴住一只怪物：它会拼命朝远离你的方向逃，不会再扑向你，一边被锁链勒得掉血，一边把挡路的敌人撞开；链子绷紧时它拖着你一起走，绷直的锁链扫到的敌人也会受伤。最多三条，BOSS 拴不住。',
-    evo: { need: 'ratelimit', name: '铁索连环', desc: '三条烧红的锁链，拴得更久；锁链扫过的敌人着火，拴住的怪物一死，锁链立刻缠上它身边的下一只。' },
+    name: '锁链', g: '锁', desc: '朝敌人甩出带铁镖的锁链，直接拴住一只怪物：它会拼命朝远离你的方向逃，不会再扑向你，一边被锁链勒得掉血，一边把挡路的敌人撞开；链子绷紧时它拖着你一起走，绷直的锁链扫到的敌人也会受伤。最多五条，BOSS 拴不住。',
+    evo: { need: 'ratelimit', name: '铁索连环', desc: '五条烧红的锁链，拴得更久；锁链扫过的敌人着火，拴住的怪物一死，锁链立刻缠上它身边的下一只。' },
     lv: [
       { cd: 1.8, n: 1, dmg: 20, len: 170, dur: 3.0 },
       { cd: 1.8, n: 1, dmg: 27, len: 180, dur: 3.2 },
       { cd: 1.6, n: 2, dmg: 27, len: 190, dur: 3.4 },
-      { cd: 1.6, n: 2, dmg: 34, len: 200, dur: 3.6 },
-      { cd: 1.4, n: 2, dmg: 40, len: 215, dur: 3.8 },
-      { cd: 1.2, n: 3, dmg: 48, len: 240, dur: 4.5 },
+      { cd: 1.6, n: 3, dmg: 30, len: 200, dur: 3.6 },
+      { cd: 1.4, n: 4, dmg: 28, len: 215, dur: 3.8 },
+      { cd: 1.2, n: 5, dmg: 36, len: 240, dur: 4.5 },
     ],
   },
   // 反向传播: a ball of light that bounces back off the edges of the screen, to and fro through whatever is in the way
@@ -8983,8 +8983,8 @@ function updateWeapons(dt) {
         break;
       }
       case 'shackle': {
-        // 锁链: each of up to three chains has its own cooldown, counted from when it comes back to her hand
-        const n = Math.min(3, s.n + P.amount);
+        // 锁链: each of up to five chains has its own cooldown, counted from when it comes back to her hand
+        const n = Math.min(5, s.n + P.amount);
         w.hooks = w.hooks || [];
         for (const h of w.hooks.slice()) if (!hookTick(h, dt, s, evo)) { w.hooks.splice(w.hooks.indexOf(h), 1); w.ts[h.slot] = cdOf(s.cd); }
         for (let i = 0; i < n; i++) {
