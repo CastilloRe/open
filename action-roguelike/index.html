@@ -1046,8 +1046,21 @@ const WEAPONS = {
       { cd: 2.8, r: 240, pct: 0.24, dmg: 14 },
     ],
   },
+  // 锁链: a chain with a dart on the end, flung out to string enemies up and yanked back to drag them in and bind them
+  shackle: {
+    name: '锁链', g: '锁', desc: '朝最近的敌人甩出一条带铁镖的锁链，一路串起碰到的敌人，再猛地一拽，把它们拖到身前锁住：锁住的敌人不能动、也不能伤人（精英只被锁在原地，BOSS 只是减速）。',
+    evo: { need: 'ratelimit', name: '铁索连环', desc: '四条更长的锁链，烧得通红；拖回来的敌人被铁索连成一串，打中其中一个，链上的其他敌人一起受到 40% 的伤害。' },
+    lv: [
+      { cd: 2.2, n: 1, dmg: 20, len: 260, grab: 4, lock: 1.0 },
+      { cd: 2.2, n: 1, dmg: 27, len: 270, grab: 4, lock: 1.0 },
+      { cd: 2.0, n: 2, dmg: 27, len: 280, grab: 5, lock: 1.2 },
+      { cd: 2.0, n: 2, dmg: 34, len: 295, grab: 6, lock: 1.3 },
+      { cd: 1.8, n: 3, dmg: 40, len: 310, grab: 6, lock: 1.4 },
+      { cd: 1.6, n: 4, dmg: 48, len: 350, grab: 8, lock: 1.8 },
+    ],
+  },
 };
-const STAT_LABEL = { dmg: '伤害', n: '数量', cd: '冷却', pierce: '穿透', rings: '圈数', size: '体积', boom: '爆炸伤害', boomR: '爆炸范围', r: '范围', slow: '减速', jumps: '推理步数', bloom: '绽放范围', dur: '持续', spin: '转速', len: '长度', wid: '宽度', range: '射程', root: '定身', stun: '震晕', pop: '溅射范围', freeze: '冻结', pct: '削减' };
+const STAT_LABEL = { dmg: '伤害', n: '数量', cd: '冷却', pierce: '穿透', rings: '圈数', size: '体积', boom: '爆炸伤害', boomR: '爆炸范围', r: '范围', slow: '减速', jumps: '推理步数', bloom: '绽放范围', dur: '持续', spin: '转速', len: '长度', wid: '宽度', range: '射程', root: '定身', stun: '震晕', pop: '溅射范围', freeze: '冻结', pct: '削减', grab: '串敌', lock: '锁住' };
 
 const CAT_CLASS = { atk: 'atk', def: 'def', grow: 'grow', mech: 'mech', ex: 'ex' };
 const TALENTS = [
@@ -1356,6 +1369,8 @@ const audio = (() => {
     lucky() { [784, 988, 1175, 1568].forEach((f, i) => tone(f, 0.18, { type: 'square', vol: 0.022, at: i * 0.06 })); },
     wall() { noise(0.4, { vol: 0.08, freq: 500, type: 'lowpass', slide: 2 }); tone(160, 0.2, { type: 'triangle', vol: 0.05, slide: 0.6 }); },
     quant() { [1568, 1175, 784, 523].forEach((f, i) => tone(f, 0.05, { type: 'square', vol: 0.016, at: i * 0.035 })); },
+    chain() { if (gate('chain', 120)) { noise(0.18, { vol: 0.07, freq: 1500, slide: 3 }); for (let i = 0; i < 5; i++) tone(rand(2300, 3400), 0.03, { type: 'square', vol: 0.01, at: i * 0.03 }); } },
+    clank() { if (gate('clank', 100)) { tone(rand(820, 980), 0.14, { type: 'triangle', vol: 0.05, slide: 0.7 }); noise(0.09, { vol: 0.07, freq: 3200, q: 2 }); } },
     // the world: thunder, a tree rustling when she bumps it, a tree coming down
     thunder() { noise(0.12, { vol: 0.2, freq: 3200, q: 0.5 }); noise(1.8, { vol: 0.24, freq: 380, type: 'lowpass', slide: 0.35, at: 0.05 }); tone(52, 1.4, { vol: 0.14, slide: 0.6, at: 0.05 }); },
     rustle() { if (gate('rustle', 250)) noise(0.4, { vol: 0.06, freq: 3600, q: 0.5, slide: 0.7 }); },
@@ -3213,6 +3228,15 @@ const SPR = {
     x.fillStyle = '#fff3e6'; disc(x, 0, 0, 4.3); x.fill();
     x.fillStyle = '#3b2416'; disc(x, -1.6, -0.3, 0.9); x.fill(); disc(x, 1.6, -0.3, 0.9); x.fill();
   }),
+  // the padlock on a bound enemy: a steel shackle and a brass body with a keyhole
+  padlock: () => sprite('padlock', 16, 20, x => {
+    x.lineCap = 'round';
+    x.beginPath(); x.moveTo(-3.6, 0); x.lineTo(-3.6, -4); x.arc(0, -4, 3.6, Math.PI, 0); x.lineTo(3.6, 0);
+    x.lineWidth = 3.4; x.strokeStyle = '#1e2228'; x.stroke(); x.lineWidth = 1.6; x.strokeStyle = '#c9d3da'; x.stroke();
+    rrPath(x, -6, -1, 12, 10, 2.5); x.fillStyle = vgrad(x, -1, 9, '#ffe08a', '#b8801e'); x.fill();
+    x.lineWidth = 1.3; x.strokeStyle = '#4a3010'; x.stroke();
+    x.fillStyle = '#3a2410'; disc(x, 0, 3, 1.6); x.fill(); x.fillRect(-0.7, 3.5, 1.4, 3);
+  }),
   crown: () => sprite('crown', 24, 18, x => {
     x.fillStyle = '#f0b43c'; x.strokeStyle = '#5a3a10'; x.lineWidth = 1.2;
     x.beginPath(); x.moveTo(-9, 5); x.lineTo(-10, -5); x.lineTo(-5, 0); x.lineTo(0, -7); x.lineTo(5, 0); x.lineTo(10, -5); x.lineTo(9, 5); x.closePath();
@@ -3442,7 +3466,7 @@ function newRun() {
   G = {
     time: 0, enemies: [], shots: [], ebullets: [], gems: [], items: [], zones: [], beams: [], stamps: [],
     parts: [], rings: [], texts: [], delayed: [], blooms: [], ult: null, flashT: 0,
-    kills: 0, banned: 0, breaks: 0, dmgBy: {}, nextId: 1, spawnAcc: 0, evI: 0, chestT: 35,
+    kills: 0, banned: 0, breaks: 0, dmgBy: {}, links: [], nextId: 1, spawnAcc: 0, evI: 0, chestT: 35,
     pendLv: 0, pendChest: 0, modal: null, modalAt: 0, ending: null, hitStop: 0, shake: 0, hurtFlash: 0,
     cam: { x: 0, y: 0 }, boss: null, decoy: null, gemCombo: 0, gemComboT: 0, map: pickMap(),
     trees: new Map(), near: [], wx: { kind: null, k: 0, next: rand(75, 100), last: null }, boltFlash: 0,
@@ -3754,6 +3778,7 @@ function hit(e, base, src, o = {}) {
   }
   if (!o.quiet) dmgText(e.x + rand(-6, 6), e.y - e.r - 4, d, crit, o.burn, e);
   sfx.hit();
+  if (e.link && e.chainT > 0 && !o.linked) for (const x of e.link) if (x !== e && !x.dead && x.chainT > 0) hit(x, base * 0.4, 'shackle', { quiet: true, noCrit: true, noBurst: true, linked: true });
   if (crit && P.talents.burst && !o.noBurst && Math.random() < 0.3) {
     const x = e.x, y = e.y;
     later(0.05, () => explode(x, y, 55 * P.area, base * 0.8, 'burst', { color: '#ffd27a' }));
@@ -4935,6 +4960,25 @@ function updateWeapons(dt) {
         }
         break;
       }
+      case 'shackle': {
+        // 锁链: one chain at each of the nearest enemies (fanned out round the first if there are fewer of them)
+        w.hooks = (w.hooks || []).filter(h => hookTick(h, dt, s, evo));
+        G.links = G.links.filter(g => g.room === G.room && g.es.some(e => !e.dead && e.chainT > 0));
+        w.t -= dt;
+        if (w.t > 0) break;
+        const L = s.len * P.area, n = s.n + P.amount, list = nearestList(P.x, P.y, L, n);
+        if (!list.length) { w.t = 0.2; break; }
+        w.t = cdOf(s.cd);
+        const m = castMult(w), a0 = Math.atan2(list[0].y - P.y, list[0].x - P.x);
+        for (let i = 0; i < n; i++) {
+          const tg = list[i], a = tg ? Math.atan2(tg.y - P.y, tg.x - P.x) : a0 + (i % 2 ? 1 : -1) * Math.ceil(i / 2) * 0.45;
+          later(i * 0.06, () => { if (P && w.hooks) w.hooks.push(newHook(a, L, m)); });
+        }
+        sfx.chain();
+        P.aimX = list[0].x - P.x; P.aimY = list[0].y - P.y;
+        if (!P.moving && !P.dash) { P.face = list[0].x >= P.x ? 1 : -1; playAnim(['atk1', 'atk2', 'atk3'], 0.32, 0); }
+        break;
+      }
       case 'captcha': {
         // 人机验证: a beam sweeping round her; whatever it crosses is hurt and held for a moment
         const n = s.n + P.amount, L = s.len * P.area * P.size;
@@ -5207,6 +5251,64 @@ function lash(dx, dy, s, m) {
   });
   G.zones.push({ kind: 'lash', x: ox, y: oy, dx, dy, len: L, wd, r: L, life: 0.24, max: 0.24, flip: Math.random() < 0.5 ? 1 : -1 });
 }
+// 锁链: the dart flies out along its line, stringing whatever it touches onto the chain, until it has its fill or the
+// chain runs out; then she yanks it back, and the small ones are dragged in like beads on a string to a stop in front of
+// her, hit again and bound: for a moment they can't move or hurt anyone. The big ones are bound where they stand for half
+// as long, and DAN and the golden slime are only hurt and slowed. 铁索连环 links the ones it brings in, so a blow to one is
+// felt down the chain
+const hookFrom = () => ({ x: P.x + P.face * 10, y: P.y - 18 * P.size });
+function newHook(a, L, m) {
+  return { a, dx: Math.cos(a), dy: Math.sin(a), ext: 0, L, st: 'out', caught: [], m, t: 0, room: G.room, wob: Math.random() < 0.5 ? 1 : -1 };
+}
+function hookTick(h, dt, s, evo) {
+  if (h.room !== G.room) return false;
+  const o = hookFrom();
+  h.t += dt;
+  h.caught = h.caught.filter(c => !c.e.dead && !(c.e.banned > 0));
+  if (h.st === 'out') {
+    const from = h.ext;
+    h.ext = Math.min(h.L, h.ext + 1500 * P.pspeed * dt);
+    const ax = o.x + h.dx * from, ay = o.y + h.dy * from, bx = o.x + h.dx * h.ext, by = o.y + h.dy * h.ext;
+    forNear((ax + bx) / 2, (ay + by) / 2, (h.ext - from) / 2 + 60, e => {
+      if (h.caught.length >= s.grab || e.banned > 0 || e.paradeT > 0 || e.hooked === h || segDist(e.x, e.y, ax, ay, bx, by) > e.r + 10) return;
+      const held = e.wrapped || (e.hooked && e.hooked.st !== 'back');
+      e.hooked = h;
+      hit(e, s.dmg * h.m, 'shackle');
+      if (e.dead || held) return;
+      if (e.boss || e.type === 'gold') { e.slowT = Math.max(e.slowT, 0.8); e.slowAmt = Math.max(e.slowAmt, 0.5); return; }
+      h.caught.push({ e, at: (e.x - o.x) * h.dx + (e.y - o.y) * h.dy, big: !!(e.heavy || e.elite || e.type === 'reg') });
+      e.chainT = Math.max(e.chainT || 0, 0.5);
+      sfx.clank();
+    });
+    if (h.ext >= h.L || h.caught.length >= s.grab) { h.st = 'yank'; h.caught.sort((a, b) => a.at - b.at); }
+  } else if (h.st === 'yank') {
+    const stop = 90 + P.r;
+    h.ext = Math.max(stop, h.ext - 1100 * dt);
+    let i = 0;
+    for (const c of h.caught) {
+      c.e.chainT = Math.max(c.e.chainT, 0.3);
+      if (c.big) continue;
+      const along = Math.min(c.at, Math.max(h.ext, stop + i++ * 22)), k = Math.min(1, dt * 16);
+      c.e.x += (o.x + h.dx * along - c.e.x) * k; c.e.y += (o.y + h.dy * along - c.e.y) * k;
+    }
+    if (h.ext <= stop) {
+      h.st = 'back';
+      const es = [];
+      for (const c of h.caught) {
+        hit(c.e, s.dmg * h.m * 0.75, 'shackle');
+        if (c.e.dead) continue;
+        c.e.chainT = s.lock * P.dur * (c.big ? 0.5 : 1); c.e.wrapped = true;
+        es.push(c.e);
+      }
+      if (evo && es.length > 1) { for (const e of es) e.link = es; G.links.push({ es, room: G.room }); }
+      if (es.length) { sfx.clank(); shake(1.5); }
+    }
+  } else {
+    h.ext -= 2200 * dt;
+    if (h.ext <= 0) return false;
+  }
+  return true;
+}
 function chainFrom(start, s, m, evo, used) {
   const pts = [P.x, P.y - 24];
   const range = 175 * P.area, jumps = s.jumps + P.amount;
@@ -5314,7 +5416,7 @@ function updatePets(dt) {
     p.anim += dt; p.flash -= dt; p.biteT -= dt;
     let hurt = 0, by = null;
     forNear(p.x, p.y, p.r + 50, e => {
-      if (e.banned > 0 || e.stun > 0 || e.frozenT > 0 || e.paradeT > 0 || e.dmg <= 0) return;
+      if (e.banned > 0 || e.stun > 0 || e.frozenT > 0 || e.chainT > 0 || e.paradeT > 0 || e.dmg <= 0) return;
       if ((e.x - p.x) ** 2 + (e.y - p.y) ** 2 > (e.r + p.r) ** 2) return;
       hurt += e.dmg * 1.2; by = e;
     });
@@ -5428,6 +5530,7 @@ function updateEnemies(dt) {
       continue;
     }
     if (e.frozenT > 0) { e.frozenT -= dt; continue; }
+    if (e.chainT > 0) { e.chainT -= dt; if (e.chainT <= 0) { e.wrapped = false; e.link = null; } continue; }
     if (e.paradeT > 0) { e.paradeT -= dt; continue; }
     if (e.type === 'gold') {
       // 金色史莱姆 darts away from her, weaving, and slips off after a while
@@ -8869,6 +8972,65 @@ function drawLash(z) {
   ctx.beginPath(); ctx.moveTo(x + nx * wd * 0.5 * -z.flip, y + ny * wd * 0.5 * -z.flip); ctx.quadraticCurveTo(cx + nx * wd * 0.3 * -z.flip, cy + ny * wd * 0.3 * -z.flip, ex, ey); ctx.stroke();
   ctx.globalAlpha = 1;
 }
+// a run of chain links, flat rings and edge-on bars in turn; at(i) gives each link's place and direction. Red-hot for 铁索连环
+function chainDraw(n, at, hot) {
+  const ring = new Path2D(), bar = new Path2D();
+  for (let i = 0; i < n; i++) {
+    const [x, y, a] = at(i), c = Math.cos(a), sn = Math.sin(a);
+    if (i % 2) { bar.moveTo(x - c * 4.2, y - sn * 4.2); bar.lineTo(x + c * 4.2, y + sn * 4.2); }
+    else { ring.moveTo(x + c * 5, y + sn * 5); ring.ellipse(x, y, 5, 2.8, a, 0, TAU); }
+  }
+  ctx.lineCap = 'round';
+  if (hot) {
+    ctx.globalCompositeOperation = 'lighter';
+    ctx.strokeStyle = 'rgba(255,110,40,0.3)'; ctx.lineWidth = 8; ctx.stroke(ring); ctx.stroke(bar);
+    ctx.globalCompositeOperation = 'source-over';
+  }
+  ctx.strokeStyle = '#1e2228'; ctx.lineWidth = 3.6; ctx.stroke(ring); ctx.lineWidth = 4.2; ctx.stroke(bar);
+  ctx.strokeStyle = hot ? '#ffb45a' : '#aeb9c2'; ctx.lineWidth = 1.7; ctx.stroke(ring); ctx.lineWidth = 2; ctx.stroke(bar);
+}
+// 锁链 in flight: the links from her hand to the dart, whipping a little on the way out; the dart is a steel blade with a
+// ring and a red tassel, like a 绳镖's
+function drawShackle() {
+  const w = P.weapons.find(v => v.id === 'shackle');
+  if (!w) return;
+  const hot = w.level === 6, o = hookFrom(), t = G.time;
+  for (const h of w.hooks || []) {
+    const L = Math.max(0, h.ext), n = Math.max(1, Math.round(L / 7)), nx = -h.dy, ny = h.dx;
+    const wob = h.st === 'out' ? 12 * Math.max(0, 1 - h.t * 3) * h.wob : 0;
+    chainDraw(n, i => { const f = (i + 0.5) / n, b = Math.sin(f * Math.PI) * wob; return [o.x + h.dx * L * f + nx * b, o.y + h.dy * L * f + ny * b, h.a]; }, hot);
+    ctx.save(); ctx.translate(o.x + h.dx * L, o.y + h.dy * L); ctx.rotate(h.a);
+    ctx.strokeStyle = '#d8323a'; ctx.lineWidth = 2.2; ctx.lineCap = 'round';
+    for (const k of [-1, 1]) { ctx.beginPath(); ctx.moveTo(-8, 0); ctx.quadraticCurveTo(-13, k * 3 + Math.sin(t * 20) * 2, -19, k * 4); ctx.stroke(); }
+    if (hot) { ctx.globalCompositeOperation = 'lighter'; ctx.fillStyle = 'rgba(255,130,50,0.35)'; disc(ctx, 4, 0, 12); ctx.fill(); ctx.globalCompositeOperation = 'source-over'; }
+    ctx.beginPath(); ctx.moveTo(16, 0); ctx.lineTo(1, -5.5); ctx.lineTo(-3, 0); ctx.lineTo(1, 5.5); ctx.closePath();
+    ctx.fillStyle = hot ? '#ffd29a' : '#e4eaef'; ctx.fill(); ctx.lineWidth = 1.6; ctx.strokeStyle = '#1e2228'; ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(-1, 0); ctx.lineTo(13, 0); ctx.lineWidth = 1; ctx.strokeStyle = hot ? '#ff7a2a' : '#8c99a4'; ctx.stroke();
+    ctx.beginPath(); ctx.arc(-6, 0, 3, 0, TAU); ctx.lineWidth = 3.2; ctx.strokeStyle = '#1e2228'; ctx.stroke();
+    ctx.lineWidth = 1.5; ctx.strokeStyle = hot ? '#ffb45a' : '#aeb9c2'; ctx.stroke();
+    ctx.restore();
+  }
+  // 铁索连环: a sagging run of hot links from each bound enemy to the next
+  for (const g of G.links) {
+    const es = g.es.filter(e => !e.dead && e.chainT > 0);
+    for (let i = 1; i < es.length; i++) {
+      const a = es[i - 1], b = es[i], ax = a.x, ay = a.y - a.r * 0.1, bx = b.x, by = b.y - b.r * 0.1;
+      if (!inView((ax + bx) / 2, (ay + by) / 2, 120)) continue;
+      const L = Math.hypot(bx - ax, by - ay), n = Math.max(1, Math.round(L / 7)), ang = Math.atan2(by - ay, bx - ax);
+      ctx.globalAlpha = Math.min(1, Math.min(a.chainT, b.chainT) / 0.2);
+      chainDraw(n, j => { const f = (j + 0.5) / n; return [ax + (bx - ax) * f, ay + (by - ay) * f + Math.sin(f * Math.PI) * 6, ang]; }, true);
+    }
+  }
+  ctx.globalAlpha = 1;
+}
+// a bound enemy: a loop of chain round its middle (the front half shows) with a padlock hanging off it
+function drawBound(e) {
+  const cx = e.x, cy = e.y - e.r * 0.1, rx = e.r * 1.1, ry = e.r * 0.45, n = Math.max(5, Math.round(Math.PI * (rx + ry) / 2 / 6.5));
+  ctx.globalAlpha = Math.min(1, e.chainT / 0.2);
+  chainDraw(n + 1, i => { const th = Math.PI * i / n; return [cx + Math.cos(th) * rx, cy + Math.sin(th) * ry, Math.atan2(Math.cos(th) * ry, -Math.sin(th) * rx)]; }, !!e.link);
+  blit(SPR.padlock(), cx, cy + ry + 6);
+  ctx.globalAlpha = 1;
+}
 // 人机验证: a sweeping beam of light with a ticked checkbox at its tip
 function drawCaptcha() {
   const w = P.weapons.find(v => v.id === 'captcha');
@@ -8957,7 +9119,7 @@ function drawEnemies() {
     const s = enemySprite(e, banned ? 0 : frame, banned ? 'b' : e.flash > 0 ? 'f' : 'n', blink);
     const x = e.x + (banned ? rand(-1.3, 1.3) : 0);
     // a soft squash-and-stretch hop, feet kept on the ground
-    const still = banned || e.stun > 0 || e.frozenT > 0 || e.paradeT > 0;
+    const still = banned || e.stun > 0 || e.frozenT > 0 || e.chainT > 0 || e.paradeT > 0;
     const hop = still ? 0 : Math.sin(e.anim * (e.heavy ? 6 : 10) + e.id);
     const sy = 1 + hop * (e.heavy ? 0.03 : 0.06), sx = 1 - hop * (e.heavy ? 0.025 : 0.05);
     if (e.rage > 0 && !banned) {
@@ -8981,6 +9143,7 @@ function drawEnemies() {
       ctx.drawImage(ice.c, e.x - iw / 2, e.y + s.h / 2 - ih * 0.92, iw, ih);
       ctx.globalAlpha = 1;
     }
+    if (e.chainT > 0 && e.wrapped && !banned) drawBound(e);
     if (banned) blit(e.erase ? SPR.breaktag() : SPR.bantag(), e.x, e.y - e.r - 10);
     if (e.elite || e.type === 'reg') {
       if (!banned) blit(SPR.crown(), e.x, e.y - e.r - (e.type === 'reg' ? 24 : 12));
@@ -9959,6 +10122,7 @@ function render() {
     drawBreath();
     drawAgents(false); drawHoles(false); drawMinke(false);
     drawShots();
+    drawShackle();
     drawCaptcha();
     drawBullets();
     drawStamps();
