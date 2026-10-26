@@ -1134,8 +1134,21 @@ const WEAPONS = {
       { cd: 2.4, n: 4, dmg: 11, r: 80, dur: 5.0 },
     ],
   },
+  // 魔法扫帚: brooms that wait at her side and, every so often, sweep a wide arc round her, sweeping the enemies away
+  broom: {
+    name: '魔法扫帚', g: '帚', desc: '身边飘着一把魔法扫帚，每隔一会儿绕着她大大地扫一圈，扫到的敌人受伤并被扫飞出去，扫过的地方撒下亮晶晶的魔法粉。',
+    evo: { need: 'rag', name: '大扫除', desc: '四把金色扫帚一起转着扫满一整圈，扫过的敌人被扫得慢下来，地上的经验也一并扫到她脚边。' },
+    lv: [
+      { cd: 2.2, n: 1, dmg: 22, range: 150, arc: 3.4, wid: 26 },
+      { cd: 2.2, n: 1, dmg: 29, range: 155, arc: 3.4, wid: 26 },
+      { cd: 2.0, n: 1, dmg: 30, range: 165, arc: 4.0, wid: 30 },
+      { cd: 2.0, n: 2, dmg: 34, range: 175, arc: 4.0, wid: 30 },
+      { cd: 1.8, n: 2, dmg: 40, range: 185, arc: 4.6, wid: 34 },
+      { cd: 1.6, n: 4, dmg: 46, range: 220, arc: 6.3, wid: 40 },
+    ],
+  },
 };
-const STAT_LABEL = { dmg: '伤害', n: '数量', cd: '冷却', pierce: '穿透', rings: '圈数', size: '体积', boom: '爆炸伤害', boomR: '爆炸范围', r: '范围', slow: '减速', jumps: '推理步数', bloom: '绽放范围', dur: '持续', spin: '转速', len: '长度', wid: '宽度', range: '射程', root: '定身', stun: '震晕', pop: '溅射范围', freeze: '冻结', pct: '削减', rate: '射速' };
+const STAT_LABEL = { dmg: '伤害', n: '数量', cd: '冷却', pierce: '穿透', rings: '圈数', size: '体积', boom: '爆炸伤害', boomR: '爆炸范围', r: '范围', slow: '减速', jumps: '推理步数', bloom: '绽放范围', dur: '持续', spin: '转速', len: '长度', wid: '宽度', range: '射程', root: '定身', stun: '震晕', pop: '溅射范围', freeze: '冻结', pct: '削减', rate: '射速', arc: '扫过的角度' };
 
 const CAT_CLASS = { atk: 'atk', def: 'def', grow: 'grow', mech: 'mech', ex: 'ex' };
 const TALENTS = [
@@ -1448,6 +1461,7 @@ const audio = (() => {
     wall() { noise(0.4, { vol: 0.08, freq: 500, type: 'lowpass', slide: 2 }); tone(160, 0.2, { type: 'triangle', vol: 0.05, slide: 0.6 }); },
     quant() { [1568, 1175, 784, 523].forEach((f, i) => tone(f, 0.05, { type: 'square', vol: 0.016, at: i * 0.035 })); },
     chain() { if (gate('chain', 120)) { noise(0.18, { vol: 0.07, freq: 1500, slide: 3 }); for (let i = 0; i < 5; i++) tone(rand(2300, 3400), 0.03, { type: 'square', vol: 0.01, at: i * 0.03 }); } },
+    sweep() { if (gate('sweep', 150)) { noise(0.4, { vol: 0.08, freq: 2600, q: 0.6, slide: 0.4 }); [1318.5, 1760, 2093].forEach((f, i) => tone(f, 0.18, { type: 'sine', vol: 0.014, at: 0.05 + i * 0.05 })); } },
     charge() { tone(260, 0.45, { type: 'sawtooth', vol: 0.022, slide: 3.2 }); },
     laser() { noise(0.5, { vol: 0.1, freq: 1800, q: 1.2, slide: 0.6 }); tone(220, 0.5, { type: 'sawtooth', vol: 0.035, slide: 0.8 }); },
     hum() { if (gate('hum', 160)) tone(rand(170, 200), 0.17, { type: 'square', vol: 0.01 }); },
@@ -5108,6 +5122,26 @@ function updateWeapons(dt) {
         sfx.bounce();
         break;
       }
+      case 'broom': {
+        // 魔法扫帚: when they're all back at her side, they sweep together, starting either side of the nearest enemy and
+        // spaced evenly round her
+        const n = s.n + P.amount, R = s.range * P.area, wid = s.wid * P.wid;
+        w.brooms = w.brooms || [];
+        while (w.brooms.length < n) w.brooms.push({ st: 'idle', t: 0, ang: 0, x: P.x, y: P.y - 30, rot: Math.PI / 2, sc: 0.8, hit: new Set() });
+        w.t -= dt;
+        if (w.t <= 0 && w.brooms.every(b => b.st === 'idle')) {
+          const tg = nearest(P.x, P.y, R + 60);
+          if (!tg) w.t = 0.2;
+          else {
+            w.t = cdOf(s.cd);
+            const dir = Math.random() < 0.5 ? 1 : -1, a0 = Math.atan2(tg.y - P.y, tg.x - P.x) - dir * s.arc / 2, m = castMult(w);
+            w.brooms.forEach((b, i) => Object.assign(b, { st: 'sweep', t: 0, from: a0 + i / w.brooms.length * TAU, dir, m, hit: new Set() }));
+            sfx.sweep();
+          }
+        }
+        w.brooms.forEach((b, i) => broomTick(b, i, dt, s, R, wid, evo));
+        break;
+      }
       case 'poison': {
         // 数据投毒: vials lobbed at enemies picked from the nearest few
         w.t -= dt;
@@ -6678,6 +6712,37 @@ function updateBullets(dt) {
 
 // 模型部署: a turret takes a moment to unfold, then turns its barrel onto the nearest enemy in range and fires at it so
 // many times a second; when its time is up it packs up, and 集群部署's go off instead
+// 魔法扫帚: a sweep takes half a second, easing in and out, the broom held out from her with its bristles at the far
+// end; whatever the broom crosses is hit once and swept on and out; it sheds sparkles as it goes. Done, it flies back to
+// hover at her shoulder, bristles down. 大扫除 also slows what it sweeps and sweeps up the experience in its path
+const SWEEP_T = 0.5;
+function broomTick(b, i, dt, s, R, wid, evo) {
+  const ox = P.x, oy = P.y - 10;
+  if (b.st === 'sweep') {
+    b.t += dt;
+    const k = Math.min(1, b.t / SWEEP_T), e = k < 0.5 ? 2 * k * k : 1 - 2 * (1 - k) * (1 - k);
+    b.ang = b.from + b.dir * s.arc * e;
+    const c = Math.cos(b.ang), sn = Math.sin(b.ang) * 0.75;
+    const ax = ox + c * R * 0.3, ay = oy + sn * R * 0.3, bx = ox + c * R, by = oy + sn * R;
+    b.x = ox + c * R * 0.65; b.y = oy + sn * R * 0.65; b.rot = Math.atan2(sn, c); b.sc = R * 0.7 / 70;
+    forNear((ax + bx) / 2, (ay + by) / 2, R * 0.4 + wid + 40, e => {
+      if (e.banned > 0 || b.hit.has(e.id) || segDist(e.x, e.y, ax, ay, bx, by) > wid / 2 + e.r) return;
+      b.hit.add(e.id);
+      hit(e, s.dmg * b.m, 'broom', { kb: 260, kx: c * 0.6 - Math.sin(b.ang) * b.dir, ky: sn * 0.6 + c * b.dir });
+      if (evo && !e.dead) { e.slowT = Math.max(e.slowT, 1.2); e.slowAmt = Math.max(e.slowAmt, 0.4); }
+    });
+    if (evo) for (const g of G.gems) if (!g.pull && segDist(g.x, g.y, ax, ay, bx, by) < wid) g.pull = true;
+    if (G.parts.length < PART_MAX && Math.random() < dt * 50) G.parts.push({ x: bx + rand(-8, 8), y: by + rand(-8, 8), vx: rand(-30, 30), vy: rand(-40, 0), life: 0.5, max: 0.5, size: rand(1.6, 2.8), color: pick(evo ? ['#ffe27a', '#fff3c4', '#ffc04a'] : ['#c9a8ff', '#fff0ff', '#ffd8f0']), add: true });
+    if (k >= 1) b.st = 'back';
+    return;
+  }
+  // back at her shoulder, a little apart from each other, bobbing
+  const hx = P.x - P.face * (26 + i * 9), hy = P.y - 34 * P.size - i * 7 + Math.sin(G.time * 2.4 + i) * 3, q = Math.min(1, dt * 10);
+  b.x += (hx - b.x) * q; b.y += (hy - b.y) * q; b.sc += (0.8 - b.sc) * q;
+  const to = Math.PI / 2 + Math.sin(G.time * 1.6 + i) * 0.15;
+  b.rot += Math.atan2(Math.sin(to - b.rot), Math.cos(to - b.rot)) * q;
+  if (b.st === 'back' && Math.abs(hx - b.x) + Math.abs(hy - b.y) < 12) b.st = 'idle';
+}
 // 数据投毒: each moment in a puddle adds another dose (up to a cap) and keeps it going for three seconds more; a poisoned
 // one that dies passes half of it to its three nearest neighbours, and 模型崩溃 spills a small puddle where it fell
 function applyPoison(e, unit, cap, evo) {
@@ -9735,6 +9800,43 @@ function drawHoney(z, a) {
   ctx.fillStyle = '#fff3d6'; ctx.font = `700 9px ${UI_FONT}`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText('蜜', px, py + 1.5);
   ctx.globalAlpha = 1;
 }
+// 魔法扫帚: a wooden handle with a lighter grain, a fan of straw bristles bound with a violet ribbon (gold for 大扫除),
+// and a little star charm hanging off the end of the handle
+const broomSprite = evo => sprite('broom' + (evo ? 'e' : ''), 84, 36, x => {
+  if (evo) glow(x, 30, '#ffd860', 0.25);
+  x.lineCap = 'round';
+  x.strokeStyle = '#5a361e'; x.lineWidth = 3.6; x.beginPath(); x.moveTo(-36, 0); x.lineTo(12, 0); x.stroke();
+  x.strokeStyle = '#b07a44'; x.lineWidth = 1.2; x.beginPath(); x.moveTo(-35, -0.9); x.lineTo(11, -0.9); x.stroke();
+  x.fillStyle = evo ? '#ffe08a' : '#e8c070';
+  x.beginPath(); x.moveTo(10, -4); x.quadraticCurveTo(26, -14, 39, -13); x.lineTo(39, 13); x.quadraticCurveTo(26, 14, 10, 4); x.closePath(); x.fill();
+  x.strokeStyle = 'rgba(140,90,30,0.8)'; x.lineWidth = 0.8;
+  for (let i = -12; i <= 12; i += 3) { x.beginPath(); x.moveTo(12, i * 0.3); x.lineTo(39, i); x.stroke(); }
+  x.fillStyle = evo ? '#ffb020' : '#9a5ae8'; x.fillRect(8, -5, 5, 10);
+  x.strokeStyle = evo ? '#ffb020' : '#9a5ae8'; x.lineWidth = 1; x.beginPath(); x.moveTo(-34, 1); x.lineTo(-34, 8); x.stroke();
+  x.fillStyle = '#ffe27a'; x.beginPath();
+  for (let i = 0; i < 10; i++) { const a = -Math.PI / 2 + i / 10 * TAU, r = i % 2 ? 1.6 : 3.6; x.lineTo(-34 + Math.cos(a) * r, 11 + Math.sin(a) * r); }
+  x.closePath(); x.fill();
+});
+function drawBrooms() {
+  const w = P.weapons.find(v => v.id === 'broom');
+  if (!w || !w.brooms) return;
+  const evo = w.level === 6, s = wStats(w), R = s.range * P.area;
+  for (const b of w.brooms) {
+    if (b.st === 'sweep') {
+      // the swept crescent, fading behind the broom
+      const a1 = b.ang, st = a1 - b.dir * Math.min(Math.abs(a1 - b.from), 1.6);
+      ctx.save(); ctx.translate(P.x, P.y - 10); ctx.scale(1, 0.75);
+      ctx.globalCompositeOperation = 'lighter';
+      ctx.strokeStyle = evo ? 'rgba(255,215,110,0.22)' : 'rgba(190,150,255,0.22)'; ctx.lineWidth = R * 0.5; ctx.lineCap = 'butt';
+      ctx.beginPath(); ctx.arc(0, 0, R * 0.68, st, a1, b.dir < 0); ctx.stroke();
+      ctx.globalCompositeOperation = 'source-over';
+      ctx.restore();
+    }
+    ctx.save(); ctx.translate(b.x, b.y); ctx.rotate(b.rot); ctx.scale(b.sc, b.sc);
+    blit(broomSprite(evo), 0, 0);
+    ctx.restore();
+  }
+}
 // 数据投毒: a round flask of green poison (violet for 模型崩溃) with a cork, a highlight and 01 on it
 const vialSprite = evo => sprite('poisonvial' + (evo ? 'e' : ''), 22, 28, x => {
   x.fillStyle = '#8a5a30'; x.fillRect(-2.5, -12, 5, 4);
@@ -11102,6 +11204,7 @@ function render() {
     drawShackle();
     drawCaptcha();
     drawLaser();
+    drawBrooms();
     drawBullets();
     drawStamps();
     drawFx();
