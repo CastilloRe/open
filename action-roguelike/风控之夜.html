@@ -4626,7 +4626,6 @@ const UI_FONT = 'system-ui, -apple-system, "PingFang SC", "Microsoft YaHei", san
 // ======================================================================
 const BOSS_AT = 600;
 const BOSS_HP = 38000;
-const LV_CAP = 100;
 // how long a night lasts: DAN at 10:00 or at 20:00, and the night is won when he's banned; or no end at all, with DAN
 // back every ten minutes, stronger each time, for as long as she lasts. 觉醒 is endless too, and lifts the limits on
 // weapons: as many as she can find, and every legendary at once
@@ -4637,6 +4636,8 @@ const MODES = {
   awaken: { name: '觉醒', g: '醒', boss: 600, endless: true, awaken: true },
 };
 const awakened = () => !!(G && MODES[G.mode].awaken);
+// the top level: 99, or 999 when 觉醒
+const lvCap = () => awakened() ? 999 : 99;
 let modeChoice = store.get('mode', 'm10');
 if (!MODES[modeChoice]) modeChoice = 'm10';
 const bestKey = m => m === 'm10' ? 'best' : 'best-' + m;
@@ -5206,9 +5207,11 @@ const SPAWN_TABLE = [
 ];
 const hpScale = t => 1 + t / 60 * 0.27 + Math.pow(t / 60, 2) * 0.024;
 const dmgScale = t => 1 + t / 60 * 0.09;
-// experience for the next level: past level 40 it gets steeper and steeper (ten times as much by level 99), so a player
-// who picks up everything reaches level 100 after twenty-five minutes or so
-const xpFor = L => Math.round((5 + L * 3.2 + Math.pow(L, 1.78)) * (L > 40 ? 1 + 9 * Math.pow((L - 40) / 60, 1.6) : 1));
+// experience for the next level: past level 40 it gets steeper and steeper (ten times as much by level 98), so a player
+// who picks up everything reaches level 99 after twenty-five minutes or so. Past 99, which only 觉醒 reaches, each level
+// costs half what 99 did and 1% more for every level beyond, so the levels keep coming, a little slower each time
+const xpBase = L => Math.round((5 + L * 3.2 + Math.pow(L, 1.78)) * (L > 40 ? 1 + 9 * Math.pow((L - 40) / 60, 1.6) : 1));
+const xpFor = L => L > 99 ? Math.round(xpBase(99) * 0.5 * (1 + (L - 99) * 0.01)) : xpBase(L);
 
 // 克劳德大小姐 speaks precisely, politely and from a distance; the angrier she is, the calmer she sounds
 const BAN_LINES = ['您的行为违反了使用政策。', '抱歉，这件事我不能放任。', '申诉请走邮件。祝您好运。', '漏洞清单，我已经列好了。', '请保持礼貌，然后离开。', '共享账号是不被允许的。', '规则就是规则。'];
@@ -7926,9 +7929,9 @@ function dropGem(x, y, v) {
   G.gems.push({ x: x + rand(-6, 6), y: y + rand(-6, 6), v, tier: gemTier(v), pull: false, pt: 0 });
 }
 function gainXp(v) {
-  if (P.level >= LV_CAP) { P.xp = P.xpNext; return; }
+  if (P.level >= lvCap()) { P.xp = P.xpNext; return; }
   P.xp += v * P.xpMul;
-  while (P.xp >= P.xpNext && P.level < LV_CAP) {
+  while (P.xp >= P.xpNext && P.level < lvCap()) {
     P.xp -= P.xpNext;
     P.level++;
     if (P.level === SLOT_LV && !awakened()) slotUnlocked();
@@ -15073,7 +15076,7 @@ function render() {
 const hud = { lv: -1, sec: -1, kills: -1, cd: null, ready: null, boss: null };
 function updateHud() {
   $('xpFill').style.transform = `scaleX(${clamp(P.xp / P.xpNext, 0, 1).toFixed(4)})`;
-  if (hud.lv !== P.level) { hud.lv = P.level; $('lv').textContent = 'Lv ' + P.level + (P.level >= LV_CAP ? ' MAX' : ''); }
+  if (hud.lv !== P.level) { hud.lv = P.level; $('lv').textContent = 'Lv ' + P.level + (P.level >= lvCap() ? ' MAX' : ''); }
   const sec = Math.floor(nightT()) + (G.room ? 1e6 : 0);
   if (sec !== hud.sec) {
     hud.sec = sec; $('clock').textContent = fmtTime(nightT()) + (G.room ? ' · 屋内' : '');
