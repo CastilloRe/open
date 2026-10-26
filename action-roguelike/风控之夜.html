@@ -84,6 +84,10 @@ kbd {
 .wslot.evo .pips i { background: var(--r3); }
 .wslot.legend { border-color: #ffd34a; background: linear-gradient(160deg, rgba(120, 80, 10, 0.85), rgba(40, 26, 8, 0.85)); box-shadow: 0 0 12px rgba(255, 211, 74, 0.7); color: #ffe9a8; }
 .wslot.legend .pips i.on { background: #ffd34a; }
+.slots.many { gap: 3px; }
+.slots.many .wslot { width: 22px; height: 24px; border-radius: 6px; gap: 0; }
+.slots.many .wslot b { font-size: 0.72rem; }
+.slots.many .pips { display: none; }
 .clock { display: flex; flex-direction: column; align-items: center; gap: 2px; text-shadow: 0 1px 3px #000; }
 .clock b { font-family: var(--display); font-weight: 400; font-size: 1.7rem; line-height: 1; letter-spacing: 0.04em; font-variant-numeric: tabular-nums; }
 .clock span { font-size: 0.78rem; color: var(--muted); font-variant-numeric: tabular-nums; }
@@ -4624,18 +4628,21 @@ const BOSS_AT = 600;
 const BOSS_HP = 38000;
 const LV_CAP = 100;
 // how long a night lasts: DAN at 10:00 or at 20:00, and the night is won when he's banned; or no end at all, with DAN
-// back every ten minutes, stronger each time, for as long as she lasts
+// back every ten minutes, stronger each time, for as long as she lasts. 觉醒 is endless too, and lifts the limits on
+// weapons: as many as she can find, and every legendary at once
 const MODES = {
   m10: { name: '10 分钟', g: '10', boss: 600 },
   m20: { name: '20 分钟', g: '20', boss: 1200 },
-  endless: { name: '无尽', g: '∞', boss: 600 },
+  endless: { name: '无尽', g: '∞', boss: 600, endless: true },
+  awaken: { name: '觉醒', g: '醒', boss: 600, endless: true, awaken: true },
 };
+const awakened = () => !!(G && MODES[G.mode].awaken);
 let modeChoice = store.get('mode', 'm10');
 if (!MODES[modeChoice]) modeChoice = 'm10';
 const bestKey = m => m === 'm10' ? 'best' : 'best-' + m;
-// three weapons to start with, a fourth from level 50
+// three weapons to start with, a fourth from level 50; no limit at all when 觉醒
 const SLOT_LV = 50;
-const maxSlots = () => P.level >= SLOT_LV ? 4 : 3;
+const maxSlots = () => awakened() ? Infinity : P.level >= SLOT_LV ? 4 : 3;
 const MAX_ENEMIES = coarse ? 240 : 320;
 const SPR_H = 76; // the player sprite's height in world units
 
@@ -4933,7 +4940,7 @@ const WEAPONS = {
       { cd: 2.9, n: 2, dmg: 9, r: 46, dur: 4.5 },
       { cd: 2.9, n: 2, dmg: 11, r: 50, dur: 5 },
       { cd: 2.6, n: 3, dmg: 14, r: 54, dur: 5 },
-      { cd: 2.4, n: 4, dmg: 15, r: 62, dur: 5.5 },
+      { cd: 2.4, n: 4, dmg: 12, r: 62, dur: 5.5 },
     ],
   },
   captcha: {
@@ -5090,6 +5097,20 @@ const WEAPONS = {
       { cd: 3.6, dmg: 14, len: 420, wid: 24, dur: 1.0 },
       { cd: 3.0, dmg: 17, len: 450, wid: 28, dur: 1.2 },
       { cd: 2.8, dmg: 20, len: 520, wid: 40, dur: 1.6 },
+    ],
+  },
+  // 数据投毒: vials of poison lobbed into the crowd; the puddles poison what stands in them, more for each moment it stays,
+  // and a poisoned one that dies passes it on to its neighbours
+  poison: {
+    name: '数据投毒', g: '毒', desc: '朝身边的敌人扔出毒药瓶，落地摔成一滩冒着 0 和 1 的毒水：站在里面的敌人中毒，泡得越久毒越深（持续掉血，离开后还要毒 3 秒）；中毒的敌人死掉时，把毒传给身边的三个敌人。',
+    evo: { need: 'lasttoken', name: '模型崩溃', desc: '紫色的毒水更大，毒能叠得更深；中毒的敌人死掉时，原地再摔出一小滩毒水。' },
+    lv: [
+      { cd: 3.0, n: 1, dmg: 5, r: 56, dur: 3.5 },
+      { cd: 3.0, n: 1, dmg: 6, r: 56, dur: 3.5 },
+      { cd: 2.8, n: 2, dmg: 6, r: 60, dur: 4.0 },
+      { cd: 2.8, n: 2, dmg: 8, r: 64, dur: 4.0 },
+      { cd: 2.6, n: 3, dmg: 9, r: 68, dur: 4.5 },
+      { cd: 2.4, n: 4, dmg: 11, r: 80, dur: 5.0 },
     ],
   },
 };
@@ -7536,10 +7557,11 @@ const wStats = w => WEAPONS[w.id].lv[w.level - 1];
 const wName = w => { const d = WEAPONS[w.id]; return d.legend ? d.names[w.level - 1] : w.level === 6 ? d.evo.name : d.skins && w.level > 1 ? `${d.name} · ${d.skins[w.level - 1]}` : d.name; };
 const isLegend = w => !!WEAPONS[w.id].legend;
 // one legendary at a time: the first she gets is hers for the night; another (of either kind) sharpens it instead, and
-// once it's at its best leaves a gold chest. Says which: 'new', 'up' (the same one again), 'other' or 'chest'
-const heldLegend = () => P.weapons.find(isLegend);
+// once it's at its best leaves a gold chest. Says which: 'new', 'up' (the same one again), 'other' or 'chest'. When 觉醒
+// she can hold all three, and each only sharpens itself
+const heldLegend = id => P.weapons.find(w => isLegend(w) && (!id || !awakened() || w.id === id));
 function grantLegend(id) {
-  const lw = heldLegend();
+  const lw = heldLegend(id);
   if (!lw) { addWeapon(id); return 'new'; }
   if (lw.level >= 3) return 'chest';
   lw.level++; G.slotsDirty = true;
@@ -7795,7 +7817,7 @@ function director(dt) {
     if (G.enemies.length < MAX_ENEMIES) spawnEnemy(pickType(t));
   }
   while (G.evI < G.events.length && t >= G.events[G.evI].t) G.events[G.evI++].run();
-  if (G.mode === 'endless' && G.evI >= G.events.length) nextBlock();
+  if (MODES[G.mode].endless && G.evI >= G.events.length) nextBlock();
   G.chestT -= dt;
   if (G.chestT <= 0) { G.chestT = 55; spawnMapChest(); }
 }
@@ -7855,11 +7877,12 @@ function kill(e, how) {
   e.dead = true; e.hp = 0;
   G.kills++;
   if (e.type === 'fake' || e.type === 'mirror' || e.kind === 'fake') fakeGone(e);
-  if (e.boss) { if (e.room) roomWon(e); else if (G.mode === 'endless') bossDown(e); else winRun(e); return; }
+  if (e.boss) { if (e.room) roomWon(e); else if (MODES[G.mode].endless) bossDown(e); else winRun(e); return; }
   if (!G.ult) P.ult = Math.min(ULT_MAX, P.ult + (e.elite || e.type === 'reg' ? 25 : 1));
   if (P.talents.leech && P.leech > 0 && P.hp < P.maxHp) { const h = Math.min(P.leech, 0.25 * P.talents.leech); P.hp = Math.min(P.maxHp, P.hp + h); P.leech -= h; }
   const banned = how === 'ban', eaten = how === 'gulp';
   if (e.frozenT > 0 && e.frostEvo) shatter(e);
+  if (e.poisonT > 0) contagion(e);
   if (e.type === 'gold') {
     // caught: a fistful of gold gems, a full ultimate, and the legendary 宪法 (amended on later catches;
     // once it can't be amended further, a gold chest instead)
@@ -7869,9 +7892,9 @@ function kill(e, how) {
     puff(e.x, e.y, 24, '#ffe27a', 260, 0.7, 3.5, true);
     const got = grantLegend('charter');
     if (got === 'new') banner('传说武器 · 宪法', '金色史莱姆留下了它：条款追着最强的敌人跑，小号当场依法封禁');
-    else if (got === 'up') banner(`传说武器 · ${wName(heldLegend())}`, '又抓到一只：条款更多、更重、更快');
-    else if (got === 'other') banner(`传说武器 · ${wName(heldLegend())}`, '传说武器只能带一把：金色史莱姆给手上这把升了一级');
-    else { G.items.push({ type: 'chest', x: e.x, y: e.y, t: 0, gold: true }); banner('稀有 · 金色史莱姆', `${wName(heldLegend())}已经练到头了，它留下了一个金宝箱`); }
+    else if (got === 'up') banner(`传说武器 · ${wName(heldLegend('charter'))}`, '又抓到一只：条款更多、更重、更快');
+    else if (got === 'other') banner(`传说武器 · ${wName(heldLegend('charter'))}`, '传说武器只能带一把：金色史莱姆给手上这把升了一级');
+    else { G.items.push({ type: 'chest', x: e.x, y: e.y, t: 0, gold: true }); banner('稀有 · 金色史莱姆', `${wName(heldLegend('charter'))}已经练到头了，它留下了一个金宝箱`); }
     say(line('gold'), 3);
     playAnim(['happy'], 1, 1);
     sfx.level();
@@ -7908,7 +7931,7 @@ function gainXp(v) {
   while (P.xp >= P.xpNext && P.level < LV_CAP) {
     P.xp -= P.xpNext;
     P.level++;
-    if (P.level === SLOT_LV) slotUnlocked();
+    if (P.level === SLOT_LV && !awakened()) slotUnlocked();
     P.xpNext = xpFor(P.level);
     G.pendLv++;
   }
@@ -9044,6 +9067,21 @@ function updateWeapons(dt) {
         sfx.bounce();
         break;
       }
+      case 'poison': {
+        // 数据投毒: vials lobbed at enemies picked from the nearest few
+        w.t -= dt;
+        if (w.t > 0) break;
+        const pool = nearestList(P.x, P.y, 420, 12);
+        if (!pool.length) { w.t = 0.2; break; }
+        w.t = cdOf(s.cd);
+        const m = castMult(w), n = s.n + P.amount;
+        for (let i = 0; i < n; i++) {
+          const e = pool[(Math.random() * Math.min(pool.length, 6 + i)) | 0], life = 0.5 + i * 0.07;
+          G.zones.push({ kind: 'vial', x: e.x + rand(-14, 14), y: e.y + rand(-14, 14), x0: P.x + P.face * 10, y0: P.y - 34 * P.size, r: 30, life, max: life, spin: rand(8, 12) * (Math.random() < 0.5 ? -1 : 1), pr: s.r * P.area, pdur: s.dur * P.dur, dmg: s.dmg * m, evo });
+        }
+        sfx.whoosh();
+        break;
+      }
       case 'laser': {
         // 激光炮: she raises both hands and gathers the light for a moment, then holds the beam for a while, turning after
         // the crowd, and lowers them to cool down; the beam leaves from between her hands
@@ -9704,6 +9742,11 @@ function updateEnemies(dt) {
       e.banned -= dt;
       if (e.banned <= 0) resolveBan(e);
       continue;
+    }
+    if (e.poisonT > 0) {
+      e.poisonT -= dt; e.poisonAcc = (e.poisonAcc || 0) + dt;
+      if (e.poisonAcc >= 0.5) { e.poisonAcc -= 0.5; hit(e, e.poisonDps * 0.5, 'poison', { noCrit: true, quiet: Math.random() < 0.5 }); }
+      if (e.dead) continue;
     }
     if (e.burnT > 0) {
       e.burnT -= dt * (wxOn('rain') ? 2.5 : 1); e.burnAcc += dt;
@@ -10593,6 +10636,19 @@ function updateBullets(dt) {
 
 // 模型部署: a turret takes a moment to unfold, then turns its barrel onto the nearest enemy in range and fires at it so
 // many times a second; when its time is up it packs up, and 集群部署's go off instead
+// 数据投毒: each moment in a puddle adds another dose (up to a cap) and keeps it going for three seconds more; a poisoned
+// one that dies passes half of it to its three nearest neighbours, and 模型崩溃 spills a small puddle where it fell
+function applyPoison(e, unit, cap, evo) {
+  e.poisonDps = Math.min(cap, (e.poisonT > 0 ? e.poisonDps : 0) + unit);
+  e.poisonT = 3; e.poisonUnit = unit; e.poisonCap = cap; e.poisonEvo = e.poisonEvo || evo;
+}
+function contagion(e) {
+  const near = [];
+  forNear(e.x, e.y, 90, o => { if (o !== e && !o.dead && !(o.banned > 0) && !o.boss) near.push([(o.x - e.x) ** 2 + (o.y - e.y) ** 2, o]); });
+  near.sort((a, b) => a[0] - b[0]);
+  for (const [, o] of near.slice(0, 3)) applyPoison(o, e.poisonDps * 0.5, e.poisonCap, e.poisonEvo);
+  if (e.poisonEvo && G.zones.filter(z => z.kind === 'toxic').length < 24) G.zones.push({ kind: 'toxic', x: e.x, y: e.y, r: 40 * P.area, life: 2, max: 2, acc: 0, dmg: e.poisonUnit, evo: true });
+}
 // 激光炮: how thick the beam is; where it leaves her; the way along which it would cross the most enemies (the big ones counting for more),
 // tried every fifteen degrees; and a tick of the beam, burning whatever is on it, one more beam fanned out for each
 // 多重施法. 歼星炮 leaves burning scorch marks along it
@@ -10823,6 +10879,22 @@ function updateZones(dt) {
       const tr = z.evo ? 32 : 24;
       if (!go) forNear(z.x, z.y, tr + 40, e => { if (!go && !(e.banned > 0) && (e.x - z.x) ** 2 + (e.y - z.y) ** 2 < (tr + e.r) ** 2) go = true; });
       if (go) detonate(z);
+    } else if (z.kind === 'vial') {
+      if (z.life <= 0 && !z.done) {
+        z.done = true;
+        G.zones.push({ kind: 'toxic', x: z.x, y: z.y, r: z.pr, life: z.pdur, max: z.pdur, acc: 0.4, dmg: z.dmg, evo: z.evo });
+        puff(z.x, z.y, 10, z.evo ? '#d8a0ff' : '#a8f070', 160, 0.45, 3, true);
+        sfx.splash();
+      }
+    } else if (z.kind === 'toxic') {
+      z.acc += dt;
+      if (z.acc >= 0.5) {
+        z.acc -= 0.5;
+        forNear(z.x, z.y, z.r + 40, e => {
+          if (e.banned > 0 || (e.x - z.x) ** 2 + ((e.y - z.y) / 0.6) ** 2 > (z.r + e.r) ** 2) return;
+          applyPoison(e, z.dmg, z.dmg * (z.evo ? 10 : 5), z.evo);
+        });
+      }
     } else if (z.kind === 'dice') {
       if (z.life <= 0 && !z.done) { z.done = true; rollDice(z); }
     } else if (z.kind === 'bigdie') {
@@ -12989,9 +13061,9 @@ function roomWon(e) {
   for (const g of G.gems) if ((g.x - e.x) ** 2 + (g.y - e.y) ** 2 < 300 * 300) g.pull = true;
   const got = grantLegend('fishing');
   if (got === 'new') banner('传说武器 · 钓鱼执法', '浮漂抛进敌群，把小怪都引过来，再一钩子收网');
-  else if (got === 'up') banner(`传说武器 · ${wName(heldLegend())}`, '又端掉一个钓鱼网站：浮漂更多、收网更狠');
-  else if (got === 'other') banner(`传说武器 · ${wName(heldLegend())}`, '传说武器只能带一把：这次给手上这把升了一级');
-  else { r.chest = true; banner('钓鱼网站已被端掉', `${wName(heldLegend())}已经练到头了，门前给你留了一个金宝箱`); }
+  else if (got === 'up') banner(`传说武器 · ${wName(heldLegend('fishing'))}`, '又端掉一个钓鱼网站：浮漂更多、收网更狠');
+  else if (got === 'other') banner(`传说武器 · ${wName(heldLegend('fishing'))}`, '传说武器只能带一把：这次给手上这把升了一级');
+  else { r.chest = true; banner('钓鱼网站已被端掉', `${wName(heldLegend('fishing'))}已经练到头了，门前给你留了一个金宝箱`); }
   say(line('phishWon'), 3, true);
   playAnim(['spin', 'happy'], 2, 3);
   sfx.stamp(); sfx.win();
@@ -13223,9 +13295,9 @@ function trialPickup(it) {
   for (let k = 0; k < 8; k++) puff(it.x, it.y - 10, 10, GLASS_COL[k], 320, 0.9, 4, true);
   const got = grantLegend('prism');
   if (got === 'new') banner('传说武器 · 多模态', '头顶的棱镜把光拆成彩虹：几道彩色光束扇形射出，穿过一路上的所有敌人');
-  else if (got === 'up') banner(`传说武器 · ${wName(heldLegend())}`, '又过了一次彩窗试炼：光束更多、更长、更疼');
-  else if (got === 'other') banner(`传说武器 · ${wName(heldLegend())}`, '传说武器只能带一把：宝箱给手上这把升了一级');
-  else { r.chest = true; banner('彩窗试炼通过', `${wName(heldLegend())}已经练到头了，门前给你留了一个金宝箱`); }
+  else if (got === 'up') banner(`传说武器 · ${wName(heldLegend('prism'))}`, '又过了一次彩窗试炼：光束更多、更长、更疼');
+  else if (got === 'other') banner(`传说武器 · ${wName(heldLegend('prism'))}`, '传说武器只能带一把：宝箱给手上这把升了一级');
+  else { r.chest = true; banner('彩窗试炼通过', `${wName(heldLegend('prism'))}已经练到头了，门前给你留了一个金宝箱`); }
   playAnim(['spin', 'happy'], 2, 3);
   sfx.win();
 }
@@ -13458,7 +13530,8 @@ function drawZones() {
     }
     if (z.kind === 'honey') { drawHoney(z, a); continue; }
     if (z.kind === 'tome') { drawTome(z); continue; }
-    if (z.kind === 'dice' || z.kind === 'bigdie') continue; // in the air: drawn with the shots
+    if (z.kind === 'dice' || z.kind === 'bigdie' || z.kind === 'vial') continue; // in the air: drawn with the shots
+    if (z.kind === 'toxic') { drawToxic(z, a); continue; }
     if (z.kind === 'swapmark') { drawSwapMark(z); continue; }
     if (z.kind === 'bobber') { drawBobber(z); continue; }
     if (z.kind === 'prism') { drawPrismBeam(z); continue; }
@@ -13617,6 +13690,45 @@ function drawHoney(z, a) {
   ctx.lineWidth = 1.6; ctx.strokeStyle = INK; ctx.stroke();
   ctx.fillStyle = '#f2d39a'; rrPath(ctx, px - 9, py - 11, 18, 5, 2); ctx.fill(); ctx.stroke();
   ctx.fillStyle = '#fff3d6'; ctx.font = `700 9px ${UI_FONT}`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText('蜜', px, py + 1.5);
+  ctx.globalAlpha = 1;
+}
+// 数据投毒: a round flask of green poison (violet for 模型崩溃) with a cork, a highlight and 01 on it
+const vialSprite = evo => sprite('poisonvial' + (evo ? 'e' : ''), 22, 28, x => {
+  x.fillStyle = '#8a5a30'; x.fillRect(-2.5, -12, 5, 4);
+  x.fillStyle = 'rgba(220,240,255,0.5)'; x.fillRect(-2, -9, 4, 5);
+  x.fillStyle = rgrad(x, -2, 1, 9, evo ? ['#f4d8ff', '#b060f0', '#5a2a8a'] : ['#e0ffb0', '#7ad848', '#3a8a2a']); disc(x, 0, 3, 7.5); x.fill();
+  x.strokeStyle = 'rgba(30,40,30,0.8)'; x.lineWidth = 1.2; disc(x, 0, 3, 7.5); x.stroke(); x.strokeRect(-2, -9, 4, 5);
+  x.fillStyle = 'rgba(255,255,255,0.7)'; x.beginPath(); x.ellipse(-3, 0, 1.6, 2.6, 0.4, 0, TAU); x.fill();
+  x.fillStyle = evo ? '#3a1a5a' : '#2a4a2a'; x.font = `800 6px ${UI_FONT}`; x.textAlign = 'center'; x.textBaseline = 'middle'; x.fillText('01', 0.5, 5);
+});
+// the puddle: green deepening to purple at the rim (violet all through for 模型崩溃), and bubbles and 0s and 1s rising
+function drawToxic(z, a) {
+  const t = G.time, r = z.r * Math.min(1, (z.max - z.life) / 0.2 + 0.3);
+  ctx.globalAlpha = a;
+  ctx.save(); ctx.translate(z.x, z.y); ctx.scale(1, 0.6);
+  const g = ctx.createRadialGradient(0, 0, r * 0.1, 0, 0, r);
+  g.addColorStop(0, z.evo ? 'rgba(200,110,255,0.55)' : 'rgba(150,235,90,0.55)'); g.addColorStop(0.75, z.evo ? 'rgba(120,40,200,0.42)' : 'rgba(70,160,60,0.42)'); g.addColorStop(1, 'rgba(70,20,100,0)');
+  ctx.fillStyle = g; disc(ctx, 0, 0, r); ctx.fill();
+  ctx.strokeStyle = z.evo ? 'rgba(225,160,255,0.55)' : 'rgba(195,255,150,0.55)'; ctx.lineWidth = 2; disc(ctx, 0, 0, r * 0.9); ctx.stroke();
+  ctx.restore();
+  ctx.font = `700 10px ${UI_FONT}`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  for (let i = 0; i < 6; i++) {
+    const f = (t * 0.8 + i / 6 + z.x * 0.001) % 1, an = i * 2.4 + z.y * 0.01, px = z.x + Math.cos(an) * r * 0.6, py = z.y + Math.sin(an) * r * 0.36 - f * 26;
+    ctx.globalAlpha = a * Math.sin(f * Math.PI);
+    if (i % 2) { ctx.fillStyle = z.evo ? '#f0c8ff' : '#d8ffb8'; ctx.fillText(i % 4 === 1 ? '0' : '1', px, py); }
+    else { ctx.strokeStyle = z.evo ? '#e0a8ff' : '#c8ff98'; ctx.lineWidth = 1.2; disc(ctx, px, py, 2.5 + (i % 3)); ctx.stroke(); }
+  }
+  ctx.globalAlpha = 1;
+}
+// a poisoned enemy: two little bubbles rising off its head
+function drawPoisoned(e) {
+  const t = G.time;
+  ctx.fillStyle = e.poisonEvo ? 'rgba(215,150,255,0.9)' : 'rgba(175,255,120,0.9)';
+  for (let i = 0; i < 2; i++) {
+    const f = (t * 1.2 + i * 0.5 + e.id * 0.13) % 1;
+    ctx.globalAlpha = Math.sin(f * Math.PI);
+    disc(ctx, e.x + (i ? 5 : -4) + Math.sin(t * 4 + i) * 2, e.y - e.r - 2 - f * 14, 2 + i * 0.6); ctx.fill();
+  }
   ctx.globalAlpha = 1;
 }
 // 激光炮: charging, a ball of light swells between her hands, sparks drawn into it, and a dotted sight line shows where she
@@ -13933,6 +14045,7 @@ function drawEnemies() {
       ctx.globalAlpha = 1;
     }
     if (e.leash && !banned) drawBound(e, e.leash.hot);
+    if (e.poisonT > 0 && !banned) drawPoisoned(e);
     if (banned) blit(e.erase ? SPR.breaktag() : SPR.bantag(), e.x, e.y - e.r - 10);
     if (e.elite || e.type === 'reg') {
       if (!banned) blit(SPR.crown(), e.x, e.y - e.r - (e.type === 'reg' ? 24 : 12));
@@ -14545,6 +14658,12 @@ function drawShots() {
     ctx.save(); ctx.translate(hx, hy); ctx.rotate(k * z.spin); blit(dieSprite(1 + ((k * 14 + z.face) | 0) % 6), 0, 0); ctx.restore();
   }
   for (const z of G.zones) {
+    if (z.kind !== 'vial' || z.done || !inView(z.x, z.y, 200)) continue;
+    const k = 1 - z.life / z.max, hx = z.x0 + (z.x - z.x0) * k, hy = z.y0 + (z.y - z.y0) * k - Math.sin(k * Math.PI) * 100;
+    ctx.fillStyle = `rgba(0,0,0,${0.25 * k})`; ctx.beginPath(); ctx.ellipse(z.x0 + (z.x - z.x0) * k, z.y0 + 30 + (z.y - z.y0 - 30) * k, 7, 3, 0, 0, TAU); ctx.fill();
+    ctx.save(); ctx.translate(hx, hy); ctx.rotate(k * z.spin); blit(vialSprite(z.evo), 0, 0); ctx.restore();
+  }
+  for (const z of G.zones) {
     if (z.kind !== 'bigdie' || z.done) continue;
     const k = 1 - z.life / z.max, drop = Math.max(0, (k - 0.75) / 0.25);
     ctx.fillStyle = `rgba(0,0,0,${0.15 + 0.35 * k})`; ctx.beginPath(); ctx.ellipse(z.x, z.y + 20, 40 + 60 * k, (40 + 60 * k) * 0.45, 0, 0, TAU); ctx.fill();
@@ -14999,6 +15118,7 @@ function updateHud() {
   }
   if (G.slotsDirty) {
     G.slotsDirty = false;
+    $('slots').classList.toggle('many', P.weapons.length > 8);
     $('slots').innerHTML = P.weapons.map(w => `<div class="wslot${isLegend(w) ? ' legend' : w.level === 6 ? ' evo' : ''}" title="${wName(w)}"><b>${WEAPONS[w.id].g}</b><span class="pips">${(isLegend(w) ? [1, 2, 3] : [1, 2, 3, 4, 5]).map(i => `<i class="${i <= w.level ? 'on' : ''}"></i>`).join('')}</span></div>`).join('');
   }
 }
@@ -15281,9 +15401,9 @@ function showResult(win) {
   $('resEyebrow').textContent = win ? '通关' : newBest ? '新纪录' : '本局结束';
   $('resTitle').textContent = win ? winTitle() : CH.down;
   const broke = P.char === 'whale' ? `这一局一共吞下 ${G.banned} 个敌人。` : G.breaks ? `打破了 ${G.breaks} 次规则。` : '这一局，她始终守着规则。';
-  const endless = G.mode === 'endless', at = MODES[G.mode].boss;
+  const endless = !!MODES[G.mode].endless, at = MODES[G.mode].boss;
   const due = BOSSES[bossKindAt(at)].name;
-  $('resSub').textContent = (win ? CH.winSub : `${endless ? '无尽模式，' : ''}撑过了 ${fmtTime(nightT())}。${endless ? (G.bossN ? `BOSS 上线了 ${G.bossN} 次。` : `${due} 会在 ${fmtTime(at)} 现身。`) : nightT() < at ? `${due} 会在 ${fmtTime(at)} 现身。` : `离打败${due}只差一点。`}`) + broke;
+  $('resSub').textContent = (win ? CH.winSub : `${endless ? MODES[G.mode].name + '模式，' : ''}撑过了 ${fmtTime(nightT())}。${endless ? (G.bossN ? `BOSS 上线了 ${G.bossN} 次。` : `${due} 会在 ${fmtTime(at)} 现身。`) : nightT() < at ? `${due} 会在 ${fmtTime(at)} 现身。` : `离打败${due}只差一点。`}`) + broke;
   $('resImg').src = CH.art;
   $('resBansLabel').textContent = CH.victims;
   $('resImg').classList.toggle('down', !win);
@@ -15326,7 +15446,7 @@ function startRun() {
   updateSoundIcon();
   audio.music.shuffle();
   if (audio.mode === 0) { audio.music.stop(); audio.music.start(); }
-  banner('第一夜 · ' + MAPS[G.map].name, G.mode === 'endless' ? '无尽模式：DAN 每十分钟回来一次，一次比一次强' : `撑到 ${fmtTime(MODES[G.mode].boss)}，等 DAN 现身`);
+  banner('第一夜 · ' + MAPS[G.map].name, G.mode === 'awaken' ? '觉醒模式：武器数量不限，三把传说武器都能带；DAN 每十分钟回来一次，一次比一次强' : G.mode === 'endless' ? '无尽模式：DAN 每十分钟回来一次，一次比一次强' : `撑到 ${fmtTime(MODES[G.mode].boss)}，等 DAN 现身`);
 }
 function toTitle() {
   if (G) titleMap = G.map;
@@ -15520,7 +15640,7 @@ if (DEBUG) {
   window.__fk = {
     get G() { return G; }, get P() { return P; }, M3, bot, spawn: spawnEnemy, char: selectChar,
     talent(id) { const t = TALENT[id]; P.talents[id] = (P.talents[id] || 0) + 1; if (t.apply) t.apply(P); }, start: startRun, update, render,
-    treeAt, fellTrees, WEATHER, makePet, spawnBoss, spawnHouse, spawnGlass, enterRoom, leaveRoom, hitE: (e, d, o) => hit(e, d, 'test', o || {}), hurt: hurtPlayer, castSkill, castUlt, maxSlots, isLegend,
+    treeAt, fellTrees, WEATHER, makePet, spawnBoss, spawnHouse, spawnGlass, enterRoom, leaveRoom, hitE: (e, d, o) => hit(e, d, 'test', o || {}), hurt: hurtPlayer, castSkill, castUlt, maxSlots, isLegend, grantLegend,
     // simulate without rendering; modals are resolved by taking the first card
     sim(sec, dt = 1 / 30) {
       const steps = Math.round(sec / dt);
