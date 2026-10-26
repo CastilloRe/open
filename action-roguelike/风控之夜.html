@@ -186,6 +186,7 @@ kbd {
 .toast.wx .toast-seal { background: #3f6fb0; }
 .toast.pet .toast-seal { background: #e8679c; }
 .toast.house .toast-seal { background: #8a5ad8; }
+.toast.glass .toast-seal { background: linear-gradient(135deg, #ff5a7a, #ffa14a, #6ae08a, #5a8aff, #a86aff); }
 .toast b { font-size: 0.98rem; }
 .toast span { font-size: 0.8rem; color: var(--ink-soft); }
 @keyframes toast { 0% { opacity: 0; transform: translate(-50%, -12px) scale(0.96); } 10%, 82% { opacity: 1; transform: translate(-50%, 0) scale(1); } 100% { opacity: 0; transform: translate(-50%, -8px); } }
@@ -4881,6 +4882,16 @@ const WEAPONS = {
       { cd: 2.4, r: 220, dmg: 57, stun: 0.6 },
     ],
   },
+  // legendary: only the chest at the end of the stained-glass trial gives it
+  prism: {
+    name: '多模态', g: '彩', legend: true, names: ['多模态', '多模态 · 全彩', '多模态 · 全光谱'],
+    desc: '传说武器。头顶的棱镜把光拆成彩虹：每隔一会儿朝敌人最多的方向扇形射出几道彩色光束，每道都穿过一路上的所有敌人。',
+    lv: [
+      { cd: 3.0, n: 3, dmg: 80, len: 420 },
+      { cd: 2.6, n: 5, dmg: 95, len: 470 },
+      { cd: 2.2, n: 7, dmg: 110, len: 520 },
+    ],
+  },
   // legendary: only beating the 钓鱼网站 behind a door gives it, it takes no weapon slot, and each further one sharpens it
   fishing: {
     name: '钓鱼执法', g: '钓', legend: true, names: ['钓鱼执法', '钓鱼执法 · 收网', '钓鱼执法 · 一网打尽'],
@@ -7416,7 +7427,7 @@ function newRun() {
     cam: { x: 0, y: 0 }, boss: null, decoy: null, gemCombo: 0, gemComboT: 0, map: pickMap(),
     trees: new Map(), near: [], wx: { kind: null, k: 0, next: rand(75, 100), last: null }, boltFlash: 0,
     mode: modeChoice, events: buildEvents(modeChoice), block: 0, bossN: 0, pets: [],
-    roomT: 0, room: null, house: null, houseAt: rand(200, 300), fade: 0,
+    roomT: 0, room: null, house: null, houseAt: rand(200, 300), glass: null, glassAt: rand(330, 420), fade: 0,
     rerolls: 2, banishes: 2, banished: new Set(), banishMode: false, picks: [], slotsDirty: true, lures: [], gulp: null,
   };
   addWeapon(CH.start);
@@ -8824,6 +8835,15 @@ function updateWeapons(dt) {
             G.zones.push({ kind: 'meteor', x: e.x + rand(-12, 12), y: e.y + rand(-12, 12), r: R, life, max: life, dmg: s.dmg * m, evo });
           }
         }
+        break;
+      }
+      case 'prism': {
+        w.t -= dt;
+        if (w.t > 0) break;
+        const pool = G.enemies.filter(e => targetable(e) && inView(e.x, e.y, -20));
+        if (!pool.length) { w.t = 0.3; break; }
+        w.t = cdOf(s.cd);
+        firePrism(s, pool);
         break;
       }
       case 'fishing': {
@@ -10382,6 +10402,8 @@ function updateZones(dt) {
       if (z.life <= 0 && !z.done) { z.done = true; rollDice(z); }
     } else if (z.kind === 'bigdie') {
       if (z.life <= 0 && !z.done) { z.done = true; paradeLands(z); }
+    } else if (z.kind === 'prism') {
+      if (!z.done) prismHit(z);
     } else if (z.kind === 'bobber') {
       // floating, it draws the small fry in; then the hook comes up under them
       const age = z.max - z.life;
@@ -10434,7 +10456,9 @@ function updatePickups(dt) {
     if (it.type === 'bait' && it.t > 10) { it.dead = true; puff(it.x, it.y, 6, '#c8d8ff', 80, 0.4, 3); continue; }
     const d2 = (P.x - it.x) ** 2 + (P.y - it.y) ** 2;
     if (d2 > 30 * 30) continue;
+    if (it.type === 'gchest' && !(G.room && G.room.trial && G.room.trial.open)) continue;
     it.dead = true;
+    if (it.type === 'shard' || it.type === 'gchest') { trialPickup(it); continue; }
     if (it.type === 'bait') {
       hurtPlayer(it.dmg);
       ring(it.x, it.y, 8, 70, 0.35, '#ff5a6a', 5); puff(it.x, it.y, 12, '#ff8a6a', 200, 0.45, 3, true); sfx.boom();
@@ -11786,17 +11810,23 @@ function spawnHouse() {
     const a = rand(0, TAU), d = rand(520, 700), x = P.x + Math.cos(a) * d, y = P.y + Math.sin(a) * d;
     // not on top of a tree
     if (k < 11 && nearTree(x, y, 150)) continue;
-    G.house = { x, y, t: 0, hold: 0, state: 'out' };
+    G.house = { x, y, t: 0, hold: 0, state: 'out', kind: 'house' };
     toast('一扇门出现了', '跟着紫色箭头找到它，站在门前就能进去：门后有个新 BOSS', 'house', '门');
     sfx.chest();
     return;
   }
 }
-// the door: standing in front of it for a second takes her through
-function houseTick(dt) {
-  const t = nightT();
-  if (!G.house) { if (t >= G.houseAt && !(G.boss && !G.boss.dead) && !G.ending) spawnHouse(); return; }
-  const h = G.house;
+// the doors (the plain one to 钓鱼网站, the stained-glass one to the trial): standing in front of one for a second
+// takes her through; each turns up on its own clock, waits two minutes and is gone
+const DOORS = {
+  house: { at: 'houseAt', spawn: () => spawnHouse(), again: () => rand(150, 240), gone: '门消失了……', col: '#c8a8ff' },
+  glass: { at: 'glassAt', spawn: () => spawnGlass(), again: () => rand(240, 360), gone: '彩色玻璃门消失了……', col: '#ffd0f0' },
+};
+function houseTick(dt) { for (const key in DOORS) if (!G.room) doorTick(key, dt); }
+function doorTick(key, dt) {
+  const D = DOORS[key], t = nightT();
+  if (!G[key]) { if (t >= G[D.at] && !(G.boss && !G.boss.dead) && !G.ending) D.spawn(); return; }
+  const h = G[key];
   h.t += dt;
   const pf = P.y + 24 * P.size;
   const atDoor = (P.x - h.x) ** 2 + ((pf - h.y - 14) * 1.4) ** 2 < 40 * 40;
@@ -11805,31 +11835,39 @@ function houseTick(dt) {
   else if (atDoor) { h.hold += dt; if (h.hold >= 1) { enterRoom(h); return; } }
   else h.hold = Math.max(0, h.hold - dt * 2);
   if (h.t > HOUSE_STAY && h.hold <= 0) {
-    puff(h.x, h.y - 60, 30, '#c8a8ff', 220, 0.8, 5, true);
-    floatText(h.x, h.y - 150, '门消失了……', '#e8d0ff', 14);
-    G.house = null; G.houseAt = t + rand(150, 240);
+    puff(h.x, h.y - 60, 30, D.col, 220, 0.8, 5, true);
+    floatText(h.x, h.y - 150, D.gone, '#e8d0ff', 14);
+    G[key] = null; G[D.at] = t + D.again();
   }
 }
 function enterRoom(h) {
   h.state = 'in'; G.roomsIn = (G.roomsIn || 0) + 1;
   const cx = ROOM_X, cy = 0;
-  G.room = { h, cx, cy, x0: cx - ROOM_W / 2, x1: cx + ROOM_W / 2, y0: cy - ROOM_H / 2, y1: cy + ROOM_H / 2, exitHold: 0, won: false, winT: 0, dark: false };
+  G.room = { h, kind: h.kind, cx, cy, x0: cx - ROOM_W / 2, x1: cx + ROOM_W / 2, y0: cy - ROOM_H / 2, y1: cy + ROOM_H / 2, exitHold: 0, won: false, winT: 0, dark: false };
   G.stash = { enemies: G.enemies, ebullets: G.ebullets, shots: G.shots, zones: G.zones, boss: G.boss, wx: G.wx.k };
   G.enemies = []; G.ebullets = []; G.shots = []; G.zones = []; G.near.length = 0;
   P.x = cx; P.y = G.room.y1 - 100; G.cam.x = P.x; G.cam.y = P.y; P.hooked = null;
   for (const p of G.pets) { p.x = P.x + rand(-40, 40); p.y = P.y + 20; p.target = null; }
   G.fade = 1;
-  spawnRoomBoss();
+  if (h.kind === 'glass') startTrial(); else spawnRoomBoss();
   sfx.whoosh();
 }
 function leaveRoom(won) {
-  const r = G.room, h = r.h, s = G.stash;
-  if (!won && G.boss && G.boss.room) h.left = Math.max(0.05, G.boss.hp / G.boss.maxHp);
+  const r = G.room, h = r.h, s = G.stash, glass = r.kind === 'glass';
+  if (!won && !glass && G.boss && G.boss.room) h.left = Math.max(0.05, G.boss.hp / G.boss.maxHp);
   G.enemies = s.enemies; G.ebullets = s.ebullets; G.shots = s.shots; G.zones = s.zones; G.boss = s.boss;
-  for (const it of G.items) if (it.type === 'bait') it.dead = true;
+  for (const it of G.items) if (it.type === 'bait' || it.type === 'shard' || it.type === 'gchest') it.dead = true;
   P.x = h.x; P.y = h.y + 46; G.cam.x = P.x; G.cam.y = P.y; P.hooked = null;
   for (const p of G.pets) { p.x = P.x + rand(-40, 40); p.y = P.y + 20; p.target = null; }
   G.room = null; G.stash = null; G.fade = 1;
+  if (glass) {
+    // one go at the trial: the door is gone whichever way it went
+    if (r.chest) G.items.push({ type: 'chest', x: h.x + 50, y: h.y + 50, t: 0, gold: true });
+    puff(h.x, h.y - 60, 40, '#ffd0f0', 260, 0.9, 5, true);
+    if (!won) floatText(P.x, P.y - SPR_H, r.trial && r.trial.t <= 0 ? '时间到了……彩色玻璃门碎了' : '放弃了挑战，彩色玻璃门碎了', '#ffd0f0', 13);
+    G.glass = null; G.glassAt = nightT() + rand(240, 360);
+    return;
+  }
   if (won) {
     if (r.chest) G.items.push({ type: 'chest', x: h.x + 50, y: h.y + 50, t: 0, gold: true });
     puff(h.x, h.y - 60, 40, '#c8a8ff', 260, 0.9, 5, true);
@@ -11846,6 +11884,7 @@ function roomTick(dt) {
   P.x = clamp(P.x, r.x0 + m, r.x1 - m); P.y = clamp(P.y, r.y0 + m, r.y1 - 40);
   for (const e of G.enemies) { if (e.dead) continue; e.x = clamp(e.x, r.x0 + e.r, r.x1 - e.r); e.y = clamp(e.y, r.y0 + e.r, r.y1 - e.r - 20); }
   for (const p of G.pets) { p.x = clamp(p.x, r.x0 + 12, r.x1 - 12); p.y = clamp(p.y, r.y0 + 12, r.y1 - 30); }
+  if (r.kind === 'glass' && trialTick(r, dt)) return;
   if (r.won) { r.winT += dt; if (r.winT > 3) leaveRoom(true); return; }
   const atExit = Math.abs(P.x - r.cx) < 44 && P.y > r.y1 - 64;
   if (atExit) { r.exitHold += dt; if (r.exitHold >= 1.5) leaveRoom(false); }
@@ -11905,6 +11944,7 @@ function paintBoards(x, S) {
   }
 }
 function drawRoom() {
+  if (G.room.kind === 'glass') { drawTrialRoom(); return; }
   const r = G.room, t = G.time;
   ctx.fillStyle = '#05060a'; ctx.fillRect(G.cam.x - viewW, G.cam.y - viewH, viewW * 2, viewH * 2);
   ctx.fillStyle = groundPattern('room-floor', 512, paintBoards); ctx.fillRect(r.x0, r.y0, ROOM_W, ROOM_H);
@@ -11962,6 +12002,304 @@ function drawBobber(z) {
   if (!z.done) blit(bobberSprite(), z.x, z.y - 6 + Math.sin(age * 8) * 2);
   else { const k = (age - 1.55) / (z.max - 1.55); ctx.globalAlpha = Math.max(0, 1 - k); blit(hookSprite(), z.x, z.y - 40 - k * 70); ctx.globalAlpha = 1; }
 }
+// ======================================================================
+//  The stained-glass door (G.glass): now and then, a door of coloured glass. Behind it there's no boss but a trial: a
+//  hall floored with stained glass where bars of rainbow light sweep round; she has to gather the five prism shards
+//  before the time runs out, and anything the light touches is thrown back to the door. With the five in hand the
+//  glass cage round the chest breaks, and the chest holds a legendary, 多模态. One go per door
+// ======================================================================
+const TRIAL_T = 50, TRIAL_NEED = 5;
+const GLASS_COL = ['#ff5a7a', '#ffa14a', '#ffe14a', '#6ae08a', '#4ad0e0', '#5a8aff', '#a86aff', '#ff6ad0'];
+const glassDoorSprite = () => sprite('glassdoor', 150, 210, x => {
+  // the same door as the other, but its arch is filled with panes of every colour held in lead; foot 95 below centre
+  const arch = r => { x.beginPath(); x.moveTo(-r, 85); x.lineTo(-r, -25); x.arc(0, -25, r, Math.PI, 0); x.lineTo(r, 85); x.closePath(); };
+  x.save(); x.translate(0, -25); glow(x, 80, '#ffd8f4', 0.35); x.restore();
+  arch(31); x.save(); x.clip();
+  for (let j = 0; j < 9; j++) for (let i = 0; i < 4; i++) {
+    const X = -31 + i * 15.5, Y = -56 + j * 16;
+    x.fillStyle = GLASS_COL[(i * 3 + j * 5) % 8]; x.globalAlpha = 0.9; x.fillRect(X, Y, 15.5, 16);
+    x.fillStyle = 'rgba(255,255,255,0.35)'; x.beginPath(); x.moveTo(X + 2, Y + 2); x.lineTo(X + 9, Y + 2); x.lineTo(X + 2, Y + 8); x.closePath(); x.fill();
+  }
+  x.globalAlpha = 1;
+  // a rose window in the arch, and a diamond down the middle
+  x.fillStyle = '#fff2c0'; disc(x, 0, -30, 9); x.fill();
+  for (let k = 0; k < 8; k++) { const a = k / 8 * TAU; x.fillStyle = GLASS_COL[k]; x.beginPath(); x.moveTo(0, -30); x.arc(0, -30, 22, a, a + TAU / 8); x.closePath(); x.fill(); }
+  x.fillStyle = '#fff2c0'; disc(x, 0, -30, 7); x.fill();
+  x.strokeStyle = '#141018'; x.lineWidth = 2.4;
+  x.beginPath();
+  for (let i = 1; i < 4; i++) { x.moveTo(-31 + i * 15.5, -8); x.lineTo(-31 + i * 15.5, 85); }
+  for (let j = 0; j < 9; j++) { x.moveTo(-31, -8 + j * 12); x.lineTo(31, -8 + j * 12); }
+  for (let k = 0; k < 8; k++) { const a = k / 8 * TAU; x.moveTo(Math.cos(a) * 7, -30 + Math.sin(a) * 7); x.lineTo(Math.cos(a) * 22, -30 + Math.sin(a) * 22); }
+  x.stroke();
+  x.beginPath(); disc(x, 0, -30, 22); x.stroke(); disc(x, 0, -30, 7); x.stroke();
+  x.restore();
+  // the frame, the step and the ground line, like the plain door's
+  const frame = () => {
+    x.beginPath();
+    x.moveTo(-66, 95); x.lineTo(66, 95);
+    x.rect(-50, 85, 100, 10);
+    x.moveTo(-42, 85); x.lineTo(-42, -25); x.arc(0, -25, 42, Math.PI, 0); x.lineTo(42, 85);
+    x.moveTo(-31, 85); x.lineTo(-31, -25); x.arc(0, -25, 31, Math.PI, 0); x.lineTo(31, 85);
+    x.moveTo(-7, -69); x.lineTo(7, -69); x.lineTo(5, -55); x.lineTo(-5, -55); x.closePath();
+  };
+  x.lineJoin = 'round'; x.lineCap = 'round';
+  x.strokeStyle = 'rgba(255,255,255,0.45)'; x.lineWidth = 8; frame(); x.stroke();
+  x.strokeStyle = '#111'; x.lineWidth = 4; frame(); x.stroke();
+});
+function spawnGlass() {
+  for (let k = 0; k < 12; k++) {
+    const a = rand(0, TAU), d = rand(520, 700), x = P.x + Math.cos(a) * d, y = P.y + Math.sin(a) * d;
+    // not on a tree, and not next to the other door
+    if (k < 11 && (nearTree(x, y, 150) || (G.house && (G.house.x - x) ** 2 + (G.house.y - y) ** 2 < 360 * 360))) continue;
+    G.glass = { x, y, t: 0, hold: 0, state: 'out', kind: 'glass' };
+    toast('一扇彩色玻璃门出现了', '门后是一个小挑战：拿到里面的宝箱就能得到传说武器', 'glass', '彩');
+    sfx.chest();
+    return;
+  }
+}
+function drawGlassDoor() {
+  const h = G.glass;
+  if (!h || h.state !== 'out' || !inView(h.x, h.y - 70, 160)) return;
+  const t = G.time;
+  // a glow behind it that runs through the colours, the door, and a band of light sliding down the glass
+  ctx.globalCompositeOperation = 'lighter';
+  ctx.globalAlpha = 0.45 + 0.15 * Math.sin(t * 2);
+  ctx.fillStyle = rgrad(ctx, h.x, h.y - 70, 110, [`hsla(${(t * 60) % 360},90%,65%,0.6)`, `hsla(${(t * 60 + 120) % 360},90%,60%,0)`]);
+  disc(ctx, h.x, h.y - 70, 110); ctx.fill();
+  ctx.globalAlpha = 1; ctx.globalCompositeOperation = 'source-over';
+  blit(glassDoorSprite(), h.x, h.y - 95);
+  ctx.save();
+  ctx.beginPath(); ctx.moveTo(h.x - 31, h.y - 10); ctx.lineTo(h.x - 31, h.y - 120); ctx.arc(h.x, h.y - 120, 31, Math.PI, 0); ctx.lineTo(h.x + 31, h.y - 10); ctx.closePath(); ctx.clip();
+  const by = h.y - 160 + ((t * 70) % 220);
+  ctx.globalCompositeOperation = 'lighter';
+  const g = ctx.createLinearGradient(0, by - 24, 0, by + 24);
+  g.addColorStop(0, 'rgba(255,255,255,0)'); g.addColorStop(0.5, 'rgba(255,255,255,0.45)'); g.addColorStop(1, 'rgba(255,255,255,0)');
+  ctx.fillStyle = g; ctx.fillRect(h.x - 40, by - 24, 80, 48);
+  ctx.restore();
+  ctx.globalCompositeOperation = 'source-over';
+  const left = HOUSE_STAY - h.t;
+  if (left < 20) label(h.x, h.y - 240, `${Math.ceil(left)} 秒后消失`, '#ffd8f4');
+  if (h.hold > 0) holdRing(h.x, h.y - 205, h.hold);
+}
+
+// the trial: three bars of light turning on prisms set in the floor, five shards about the hall, the chest at the far end
+function startTrial() {
+  const r = G.room, spin = () => (Math.random() < 0.5 ? 1 : -1) * rand(1.15, 1.55);
+  r.trial = {
+    t: TRIAL_T, got: 0, open: false, done: false, failT: 2, bounceT: 0,
+    beams: [
+      { px: r.cx - 220, py: r.cy + 40, len: 190, a: rand(0, TAU), w: spin() },
+      { px: r.cx + 220, py: r.cy + 40, len: 190, a: rand(0, TAU), w: spin() },
+      { px: r.cx, py: r.cy - 110, len: 230, a: rand(0, TAU), w: spin() * 0.85 },
+    ],
+  };
+  const spots = [[-370, 200], [370, 200], [-390, -40], [390, -40], [0, 60], [-220, -210], [220, -210], [-120, 170], [120, 170]];
+  for (let i = spots.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [spots[i], spots[j]] = [spots[j], spots[i]]; }
+  spots.slice(0, TRIAL_NEED).forEach(([sx, sy], i) => G.items.push({ type: 'shard', x: r.cx + sx, y: r.cy + sy, t: 0, col: i * 3 % 8 }));
+  G.items.push({ type: 'gchest', x: r.cx, y: r.y0 + 80, t: 0 });
+  banner('彩窗试炼', `${TRIAL_T} 秒内捡齐 ${TRIAL_NEED} 块棱镜碎片，再去开宝箱；碰到彩虹光会被弹回门口`);
+  sfx.warn();
+}
+const beamTip = b => [b.px + Math.cos(b.a) * b.len, b.py + Math.sin(b.a) * b.len * 0.62];
+// returns true once it has sent her out
+function trialTick(r, dt) {
+  const T = r.trial;
+  if (r.won) return false;
+  if (T.done) { T.failT -= dt; if (T.failT <= 0) { leaveRoom(false); return true; } return false; }
+  T.t -= dt;
+  for (const b of T.beams) b.a += b.w * dt;
+  if (T.bounceT > 0) T.bounceT -= dt;
+  else {
+    const fy = P.y + 20 * P.size;
+    for (const b of T.beams) {
+      const [tx, ty] = beamTip(b);
+      if (segDist(P.x, fy, b.px, b.py, tx, ty) > 16) continue;
+      // the light throws her back to where she came in
+      puff(P.x, P.y - 20, 18, '#ffffff', 220, 0.5, 3, true);
+      P.x = r.cx; P.y = r.y1 - 100; G.cam.x = P.x; G.cam.y = P.y;
+      T.bounceT = 1.2; P.iframes = Math.max(P.iframes, 1.2);
+      const ft = floatText(P.x, P.y - SPR_H, '被彩虹光弹回门口了！', '#ffd8f4', 15); ft.pop = 1;
+      shake(6); sfx.deny();
+      break;
+    }
+  }
+  if (T.t <= 0) {
+    T.done = true; T.t = 0;
+    banner('挑战失败', '时间到了，彩色玻璃门碎掉了');
+    sfx.deny();
+  }
+  return false;
+}
+// a shard picked up, or the chest opened
+function trialPickup(it) {
+  const r = G.room, T = r && r.trial;
+  if (!T) return;
+  if (it.type === 'shard') {
+    T.got++;
+    ring(it.x, it.y, 6, 60, 0.4, GLASS_COL[it.col], 4); puff(it.x, it.y, 12, GLASS_COL[it.col], 180, 0.5, 3, true);
+    const ft = floatText(it.x, it.y - 30, `棱镜碎片 ${T.got}/${TRIAL_NEED}`, '#ffe8f8', 15); ft.pop = 1;
+    sfx.pick();
+    if (T.got >= TRIAL_NEED) {
+      T.open = true;
+      const c = G.items.find(o => o.type === 'gchest' && !o.dead);
+      if (c) for (let k = 0; k < 8; k++) puff(c.x, c.y - 10, 6, GLASS_COL[k], 260, 0.7, 3, true);
+      banner('宝箱解锁了！', '玻璃笼子碎了，快去拿宝箱');
+      sfx.stamp();
+    }
+    return;
+  }
+  // the chest: the legendary 多模态 (under the one-legendary rule), and out she goes a moment later
+  r.won = true; T.done = true; G.trialsWon = (G.trialsWon || 0) + 1;
+  G.hitStop = 0.15; shake(10);
+  ring(it.x, it.y, 20, 260, 0.8, '#ffffff', 8);
+  for (let k = 0; k < 8; k++) puff(it.x, it.y - 10, 10, GLASS_COL[k], 320, 0.9, 4, true);
+  const got = grantLegend('prism');
+  if (got === 'new') banner('传说武器 · 多模态', '头顶的棱镜把光拆成彩虹：几道彩色光束扇形射出，穿过一路上的所有敌人');
+  else if (got === 'up') banner(`传说武器 · ${wName(heldLegend())}`, '又过了一次彩窗试炼：光束更多、更长、更疼');
+  else if (got === 'other') banner(`传说武器 · ${wName(heldLegend())}`, '传说武器只能带一把：宝箱给手上这把升了一级');
+  else { r.chest = true; banner('彩窗试炼通过', `${wName(heldLegend())}已经练到头了，门前给你留了一个金宝箱`); }
+  playAnim(['spin', 'happy'], 2, 3);
+  sfx.win();
+}
+// the hall: a floor of stained glass, tall coloured windows along the top wall throwing their light down, the prisms in
+// the floor and their turning bars of light
+function paintStained(x, S) {
+  const rnd = seeded(509), n = 8, c = S / n;
+  x.fillStyle = '#0c0a12'; x.fillRect(0, 0, S, S);
+  for (let j = 0; j < n; j++) for (let i = 0; i < n; i++) {
+    const X = i * c, Y = j * c, col = GLASS_COL[Math.floor(rnd() * 8)];
+    // each square split into four triangles of nearby colours
+    const corners = [[X, Y], [X + c, Y], [X + c, Y + c], [X, Y + c]], mid = [X + c / 2, Y + c / 2];
+    for (let k = 0; k < 4; k++) {
+      const [ax, ay] = corners[k], [bx, by] = corners[(k + 1) % 4];
+      x.fillStyle = k % 2 ? col : GLASS_COL[(GLASS_COL.indexOf(col) + 1 + Math.floor(rnd() * 2)) % 8];
+      x.globalAlpha = 0.12 + rnd() * 0.07;
+      x.beginPath(); x.moveTo(ax, ay); x.lineTo(bx, by); x.lineTo(mid[0], mid[1]); x.closePath(); x.fill();
+    }
+  }
+  x.globalAlpha = 1;
+  x.strokeStyle = '#0a080e'; x.lineWidth = 2.5;
+  x.beginPath();
+  for (let k = 0; k <= n; k++) { x.moveTo(k * c, 0); x.lineTo(k * c, S); x.moveTo(0, k * c); x.lineTo(S, k * c); }
+  for (let j = 0; j < n; j++) for (let i = 0; i < n; i++) { x.moveTo(i * c, j * c); x.lineTo(i * c + c, j * c + c); x.moveTo(i * c + c, j * c); x.lineTo(i * c, j * c + c); }
+  x.stroke();
+}
+function drawTrialRoom() {
+  const r = G.room, T = r.trial, t = G.time;
+  ctx.fillStyle = '#05040a'; ctx.fillRect(G.cam.x - viewW, G.cam.y - viewH, viewW * 2, viewH * 2);
+  ctx.fillStyle = groundPattern('glass-floor', 256, paintStained); ctx.fillRect(r.x0, r.y0, ROOM_W, ROOM_H);
+  // the top wall and its windows, each throwing a shaft of coloured light onto the floor
+  ctx.fillStyle = vgrad(ctx, r.y0 - 130, r.y0, '#241e30', '#120e18'); ctx.fillRect(r.x0 - 20, r.y0 - 130, ROOM_W + 40, 130);
+  for (let i = 0; i < 5; i++) {
+    const wx = r.x0 + 100 + i * (ROOM_W - 200) / 4, wy = r.y0 - 70, col = GLASS_COL[(i * 3) % 8];
+    ctx.globalCompositeOperation = 'lighter';
+    ctx.globalAlpha = 0.16 + 0.05 * Math.sin(t * 1.3 + i);
+    ctx.fillStyle = col; ctx.beginPath(); ctx.moveTo(wx - 22, r.y0); ctx.lineTo(wx + 22, r.y0); ctx.lineTo(wx + 70, r.y0 + 260); ctx.lineTo(wx - 30, r.y0 + 260); ctx.closePath(); ctx.fill();
+    ctx.globalAlpha = 1; ctx.globalCompositeOperation = 'source-over';
+    ctx.fillStyle = '#0a080e'; rrPath(ctx, wx - 26, wy - 52, 52, 104, 26); ctx.fill();
+    for (let j = 0; j < 6; j++) { ctx.fillStyle = GLASS_COL[(i * 3 + j) % 8]; ctx.globalAlpha = 0.85; ctx.fillRect(wx - 20 + (j % 2) * 20, wy - 30 + Math.floor(j / 2) * 24, 20, 24); }
+    ctx.globalAlpha = 1;
+    ctx.fillStyle = '#fff2c0'; disc(ctx, wx, wy - 38, 9); ctx.fill();
+    ctx.strokeStyle = '#0a080e'; ctx.lineWidth = 2.5; ctx.strokeRect(wx - 20, wy - 30, 40, 72);
+    ctx.beginPath(); ctx.moveTo(wx, wy - 30); ctx.lineTo(wx, wy + 42); for (let j = 1; j < 3; j++) { ctx.moveTo(wx - 20, wy - 30 + j * 24); ctx.lineTo(wx + 20, wy - 30 + j * 24); } ctx.stroke();
+  }
+  // the bars of light and the prisms they turn on
+  for (const b of T.beams) {
+    const [tx, ty] = beamTip(b), g = ctx.createLinearGradient(b.px, b.py, tx, ty);
+    GLASS_COL.forEach((c, k) => g.addColorStop(k / 7, c));
+    ctx.globalCompositeOperation = 'lighter'; ctx.lineCap = 'round';
+    ctx.globalAlpha = 0.35; ctx.strokeStyle = g; ctx.lineWidth = 26; ctx.beginPath(); ctx.moveTo(b.px, b.py); ctx.lineTo(tx, ty); ctx.stroke();
+    ctx.globalAlpha = 0.95; ctx.lineWidth = 9; ctx.stroke();
+    ctx.strokeStyle = 'rgba(255,255,255,0.85)'; ctx.lineWidth = 3; ctx.stroke();
+    ctx.globalAlpha = 1; ctx.globalCompositeOperation = 'source-over';
+    ctx.fillStyle = 'rgba(0,0,0,0.4)'; ctx.beginPath(); ctx.ellipse(b.px, b.py + 4, 20, 7, 0, 0, TAU); ctx.fill();
+    ctx.save(); ctx.translate(b.px, b.py - 12); ctx.rotate(Math.sin(t * 2 + b.px) * 0.1);
+    ctx.fillStyle = vgrad(ctx, -18, 14, 'rgba(240,250,255,0.95)', 'rgba(160,190,255,0.8)');
+    ctx.beginPath(); ctx.moveTo(0, -20); ctx.lineTo(16, 14); ctx.lineTo(-16, 14); ctx.closePath(); ctx.fill();
+    ctx.strokeStyle = '#ffffff'; ctx.lineWidth = 1.5; ctx.stroke();
+    ctx.restore();
+  }
+  // side and bottom walls, the way out
+  ctx.fillStyle = '#120e18';
+  ctx.fillRect(r.x0 - 20, r.y0 - 130, 20, ROOM_H + 150); ctx.fillRect(r.x1, r.y0 - 130, 20, ROOM_H + 150);
+  ctx.fillRect(r.x0 - 20, r.y1, ROOM_W / 2 - 30, 26); ctx.fillRect(r.cx + 50, r.y1, ROOM_W / 2 - 30, 26);
+  ctx.strokeStyle = '#3a3048'; ctx.lineWidth = 3; ctx.strokeRect(r.x0, r.y0, ROOM_W, ROOM_H);
+  ctx.fillStyle = 'rgba(255,190,240,0.22)'; ctx.fillRect(r.cx - 50, r.y1 - 6, 100, 32);
+  ctx.fillStyle = '#ffe8f8'; ctx.font = `800 12px ${UI_FONT}`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText('出口（放弃）', r.cx, r.y1 + 12);
+  if (r.exitHold > 0) holdRing(r.cx, r.y1 - 20, r.exitHold / 1.5);
+}
+// a prism shard, turning and glinting
+function drawShard(it) {
+  const t = G.time, y = it.y - 10 + Math.sin(it.t * 3 + it.col) * 3, c = GLASS_COL[it.col];
+  ctx.globalCompositeOperation = 'lighter';
+  ctx.fillStyle = rgrad(ctx, it.x, y, 26, [hexA(c, 0.55), hexA(c, 0)]); disc(ctx, it.x, y, 26); ctx.fill();
+  ctx.globalCompositeOperation = 'source-over';
+  ctx.fillStyle = 'rgba(0,0,0,0.3)'; ctx.beginPath(); ctx.ellipse(it.x, it.y + 6, 9, 3, 0, 0, TAU); ctx.fill();
+  ctx.save(); ctx.translate(it.x, y); ctx.scale(Math.cos(t * 2.5 + it.col), 1);
+  ctx.fillStyle = c; ctx.beginPath(); ctx.moveTo(0, -12); ctx.lineTo(7, 0); ctx.lineTo(0, 12); ctx.lineTo(-7, 0); ctx.closePath(); ctx.fill();
+  ctx.fillStyle = 'rgba(255,255,255,0.6)'; ctx.beginPath(); ctx.moveTo(0, -12); ctx.lineTo(7, 0); ctx.lineTo(0, 0); ctx.closePath(); ctx.fill();
+  ctx.strokeStyle = '#ffffff'; ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(0, -12); ctx.lineTo(7, 0); ctx.lineTo(0, 12); ctx.lineTo(-7, 0); ctx.closePath(); ctx.stroke();
+  ctx.restore();
+}
+// the chest at the end of the hall, in its glass cage until the five shards are in
+function drawTrialChest(it) {
+  const r = G.room, open = r && r.trial && r.trial.open, t = G.time;
+  ctx.globalCompositeOperation = 'lighter';
+  ctx.fillStyle = rgrad(ctx, it.x, it.y - 10, 70, [`hsla(${(t * 80) % 360},90%,70%,0.45)`, 'rgba(255,255,255,0)']); disc(ctx, it.x, it.y - 10, 70); ctx.fill();
+  ctx.globalCompositeOperation = 'source-over';
+  blit(SPR.chest(), it.x, it.y + Math.sin(it.t * 3) * 2);
+  for (let k = 0; k < 5; k++) { ctx.fillStyle = GLASS_COL[(k * 2 + Math.floor(t * 4)) % 8]; disc(ctx, it.x - 12 + k * 6, it.y - 2, 2); ctx.fill(); }
+  if (open) return;
+  ctx.strokeStyle = 'rgba(200,235,255,0.75)'; ctx.lineWidth = 2.5;
+  ctx.beginPath();
+  for (let i = -3; i <= 3; i++) { ctx.moveTo(it.x + i * 11, it.y + 20); ctx.lineTo(it.x + i * 11, it.y - 46); }
+  ctx.moveTo(it.x - 36, it.y - 46); ctx.lineTo(it.x + 36, it.y - 46); ctx.moveTo(it.x - 36, it.y + 20); ctx.lineTo(it.x + 36, it.y + 20);
+  ctx.stroke();
+  ctx.fillStyle = 'rgba(200,235,255,0.12)'; ctx.fillRect(it.x - 36, it.y - 46, 72, 66);
+  label(it.x, it.y - 62, `还差 ${TRIAL_NEED - r.trial.got} 块碎片`, '#e8f4ff');
+}
+
+// 多模态: the prism over her head splits the light into a fan of coloured beams aimed at the thickest of the crowd; each
+// beam goes through everything in its way
+function firePrism(s, pool) {
+  const R = 160;
+  let best = pool[0], bn = -1;
+  for (let k = 0; k < 8; k++) {
+    const e = pick(pool);
+    let c = 0;
+    for (const o of pool) if ((o.x - e.x) ** 2 + (o.y - e.y) ** 2 < R * R) c++;
+    if (c > bn) { bn = c; best = e; }
+  }
+  const ox = P.x, oy = P.y - SPR_H * 0.9 * P.size, a0 = Math.atan2(best.y - oy, best.x - ox), n = s.n + P.amount;
+  for (let i = 0; i < n; i++) {
+    const a = a0 + (i - (n - 1) / 2) * 0.15;
+    G.zones.push({ kind: 'prism', x: ox, y: oy, a, r: s.len * P.area, len: s.len * P.area, w: 12 * P.area, life: 0.4, max: 0.4, dmg: s.dmg, col: GLASS_COL[(i * 8 / Math.max(1, n)) % 8 | 0], done: false });
+  }
+  sfx.zap();
+}
+function prismHit(z) {
+  z.done = true;
+  const tx = z.x + Math.cos(z.a) * z.len, ty = z.y + Math.sin(z.a) * z.len, mx = (z.x + tx) / 2, my = (z.y + ty) / 2;
+  forNear(mx, my, z.len / 2 + 60, e => {
+    if (e.banned > 0 || segDist(e.x, e.y, z.x, z.y, tx, ty) > z.w + e.r) return;
+    hit(e, z.dmg, 'prism', { kb: 50, kx: Math.cos(z.a), ky: Math.sin(z.a) });
+  });
+}
+function drawPrismBeam(z) {
+  const k = z.life / z.max, tx = z.x + Math.cos(z.a) * z.len, ty = z.y + Math.sin(z.a) * z.len;
+  ctx.globalCompositeOperation = 'lighter'; ctx.lineCap = 'round';
+  ctx.globalAlpha = 0.4 * k; ctx.strokeStyle = z.col; ctx.lineWidth = z.w * 2.6; ctx.beginPath(); ctx.moveTo(z.x, z.y); ctx.lineTo(tx, ty); ctx.stroke();
+  ctx.globalAlpha = 0.9 * k; ctx.lineWidth = z.w * 0.9; ctx.stroke();
+  ctx.strokeStyle = '#ffffff'; ctx.lineWidth = z.w * 0.3; ctx.stroke();
+  ctx.globalAlpha = 1; ctx.globalCompositeOperation = 'source-over';
+  // the prism itself, a moment, where the light leaves her
+  if (k > 0.6) {
+    ctx.save(); ctx.translate(z.x, z.y); ctx.globalAlpha = (k - 0.6) * 2.5;
+    ctx.fillStyle = 'rgba(240,250,255,0.9)'; ctx.beginPath(); ctx.moveTo(0, -12); ctx.lineTo(10, 8); ctx.lineTo(-10, 8); ctx.closePath(); ctx.fill();
+    ctx.restore(); ctx.globalAlpha = 1;
+  }
+}
+
 // with the lights out in the room: black but for a little round her and the glow of the lure
 function drawRoomDark() {
   if (!G.room.dark) return;
@@ -12053,6 +12391,7 @@ function drawZones() {
     if (z.kind === 'dice' || z.kind === 'bigdie') continue; // in the air: drawn with the shots
     if (z.kind === 'swapmark') { drawSwapMark(z); continue; }
     if (z.kind === 'bobber') { drawBobber(z); continue; }
+    if (z.kind === 'prism') { drawPrismBeam(z); continue; }
     if (z.kind === 'wall') { drawWall(z); continue; }
     if (z.kind === 'qpulse') {
       // a ring of little square pixels rolling out, green and cyan by turns
@@ -12277,6 +12616,8 @@ function drawPickups() {
   for (const it of G.items) {
     if (it.dead || !inView(it.x, it.y, 40)) continue;
     if (it.type === 'bait') { drawBait(it); continue; }
+    if (it.type === 'shard') { drawShard(it); continue; }
+    if (it.type === 'gchest') { drawTrialChest(it); continue; }
     const bob = Math.sin(it.t * 3) * 2;
     if (it.type === 'chest') {
       ctx.globalCompositeOperation = 'lighter';
@@ -13273,6 +13614,9 @@ function drawScreen() {
   if (!G.ult) {
     if (!G.room) for (const it of G.items) if (it.type === 'chest') edgeArrow(it.x, it.y, '#f0b43c', top);
     if (G.house && G.house.state === 'out' && !G.room) edgeArrow(G.house.x, G.house.y - 60, '#c08cff', top);
+    if (G.glass && G.glass.state === 'out' && !G.room) edgeArrow(G.glass.x, G.glass.y - 60, `hsl(${(G.time * 90) % 360},90%,70%)`, top);
+    // in the trial: the shards still to find, and the chest once it's open
+    if (G.room && G.room.trial) for (const it of G.items) if (!it.dead && (it.type === 'shard' || (it.type === 'gchest' && G.room.trial.open))) edgeArrow(it.x, it.y, it.type === 'shard' ? GLASS_COL[it.col] : '#ffe08a', top);
     for (const e of G.enemies) if (!e.dead && (e.marked || e.boss)) edgeArrow(e.x, e.y, e.boss ? '#ff4fb3' : '#ffd27a', top);
   }
   if (joy) {
@@ -13308,6 +13652,7 @@ function render() {
     drawPickups();
     drawTrees();
     drawHouse();
+    drawGlassDoor();
     drawEnemies();
     drawPets();
     drawUltWorld();
@@ -13368,15 +13713,21 @@ function updateHud() {
   const ub = $('ultBtn'), uk = P.ult / ULT_MAX;
   ub.style.setProperty('--p', (1 - uk).toFixed(3));
   if ((uk >= 1) !== hud.ult) { hud.ult = uk >= 1; ub.classList.toggle('ready', hud.ult); }
-  const boss = G.boss && !G.boss.dead;
-  if (boss !== hud.boss) { hud.boss = boss; $('bossbar').hidden = !boss; }
+  // the boss's health; in the stained-glass trial, the time left and the shards so far in its place
+  const trial = G.room && G.room.trial, boss = !trial && G.boss && !G.boss.dead, bar = !!(boss || trial);
+  if (bar !== hud.boss) { hud.boss = bar; $('bossbar').hidden = !bar; }
   if (boss) $('bossFill').style.transform = `scaleX(${clamp(G.boss.hp / G.boss.maxHp, 0, 1).toFixed(4)})`;
+  else if (trial) {
+    $('bossFill').style.transform = `scaleX(${clamp(trial.t / TRIAL_T, 0, 1).toFixed(4)})`;
+    const msg = G.room.won ? '彩窗试炼 · 通过！' : trial.done ? '彩窗试炼 · 时间到' : `彩窗试炼 · 剩 ${Math.ceil(trial.t)} 秒 · 碎片 ${trial.got}/${TRIAL_NEED}`;
+    if (msg !== hud.trial) { hud.trial = msg; $('bossName').textContent = msg; }
+  }
   if (G.slotsDirty) {
     G.slotsDirty = false;
     $('slots').innerHTML = P.weapons.map(w => `<div class="wslot${isLegend(w) ? ' legend' : w.level === 6 ? ' evo' : ''}" title="${wName(w)}"><b>${WEAPONS[w.id].g}</b><span class="pips">${(isLegend(w) ? [1, 2, 3] : [1, 2, 3, 4, 5]).map(i => `<i class="${i <= w.level ? 'on' : ''}"></i>`).join('')}</span></div>`).join('');
   }
 }
-function resetHud() { hud.lv = hud.sec = hud.kills = -1; hud.cd = hud.ready = hud.boss = hud.mode = hud.doubt = hud.dash = hud.ult = null; }
+function resetHud() { hud.lv = hud.sec = hud.kills = -1; hud.cd = hud.ready = hud.boss = hud.mode = hud.doubt = hud.dash = hud.ult = hud.trial = null; }
 
 let bannerTimer = 0, toastTimer = 0;
 function replay(el) { el.hidden = false; el.style.animation = 'none'; void el.offsetWidth; el.style.animation = ''; }
@@ -13398,6 +13749,7 @@ function toast(title, sub, kind, seal) {
   el.classList.toggle('wx', k === 'wx');
   el.classList.toggle('pet', k === 'pet');
   el.classList.toggle('house', k === 'house');
+  el.classList.toggle('glass', k === 'glass');
   replay(el);
   clearTimeout(toastTimer);
   toastTimer = setTimeout(() => { el.hidden = true; }, 2300);
@@ -13893,7 +14245,7 @@ if (DEBUG) {
   window.__fk = {
     get G() { return G; }, get P() { return P; }, M3, bot, spawn: spawnEnemy, char: selectChar,
     talent(id) { const t = TALENT[id]; P.talents[id] = (P.talents[id] || 0) + 1; if (t.apply) t.apply(P); }, start: startRun, update, render,
-    treeAt, fellTrees, WEATHER, makePet, spawnBoss, spawnHouse, enterRoom, leaveRoom, hitE: (e, d, o) => hit(e, d, 'test', o || {}), hurt: hurtPlayer, castSkill, castUlt, maxSlots, isLegend,
+    treeAt, fellTrees, WEATHER, makePet, spawnBoss, spawnHouse, spawnGlass, enterRoom, leaveRoom, hitE: (e, d, o) => hit(e, d, 'test', o || {}), hurt: hurtPlayer, castSkill, castUlt, maxSlots, isLegend,
     // simulate without rendering; modals are resolved by taking the first card
     sim(sec, dt = 1 / 30) {
       const steps = Math.round(sec / dt);
