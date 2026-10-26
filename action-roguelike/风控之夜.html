@@ -4818,7 +4818,7 @@ const WEAPONS = {
       { cd: 0.55, dmg: 68 },
       { cd: 0.55, dmg: 90 },
       { cd: 0.55, dmg: 120 },
-      { cd: 0.5, dmg: 165, pierce: 2 },
+      { cd: 0.5, dmg: 145, pierce: 2 },
     ],
   },
   // the five elements, 五行: 金 flying swords, 木 bamboo shoots, 水 a tide, 火 dragon's breath, 土 an earthquake
@@ -4843,7 +4843,7 @@ const WEAPONS = {
       { cd: 1.8, len: 8, dmg: 34, root: 0.6 },
       { cd: 1.8, len: 9, dmg: 40, root: 0.6 },
       { cd: 1.6, len: 11, dmg: 48, root: 0.7 },
-      { cd: 1.4, len: 12, dmg: 58, root: 0.8 },
+      { cd: 1.4, len: 12, dmg: 50, root: 0.8 },
     ],
   },
   shui: {
@@ -4897,9 +4897,9 @@ const WEAPONS = {
     name: '钓鱼执法', g: '钓', legend: true, names: ['钓鱼执法', '钓鱼执法 · 收网', '钓鱼执法 · 一网打尽'],
     desc: '传说武器。往敌人最多的地方抛出浮漂，把附近的小怪都引过去挤成一团，再一钩子收网：一起重创，残血的小怪直接被钓走。',
     lv: [
-      { cd: 4.5, n: 1, dmg: 150, r: 150 },
-      { cd: 4.0, n: 2, dmg: 190, r: 170 },
-      { cd: 3.5, n: 3, dmg: 230, r: 190 },
+      { cd: 4.5, n: 1, dmg: 125, r: 150 },
+      { cd: 4.0, n: 2, dmg: 160, r: 170 },
+      { cd: 3.5, n: 3, dmg: 195, r: 190 },
     ],
   },
   // legendary: only the golden slime gives it, it takes no weapon slot, and each further catch amends it
@@ -4933,7 +4933,7 @@ const WEAPONS = {
       { cd: 2.9, n: 2, dmg: 9, r: 46, dur: 4.5 },
       { cd: 2.9, n: 2, dmg: 11, r: 50, dur: 5 },
       { cd: 2.6, n: 3, dmg: 14, r: 54, dur: 5 },
-      { cd: 2.4, n: 4, dmg: 18, r: 62, dur: 5.5 },
+      { cd: 2.4, n: 4, dmg: 15, r: 62, dur: 5.5 },
     ],
   },
   captcha: {
@@ -4956,9 +4956,9 @@ const WEAPONS = {
       { n: 2, dmg: 7, range: 230 },
       { n: 2, dmg: 9, range: 240 },
       { n: 3, dmg: 9, range: 250 },
-      { n: 3, dmg: 11, range: 265 },
-      { n: 4, dmg: 13, range: 280 },
-      { n: 8, dmg: 15, range: 320 },
+      { n: 3, dmg: 10, range: 265 },
+      { n: 4, dmg: 11, range: 280 },
+      { n: 8, dmg: 13, range: 320 },
     ],
   },
   // 埋点: little tracking pins she leaves in the ground as she goes; whatever comes near one sets it off
@@ -4969,9 +4969,9 @@ const WEAPONS = {
       { cd: 1.5, n: 1, dmg: 24, r: 58 },
       { cd: 1.5, n: 1, dmg: 33, r: 58 },
       { cd: 1.35, n: 2, dmg: 34, r: 64 },
-      { cd: 1.35, n: 2, dmg: 44, r: 70 },
-      { cd: 1.2, n: 3, dmg: 50, r: 76 },
-      { cd: 1.0, n: 4, dmg: 63, r: 92 },
+      { cd: 1.35, n: 2, dmg: 38, r: 70 },
+      { cd: 1.2, n: 3, dmg: 42, r: 76 },
+      { cd: 1.0, n: 4, dmg: 52, r: 92 },
     ],
   },
   // 冷启动: snowflakes thrown at the nearest enemies, each bursting into a patch of frost that freezes them solid
@@ -4995,9 +4995,9 @@ const WEAPONS = {
       { cd: 2.0, n: 1, dmg: 19, r: 54 },
       { cd: 2.0, n: 1, dmg: 25, r: 54 },
       { cd: 1.8, n: 2, dmg: 25, r: 58 },
-      { cd: 1.8, n: 2, dmg: 31, r: 62 },
-      { cd: 1.6, n: 3, dmg: 36, r: 66 },
-      { cd: 1.4, n: 4, dmg: 43, r: 74 },
+      { cd: 1.8, n: 2, dmg: 27, r: 62 },
+      { cd: 1.6, n: 3, dmg: 31, r: 66 },
+      { cd: 1.4, n: 4, dmg: 36, r: 74 },
     ],
   },
   // 防火墙: a wall of burning bricks raised across the way; what walks into it is held back and set alight
@@ -7505,7 +7505,7 @@ function newRun() {
   P = {
     x: 0, y: 0, r: 14, face: 1, moving: false, walkT: 0, stillT: 0, moveT: 0,
     char: CH.id, hp: CH.hp, maxHp: CH.hp, regen: 0, armor: 0, dodge: 0, speed: CH.speed, magnet: CH.magnet,
-    dmg: 0.85, cd: 1, area: 1, wid: 1, pspeed: 1, dur: 1, amount: 0, pierce: 0, crit: 0.05, critDmg: 1.5, xpMul: CH.xpMul || 1, luck: 0,
+    dmg: 0.78, cd: 1, area: 1, wid: 1, pspeed: 1, dur: 1, amount: 0, pierce: 0, crit: 0.05, critDmg: 1.5, xpMul: CH.xpMul || 1, luck: 0,
     level: 1, xp: 0, xpNext: xpFor(1), iframes: 0, flash: 0,
     weapons: [], talents: {}, banCd: 0, banMax: 1, think: 0, fore: true, foreT: 0, grace: 0, graceT: 0,
     shield: 0, shieldT: 0, decoyCd: 0, revived: false, say: null, lowLineT: 0, chaosT: 20,
