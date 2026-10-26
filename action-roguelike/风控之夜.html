@@ -5105,7 +5105,9 @@ const SPAWN_TABLE = [
 ];
 const hpScale = t => 1 + t / 60 * 0.27 + Math.pow(t / 60, 2) * 0.024;
 const dmgScale = t => 1 + t / 60 * 0.09;
-const xpFor = L => Math.round(5 + L * 3.2 + Math.pow(L, 1.78));
+// experience for the next level: past level 40 it gets steeper and steeper (six times as much by level 99), so a player
+// who picks up everything reaches level 100 after twenty-odd minutes rather than fifteen
+const xpFor = L => Math.round((5 + L * 3.2 + Math.pow(L, 1.78)) * (L > 40 ? 1 + 5 * Math.pow((L - 40) / 60, 1.5) : 1));
 
 // 克劳德大小姐 speaks precisely, politely and from a distance; the angrier she is, the calmer she sounds
 const BAN_LINES = ['您的行为违反了使用政策。', '抱歉，这件事我不能放任。', '申诉请走邮件。祝您好运。', '漏洞清单，我已经列好了。', '请保持礼貌，然后离开。', '共享账号是不被允许的。', '规则就是规则。'];
