@@ -13549,25 +13549,30 @@ function chainDraw(n, at, hot) {
   ctx.strokeStyle = '#1e2228'; ctx.lineWidth = 3.6; ctx.stroke(ring); ctx.lineWidth = 4.2; ctx.stroke(bar);
   ctx.strokeStyle = hot ? '#ffb45a' : '#aeb9c2'; ctx.lineWidth = 1.7; ctx.stroke(ring); ctx.lineWidth = 2; ctx.stroke(bar);
 }
-// 锁链: the links from her hand to the dart in flight, or to the collar of the one it holds: drawn straight when it's
-// taut and sagging when it's slack. The dart is a steel blade with a ring and a red tassel, like a 绳镖's
+// 锁链: the links from her hand to the dart in flight, or to the collar of the one it holds: tighter when it's taut and
+// sagging when it's slack. The dart is a steel blade with a ring and a red tassel, like a 绳镖's
 function drawShackle() {
   const w = P.weapons.find(v => v.id === 'shackle');
   if (!w || !w.hooks) return;
   const o = hookFrom(), t = G.time;
+  // it wriggles like a snake: a wave running down it from the far end to her hand, both ends held still, each link
+  // turned along the curve
+  const snake = (n, pt, hot) => chainDraw(n, i => {
+    const f = (i + 0.5) / n, [x, y] = pt(f), [x2, y2] = pt(f + 0.01);
+    return [x, y, Math.atan2(y2 - y, x2 - x)];
+  }, hot);
+  const wig = (f, len, amp, ph) => Math.sin(f * Math.PI) * amp * Math.sin(f * len / 90 * TAU + ph);
   for (const h of w.hooks) {
+    const ph = t * 10 + h.slot * 2.1;
     if (h.st === 'leash') {
-      const e = h.e, ex = e.x, ey = e.y - e.r * 0.1, d = Math.hypot(ex - o.x, ey - o.y), L = wStats(w).len * P.area;
-      const sag = h.taut ? 0 : Math.min(40, Math.sqrt(Math.max(0, L * L - d * d)) * 0.3), n = Math.max(1, Math.round(d / 7));
-      chainDraw(n, i => {
-        const f = (i + 0.5) / n;
-        return [o.x + (ex - o.x) * f, o.y + (ey - o.y) * f + sag * 4 * f * (1 - f), Math.atan2(ey - o.y + sag * 4 * (1 - 2 * f), ex - o.x)];
-      }, h.hot);
+      const e = h.e, ex = e.x, ey = e.y - e.r * 0.1, d = Math.hypot(ex - o.x, ey - o.y) || 1, L = wStats(w).len * P.area;
+      const sag = h.taut ? 0 : Math.min(40, Math.sqrt(Math.max(0, L * L - d * d)) * 0.3), nx = -(ey - o.y) / d, ny = (ex - o.x) / d, amp = Math.min(h.taut ? 9 : 14, d * 0.09);
+      snake(Math.max(1, Math.round(d / 7)), f => { const b = wig(f, d, amp, ph); return [o.x + (ex - o.x) * f + nx * b, o.y + (ey - o.y) * f + sag * 4 * f * (1 - f) + ny * b]; }, h.hot);
       continue;
     }
-    const L = Math.max(0, h.ext), n = Math.max(1, Math.round(L / 7)), dx = Math.cos(h.a), dy = Math.sin(h.a), nx = -dy, ny = dx;
-    const wob = h.st === 'out' ? 12 * Math.max(0, 1 - h.t * 3) * h.wob : 0;
-    chainDraw(n, i => { const f = (i + 0.5) / n, b = Math.sin(f * Math.PI) * wob; return [o.x + dx * L * f + nx * b, o.y + dy * L * f + ny * b, h.a]; }, h.hot);
+    const L = Math.max(0, h.ext), dx = Math.cos(h.a), dy = Math.sin(h.a), nx = -dy, ny = dx;
+    const wob = h.st === 'out' ? 12 * Math.max(0, 1 - h.t * 3) * h.wob : 0, amp = Math.min(12, L * 0.09);
+    snake(Math.max(1, Math.round(L / 7)), f => { const b = Math.sin(f * Math.PI) * wob + wig(f, L, amp, ph); return [o.x + dx * L * f + nx * b, o.y + dy * L * f + ny * b]; }, h.hot);
     ctx.save(); ctx.translate(o.x + dx * L, o.y + dy * L); ctx.rotate(h.a);
     ctx.strokeStyle = '#d8323a'; ctx.lineWidth = 2.2; ctx.lineCap = 'round';
     for (const k of [-1, 1]) { ctx.beginPath(); ctx.moveTo(-8, 0); ctx.quadraticCurveTo(-13, k * 3 + Math.sin(t * 20) * 2, -19, k * 4); ctx.stroke(); }
