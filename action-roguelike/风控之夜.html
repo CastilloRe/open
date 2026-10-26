@@ -87,6 +87,7 @@ kbd {
 .clock { display: flex; flex-direction: column; align-items: center; gap: 2px; text-shadow: 0 1px 3px #000; }
 .clock b { font-family: var(--display); font-weight: 400; font-size: 1.7rem; line-height: 1; letter-spacing: 0.04em; font-variant-numeric: tabular-nums; }
 .clock span { font-size: 0.78rem; color: var(--muted); font-variant-numeric: tabular-nums; }
+.clock .threat { font-size: 0.7rem; color: #ff9c86; }
 .hud-btns { justify-self: end; display: flex; gap: 8px; }
 .icon-btn {
   pointer-events: auto; width: 40px; height: 40px; border-radius: 50%;
@@ -397,7 +398,7 @@ button.who:focus-visible .face { outline: 2px solid var(--amber); outline-offset
     <div class="xp"><span id="lv" class="lv">Lv 1</span><div class="xp-track"><div id="xpFill" class="xp-fill"></div></div></div>
     <div class="hud-row">
       <div id="slots" class="slots"></div>
-      <div class="clock"><b id="clock">00:00</b><span id="kills">击杀 0</span></div>
+      <div class="clock"><b id="clock">00:00</b><span id="kills">击杀 0</span><span id="threat" class="threat"></span></div>
       <div class="hud-btns">
         <button id="btnSound" class="icon-btn" type="button" aria-label="声音：音乐和音效">♫</button>
         <button id="btnPause" class="icon-btn" type="button" aria-label="暂停">❚❚</button>
@@ -474,7 +475,7 @@ button.who:focus-visible .face { outline: 2px solid var(--amber); outline-offset
             <p>被大印砸中过的精英和 BOSS 记进黑名单，之后受到她的伤害 +30%。</p></div>
           </div>
         </div>
-        <ul class="stats"><li>生命<b>140</b></li><li>移速<b>200</b></li><li>拾取范围<b>95</b></li><li>武器栏<b>4</b>（60 级 +1）</li></ul>
+        <ul class="stats"><li>生命<b>140</b></li><li>移速<b>200</b></li><li>拾取范围<b>95</b></li><li>武器栏<b>3</b>（50 级 +1）</li></ul>
         </div>
         <div class="hero-body" data-char="whale" hidden>
         <div class="hero-name"><h2>大肥鱼</h2><span class="en">Blue Whale</span><span class="role">Token 鲸</span></div>
@@ -503,7 +504,7 @@ button.who:focus-visible .face { outline: 2px solid var(--amber); outline-offset
           <div class="kit-item">
             <span class="glyph tok">T</span>
             <div><h3>Token 来<small>被动</small></h3>
-            <p>捡经验、吞敌人、吃饭、摸鱼都攒 Token，平时一点也不会掉，每 10 Token 伤害 +2.2%（满 100 是 +22%）。</p></div>
+            <p>捡经验、吞敌人、吃饭、摸鱼都攒 Token，平时一点也不会掉，每 10 Token 伤害 +1.8%（满 100 是 +18%）。</p></div>
           </div>
           <div class="kit-item">
             <span class="glyph tok">思</span>
@@ -521,7 +522,7 @@ button.who:focus-visible .face { outline: 2px solid var(--amber); outline-offset
             <p>生命跌破 30% 时收起玩笑，认真 8 秒：攻速 +25%、伤害 +20%。受到致命伤时若有 50 Token，花光它们嘴硬撑住（各 90 秒一次）。</p></div>
           </div>
         </div>
-        <ul class="stats"><li>生命<b>110</b></li><li>移速<b>185</b></li><li>拾取范围<b>110</b></li><li>武器栏<b>4</b>（60 级 +1）</li></ul>
+        <ul class="stats"><li>生命<b>110</b></li><li>移速<b>185</b></li><li>拾取范围<b>110</b></li><li>武器栏<b>3</b>（50 级 +1）</li></ul>
         </div>
         <div class="hero-go">
           <div class="roster" aria-label="角色">
@@ -4631,8 +4632,9 @@ const MODES = {
 let modeChoice = store.get('mode', 'm10');
 if (!MODES[modeChoice]) modeChoice = 'm10';
 const bestKey = m => m === 'm10' ? 'best' : 'best-' + m;
-// four weapons to start with, a fifth from level 60
-const maxSlots = () => P.level >= 60 ? 5 : 4;
+// three weapons to start with, a fourth from level 50
+const SLOT_LV = 50;
+const maxSlots = () => P.level >= SLOT_LV ? 4 : 3;
 const MAX_ENEMIES = coarse ? 240 : 320;
 const SPR_H = 76; // the player sprite's height in world units
 
@@ -7426,9 +7428,19 @@ function addWeapon(id) {
 const wStats = w => WEAPONS[w.id].lv[w.level - 1];
 const wName = w => { const d = WEAPONS[w.id]; return d.legend ? d.names[w.level - 1] : w.level === 6 ? d.evo.name : d.skins && w.level > 1 ? `${d.name} · ${d.skins[w.level - 1]}` : d.name; };
 const isLegend = w => !!WEAPONS[w.id].legend;
+// one legendary at a time: the first she gets is hers for the night; another (of either kind) sharpens it instead, and
+// once it's at its best leaves a gold chest. Says which: 'new', 'up' (the same one again), 'other' or 'chest'
+const heldLegend = () => P.weapons.find(isLegend);
+function grantLegend(id) {
+  const lw = heldLegend();
+  if (!lw) { addWeapon(id); return 'new'; }
+  if (lw.level >= 3) return 'chest';
+  lw.level++; G.slotsDirty = true;
+  return lw.id === id ? 'up' : 'other';
+}
 const thinkMax = () => 5 + 2 * (P.talents.slowthink || 0);
-// 深度思考 for 克劳德; for 大肥鱼 her Token, +2.2% per 10 up to 100 and half that beyond
-const thinkBonus = () => P.char === 'whale' ? Math.min(P.tok, 100) * 0.0022 + Math.max(0, P.tok - 100) * 0.0011 : P.think * 0.08;
+// 深度思考 for 克劳德; for 大肥鱼 her Token, +1.8% per 10 up to 100 and half that beyond
+const thinkBonus = () => P.char === 'whale' ? Math.min(P.tok, 100) * 0.0018 + Math.max(0, P.tok - 100) * 0.0009 : P.think * 0.08;
 const critChance = () => P.crit + (P.think >= thinkMax() || P.spark > 0 ? 0.15 : 0);
 const banRadius = () => 230 * (1 + 0.18 * (P.talents.ipban || 0)) * P.area;
 const banCooldown = () => 18 * Math.pow(0.85, P.talents.risk || 0);
@@ -7540,6 +7552,8 @@ function spawnEnemy(type, x, y, o = {}) {
     tint: (Math.random() * SLIME.length) | 0,
   };
   if (type === 'jail') e.tint = Math.random() < 0.5 ? 0 : 1;
+  // the strength of the hour it came at; it keeps growing from there (growEnemies)
+  e.hs = hpScale(t); e.ds = dmgScale(t);
   if (golden) {
     e.hp = e.maxHp = 8; e.goldT = 18; e.marked = true;
     toast('有什么在闪闪发光……', '一只金色史莱姆出现了，抓住它！', 'gold');
@@ -7746,10 +7760,11 @@ function kill(e, how) {
     P.ult = ULT_MAX;
     ring(e.x, e.y, 10, 120, 0.6, '#ffd34a', 5);
     puff(e.x, e.y, 24, '#ffe27a', 260, 0.7, 3.5, true);
-    const lw = P.weapons.find(w => w.id === 'charter');
-    if (!lw) { addWeapon('charter'); banner('传说武器 · 宪法', '金色史莱姆留下了它：条款追着最强的敌人跑，小号当场依法封禁'); }
-    else if (lw.level < 3) { lw.level++; G.slotsDirty = true; banner(`传说武器 · ${wName(lw)}`, '又抓到一只：条款更多、更重、更快'); }
-    else { G.items.push({ type: 'chest', x: e.x, y: e.y, t: 0, gold: true }); banner('稀有 · 金色史莱姆', '宪法已经修订到头了，它留下了一个金宝箱'); }
+    const got = grantLegend('charter');
+    if (got === 'new') banner('传说武器 · 宪法', '金色史莱姆留下了它：条款追着最强的敌人跑，小号当场依法封禁');
+    else if (got === 'up') banner(`传说武器 · ${wName(heldLegend())}`, '又抓到一只：条款更多、更重、更快');
+    else if (got === 'other') banner(`传说武器 · ${wName(heldLegend())}`, '传说武器只能带一把：金色史莱姆给手上这把升了一级');
+    else { G.items.push({ type: 'chest', x: e.x, y: e.y, t: 0, gold: true }); banner('稀有 · 金色史莱姆', `${wName(heldLegend())}已经练到头了，它留下了一个金宝箱`); }
     say(line('gold'), 3);
     playAnim(['happy'], 1, 1);
     sfx.level();
@@ -7786,14 +7801,14 @@ function gainXp(v) {
   while (P.xp >= P.xpNext && P.level < LV_CAP) {
     P.xp -= P.xpNext;
     P.level++;
-    if (P.level === 60) slotUnlocked();
+    if (P.level === SLOT_LV) slotUnlocked();
     P.xpNext = xpFor(P.level);
     G.pendLv++;
   }
 }
-// level 60: a fifth weapon slot, and a chest at her feet to fill it
+// level 50: a fourth weapon slot, and a chest at her feet to fill it
 function slotUnlocked() {
-  banner('第五个武器栏', 'Lv 60：可以多带一件武器了，先送你一个宝箱');
+  banner('第四个武器栏', 'Lv 50：可以多带一件武器了，先送你一个宝箱');
   G.items.push({ type: 'chest', x: P.x + rand(-60, 60), y: P.y + 70, t: 0, gold: true });
   G.slotsDirty = true;
   sfx.chest();
@@ -10506,6 +10521,18 @@ function cleanup() {
   G.delayed = G.delayed.filter(d => !d.done);
 }
 
+// the night wears on: every enemy on the field keeps pace with the hour, not just those that arrive later; its health
+// (what it has left too) and its hits grow with the clock. Checked once a second; the clock stops behind the door
+function growEnemies(dt) {
+  if ((G.growT = (G.growT || 0) - dt) > 0) return;
+  G.growT = 1;
+  const t = nightT(), hs = hpScale(t), ds = dmgScale(t);
+  for (const e of G.enemies) {
+    if (e.dead || e.type === 'gold' || !e.hs) continue;
+    if (hs > e.hs) { const k = hs / e.hs; e.maxHp *= k; e.hp *= k; e.hs = hs; }
+    if (ds > e.ds) { e.dmg *= ds / e.ds; e.ds = ds; }
+  }
+}
 function update(dt) {
   if (G.ult) {
     // the finale freezes the field while the flowers open
@@ -10525,6 +10552,7 @@ function update(dt) {
   updateWeapons(dt);
   updateShots(dt);
   updateEnemies(dt);
+  growEnemies(dt);
   updatePets(dt);
   updateBullets(dt);
   if (G.room) roomTick(dt);
@@ -11815,10 +11843,11 @@ function roomWon(e) {
   for (const o of G.enemies) if (!o.dead && o !== e) { o.banned = rand(0.4, 1); o.banDepth = 9; }
   for (let i = 0; i < 12; i++) { dropGem(e.x + rand(-60, 60), e.y + rand(-40, 40), 30); }
   for (const g of G.gems) if ((g.x - e.x) ** 2 + (g.y - e.y) ** 2 < 300 * 300) g.pull = true;
-  const lw = P.weapons.find(w => w.id === 'fishing');
-  if (!lw) { addWeapon('fishing'); banner('传说武器 · 钓鱼执法', '浮漂抛进敌群，把小怪都引过来，再一钩子收网'); }
-  else if (lw.level < 3) { lw.level++; G.slotsDirty = true; banner(`传说武器 · ${wName(lw)}`, '又端掉一个钓鱼网站：浮漂更多、收网更狠'); }
-  else { r.chest = true; banner('钓鱼网站已被端掉', '钓鱼执法已经练到头了，门口给你留了一个金宝箱'); }
+  const got = grantLegend('fishing');
+  if (got === 'new') banner('传说武器 · 钓鱼执法', '浮漂抛进敌群，把小怪都引过来，再一钩子收网');
+  else if (got === 'up') banner(`传说武器 · ${wName(heldLegend())}`, '又端掉一个钓鱼网站：浮漂更多、收网更狠');
+  else if (got === 'other') banner(`传说武器 · ${wName(heldLegend())}`, '传说武器只能带一把：这次给手上这把升了一级');
+  else { r.chest = true; banner('钓鱼网站已被端掉', `${wName(heldLegend())}已经练到头了，门前给你留了一个金宝箱`); }
   say(line('phishWon'), 3, true);
   playAnim(['spin', 'happy'], 2, 3);
   sfx.stamp(); sfx.win();
@@ -13260,7 +13289,11 @@ function updateHud() {
   $('xpFill').style.transform = `scaleX(${clamp(P.xp / P.xpNext, 0, 1).toFixed(4)})`;
   if (hud.lv !== P.level) { hud.lv = P.level; $('lv').textContent = 'Lv ' + P.level + (P.level >= LV_CAP ? ' MAX' : ''); }
   const sec = Math.floor(nightT()) + (G.room ? 1e6 : 0);
-  if (sec !== hud.sec) { hud.sec = sec; $('clock').textContent = fmtTime(nightT()) + (G.room ? ' · 屋内' : ''); }
+  if (sec !== hud.sec) {
+    hud.sec = sec; $('clock').textContent = fmtTime(nightT()) + (G.room ? ' · 屋内' : '');
+    // how much stronger the enemies have grown since nightfall
+    $('threat').textContent = `敌人 血×${hpScale(nightT()).toFixed(1)} 攻×${dmgScale(nightT()).toFixed(1)}`;
+  }
   if (G.kills !== hud.kills) { hud.kills = G.kills; $('kills').textContent = '击杀 ' + G.kills; }
   const sk = $('skill');
   const whale = P.char === 'whale';
@@ -13812,7 +13845,7 @@ if (DEBUG) {
   window.__fk = {
     get G() { return G; }, get P() { return P; }, M3, bot, spawn: spawnEnemy, char: selectChar,
     talent(id) { const t = TALENT[id]; P.talents[id] = (P.talents[id] || 0) + 1; if (t.apply) t.apply(P); }, start: startRun, update, render,
-    treeAt, fellTrees, WEATHER, makePet, spawnBoss, spawnHouse, enterRoom, leaveRoom, hitE: (e, d, o) => hit(e, d, 'test', o || {}), hurt: hurtPlayer, castSkill,
+    treeAt, fellTrees, WEATHER, makePet, spawnBoss, spawnHouse, enterRoom, leaveRoom, hitE: (e, d, o) => hit(e, d, 'test', o || {}), hurt: hurtPlayer, castSkill, maxSlots, isLegend,
     // simulate without rendering; modals are resolved by taking the first card
     sim(sec, dt = 1 / 30) {
       const steps = Math.round(sec / dt);
