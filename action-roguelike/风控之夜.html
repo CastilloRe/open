@@ -7173,9 +7173,9 @@ const DRAW = {
   },
 };
 function enemySprite(e, frame, kind, blink) {
-  const key = 'e' + e.type + (e.tint || 0) + '-' + e.r + '-' + frame + (blink ? 'b' : '');
-  const size = e.r * 2.8 + 12;
-  const base = sprite(key, size, size, x => DRAW[e.type](x, e.r, frame, blink, e.tint || 0));
+  const r = e.r0 || e.r, key = 'e' + e.type + (e.tint || 0) + '-' + r + '-' + frame + (blink ? 'b' : '');
+  const size = r * 2.8 + 12;
+  const base = sprite(key, size, size, x => DRAW[e.type](x, r, frame, blink, e.tint || 0));
   if (kind === 'n') return base;
   return variant(base, key + kind, kind === 'f' ? 'flash' : 'ban');
 }
@@ -7551,6 +7551,7 @@ function newRun() {
     rerolls: 2, banishes: 2, banished: new Set(), banishMode: false, picks: [], slotsDirty: true, lures: [], gulp: null,
   };
   addWeapon(CH.start);
+  if (MODES[G.mode].awaken) G.chestT = 15;
 }
 function addWeapon(id) {
   P.weapons.push({ id, level: 1, t: 0.5, casts: 0, burst: 0, burstT: 0, mult: 1, acc: 0, ts: [] });
@@ -7674,6 +7675,13 @@ function spawnEnemy(type, x, y, o = {}) {
   let r = d.r, hp = d.hp * (o.flat ? 1 : hpScale(t)), dmg = d.dmg * dmgScale(t), xp = d.xp;
   let speed = d.speed * (1 + t / 600 * 0.12) * rand(0.92, 1.08);
   if (o.elite) { r *= 1.45; hp *= 9; dmg *= 1.4; xp *= 12; speed *= 1.06; }
+  // 觉醒: the mobs come five times the size and the health, hit a third harder, lumber a quarter slower and give five
+  // times the experience (and come fewer at a time, see director); their picture is drawn at the usual size and stretched (r0 is the size
+  // it's drawn at)
+  const big = awakened() && !o.flat && type !== 'gold' && type !== 'mirror', r0 = Math.round(r);
+  // the small fry grow the full five times; past the size of a giant 小号 the bigger kinds grow only half as fast again,
+  // or a 注册机 would be wider than the screen
+  if (big) { r = r <= 13 ? r * 5 : 65 + (r - 13) * 1.5; hp *= 5; dmg *= 1.3; xp *= 5; speed *= 0.75; }
   if (x == null) { const p = edgePos(); x = p.x; y = p.y; }
   const e = {
     id: G.nextId++, type, x, y, r: Math.round(r), hp, maxHp: hp, dmg, speed, xp,
@@ -7684,6 +7692,7 @@ function spawnEnemy(type, x, y, o = {}) {
     tint: (Math.random() * SLIME.length) | 0,
   };
   if (type === 'jail') e.tint = Math.random() < 0.5 ? 0 : 1;
+  if (big) e.r0 = r0;
   // the strength of the hour it came at; it keeps growing from there (growEnemies)
   e.hs = hpScale(t); e.ds = dmgScale(t);
   if (golden) {
@@ -7715,6 +7724,8 @@ function spawnElite(type) {
   return e;
 }
 function ringSwarm(type, n, k = 1) {
+  // 觉醒's giants close a ring with a third as many, a little further out
+  if (awakened()) { n = Math.max(4, Math.round(n * 0.3)); k *= 1.3; }
   const R = Math.max(viewW, viewH) * 0.55 * k + 40;
   const off = rand(0, TAU);
   for (let i = 0; i < n; i++) {
@@ -7723,6 +7734,7 @@ function ringSwarm(type, n, k = 1) {
   }
 }
 function crawlerRush(n) {
+  if (awakened()) n = Math.max(4, Math.round(n * 0.3));
   const a = rand(0, TAU), D = Math.max(viewW, viewH) * 0.6;
   const cx = P.x + Math.cos(a) * D, cy = P.y + Math.sin(a) * D;
   for (let i = 0; i < n; i++) {
@@ -7735,6 +7747,8 @@ function spawnMapChest() {
   const a = rand(0, TAU), d = rand(380, 560);
   G.items.push({ type: 'chest', x: P.x + Math.cos(a) * d, y: P.y + Math.sin(a) * d, t: 0, map: true });
 }
+// 觉醒's bosses: twice the size, five times the health, and they hit a third harder
+function awakenBoss(e) { e.r = Math.round(e.r * 2); e.hp *= 5; e.maxHp *= 5; e.dmg *= 1.3; }
 function spawnBoss() {
   const a = rand(0, TAU), d = Math.max(viewW, viewH) * 0.5, kind = bossKindAt(nightT()), B = BOSSES[kind];
   const e = spawnEnemy('boss', P.x + Math.cos(a) * d, P.y + Math.sin(a) * d, { flat: true });
@@ -7745,6 +7759,7 @@ function spawnBoss() {
   e.hp = e.maxHp = Math.round(BOSS_HP * hpScale(nightT()) / hpScale(BOSS_AT) * Math.pow(1.3, G.bossN - 1) * BOSSES[kind].hp);
   e.dmg = ENEMY.boss.dmg * dmgScale(nightT());
   e.speed = B.speed;
+  if (awakened()) awakenBoss(e);
   Object.assign(e, { act: 'chase', actT: 3, phase: 1, seqI: 0, sub: 0, spin: 0, waves: 0, dashes: 0, dashA: 0, face: 1 });
   G.boss = e;
   G.bossSeen = G.bossSeen || {};
@@ -7810,19 +7825,22 @@ function nextBlock() {
 function director(dt) {
   const t = nightT();
   const bossUp = G.boss && !G.boss.dead;
-  let rate = 1.3 + t / 60 * 0.7 + Math.max(0, t - 300) / 60 * 0.3;
+  // 觉醒's giants come a third as many or so, each taking the room of a crowd
+  const few = awakened() ? 0.3 : 1;
+  let rate = (1.3 + t / 60 * 0.7 + Math.max(0, t - 300) / 60 * 0.3) * few;
   if (bossUp) rate *= 0.35;
   G.spawnAcc += rate * dt;
-  const floor = bossUp ? 0 : Math.min(MAX_ENEMIES * 0.6, 12 + t / 60 * 10);
+  const floor = bossUp ? 0 : Math.min(MAX_ENEMIES * 0.6, 12 + t / 60 * 10) * few;
   if (G.enemies.length < floor) G.spawnAcc += dt * 6;
   while (G.spawnAcc >= 1) {
     G.spawnAcc -= 1;
-    if (G.enemies.length < MAX_ENEMIES) spawnEnemy(pickType(t));
+    if (G.enemies.length < MAX_ENEMIES * few) spawnEnemy(pickType(t));
   }
   while (G.evI < G.events.length && t >= G.events[G.evI].t) G.events[G.evI++].run();
   if (MODES[G.mode].endless && G.evI >= G.events.length) nextBlock();
   G.chestT -= dt;
-  if (G.chestT <= 0) { G.chestT = 55; spawnMapChest(); }
+  // a chest on the map every 55 seconds, or every 30 when 觉醒, when there's no end to the weapons she can carry
+  if (G.chestT <= 0) { G.chestT = awakened() ? 30 : 55; spawnMapChest(); }
 }
 
 // ======================================================================
@@ -9876,7 +9894,8 @@ function updateEnemies(dt) {
     }
     // touch damage
     const pdx = e.x - P.x, pdy = e.y - P.y;
-    if (e.dmg > 0 && e.touchK !== 0 && pdx * pdx + pdy * pdy < (e.r + P.r * 0.85) ** 2) hurtPlayer(e.dmg * (e.touchK || 1));
+    // (觉醒's giants bite only once she's well inside the edge of them)
+    if (e.dmg > 0 && e.touchK !== 0 && pdx * pdx + pdy * pdy < (e.r * (e.r0 ? 0.7 : 1) + P.r * 0.85) ** 2) hurtPlayer(e.dmg * (e.touchK || 1));
     // stragglers left far behind come back in from the edge
     if (Math.abs(pdx) > viewCut || Math.abs(pdy) > viewCut) {
       const p = edgePos(60);
@@ -13043,6 +13062,7 @@ function spawnRoomBoss() {
   e.hp = e.maxHp * (r.h.left || 1);
   e.dmg = ENEMY.boss.dmg * dmgScale(t);
   e.speed = B.speed;
+  if (awakened()) awakenBoss(e);
   Object.assign(e, { act: 'chase', actT: 2.5, phase: 1, seqI: 0, sub: 0, spin: 0, waves: 0, dashes: 0, dashA: 0, face: 1 });
   G.boss = e;
   $('bossName').textContent = B.bar;
@@ -14020,7 +14040,7 @@ function drawEnemies() {
     const frame = e.type === 'crawler' ? ((e.anim * 10) | 0) % 2 : e.type === 'jail' ? ((e.anim * 7) | 0) % 2 : e.type === 'heavy' || e.type === 'reg' || e.type === 'carpool' ? ((e.anim * 3) | 0) % 2 : 0;
     // each mob blinks on its own rhythm; banned ones keep their eyes shut
     const blink = banned || (e.anim + e.id * 0.37) % 3.1 < 0.14;
-    const s = enemySprite(e, banned ? 0 : frame, banned ? 'b' : e.flash > 0 ? 'f' : 'n', blink);
+    const s = enemySprite(e, banned ? 0 : frame, banned ? 'b' : e.flash > 0 ? 'f' : 'n', blink), k = e.r0 ? e.r / e.r0 : 1;
     const x = e.x + (banned ? rand(-1.3, 1.3) : 0);
     // a soft squash-and-stretch hop, feet kept on the ground
     const still = banned || e.stun > 0 || e.frozenT > 0 || e.paradeT > 0;
@@ -14035,16 +14055,16 @@ function drawEnemies() {
       ctx.strokeStyle = `rgba(240,180,60,${0.45 + Math.sin(e.anim * 5) * 0.2})`; ctx.lineWidth = 2.5;
       ctx.beginPath(); ctx.ellipse(e.x, e.y + e.r * 0.92, e.r * 1.15, e.r * 0.42, 0, 0, TAU); ctx.stroke();
     }
-    const dw = s.w * sx, dh = s.h * sy;
+    const dw = s.w * sx * k, dh = s.h * sy * k;
     if (e.quantT > 0) {
       ctx.imageSmoothingEnabled = false;
-      ctx.drawImage(pixelated(s), x - dw / 2, e.y + s.h / 2 - dh, dw, dh);
+      ctx.drawImage(pixelated(s), x - dw / 2, e.y + s.h * k / 2 - dh, dw, dh);
       ctx.imageSmoothingEnabled = true;
-    } else ctx.drawImage(s.c, x - dw / 2, e.y + s.h / 2 - dh, dw, dh);
+    } else ctx.drawImage(s.c, x - dw / 2, e.y + s.h * k / 2 - dh, dw, dh);
     if (e.frozenT > 0 && !banned) {
       const ice = SPR.ice(), iw = e.r * 3, ih = e.r * 3.1;
       ctx.globalAlpha = Math.min(1, e.frozenT / 0.25);
-      ctx.drawImage(ice.c, e.x - iw / 2, e.y + s.h / 2 - ih * 0.92, iw, ih);
+      ctx.drawImage(ice.c, e.x - iw / 2, e.y + s.h * k / 2 - ih * 0.92, iw, ih);
       ctx.globalAlpha = 1;
     }
     if (e.leash && !banned) drawBound(e, e.leash.hot);
@@ -15081,7 +15101,8 @@ function updateHud() {
   if (sec !== hud.sec) {
     hud.sec = sec; $('clock').textContent = fmtTime(nightT()) + (G.room ? ' · 屋内' : '');
     // how much stronger the enemies have grown since nightfall
-    $('threat').textContent = `敌人 血×${hpScale(nightT()).toFixed(1)} 攻×${dmgScale(nightT()).toFixed(1)}`;
+    const aw = awakened();
+    $('threat').textContent = `${aw ? '巨型' : ''}敌人 血×${(hpScale(nightT()) * (aw ? 5 : 1)).toFixed(1)} 攻×${(dmgScale(nightT()) * (aw ? 1.3 : 1)).toFixed(1)}`;
   }
   if (G.kills !== hud.kills) { hud.kills = G.kills; $('kills').textContent = '击杀 ' + G.kills; }
   const sk = $('skill');
