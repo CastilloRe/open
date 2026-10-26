@@ -1046,21 +1046,47 @@ const WEAPONS = {
       { cd: 2.8, r: 240, pct: 0.24, dmg: 14 },
     ],
   },
-  // 锁链: a chain with a dart on the end, flung out to string enemies up and yanked back to drag them in and bind them
+  // 锁链: a dart on a chain that hooks one enemy; it runs from her for all it's worth and drags her along behind it
   shackle: {
-    name: '锁链', g: '锁', desc: '朝最近的敌人甩出一条带铁镖的锁链，一路串起碰到的敌人，再猛地一拽，把它们拖到身前锁住：锁住的敌人不能动、也不能伤人（精英只被锁在原地，BOSS 只是减速）。',
-    evo: { need: 'ratelimit', name: '铁索连环', desc: '四条更长的锁链，烧得通红；拖回来的敌人被铁索连成一串，打中其中一个，链上的其他敌人一起受到 40% 的伤害。' },
+    name: '锁链', g: '锁', desc: '朝敌人甩出带铁镖的锁链，直接拴住一只怪物：它会拼命朝远离你的方向逃，不会再扑向你，一边被锁链勒得掉血，一边把挡路的敌人撞开；链子绷紧时它拖着你一起走，绷直的锁链扫到的敌人也会受伤。最多三条，BOSS 拴不住。',
+    evo: { need: 'ratelimit', name: '铁索连环', desc: '三条烧红的锁链，拴得更久；锁链扫过的敌人着火，拴住的怪物一死，锁链立刻缠上它身边的下一只。' },
     lv: [
-      { cd: 2.2, n: 1, dmg: 20, len: 260, grab: 4, lock: 1.0 },
-      { cd: 2.2, n: 1, dmg: 27, len: 270, grab: 4, lock: 1.0 },
-      { cd: 2.0, n: 2, dmg: 27, len: 280, grab: 5, lock: 1.2 },
-      { cd: 2.0, n: 2, dmg: 34, len: 295, grab: 6, lock: 1.3 },
-      { cd: 1.8, n: 3, dmg: 40, len: 310, grab: 6, lock: 1.4 },
-      { cd: 1.6, n: 4, dmg: 48, len: 350, grab: 8, lock: 1.8 },
+      { cd: 1.8, n: 1, dmg: 20, len: 170, dur: 3.0 },
+      { cd: 1.8, n: 1, dmg: 27, len: 180, dur: 3.2 },
+      { cd: 1.6, n: 2, dmg: 27, len: 190, dur: 3.4 },
+      { cd: 1.6, n: 2, dmg: 34, len: 200, dur: 3.6 },
+      { cd: 1.4, n: 2, dmg: 40, len: 215, dur: 3.8 },
+      { cd: 1.2, n: 3, dmg: 48, len: 240, dur: 4.5 },
+    ],
+  },
+  // 反向传播: a ball of light that bounces back off the edges of the screen, to and fro through whatever is in the way
+  backprop: {
+    name: '反向传播', g: '反', desc: '射出一颗带「∇」的梯度球，碰到屏幕边缘就反弹回来，在屏幕里来回乱弹，穿过的敌人都会受伤。',
+    evo: { need: 'stream', name: '梯度爆炸', desc: '四颗更大的梯度球，每撞一次屏幕边缘就炸开一次。' },
+    lv: [
+      { cd: 3.0, n: 1, dmg: 14, size: 10, dur: 3.0 },
+      { cd: 3.0, n: 1, dmg: 19, size: 10, dur: 3.0 },
+      { cd: 2.8, n: 2, dmg: 19, size: 11, dur: 3.2 },
+      { cd: 2.8, n: 2, dmg: 24, size: 12, dur: 3.4 },
+      { cd: 2.6, n: 3, dmg: 28, size: 13, dur: 3.6 },
+      { cd: 2.4, n: 4, dmg: 30, size: 16, dur: 4.0 },
+    ],
+  },
+  // 头脑风暴: a whirlwind of ideas that wanders after the crowd, whirling the small ones round in it and flinging them out
+  storm: {
+    name: '头脑风暴', g: '旋', desc: '在敌人扎堆的地方刮起一股旋风，追着敌人群游荡：碰到的小怪被卷进去转圈、持续受伤，风停时被甩飞出去（精英和机房 IP 卷不动，只会减速）。',
+    evo: { need: 'area', name: '集思广益', desc: '三股更大的风暴，卷得更多；风停时轰地炸开，把周围的敌人掀飞。' },
+    lv: [
+      { cd: 5.0, n: 1, dmg: 6, r: 46, dur: 4.0 },
+      { cd: 5.0, n: 1, dmg: 8, r: 50, dur: 4.0 },
+      { cd: 4.6, n: 1, dmg: 9, r: 56, dur: 4.5 },
+      { cd: 4.6, n: 2, dmg: 10, r: 60, dur: 4.5 },
+      { cd: 4.2, n: 2, dmg: 12, r: 66, dur: 5.0 },
+      { cd: 4.0, n: 3, dmg: 15, r: 84, dur: 5.5 },
     ],
   },
 };
-const STAT_LABEL = { dmg: '伤害', n: '数量', cd: '冷却', pierce: '穿透', rings: '圈数', size: '体积', boom: '爆炸伤害', boomR: '爆炸范围', r: '范围', slow: '减速', jumps: '推理步数', bloom: '绽放范围', dur: '持续', spin: '转速', len: '长度', wid: '宽度', range: '射程', root: '定身', stun: '震晕', pop: '溅射范围', freeze: '冻结', pct: '削减', grab: '串敌', lock: '锁住' };
+const STAT_LABEL = { dmg: '伤害', n: '数量', cd: '冷却', pierce: '穿透', rings: '圈数', size: '体积', boom: '爆炸伤害', boomR: '爆炸范围', r: '范围', slow: '减速', jumps: '推理步数', bloom: '绽放范围', dur: '持续', spin: '转速', len: '长度', wid: '宽度', range: '射程', root: '定身', stun: '震晕', pop: '溅射范围', freeze: '冻结', pct: '削减' };
 
 const CAT_CLASS = { atk: 'atk', def: 'def', grow: 'grow', mech: 'mech', ex: 'ex' };
 const TALENTS = [
@@ -1370,6 +1396,8 @@ const audio = (() => {
     wall() { noise(0.4, { vol: 0.08, freq: 500, type: 'lowpass', slide: 2 }); tone(160, 0.2, { type: 'triangle', vol: 0.05, slide: 0.6 }); },
     quant() { [1568, 1175, 784, 523].forEach((f, i) => tone(f, 0.05, { type: 'square', vol: 0.016, at: i * 0.035 })); },
     chain() { if (gate('chain', 120)) { noise(0.18, { vol: 0.07, freq: 1500, slide: 3 }); for (let i = 0; i < 5; i++) tone(rand(2300, 3400), 0.03, { type: 'square', vol: 0.01, at: i * 0.03 }); } },
+    bounce() { if (gate('bounce', 90)) tone(rand(880, 1180), 0.06, { type: 'sine', vol: 0.022, slide: 1.6 }); },
+    storm() { noise(1.2, { vol: 0.08, freq: 520, q: 0.6, slide: 2.2 }); },
     clank() { if (gate('clank', 100)) { tone(rand(820, 980), 0.14, { type: 'triangle', vol: 0.05, slide: 0.7 }); noise(0.09, { vol: 0.07, freq: 3200, q: 2 }); } },
     // the world: thunder, a tree rustling when she bumps it, a tree coming down
     thunder() { noise(0.12, { vol: 0.2, freq: 3200, q: 0.5 }); noise(1.8, { vol: 0.24, freq: 380, type: 'lowpass', slide: 0.35, at: 0.05 }); tone(52, 1.4, { vol: 0.14, slide: 0.6, at: 0.05 }); },
@@ -3228,7 +3256,7 @@ const SPR = {
     x.fillStyle = '#fff3e6'; disc(x, 0, 0, 4.3); x.fill();
     x.fillStyle = '#3b2416'; disc(x, -1.6, -0.3, 0.9); x.fill(); disc(x, 1.6, -0.3, 0.9); x.fill();
   }),
-  // the padlock on a bound enemy: a steel shackle and a brass body with a keyhole
+  // the padlock on a leashed enemy's collar: a steel shackle and a brass body with a keyhole
   padlock: () => sprite('padlock', 16, 20, x => {
     x.lineCap = 'round';
     x.beginPath(); x.moveTo(-3.6, 0); x.lineTo(-3.6, -4); x.arc(0, -4, 3.6, Math.PI, 0); x.lineTo(3.6, 0);
@@ -3466,7 +3494,7 @@ function newRun() {
   G = {
     time: 0, enemies: [], shots: [], ebullets: [], gems: [], items: [], zones: [], beams: [], stamps: [],
     parts: [], rings: [], texts: [], delayed: [], blooms: [], ult: null, flashT: 0,
-    kills: 0, banned: 0, breaks: 0, dmgBy: {}, links: [], nextId: 1, spawnAcc: 0, evI: 0, chestT: 35,
+    kills: 0, banned: 0, breaks: 0, dmgBy: {}, nextId: 1, spawnAcc: 0, evI: 0, chestT: 35,
     pendLv: 0, pendChest: 0, modal: null, modalAt: 0, ending: null, hitStop: 0, shake: 0, hurtFlash: 0,
     cam: { x: 0, y: 0 }, boss: null, decoy: null, gemCombo: 0, gemComboT: 0, map: pickMap(),
     trees: new Map(), near: [], wx: { kind: null, k: 0, next: rand(75, 100), last: null }, boltFlash: 0,
@@ -3778,7 +3806,6 @@ function hit(e, base, src, o = {}) {
   }
   if (!o.quiet) dmgText(e.x + rand(-6, 6), e.y - e.r - 4, d, crit, o.burn, e);
   sfx.hit();
-  if (e.link && e.chainT > 0 && !o.linked) for (const x of e.link) if (x !== e && !x.dead && x.chainT > 0) hit(x, base * 0.4, 'shackle', { quiet: true, noCrit: true, noBurst: true, linked: true });
   if (crit && P.talents.burst && !o.noBurst && Math.random() < 0.3) {
     const x = e.x, y = e.y;
     later(0.05, () => explode(x, y, 55 * P.area, base * 0.8, 'burst', { color: '#ffd27a' }));
@@ -4961,22 +4988,51 @@ function updateWeapons(dt) {
         break;
       }
       case 'shackle': {
-        // 锁链: one chain at each of the nearest enemies (fanned out round the first if there are fewer of them)
-        w.hooks = (w.hooks || []).filter(h => hookTick(h, dt, s, evo));
-        G.links = G.links.filter(g => g.room === G.room && g.es.some(e => !e.dead && e.chainT > 0));
+        // 锁链: each of up to three chains has its own cooldown, counted from when it comes back to her hand
+        const n = Math.min(3, s.n + P.amount);
+        w.hooks = w.hooks || [];
+        for (const h of w.hooks.slice()) if (!hookTick(h, dt, s, evo)) { w.hooks.splice(w.hooks.indexOf(h), 1); w.ts[h.slot] = cdOf(s.cd); }
+        for (let i = 0; i < n; i++) {
+          if (w.hooks.some(h => h.slot === i)) continue;
+          w.ts[i] = (w.ts[i] == null ? i * 0.3 : w.ts[i]) - dt;
+          if (w.ts[i] > 0) continue;
+          const tg = leashTarget(s.len * 1.5 * P.area);
+          if (!tg) { w.ts[i] = 0.2; continue; }
+          tg.hooking = true;
+          w.hooks.push({ slot: i, e: tg, ext: 0, a: Math.atan2(tg.y - P.y, tg.x - P.x), st: 'out', t: 0, m: castMult(w), room: G.room, hit: new Map(), acc: 0, sweep: 0, wob: Math.random() < 0.5 ? 1 : -1, hot: evo });
+          sfx.chain();
+          P.aimX = tg.x - P.x; P.aimY = tg.y - P.y;
+          if (!P.moving && !P.dash) { P.face = tg.x >= P.x ? 1 : -1; playAnim(['atk1', 'atk2', 'atk3'], 0.32, 0); }
+        }
+        break;
+      }
+      case 'backprop': {
+        // 反向传播: the balls go off toward the nearest enemy, fanned out
         w.t -= dt;
         if (w.t > 0) break;
-        const L = s.len * P.area, n = s.n + P.amount, list = nearestList(P.x, P.y, L, n);
-        if (!list.length) { w.t = 0.2; break; }
         w.t = cdOf(s.cd);
-        const m = castMult(w), a0 = Math.atan2(list[0].y - P.y, list[0].x - P.x);
+        const tg = nearest(P.x, P.y, 600), a0 = tg ? Math.atan2(tg.y - P.y, tg.x - P.x) : rand(0, TAU);
+        const m = castMult(w), n = s.n + P.amount, sp = 520 * P.pspeed, r = s.size * (1 + (P.area - 1) * 0.5);
         for (let i = 0; i < n; i++) {
-          const tg = list[i], a = tg ? Math.atan2(tg.y - P.y, tg.x - P.x) : a0 + (i % 2 ? 1 : -1) * Math.ceil(i / 2) * 0.45;
-          later(i * 0.06, () => { if (P && w.hooks) w.hooks.push(newHook(a, L, m)); });
+          const a = a0 + (i - (n - 1) / 2) * 0.5;
+          shot({ kind: 'ball', x: P.x, y: P.y - 16 * P.size, vx: Math.cos(a) * sp, vy: Math.sin(a) * sp, r, dmg: s.dmg * m, pierce: 9999, life: s.dur * P.dur, src: 'backprop', hitMap: new Map(), trail: [], evo });
         }
-        sfx.chain();
-        P.aimX = list[0].x - P.x; P.aimY = list[0].y - P.y;
-        if (!P.moving && !P.dash) { P.face = list[0].x >= P.x ? 1 : -1; playAnim(['atk1', 'atk2', 'atk3'], 0.32, 0); }
+        sfx.bounce();
+        break;
+      }
+      case 'storm': {
+        // 头脑风暴: whirlwinds raised where the crowd is thickest
+        w.t -= dt;
+        if (w.t > 0) break;
+        const R = s.r * P.area, n = s.n + Math.floor(P.amount / 2), spots = denseSpots(n, R);
+        if (!spots.length) { w.t = 0.3; break; }
+        w.t = cdOf(s.cd);
+        const m = castMult(w), life = s.dur * P.dur;
+        for (let i = 0; i < n; i++) {
+          const sp = spots[i % spots.length];
+          G.zones.push({ kind: 'storm', x: sp.x + rand(-30, 30), y: sp.y + rand(-30, 30), r: R, life, max: life, dmg: s.dmg * m, evo, carried: [], cap: evo ? 14 : 8, acc: 0, spin: rand(0, TAU), retarget: 0.6, tx: sp.x, ty: sp.y });
+        }
+        sfx.storm();
         break;
       }
       case 'captcha': {
@@ -5251,63 +5307,111 @@ function lash(dx, dy, s, m) {
   });
   G.zones.push({ kind: 'lash', x: ox, y: oy, dx, dy, len: L, wd, r: L, life: 0.24, max: 0.24, flip: Math.random() < 0.5 ? 1 : -1 });
 }
-// 锁链: the dart flies out along its line, stringing whatever it touches onto the chain, until it has its fill or the
-// chain runs out; then she yanks it back, and the small ones are dragged in like beads on a string to a stop in front of
-// her, hit again and bound: for a moment they can't move or hurt anyone. The big ones are bound where they stand for half
-// as long, and DAN and the golden slime are only hurt and slowed. 铁索连环 links the ones it brings in, so a blow to one is
-// felt down the chain
+// 锁链: the dart flies at an enemy and hooks it. From then on it only wants to get away from her: it runs straight off,
+// strangled by the chain a little every half second and barging aside whatever is in its way, and when the chain goes taut
+// it drags her along after it (the big ones harder); the taut chain itself hurts whatever it sweeps across. When time is up
+// the chain gives a last yank and comes back. DAN and the golden slime can't be leashed. 铁索连环's chains are red-hot and
+// set what they sweep alight, and when the leashed one dies the chain wraps round the nearest one to it instead
 const hookFrom = () => ({ x: P.x + P.face * 10, y: P.y - 18 * P.size });
-function newHook(a, L, m) {
-  return { a, dx: Math.cos(a), dy: Math.sin(a), ext: 0, L, st: 'out', caught: [], m, t: 0, room: G.room, wob: Math.random() < 0.5 ? 1 : -1 };
+function leashTarget(R) {
+  let best = null, bd = R * R;
+  for (const e of G.enemies) {
+    if (!targetable(e) || e.boss || e.leash || e.hooking || e.type === 'gold') continue;
+    const d = (e.x - P.x) ** 2 + (e.y - P.y) ** 2;
+    if (d < bd) { bd = d; best = e; }
+  }
+  return best;
+}
+function letGo(h) {
+  if (h.e) { if (h.e.leash === h) h.e.leash = null; h.e.hooking = false; }
+  h.st = 'back';
 }
 function hookTick(h, dt, s, evo) {
-  if (h.room !== G.room) return false;
-  const o = hookFrom();
+  const e = h.e, o = hookFrom();
+  if (h.room !== G.room) { letGo(h); return false; }
   h.t += dt;
-  h.caught = h.caught.filter(c => !c.e.dead && !(c.e.banned > 0));
+  if (h.st === 'back') { h.ext -= 2200 * dt; return h.ext > 0; }
+  const gone = e.dead || e.banned > 0 || e.paradeT > 0;
   if (h.st === 'out') {
-    const from = h.ext;
-    h.ext = Math.min(h.L, h.ext + 1500 * P.pspeed * dt);
-    const ax = o.x + h.dx * from, ay = o.y + h.dy * from, bx = o.x + h.dx * h.ext, by = o.y + h.dy * h.ext;
-    forNear((ax + bx) / 2, (ay + by) / 2, (h.ext - from) / 2 + 60, e => {
-      if (h.caught.length >= s.grab || e.banned > 0 || e.paradeT > 0 || e.hooked === h || segDist(e.x, e.y, ax, ay, bx, by) > e.r + 10) return;
-      const held = e.wrapped || (e.hooked && e.hooked.st !== 'back');
-      e.hooked = h;
-      hit(e, s.dmg * h.m, 'shackle');
-      if (e.dead || held) return;
-      if (e.boss || e.type === 'gold') { e.slowT = Math.max(e.slowT, 0.8); e.slowAmt = Math.max(e.slowAmt, 0.5); return; }
-      h.caught.push({ e, at: (e.x - o.x) * h.dx + (e.y - o.y) * h.dy, big: !!(e.heavy || e.elite || e.type === 'reg') });
-      e.chainT = Math.max(e.chainT || 0, 0.5);
-      sfx.clank();
+    if (gone) { letGo(h); return true; }
+    const tx = e.x, ty = e.y - e.r * 0.2, d = Math.hypot(tx - o.x, ty - o.y);
+    h.a = Math.atan2(ty - o.y, tx - o.x);
+    h.ext = Math.min(d, h.ext + 1500 * P.pspeed * dt);
+    if (h.ext < d) return true;
+    hit(e, s.dmg * h.m, 'shackle');
+    if (e.dead) { letGo(h); return true; }
+    e.hooking = false; e.leash = h; h.st = 'leash'; h.life = s.dur * P.dur;
+    sfx.clank();
+    return true;
+  }
+  // leashed
+  if (gone) {
+    const next = evo && !e.banned ? nearestFree(e.x, e.y, 170) : null;
+    if (!next) { letGo(h); return true; }
+    h.e = next; next.leash = h; h.life += 0.5;
+    hit(next, s.dmg * h.m, 'shackle');
+    ring(next.x, next.y, 6, 34, 0.3, '#ffb45a', 3);
+    sfx.clank();
+    return true;
+  }
+  const big = e.heavy || e.elite || e.type === 'reg';
+  let dx = e.x - P.x, dy = e.y - P.y, d = Math.hypot(dx, dy) || 1;
+  let step = 0;
+  if (!(e.stun > 0 || e.frozenT > 0)) {
+    // off it runs, weaving a little
+    step = Math.max(80, e.speed * 1.3) * (big ? 0.8 : 1) * (1 - 0.5 * (e.slowAmt || 0)) * dt;
+    const wv = Math.sin(h.t * 3 + e.id) * 0.35, ux = dx / d - dy / d * wv, uy = dy / d + dx / d * wv, ul = Math.hypot(ux, uy) || 1;
+    e.x += ux / ul * step; e.y += uy / ul * step;
+    e.hx = ux / ul; e.hy = uy / ul;
+  }
+  // a taut chain: what it ran past the end of drags her along, and it's held at the chain's length
+  const L = s.len * P.area;
+  dx = e.x - P.x; dy = e.y - P.y; d = Math.hypot(dx, dy) || 1;
+  h.taut = d > L * 0.97;
+  if (d > L) {
+    const pull = Math.min(d - L, step) * (big ? 0.75 : 0.55);
+    P.x += dx / d * pull; P.y += dy / d * pull;
+    dx = e.x - P.x; dy = e.y - P.y; d = Math.hypot(dx, dy) || 1;
+    if (d > L) { e.x = P.x + dx / d * L; e.y = P.y + dy / d * L; }
+  }
+  const again = (x, gap) => { const t0 = h.hit.get(x.id); if (t0 != null && G.time - t0 < gap) return false; h.hit.set(x.id, G.time); return true; };
+  if (h.hit.size > 300) h.hit.clear();
+  // strangled, a little at a time
+  h.acc += dt;
+  if (h.acc >= 0.5) { h.acc -= 0.5; hit(e, s.dmg * h.m * 0.5, 'shackle', { quiet: Math.random() < 0.5 }); }
+  // barging through the crowd
+  forNear(e.x, e.y, e.r + 50, x => {
+    if (x === e || x.banned > 0 || x.boss || (x.x - e.x) ** 2 + (x.y - e.y) ** 2 > (x.r + e.r) ** 2 || !again(x, 0.5)) return;
+    hit(x, s.dmg * h.m * 0.8, 'shackle', { kb: 150, kx: x.x - e.x, ky: x.y - e.y });
+  });
+  // the chain sweeping across whatever is between them
+  h.sweep += dt;
+  if (h.sweep >= 0.2) {
+    h.sweep -= 0.2;
+    const ex = e.x, ey = e.y - e.r * 0.2;
+    forNear((o.x + ex) / 2, (o.y + ey) / 2, d / 2 + 40, x => {
+      if (x === e || x.banned > 0 || segDist(x.x, x.y, o.x, o.y, ex, ey) > x.r + 7 || !again(x, 0.5)) return;
+      hit(x, s.dmg * h.m * 0.6, 'shackle', { quiet: Math.random() < 0.4 });
+      if (evo && !x.dead) { x.burnT = 2.5; x.burnDps = Math.max(x.burnDps, s.dmg * 0.6); x.burnSrc = 'shackle'; }
     });
-    if (h.ext >= h.L || h.caught.length >= s.grab) { h.st = 'yank'; h.caught.sort((a, b) => a.at - b.at); }
-  } else if (h.st === 'yank') {
-    const stop = 90 + P.r;
-    h.ext = Math.max(stop, h.ext - 1100 * dt);
-    let i = 0;
-    for (const c of h.caught) {
-      c.e.chainT = Math.max(c.e.chainT, 0.3);
-      if (c.big) continue;
-      const along = Math.min(c.at, Math.max(h.ext, stop + i++ * 22)), k = Math.min(1, dt * 16);
-      c.e.x += (o.x + h.dx * along - c.e.x) * k; c.e.y += (o.y + h.dy * along - c.e.y) * k;
-    }
-    if (h.ext <= stop) {
-      h.st = 'back';
-      const es = [];
-      for (const c of h.caught) {
-        hit(c.e, s.dmg * h.m * 0.75, 'shackle');
-        if (c.e.dead) continue;
-        c.e.chainT = s.lock * P.dur * (c.big ? 0.5 : 1); c.e.wrapped = true;
-        es.push(c.e);
-      }
-      if (evo && es.length > 1) { for (const e of es) e.link = es; G.links.push({ es, room: G.room }); }
-      if (es.length) { sfx.clank(); shake(1.5); }
-    }
-  } else {
-    h.ext -= 2200 * dt;
-    if (h.ext <= 0) return false;
+  }
+  h.life -= dt;
+  if (h.life <= 0 && !e.dead) {
+    hit(e, s.dmg * h.m * 0.8, 'shackle');
+    sfx.clank();
+    letGo(h);
   }
   return true;
+}
+// the nearest one to (x, y) that isn't on a chain already, for 铁索连环 to pass on to
+function nearestFree(x, y, R) {
+  let best = null, bd = R * R;
+  forNear(x, y, R, e => {
+    if (!targetable(e) || e.boss || e.leash || e.hooking || e.type === 'gold') return;
+    const d = (e.x - x) ** 2 + (e.y - y) ** 2;
+    if (d < bd) { bd = d; best = e; }
+  });
+  return best;
 }
 function chainFrom(start, s, m, evo, used) {
   const pts = [P.x, P.y - 24];
@@ -5354,6 +5458,26 @@ function updateShots(dt) {
           continue;
         }
       }
+    }
+    if (b.kind === 'ball') {
+      b.trail.push(b.x, b.y);
+      if (b.trail.length > 20) b.trail.splice(0, 2);
+      const c = G.cam, hw = viewW / 2 - b.r, hh = viewH / 2 - b.r;
+      let edge = false;
+      if (b.x < c.x - hw && b.vx < 0 || b.x > c.x + hw && b.vx > 0) { b.vx = -b.vx; edge = true; }
+      if (b.y < c.y - hh && b.vy < 0 || b.y > c.y + hh && b.vy > 0) { b.vy = -b.vy; edge = true; }
+      if (edge) {
+        b.hitMap.clear();
+        if (b.evo) explode(b.x, b.y, 70 * P.area, b.dmg * 0.8, 'backprop', { color: '#c49bff' });
+        else sfx.bounce();
+      }
+      forNear(b.x, b.y, b.r + 50, e => {
+        if (e.banned > 0 || (e.x - b.x) ** 2 + (e.y - b.y) ** 2 > (b.r + e.r) ** 2) return;
+        const last = b.hitMap.get(e.id);
+        if (last == null || G.time - last >= 0.4) { b.hitMap.set(e.id, G.time); hit(e, b.dmg, 'backprop', { kb: 60, kx: b.vx, ky: b.vy }); }
+      });
+      if (b.life <= 0) { b.dead = true; puff(b.x, b.y, 8, '#c9b6ff', 120, 0.4, 2.4, true); }
+      continue;
     }
     if (b.kind === 'orb') {
       if (b.trail) {
@@ -5416,7 +5540,7 @@ function updatePets(dt) {
     p.anim += dt; p.flash -= dt; p.biteT -= dt;
     let hurt = 0, by = null;
     forNear(p.x, p.y, p.r + 50, e => {
-      if (e.banned > 0 || e.stun > 0 || e.frozenT > 0 || e.chainT > 0 || e.paradeT > 0 || e.dmg <= 0) return;
+      if (e.banned > 0 || e.stun > 0 || e.frozenT > 0 || e.leash || e.stormT > 0 || e.paradeT > 0 || e.dmg <= 0) return;
       if ((e.x - p.x) ** 2 + (e.y - p.y) ** 2 > (e.r + p.r) ** 2) return;
       hurt += e.dmg * 1.2; by = e;
     });
@@ -5530,7 +5654,8 @@ function updateEnemies(dt) {
       continue;
     }
     if (e.frozenT > 0) { e.frozenT -= dt; continue; }
-    if (e.chainT > 0) { e.chainT -= dt; if (e.chainT <= 0) { e.wrapped = false; e.link = null; } continue; }
+    if (e.leash) continue;
+    if (e.stormT > 0) { e.stormT -= dt; continue; }
     if (e.paradeT > 0) { e.paradeT -= dt; continue; }
     if (e.type === 'gold') {
       // 金色史莱姆 darts away from her, weaving, and slips off after a while
@@ -6396,10 +6521,58 @@ function updateBullets(dt) {
   }
 }
 
+// 头脑风暴: the whirlwind drifts toward the busiest spot near her, picking up the small ones it touches (a few at most)
+// and whirling them round its eye, hurting everything in it four times a second; the big ones it only slows. When it dies
+// down it flings them out, and 集思广益 goes off with a bang
+function stormTick(z, dt) {
+  const R = z.r;
+  if (z.life <= 0) {
+    for (const c of z.carried) {
+      const e = c.e;
+      if (e.dead) continue;
+      const dx = e.x - z.x, dy = e.y - z.y, d = Math.hypot(dx, dy) || 1;
+      e.stormT = 0; e.kx += dx / d * 520; e.ky += dy / d * 520;
+      hit(e, z.dmg * 3, 'storm');
+    }
+    if (z.evo) explode(z.x, z.y, R * 1.6, z.dmg * 4, 'storm', { color: '#b9a4ff' });
+    else puff(z.x, z.y, 12, '#e6e0ff', 220, 0.5, 3);
+    return;
+  }
+  z.retarget -= dt;
+  if (z.retarget <= 0) {
+    z.retarget = 1;
+    const sp = denseSpots(1, R)[0];
+    if (sp) { z.tx = sp.x; z.ty = sp.y; } else { z.tx = P.x + rand(-160, 160); z.ty = P.y + rand(-120, 120); }
+  }
+  const dx = z.tx - z.x, dy = z.ty - z.y, d = Math.hypot(dx, dy) || 1;
+  z.x += dx / d * Math.min(d, 110 * dt); z.y += dy / d * Math.min(d, 110 * dt);
+  z.spin += dt * 7;
+  forNear(z.x, z.y, R + 40, e => {
+    if (e.banned > 0 || e.boss || e.leash || e.paradeT > 0 || e.stormT > 0 || (e.x - z.x) ** 2 + (e.y - z.y) ** 2 > (R + e.r) ** 2) return;
+    if (e.heavy || e.elite || e.type === 'reg' || e.type === 'gold' || z.carried.length >= z.cap) { e.slowT = Math.max(e.slowT, 0.3); e.slowAmt = Math.max(e.slowAmt, 0.5); return; }
+    z.carried.push({ e, a: Math.atan2(e.y - z.y, e.x - z.x), d: Math.hypot(e.x - z.x, e.y - z.y) });
+    e.stormT = 0.2;
+  });
+  z.carried = z.carried.filter(c => !c.e.dead && !(c.e.banned > 0));
+  for (const c of z.carried) {
+    c.a += dt * 6; c.d += (R * 0.55 - c.d) * Math.min(1, dt * 4);
+    c.e.x = z.x + Math.cos(c.a) * c.d; c.e.y = z.y + Math.sin(c.a) * c.d * 0.5;
+    c.e.stormT = 0.2;
+  }
+  z.acc += dt;
+  if (z.acc >= 0.25) {
+    z.acc -= 0.25;
+    forNear(z.x, z.y, R + 40, e => {
+      if (e.banned > 0 || (e.x - z.x) ** 2 + (e.y - z.y) ** 2 > (R + e.r) ** 2) return;
+      hit(e, z.dmg, 'storm', { quiet: Math.random() < 0.6 });
+    });
+  }
+}
 function updateZones(dt) {
   G.lures.length = 0;
   for (const z of G.zones) {
     z.life -= dt;
+    if (z.kind === 'storm') { stormTick(z, dt); continue; }
     if (z.kind === 'quake') {
       const r = z.R * Math.min(1, (1 - z.life / z.max) / 0.8);
       forNear(z.x, z.y, r + 60, e => {
@@ -7526,6 +7699,309 @@ LIB.patches = [
   }),
 ];
 
+// 地牢: flagstones laid in rows with moss and cracks, stone pillars standing about like trees (and coming down like them),
+// bones, barrels and chains on the floor, braziers for lamps throwing sparks, and will-o'-the-wisps drifting up
+function paintFlagstones(x, S) {
+  const rnd = seeded(711), H = S / 10;
+  x.fillStyle = '#121218'; x.fillRect(0, 0, S, S);
+  for (let j = 0; j < 10; j++) {
+    // like the planks: each row starts somewhere along and comes round to meet itself, so the tile repeats without a seam
+    const off = rnd() * S;
+    let used = 0;
+    while (used < S) {
+      let L = Math.min(56 + rnd() * 50, S - used);
+      if (S - used - L < 30) L = S - used;
+      const v = 40 + rnd() * 16 | 0, tint = rnd() * 6 | 0, crack = rnd() < 0.3 ? [8 + rnd() * (L - 16), rnd()] : null, moss = rnd() < 0.25;
+      const stone = X => {
+        const y0 = j * H;
+        x.fillStyle = `rgb(${v - 4 + tint},${v - 2},${v + 6})`; rrPath(x, X + 2, y0 + 2, L - 4, H - 4, 5); x.fill();
+        x.fillStyle = 'rgba(255,255,255,0.05)'; rrPath(x, X + 3, y0 + 3, L - 6, 6, 3); x.fill();
+        x.fillStyle = 'rgba(0,0,0,0.18)'; x.fillRect(X + 4, y0 + H - 8, L - 8, 4);
+        if (crack) {
+          x.strokeStyle = 'rgba(10,10,14,0.6)'; x.lineWidth = 1;
+          x.beginPath(); x.moveTo(X + crack[0], y0 + 4); x.lineTo(X + crack[0] + 6 - crack[1] * 12, y0 + H * 0.5); x.lineTo(X + crack[0] - 4, y0 + H - 5); x.stroke();
+        }
+        if (moss) for (let m = 0; m < 6; m++) { x.fillStyle = 'rgba(70,110,50,0.35)'; disc(x, X + 4 + (m * 37) % (L - 8), y0 + H - 5 - (m % 3) * 2, 2.5); x.fill(); }
+      };
+      const X = (off + used) % S;
+      stone(X); if (X + L > S) stone(X - S);
+      used += L;
+    }
+  }
+}
+const DUNGEON = {
+  // a fluted stone pillar, cracked and mossy, an iron ring and a length of chain on most; one has lost its top
+  pillar: k => sprite('pillar' + k, 80, 172, x => {
+    const rnd = seeded(721 + k);
+    x.fillStyle = 'rgba(0,0,0,0.4)'; x.beginPath(); x.ellipse(0, 64, 34, 9, 0, 0, TAU); x.fill();
+    x.fillStyle = '#4a4a54'; x.fillRect(-28, 46, 56, 18); x.fillStyle = '#5c5c66'; x.fillRect(-28, 46, 56, 4);
+    const g = x.createLinearGradient(-20, 0, 20, 0);
+    g.addColorStop(0, '#3a3a44'); g.addColorStop(0.35, '#7a7a86'); g.addColorStop(1, '#2e2e36');
+    x.fillStyle = g; x.fillRect(-20, -62, 40, 108);
+    x.strokeStyle = 'rgba(20,20,26,0.45)'; x.lineWidth = 1.2;
+    for (const fx of [-12, -4, 4, 12]) { x.beginPath(); x.moveTo(fx, -60); x.lineTo(fx, 44); x.stroke(); }
+    x.fillStyle = '#5c5c66'; x.fillRect(-30, -76, 60, 16); x.fillStyle = '#6e6e7a'; x.fillRect(-30, -76, 60, 4); x.fillStyle = '#44444e'; x.fillRect(-24, -62, 48, 4);
+    x.strokeStyle = 'rgba(12,12,16,0.8)'; x.lineWidth = 1.4;
+    for (let i = 0; i < 2; i++) {
+      let cx = (rnd() - 0.5) * 30, cy = -50 + rnd() * 60;
+      x.beginPath(); x.moveTo(cx, cy);
+      for (let s = 0; s < 4; s++) { cx += (rnd() - 0.5) * 10; cy += 6 + rnd() * 8; x.lineTo(cx, cy); }
+      x.stroke();
+    }
+    for (let i = 0; i < 16; i++) { x.fillStyle = `rgba(${70 + rnd() * 30 | 0},${110 + rnd() * 40 | 0},50,0.7)`; disc(x, (rnd() - 0.5) * 50, i < 5 ? -62 + rnd() * 6 : 34 + rnd() * 26, 2 + rnd() * 3); x.fill(); }
+    if (k !== 1) {
+      x.strokeStyle = '#2a2a30'; x.lineWidth = 2.5; disc(x, 0, -34, 5); x.stroke(); x.strokeStyle = '#8a8a94'; x.lineWidth = 1; x.stroke();
+      for (let i = 0; i < 6; i++) { x.beginPath(); x.ellipse(i % 2 ? 0.5 : -0.5, -26 + i * 6, i % 2 ? 1.2 : 2.6, 3, 0, 0, TAU); x.strokeStyle = '#2a2a30'; x.lineWidth = 2.2; x.stroke(); x.strokeStyle = '#6a6a74'; x.lineWidth = 0.9; x.stroke(); }
+    }
+    if (k === 2) {
+      x.globalCompositeOperation = 'destination-out';
+      x.beginPath(); x.moveTo(-34, -82); x.lineTo(12, -82); x.lineTo(-4, -66); x.lineTo(-16, -72); x.lineTo(-34, -60); x.closePath(); x.fill();
+      x.globalCompositeOperation = 'source-over';
+    }
+  }),
+  bones: k => sprite('bones' + k, 40, 28, x => {
+    x.fillStyle = 'rgba(0,0,0,0.25)'; x.beginPath(); x.ellipse(0, 8, 16, 4, 0, 0, TAU); x.fill();
+    x.strokeStyle = '#d8d0bc'; x.lineCap = 'round'; x.lineWidth = 2.6;
+    x.beginPath(); x.moveTo(-14, 6); x.lineTo(6, 2); x.moveTo(-6, 9); x.lineTo(12, 4); x.stroke();
+    x.fillStyle = '#d8d0bc';
+    for (const [bx, by] of [[-14, 6], [6, 2], [-6, 9], [12, 4]]) { disc(x, bx, by - 1.2, 2); x.fill(); disc(x, bx, by + 1.2, 2); x.fill(); }
+    if (k % 2 === 0) {
+      x.fillStyle = '#e8e0cc'; disc(x, 2, -4, 6); x.fill(); x.fillRect(-1, 0, 6, 4);
+      x.fillStyle = '#2a2420'; disc(x, -0.2, -4, 1.6); x.fill(); disc(x, 4.2, -4, 1.6); x.fill(); x.fillRect(1.5, 0.5, 1, 2);
+    }
+  }),
+  barrel: () => sprite('barrel', 34, 40, x => {
+    x.fillStyle = 'rgba(0,0,0,0.35)'; x.beginPath(); x.ellipse(0, 14, 13, 4, 0, 0, TAU); x.fill();
+    x.fillStyle = vgrad(x, -14, 14, '#7a4a28', '#4a2a16'); rrPath(x, -11, -12, 22, 26, 6); x.fill();
+    x.fillStyle = '#2a2a30'; x.fillRect(-11, -6, 22, 2.4); x.fillRect(-11, 6, 22, 2.4);
+    x.fillStyle = '#5a3a20'; x.beginPath(); x.ellipse(0, -12, 10, 3.4, 0, 0, TAU); x.fill();
+    x.strokeStyle = 'rgba(30,16,8,0.6)'; x.lineWidth = 0.8; for (const dx of [-5, 0, 5]) { x.beginPath(); x.moveTo(dx, -9); x.lineTo(dx, 12); x.stroke(); }
+  }),
+  // a loose length of chain with a manacle on the end
+  irons: () => sprite('irons', 52, 24, x => {
+    const link = (col, w) => { x.strokeStyle = col; x.lineWidth = w; for (let i = 0; i < 7; i++) { x.beginPath(); x.ellipse(-18 + i * 5.5, Math.sin(i * 0.9) * 3, i % 2 ? 1.2 : 3, 2, 0, 0, TAU); x.stroke(); } };
+    link('#22222a', 2.2); link('#6a6a74', 0.9);
+    x.strokeStyle = '#2a2a30'; x.lineWidth = 3.4; x.beginPath(); x.ellipse(21, 1, 5, 3.4, 0, 0, TAU); x.stroke();
+    x.strokeStyle = '#7a7a84'; x.lineWidth = 1; x.stroke();
+  }),
+  candles: () => sprite('dcandles', 32, 32, x => {
+    x.save(); x.translate(0, -4); glow(x, 13, '#ffb860', 0.45); x.restore();
+    x.fillStyle = 'rgba(232,220,192,0.8)'; x.beginPath(); x.ellipse(0, 9, 10, 2.5, 0, 0, TAU); x.fill();
+    for (const [cx, h] of [[-6, 10], [1, 14], [7, 8]]) {
+      x.fillStyle = '#e8dcc0'; x.fillRect(cx - 2, 8 - h, 4, h);
+      x.fillStyle = '#ffcc66'; x.beginPath(); x.ellipse(cx, 5 - h, 1.6, 3, 0, 0, TAU); x.fill();
+    }
+  }),
+  stones: k => sprite('dstones' + k, 30, 18, x => {
+    const rnd = seeded(741 + k);
+    for (let i = 0; i < 4; i++) {
+      const sx = (rnd() - 0.5) * 20, sy = (rnd() - 0.5) * 8, r = 2 + rnd() * 3;
+      x.fillStyle = '#16161c'; disc(x, sx + 0.6, sy + 0.8, r); x.fill(); x.fillStyle = '#5a5a64'; disc(x, sx, sy, r); x.fill();
+    }
+  }),
+  // an iron brazier on three legs, burning; foot 30 below the centre
+  brazier: () => sprite('brazier', 46, 80, x => {
+    x.fillStyle = 'rgba(0,0,0,0.4)'; x.beginPath(); x.ellipse(0, 31, 12, 4, 0, 0, TAU); x.fill();
+    x.save(); x.translate(0, -22); glow(x, 24, '#ff9a40', 0.6); x.restore();
+    x.strokeStyle = '#2a2a30'; x.lineWidth = 2.4; x.lineCap = 'round';
+    x.beginPath(); x.moveTo(0, -10); x.lineTo(0, 22); x.moveTo(-9, 31); x.lineTo(0, 22); x.lineTo(9, 31); x.moveTo(0, 22); x.lineTo(0, 31); x.stroke();
+    x.fillStyle = '#3a3a42'; x.beginPath(); x.moveTo(-13, -16); x.lineTo(13, -16); x.lineTo(8, -8); x.lineTo(-8, -8); x.closePath(); x.fill();
+    x.fillStyle = '#ff7a2a'; x.beginPath(); x.moveTo(-11, -16); x.quadraticCurveTo(-8, -30, -2, -38); x.quadraticCurveTo(0, -28, 3, -34); x.quadraticCurveTo(10, -26, 11, -16); x.closePath(); x.fill();
+    x.fillStyle = '#ffd060'; x.beginPath(); x.moveTo(-6, -16); x.quadraticCurveTo(-4, -26, 0, -30); x.quadraticCurveTo(4, -24, 6, -16); x.closePath(); x.fill();
+  }),
+  wisp: () => sprite('wisp', 28, 34, x => {
+    glow(x, 13, '#6affd0', 0.45);
+    x.fillStyle = 'rgba(180,255,230,0.9)'; x.beginPath(); x.moveTo(0, -11); x.quadraticCurveTo(6, -2, 4, 4); x.quadraticCurveTo(0, 8, -4, 4); x.quadraticCurveTo(-6, -2, 0, -11); x.fill();
+    x.fillStyle = 'rgba(255,255,255,0.95)'; disc(x, 0, 2, 2.2); x.fill();
+  }),
+  ember: () => sprite('ember', 8, 8, x => { x.fillStyle = 'rgba(255,150,60,0.4)'; disc(x, 0, 0, 3); x.fill(); x.fillStyle = '#ffc060'; disc(x, 0, 0, 1.4); x.fill(); }),
+  dust: () => sprite('ddust', 8, 8, x => { x.fillStyle = 'rgba(200,190,170,0.8)'; disc(x, 0, 0, 1.6); x.fill(); }),
+};
+DUNGEON.patches = [
+  // moss creeping over the stones
+  () => patchSprite('p-moss', 300, 200, 751, (x, w, h, rnd) => {
+    x.fillStyle = '#1e2e1a'; x.fillRect(-w / 2, -h / 2, w, h);
+    scatter(rnd, w, h, 260, (px, py, r) => { x.fillStyle = `rgba(${60 + r() * 40 | 0},${100 + r() * 50 | 0},${40 + r() * 20 | 0},0.6)`; disc(x, px, py, 1.5 + r() * 3); x.fill(); });
+  }),
+  // a pool of dark water, catching a little light
+  () => patchSprite('p-dpool', 240, 160, 757, (x, w, h, rnd) => {
+    x.fillStyle = '#0a1018'; x.fillRect(-w / 2, -h / 2, w, h);
+    x.fillStyle = 'rgba(140,170,210,0.16)'; x.beginPath(); x.ellipse(-w * 0.08, -h * 0.1, w * 0.26, h * 0.06, -0.15, 0, TAU); x.fill();
+    x.strokeStyle = 'rgba(140,170,210,0.18)'; x.lineWidth = 1;
+    for (let i = 1; i < 4; i++) { x.beginPath(); x.ellipse(w * 0.1, h * 0.08, i * 9, i * 4, 0, 0, TAU); x.stroke(); }
+  }),
+  // rubble and gravel where the ceiling came down
+  () => patchSprite('p-rubble', 280, 190, 761, (x, w, h, rnd) => {
+    x.fillStyle = '#24242a'; x.fillRect(-w / 2, -h / 2, w, h);
+    scatter(rnd, w, h, 120, (px, py, r) => {
+      const rr = 1.5 + r() * 5, v = 70 + r() * 30 | 0;
+      x.fillStyle = '#16161a'; disc(x, px + 1, py + 1.2, rr); x.fill();
+      x.fillStyle = `rgb(${v},${v},${v + 10})`; disc(x, px, py, rr); x.fill();
+    });
+  }),
+  // an old summoning circle, chalked in red and faintly glowing, runes round the rim
+  () => sprite('p-circle', 260, 180, x => {
+    x.save(); x.scale(1, 0.6);
+    x.strokeStyle = 'rgba(200,60,80,0.45)'; x.lineWidth = 3; disc(x, 0, 0, 110); x.stroke();
+    x.lineWidth = 1.6; disc(x, 0, 0, 92); x.stroke();
+    x.beginPath(); for (let i = 0; i <= 5; i++) { const a = -Math.PI / 2 + i * 2 * TAU / 5; x.lineTo(Math.cos(a) * 92, Math.sin(a) * 92); } x.stroke();
+    x.lineWidth = 1.4; x.lineCap = 'round';
+    for (let i = 0; i < 16; i++) {
+      const a = i / 16 * TAU, k = i % 4;
+      x.save(); x.translate(Math.cos(a) * 101, Math.sin(a) * 101); x.rotate(a + Math.PI / 2);
+      x.beginPath(); x.moveTo(0, -5); x.lineTo(0, 5);
+      if (k === 0) { x.moveTo(0, -5); x.lineTo(4, -1); } else if (k === 1) { x.moveTo(-3, -2); x.lineTo(3, 2); } else if (k === 2) { x.moveTo(0, 0); x.lineTo(-4, 4); } else { x.moveTo(0, -2); x.lineTo(4, -5); x.moveTo(0, 2); x.lineTo(4, -1); }
+      x.stroke(); x.restore();
+    }
+    x.restore();
+  }),
+  // an iron grate over a drain
+  () => sprite('p-grate', 120, 80, x => {
+    x.save(); x.scale(1, 0.62);
+    x.fillStyle = '#060608'; rrPath(x, -48, -48, 96, 96, 4); x.fill();
+    x.strokeStyle = '#3a3a42'; x.lineWidth = 5; rrPath(x, -48, -48, 96, 96, 4); x.stroke();
+    x.lineWidth = 4; for (let i = -32; i <= 32; i += 16) { x.beginPath(); x.moveTo(i, -46); x.lineTo(i, 46); x.stroke(); }
+    x.strokeStyle = '#5a5a64'; x.lineWidth = 1.2; for (let i = -32; i <= 32; i += 16) { x.beginPath(); x.moveTo(i - 1, -46); x.lineTo(i - 1, 46); x.stroke(); }
+    x.restore();
+  }),
+];
+
+// 沙漠绿洲: warm sand rippled by the wind, saguaros standing like trees, an oasis now and then, cattle skulls, clay pots,
+// tumbleweed and prickly pears, brass lanterns on poles, and sand blowing along the ground
+function paintSand(x, S) {
+  const rnd = seeded(811);
+  x.fillStyle = '#c8995a'; x.fillRect(0, 0, S, S);
+  for (let i = 0; i < 40; i++) {
+    const px = rnd() * S, py = rnd() * S, pr = 40 + rnd() * 90, light = rnd() < 0.5;
+    const stops = light ? ['rgba(255,226,170,0.3)', 'rgba(255,226,170,0)'] : ['rgba(150,100,50,0.25)', 'rgba(150,100,50,0)'];
+    wrapped(S, px, py, pr, (X, Y) => { x.fillStyle = rgrad(x, X, Y, pr, stops); disc(x, X, Y, pr); x.fill(); });
+  }
+  // ripples: short bowed strokes, a shadowed edge with a lit one under it
+  for (let i = 0; i < 160; i++) {
+    const px = rnd() * S, py = rnd() * S, w = 20 + rnd() * 40, bend = 3 + rnd() * 4;
+    wrapped(S, px, py, w + 6, (X, Y) => {
+      x.strokeStyle = 'rgba(140,90,40,0.28)'; x.lineWidth = 1.6; x.beginPath(); x.moveTo(X - w, Y); x.quadraticCurveTo(X, Y - bend, X + w, Y); x.stroke();
+      x.strokeStyle = 'rgba(255,232,180,0.3)'; x.lineWidth = 1.2; x.beginPath(); x.moveTo(X - w, Y + 2); x.quadraticCurveTo(X, Y - bend + 2, X + w, Y + 2); x.stroke();
+    });
+  }
+  for (let i = 0; i < 300; i++) { const px = rnd() * S, py = rnd() * S, a = rnd() * 0.25; x.fillStyle = rnd() < 0.5 ? `rgba(120,80,40,${a})` : `rgba(255,240,200,${a})`; x.fillRect(px, py, 1.4, 1.4); }
+}
+const DESERT = {
+  // a saguaro, ribbed and spiny, arms raised, a few flowers on top; it stands, shakes and falls like a tree
+  cactus: k => sprite('saguaro' + k, 110, 172, x => {
+    x.fillStyle = 'rgba(90,60,20,0.3)'; x.beginPath(); x.ellipse(0, 66, 34, 9, 0, 0, TAU); x.fill();
+    const arms = [[[0, 16], [-28, 16], [-28, -22]], [[0, -6], [26, -6], [26, -40]], [[0, 30], [24, 30], [24, 6]]];
+    const limbs = [[[0, 66], [0, -64]], ...[[0, 1], [1, 2], [0, 1, 2]][k % 3].map(i => arms[i])];
+    const pass = (col, w, off) => {
+      x.strokeStyle = col; x.lineCap = 'round'; x.lineJoin = 'round';
+      limbs.forEach((pts, j) => {
+        const k2 = j ? 0.7 : 1;
+        x.lineWidth = w * k2; x.beginPath();
+        pts.forEach(([px, py], i) => i ? x.lineTo(px + off * k2, py) : x.moveTo(px + off * k2, py));
+        x.stroke();
+      });
+    };
+    pass('#1e4a24', 26, 0); pass('#3a8a3a', 22, 0); pass('rgba(140,200,110,0.5)', 5, -5); pass('rgba(20,70,30,0.45)', 2, 4);
+    const rnd = seeded(821 + k);
+    x.fillStyle = 'rgba(255,250,220,0.75)';
+    for (let i = 0; i < 40; i++) { disc(x, (rnd() - 0.5) * 18, -60 + rnd() * 120, 0.7); x.fill(); }
+    for (const [fx, fy, c] of [[-5, -72, '#ff8ab0'], [5, -70, '#fff0c0'], [0, -76, '#ff6a9a']]) { x.fillStyle = c; disc(x, fx, fy, 3.4); x.fill(); x.fillStyle = '#ffd040'; disc(x, fx, fy, 1); x.fill(); }
+  }),
+  rock: k => sprite('drock' + k, 60, 40, x => {
+    const rnd = seeded(831 + k);
+    x.fillStyle = 'rgba(90,60,20,0.3)'; x.beginPath(); x.ellipse(0, 10, 24, 6, 0, 0, TAU); x.fill();
+    x.fillStyle = '#a8643a'; x.beginPath(); x.moveTo(-22, 10); x.lineTo(-18 + rnd() * 4, -8); x.lineTo(-4, -14 - rnd() * 4); x.lineTo(12, -10); x.lineTo(22, 10); x.closePath(); x.fill();
+    x.fillStyle = '#d0895a'; x.beginPath(); x.moveTo(-18, -6); x.lineTo(-4, -13); x.lineTo(10, -9); x.lineTo(2, -2); x.closePath(); x.fill();
+    x.strokeStyle = 'rgba(90,40,20,0.5)'; x.lineWidth = 1; x.beginPath(); x.moveTo(-20, 2); x.lineTo(20, 4); x.stroke();
+  }),
+  skull: () => sprite('cowskull', 48, 30, x => {
+    x.fillStyle = 'rgba(90,60,20,0.25)'; x.beginPath(); x.ellipse(0, 9, 16, 4, 0, 0, TAU); x.fill();
+    x.strokeStyle = '#efe6d0'; x.lineWidth = 3; x.lineCap = 'round';
+    x.beginPath(); x.moveTo(-6, -4); x.quadraticCurveTo(-16, -6, -20, -14); x.moveTo(6, -4); x.quadraticCurveTo(16, -6, 20, -14); x.stroke();
+    x.fillStyle = '#efe6d0'; x.beginPath(); x.moveTo(-8, -6); x.lineTo(8, -6); x.lineTo(5, 8); x.quadraticCurveTo(0, 11, -5, 8); x.closePath(); x.fill();
+    x.fillStyle = '#3a2a1a'; disc(x, -3.5, -1, 1.8); x.fill(); disc(x, 3.5, -1, 1.8); x.fill(); disc(x, -1.2, 6, 0.8); x.fill(); disc(x, 1.2, 6, 0.8); x.fill();
+  }),
+  pot: () => sprite('clay', 30, 36, x => {
+    x.fillStyle = 'rgba(90,60,20,0.3)'; x.beginPath(); x.ellipse(0, 12, 11, 3.5, 0, 0, TAU); x.fill();
+    x.fillStyle = rgrad(x, -3, -2, 14, ['#e0905a', '#b8603a', '#7a3a20']); x.beginPath(); x.ellipse(0, 2, 10, 10, 0, 0, TAU); x.fill();
+    x.fillStyle = '#9a4a2a'; x.fillRect(-4, -12, 8, 5); x.fillStyle = '#5a2a14'; x.beginPath(); x.ellipse(0, -12, 5, 1.8, 0, 0, TAU); x.fill();
+    x.strokeStyle = 'rgba(250,220,170,0.6)'; x.lineWidth = 1.2; x.beginPath(); x.moveTo(-9, 0); x.lineTo(9, 0); x.stroke();
+  }),
+  weed: () => sprite('tumble', 30, 28, x => {
+    x.fillStyle = 'rgba(90,60,20,0.25)'; x.beginPath(); x.ellipse(0, 10, 10, 3, 0, 0, TAU); x.fill();
+    const rnd = seeded(841);
+    x.strokeStyle = 'rgba(130,90,50,0.85)'; x.lineWidth = 1;
+    for (let i = 0; i < 26; i++) {
+      const a = rnd() * TAU, b = rnd() * TAU, r1 = 4 + rnd() * 6, r2 = 4 + rnd() * 6;
+      x.beginPath(); x.moveTo(Math.cos(a) * r1, -1 + Math.sin(a) * r1 * 0.85); x.quadraticCurveTo(rnd() * 6 - 3, rnd() * 6 - 4, Math.cos(b) * r2, -1 + Math.sin(b) * r2 * 0.85); x.stroke();
+    }
+  }),
+  dry: () => sprite('drygrass', 26, 20, x => {
+    x.strokeStyle = '#a88a4a'; x.lineWidth = 1.2; x.lineCap = 'round';
+    for (const [dx, h, lean] of [[-5, 9, -4], [-1, 12, -1], [2, 10, 3], [5, 7, 5]]) { x.beginPath(); x.moveTo(dx, 6); x.quadraticCurveTo(dx, 6 - h * 0.6, dx + lean, 6 - h); x.stroke(); }
+  }),
+  // prickly pear pads with a flower or two
+  pads: () => sprite('pads', 34, 36, x => {
+    x.fillStyle = 'rgba(90,60,20,0.25)'; x.beginPath(); x.ellipse(0, 12, 12, 3.5, 0, 0, TAU); x.fill();
+    for (const [px, py, a, s] of [[0, 4, 0, 1], [-6, -6, -0.5, 0.8], [6, -5, 0.5, 0.75]]) {
+      x.save(); x.translate(px, py); x.rotate(a);
+      x.fillStyle = '#4a9a4a'; x.beginPath(); x.ellipse(0, 0, 6 * s, 8 * s, 0, 0, TAU); x.fill(); x.strokeStyle = '#2a6a2a'; x.lineWidth = 1; x.stroke();
+      x.restore();
+    }
+    x.fillStyle = '#ff6a9a'; disc(x, -8, -13, 2.4); x.fill(); disc(x, 8, -11, 2); x.fill();
+  }),
+  // a brass lantern with star-shaped holes, hung from a pole; foot 30 below the centre
+  lantern: () => sprite('brasslantern', 40, 80, x => {
+    x.fillStyle = 'rgba(90,60,20,0.35)'; x.beginPath(); x.ellipse(0, 31, 10, 3.5, 0, 0, TAU); x.fill();
+    x.fillStyle = '#5a3a22'; x.fillRect(-2, -30, 4, 61); x.fillRect(-2, -30, 14, 3);
+    x.strokeStyle = '#3a2416'; x.lineWidth = 1; x.beginPath(); x.moveTo(10, -27); x.lineTo(10, -24); x.stroke();
+    x.save(); x.translate(10, -12); glow(x, 18, '#ffc060', 0.6); x.restore();
+    x.fillStyle = '#c8962e'; x.beginPath(); x.moveTo(10, -24); x.lineTo(16, -18); x.lineTo(16, -6); x.lineTo(10, -2); x.lineTo(4, -6); x.lineTo(4, -18); x.closePath(); x.fill();
+    x.fillStyle = '#ffe08a'; for (const [dx, dy] of [[-3, -15], [3, -15], [0, -10], [-3, -6], [3, -6]]) { disc(x, 10 + dx, dy, 1.3); x.fill(); }
+    x.fillStyle = '#8a6420'; x.beginPath(); x.moveTo(6, -24); x.lineTo(14, -24); x.lineTo(10, -28); x.closePath(); x.fill();
+  }),
+  grain: () => sprite('grain', 12, 6, x => { x.strokeStyle = 'rgba(240,215,160,0.9)'; x.lineWidth = 1.2; x.lineCap = 'round'; x.beginPath(); x.moveTo(-4, 0); x.lineTo(4, 0); x.stroke(); }),
+};
+DESERT.patches = [
+  // an oasis: a ring of grass and reeds round a pool of clear water
+  () => patchSprite('p-oasis', 320, 210, 851, (x, w, h, rnd) => {
+    x.fillStyle = '#6a8a34'; x.fillRect(-w / 2, -h / 2, w, h);
+    scatter(rnd, w, h, 220, (px, py, r) => { x.strokeStyle = `rgba(${110 + r() * 50 | 0},${150 + r() * 50 | 0},60,0.8)`; x.lineWidth = 1.2; x.beginPath(); x.moveTo(px, py); x.lineTo(px + (r() - 0.5) * 4, py - 5 - r() * 4); x.stroke(); });
+    x.fillStyle = '#2a8aa8'; x.beginPath(); x.ellipse(0, 4, w * 0.28, h * 0.22, 0, 0, TAU); x.fill();
+    x.fillStyle = '#4ab0c8'; x.beginPath(); x.ellipse(-4, 0, w * 0.24, h * 0.17, 0, 0, TAU); x.fill();
+    x.fillStyle = 'rgba(230,250,255,0.4)'; x.beginPath(); x.ellipse(-w * 0.08, -h * 0.06, w * 0.1, h * 0.025, -0.1, 0, TAU); x.fill();
+    x.strokeStyle = '#3a6a2a'; x.lineWidth = 1.6;
+    for (let i = 0; i < 14; i++) { const a = rnd() * TAU, rx = Math.cos(a) * w * 0.28, ry = 4 + Math.sin(a) * h * 0.22; x.beginPath(); x.moveTo(rx, ry); x.lineTo(rx + (rnd() - 0.5) * 4, ry - 12 - rnd() * 8); x.stroke(); }
+  }),
+  // dried mud, cracked into plates
+  () => patchSprite('p-cracked', 300, 200, 857, (x, w, h, rnd) => {
+    x.fillStyle = '#b07a48'; x.fillRect(-w / 2, -h / 2, w, h);
+    x.strokeStyle = 'rgba(80,46,20,0.7)'; x.lineWidth = 1.4;
+    for (let i = 0; i < 40; i++) {
+      let cx = (rnd() - 0.5) * w, cy = (rnd() - 0.5) * h;
+      x.beginPath(); x.moveTo(cx, cy);
+      for (let s = 0; s < 3; s++) { cx += (rnd() - 0.5) * 40; cy += (rnd() - 0.5) * 26; x.lineTo(cx, cy); }
+      x.stroke();
+    }
+  }),
+  // gravel and pebbles
+  () => patchSprite('p-gravel', 260, 170, 863, (x, w, h, rnd) => {
+    x.fillStyle = '#a07850'; x.fillRect(-w / 2, -h / 2, w, h);
+    scatter(rnd, w, h, 160, (px, py, r) => { x.fillStyle = `rgb(${150 + r() * 60 | 0},${110 + r() * 50 | 0},${80 + r() * 40 | 0})`; disc(x, px, py, 1.4 + r() * 3); x.fill(); });
+  }),
+  // a dune's shadowed side, ribbed by the wind
+  () => patchSprite('p-dune', 340, 200, 869, (x, w, h, rnd) => {
+    x.fillStyle = '#a8763e'; x.fillRect(-w / 2, -h / 2, w, h);
+    x.strokeStyle = 'rgba(240,200,140,0.35)'; x.lineWidth = 1.4;
+    for (let i = 0; i < 18; i++) {
+      const y = -h / 2 + i * h / 18 + rnd() * 4;
+      x.beginPath(); x.moveTo(-w / 2, y);
+      for (let px = -w / 2; px <= w / 2; px += 20) x.lineTo(px, y + Math.sin(px * 0.04 + i) * 4);
+      x.stroke();
+    }
+  }),
+];
+
 const MAPS = {
   garden: {
     name: '夜之庄园', g: '园', sub: '草坪、花丛、玫瑰和花园灯笼',
@@ -7639,6 +8115,45 @@ const MAPS = {
         const [f, a] = cycle(t, 18 + h2 * 14, h, 240);
         ctx.globalAlpha = a * 0.85;
         blit(LIB.glyph(LIB_GLYPHS[Math.floor(h2 * 997) % LIB_GLYPHS.length]), cx + h2 * 240 + Math.sin(t * 0.8 + h * 9) * 12, cy + 240 - f * 240);
+      });
+    },
+  },
+  dungeon: {
+    name: '地牢', g: '牢', sub: '石柱、火盆和飘着的鬼火',
+    base: [LAWN, paintFlagstones], patches: DUNGEON.patches,
+    decor: (h, k) => h < 0.06 ? DUNGEON.bones(k % 2) : h < 0.1 ? DUNGEON.barrel() : h < 0.13 ? DUNGEON.candles() : [() => DUNGEON.stones(0), DUNGEON.irons, () => DUNGEON.stones(1), () => DUNGEON.bones(1)][k % 4](),
+    lamp: () => DUNGEON.brazier(), glow: poolGlow('dungeon', '255,140,60'),
+    motes(t, L, R, T, B) {
+      // sparks going up off the braziers
+      for (const [lx, ly] of scatterLamps(L, R, T, B)) {
+        for (let i = 0; i < 4; i++) {
+          const f = (t * 0.7 + i / 4 + lx * 0.001) % 1;
+          ctx.globalAlpha = Math.sin(f * Math.PI);
+          blit(DUNGEON.ember(), lx + Math.sin(t * 3 + i * 2 + lx) * 6 * f, ly - 66 - f * 60);
+        }
+      }
+      // will-o'-the-wisps drifting up
+      drift(L, R, T, B, 320, 1, (cx, cy, h, h2) => {
+        if (h > 0.5) return;
+        const [f, a] = cycle(t, 14 + h2 * 10, h, 320);
+        ctx.globalAlpha = a * 0.8;
+        blit(DUNGEON.wisp(), cx + h2 * 320 + Math.sin(t * 0.8 + h * 13) * 24, cy + 320 - f * 320);
+      });
+    },
+  },
+  desert: {
+    name: '沙漠绿洲', g: '沙', sub: '仙人掌、沙丘和一汪绿洲',
+    base: [LAWN, paintSand], patches: DESERT.patches,
+    decor: (h, k) => h < 0.05 ? DESERT.skull() : h < 0.12 ? DESERT.rock(k % 3) : h < 0.16 ? DESERT.pot() : [DESERT.weed, DESERT.dry, DESERT.pads, DESERT.dry][k % 4](),
+    lamp: () => DESERT.lantern(), glow: () => GARDEN.lampGlow(),
+    // sand blowing along the ground
+    motes(t, L, R, T, B) {
+      ctx.globalCompositeOperation = 'source-over';
+      drift(L, R, T, B, 200, 3, (cx, cy, h, h2) => {
+        if (h > 0.7) return;
+        const [f, a] = cycle(t, 60 + h2 * 50, h, 200);
+        ctx.globalAlpha = a * 0.6;
+        blit(DESERT.grain(), cx + f * 200, cy + h2 * 200 + Math.sin(t * 2 + h * 9) * 4);
       });
     },
   },
@@ -7763,6 +8278,17 @@ const STUMP = {
     x.fillStyle = '#3a2416'; x.fillRect(-44, -6, 88, 12); x.fillStyle = '#4e3220'; x.fillRect(-44, -6, 88, 3);
     for (let i = 0; i < 9; i++) { x.fillStyle = SPINE_COL[i % 8]; x.fillRect(-40 + i * 9, -10, 7, 5); }
   }),
+  rubble: () => sprite('stump-rubble', 70, 34, x => {
+    x.fillStyle = 'rgba(0,0,0,0.35)'; x.beginPath(); x.ellipse(0, 8, 30, 6, 0, 0, TAU); x.fill();
+    x.fillStyle = '#4a4a54'; x.fillRect(-26, -2, 52, 10); x.fillStyle = '#5c5c66'; x.fillRect(-26, -2, 52, 3);
+    x.fillStyle = '#62626e'; x.beginPath(); x.moveTo(-18, -2); x.lineTo(-16, -10); x.lineTo(-6, -6); x.lineTo(2, -12); x.lineTo(12, -5); x.lineTo(18, -2); x.closePath(); x.fill();
+    for (const [rx, ry, rr] of [[-24, 9, 3], [22, 10, 2.5], [28, 4, 2]]) { x.fillStyle = '#55555f'; disc(x, rx, ry, rr); x.fill(); }
+  }),
+  cactus: () => sprite('stump-cactus', 40, 30, x => {
+    x.fillStyle = 'rgba(90,60,20,0.3)'; x.beginPath(); x.ellipse(0, 8, 14, 4, 0, 0, TAU); x.fill();
+    x.fillStyle = '#3a7a3a'; rrPath(x, -7, -6, 14, 14, 5); x.fill();
+    x.fillStyle = '#c8e0a0'; x.beginPath(); x.ellipse(0, -5, 6, 2.4, 0, 0, TAU); x.fill();
+  }),
   ash: () => sprite('stump-ash', 48, 30, x => {
     x.fillStyle = 'rgba(30,26,26,0.55)'; x.beginPath(); x.ellipse(0, 4, 20, 6, 0, 0, TAU); x.fill();
     x.fillStyle = '#2a201c'; x.fillRect(-8, -5, 16, 9); x.fillStyle = '#5a463a'; x.beginPath(); x.ellipse(0, -5, 8, 3, 0, 0, TAU); x.fill();
@@ -7804,6 +8330,17 @@ const FRUIT = {
     x.fillStyle = '#efe6d2'; x.fillRect(-7, 5, 16, 2);
     x.fillStyle = '#e8c04a'; x.fillRect(-5, -3, 10, 1.4); x.fillRect(-5, 0, 7, 1.2);
   }),
+  coin: () => sprite('coin', 22, 22, x => {
+    glow(x, 9, '#ffd860', 0.4);
+    x.fillStyle = '#8a6020'; disc(x, 0.6, 0.8, 6.5); x.fill();
+    x.fillStyle = rgrad(x, -2, -2, 8, ['#fff2a0', '#f0c040', '#b8862a']); disc(x, 0, 0, 6); x.fill();
+    x.strokeStyle = 'rgba(120,80,20,0.7)'; x.lineWidth = 1; disc(x, 0, 0, 4); x.stroke();
+  }),
+  pear: () => sprite('ppear', 22, 24, x => {
+    x.fillStyle = rgrad(x, -2, -3, 10, ['#ff9ac0', '#d8306a', '#8a1440']); x.beginPath(); x.ellipse(0, 1, 6, 7.5, 0, 0, TAU); x.fill();
+    x.fillStyle = '#3a8a3a'; x.beginPath(); x.ellipse(0, -7, 3.4, 1.6, 0, 0, TAU); x.fill();
+    x.fillStyle = 'rgba(255,240,200,0.8)'; for (const [dx, dy] of [[-2, -1], [2, 2], [-1, 4], [3, -3]]) { disc(x, dx, dy, 0.6); x.fill(); }
+  }),
   ram: () => sprite('ram', 30, 18, x => {
     x.fillStyle = '#1f7a3a'; x.fillRect(-12, -4, 24, 8);
     x.fillStyle = '#1a1a1a'; for (let i = 0; i < 4; i++) x.fillRect(-10 + i * 5.4, -3, 4, 5);
@@ -7820,6 +8357,8 @@ const TREE = {
   server: { make: k => SERVER.tower(k), foot: 56, r: 22, len: 115, crown: [-60, 28, 44], leaf: '#5fe0ff', fruit: 'ram', fruitCol: '#56ff9a', fruitName: '内存条', stump: 'metal' },
   maple: { make: k => MAPLE.tree(k), foot: 62, r: 15, len: 135, crown: [-86, 52, 28], leaf: '#ff8a3a', fruit: 'candy', fruitCol: '#e89a2a', fruitName: '枫糖', stump: 'wood' },
   library: { make: k => LIB.shelf(k), foot: 60, r: 26, len: 125, crown: [-66, 40, 40], leaf: '#efe6d2', fruit: 'book', fruitCol: '#c8963a', fruitName: '一本书', stump: 'shelf' },
+  dungeon: { make: k => DUNGEON.pillar(k), foot: 64, r: 20, len: 140, crown: [-72, 30, 30], leaf: '#8a8a94', fruit: 'coin', fruitCol: '#f0c040', fruitName: '金币', stump: 'rubble' },
+  desert: { make: k => DESERT.cactus(k), foot: 66, r: 13, len: 135, crown: [-62, 30, 30], leaf: '#7ac06a', fruit: 'pear', fruitCol: '#d8306a', fruitName: '仙人掌果', stump: 'cactus' },
 };
 const FALL_T = 0.55, DOWN_FOR = 50, FRUIT_EVERY = 40;
 // where a tree stands, if one does in this cell: off the walks and their edges, so it never blocks a path
@@ -8004,6 +8543,8 @@ const WEATHER = {
   server: [['rain', '机房漏水'], ['fog', '停电'], ['wind', '空调全开']],
   maple: [['rain', '秋雨'], ['fog', '晨雾'], ['wind', '秋风']],
   library: [['fog', '灰尘'], ['wind', '穿堂风']],
+  dungeon: [['fog', '瘴气'], ['wind', '阴风']],
+  desert: [['wind', '沙尘暴'], ['fog', '热浪']],
 };
 const WX_DESC = {
   rain: '会有雷劈中敌人，也会点着树；雨里思维链和雷击伤害 +30%，燃烧很快被浇灭，冻住的敌人冻得更久',
@@ -8011,7 +8552,7 @@ const WX_DESC = {
   wind: '风把敌人往一边推，树被吹得直掉果子',
 };
 // the fog's colour, and how thick it gets at the edge of sight
-const FOG = { fog: ['205,212,228', 0.8], 夜雾: ['190,180,205', 0.8], 冰雾: ['215,230,250', 0.82], 浑水: ['16,66,74', 0.8], 停电: ['3,5,10', 0.93] };
+const FOG = { fog: ['205,212,228', 0.8], 夜雾: ['190,180,205', 0.8], 冰雾: ['215,230,250', 0.82], 浑水: ['16,66,74', 0.8], 停电: ['3,5,10', 0.93], 瘴气: ['70,100,60', 0.86], 热浪: ['235,205,150', 0.7] };
 const wxOn = k => G.wx.kind === k && G.wx.k > 0.5;
 function updateWeather(dt) {
   const w = G.wx;
@@ -8110,7 +8651,7 @@ function drawWeatherAir() {
 }
 const wrapTo = (v, m) => ((v % m) + m) % m;
 // in screen space: rain streaks, the fog closing in round her, things on the wind, the flash of a strike
-const WIND_MOTE = { garden: () => GARDEN.leaf(), sea: () => SEA.bubble(), sakura: () => SAKURA.petal(), snow: () => SNOW.flake(), server: null, maple: () => MAPLE.leaf(1), library: () => LIB.scrap() };
+const WIND_MOTE = { garden: () => GARDEN.leaf(), sea: () => SEA.bubble(), sakura: () => SAKURA.petal(), snow: () => SNOW.flake(), server: null, maple: () => MAPLE.leaf(1), library: () => LIB.scrap(), dungeon: () => DUNGEON.dust(), desert: () => DESERT.grain() };
 GARDEN.leaf = () => sprite('leaf', 14, 14, x => { x.fillStyle = '#9ccf6a'; x.beginPath(); x.ellipse(0, 0, 4.4, 2, 0.6, 0, TAU); x.fill(); x.strokeStyle = 'rgba(60,100,40,0.7)'; x.lineWidth = 0.7; x.beginPath(); x.moveTo(-3, -2); x.lineTo(3, 2); x.stroke(); });
 function drawWeatherScreen() {
   const w = G.wx, k = w.k, t = G.time;
@@ -8773,6 +9314,7 @@ function drawZones() {
       }
       continue;
     }
+    if (z.kind === 'storm') { drawStorm(z, a); continue; }
     if (z.kind === 'lash') { drawLash(z); continue; }
     if (z.kind === 'bamboo') { drawBamboo(z); continue; }
     if (z.kind === 'quake') { drawQuake(z); continue; }
@@ -8947,6 +9489,44 @@ function drawHoney(z, a) {
   ctx.fillStyle = '#fff3d6'; ctx.font = `700 9px ${UI_FONT}`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText('蜜', px, py + 1.5);
   ctx.globalAlpha = 1;
 }
+// 头脑风暴: a funnel of turning rings, wider as it rises and swaying, a skirt of dust at its foot, and ideas whirling in
+// it: question marks, exclamation marks, lightbulbs and 灵感. 集思广益 is violet and crackles
+const STORM_IDEAS = ['?', '!', '💡', '灵感', '?', '!', '想法', '💡'];
+function drawStorm(z, a) {
+  const R = z.r, H = R * 2.4, t = G.time, col = z.evo ? '200,170,255' : '235,232,255';
+  ctx.globalAlpha = a;
+  ctx.fillStyle = 'rgba(120,100,80,0.2)'; ctx.beginPath(); ctx.ellipse(z.x, z.y + 4, R * 1.05, R * 0.42, 0, 0, TAU); ctx.fill();
+  ctx.lineCap = 'round';
+  const rings = 9, sway = k => Math.sin(t * 2.2 + k * 3) * R * 0.18 * k, wid = k => R * (0.22 + 0.85 * Math.pow(k, 1.3));
+  // the body of the funnel, a soft haze
+  ctx.beginPath();
+  for (let i = 0; i <= 8; i++) { const k = i / 8; ctx.lineTo(z.x + sway(k) - wid(k), z.y - k * H); }
+  for (let i = 8; i >= 0; i--) { const k = i / 8; ctx.lineTo(z.x + sway(k) + wid(k), z.y - k * H); }
+  const g = ctx.createLinearGradient(0, z.y, 0, z.y - H);
+  g.addColorStop(0, `rgba(${col},0.32)`); g.addColorStop(1, `rgba(${col},0.08)`);
+  ctx.fillStyle = g; ctx.fill();
+  for (let i = 0; i < rings; i++) {
+    const k = i / (rings - 1), rw = wid(k), cx = z.x + sway(k), cy = z.y - k * H;
+    const a0 = z.spin * (1.2 - k * 0.4) + i * 0.9;
+    ctx.strokeStyle = `rgba(${col},${0.25 + 0.35 * (1 - k)})`; ctx.lineWidth = 3 + 3 * (1 - k);
+    ctx.beginPath(); ctx.ellipse(cx, cy, rw, rw * 0.3, 0, a0, a0 + 3.6); ctx.stroke();
+    ctx.strokeStyle = `rgba(255,255,255,${0.35 * (1 - k * 0.5)})`; ctx.lineWidth = 1.2;
+    ctx.beginPath(); ctx.ellipse(cx, cy, rw * 0.8, rw * 0.24, 0, a0 + 2, a0 + 4.4); ctx.stroke();
+  }
+  ctx.font = `700 12px ${UI_FONT}`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  for (let i = 0; i < 6; i++) {
+    const k = ((i * 0.37 + t * 0.25) % 1), rw = R * (0.3 + 0.75 * k), an = z.spin * 1.1 + i * 2.1;
+    if (Math.sin(an) < -0.2) continue;
+    ctx.fillStyle = z.evo ? '#f0e4ff' : '#fff8dc';
+    ctx.fillText(STORM_IDEAS[i % STORM_IDEAS.length], z.x + Math.cos(an) * rw, z.y - k * H + Math.sin(an) * rw * 0.3);
+  }
+  if (z.evo && Math.random() < 0.3) {
+    const k = Math.random(), x0 = z.x + rand(-R, R) * 0.6, y0 = z.y - k * H;
+    ctx.strokeStyle = 'rgba(230,210,255,0.9)'; ctx.lineWidth = 1.6;
+    ctx.beginPath(); ctx.moveTo(x0, y0); ctx.lineTo(x0 + rand(-14, 14), y0 + rand(8, 18)); ctx.lineTo(x0 + rand(-14, 14), y0 + rand(20, 34)); ctx.stroke();
+  }
+  ctx.globalAlpha = 1;
+}
 // a thorned rose vine whipping out and curling back
 function drawLash(z) {
   const k = 1 - z.life / z.max, reach = Math.min(1, k * 2.4), fade = Math.min(1, z.life / z.max * 2.5);
@@ -8989,47 +9569,42 @@ function chainDraw(n, at, hot) {
   ctx.strokeStyle = '#1e2228'; ctx.lineWidth = 3.6; ctx.stroke(ring); ctx.lineWidth = 4.2; ctx.stroke(bar);
   ctx.strokeStyle = hot ? '#ffb45a' : '#aeb9c2'; ctx.lineWidth = 1.7; ctx.stroke(ring); ctx.lineWidth = 2; ctx.stroke(bar);
 }
-// 锁链 in flight: the links from her hand to the dart, whipping a little on the way out; the dart is a steel blade with a
-// ring and a red tassel, like a 绳镖's
+// 锁链: the links from her hand to the dart in flight, or to the collar of the one it holds: drawn straight when it's
+// taut and sagging when it's slack. The dart is a steel blade with a ring and a red tassel, like a 绳镖's
 function drawShackle() {
   const w = P.weapons.find(v => v.id === 'shackle');
-  if (!w) return;
-  const hot = w.level === 6, o = hookFrom(), t = G.time;
-  for (const h of w.hooks || []) {
-    const L = Math.max(0, h.ext), n = Math.max(1, Math.round(L / 7)), nx = -h.dy, ny = h.dx;
+  if (!w || !w.hooks) return;
+  const o = hookFrom(), t = G.time;
+  for (const h of w.hooks) {
+    if (h.st === 'leash') {
+      const e = h.e, ex = e.x, ey = e.y - e.r * 0.1, d = Math.hypot(ex - o.x, ey - o.y), L = wStats(w).len * P.area;
+      const sag = h.taut ? 0 : Math.min(40, Math.sqrt(Math.max(0, L * L - d * d)) * 0.3), n = Math.max(1, Math.round(d / 7));
+      chainDraw(n, i => {
+        const f = (i + 0.5) / n;
+        return [o.x + (ex - o.x) * f, o.y + (ey - o.y) * f + sag * 4 * f * (1 - f), Math.atan2(ey - o.y + sag * 4 * (1 - 2 * f), ex - o.x)];
+      }, h.hot);
+      continue;
+    }
+    const L = Math.max(0, h.ext), n = Math.max(1, Math.round(L / 7)), dx = Math.cos(h.a), dy = Math.sin(h.a), nx = -dy, ny = dx;
     const wob = h.st === 'out' ? 12 * Math.max(0, 1 - h.t * 3) * h.wob : 0;
-    chainDraw(n, i => { const f = (i + 0.5) / n, b = Math.sin(f * Math.PI) * wob; return [o.x + h.dx * L * f + nx * b, o.y + h.dy * L * f + ny * b, h.a]; }, hot);
-    ctx.save(); ctx.translate(o.x + h.dx * L, o.y + h.dy * L); ctx.rotate(h.a);
+    chainDraw(n, i => { const f = (i + 0.5) / n, b = Math.sin(f * Math.PI) * wob; return [o.x + dx * L * f + nx * b, o.y + dy * L * f + ny * b, h.a]; }, h.hot);
+    ctx.save(); ctx.translate(o.x + dx * L, o.y + dy * L); ctx.rotate(h.a);
     ctx.strokeStyle = '#d8323a'; ctx.lineWidth = 2.2; ctx.lineCap = 'round';
     for (const k of [-1, 1]) { ctx.beginPath(); ctx.moveTo(-8, 0); ctx.quadraticCurveTo(-13, k * 3 + Math.sin(t * 20) * 2, -19, k * 4); ctx.stroke(); }
-    if (hot) { ctx.globalCompositeOperation = 'lighter'; ctx.fillStyle = 'rgba(255,130,50,0.35)'; disc(ctx, 4, 0, 12); ctx.fill(); ctx.globalCompositeOperation = 'source-over'; }
+    if (h.hot) { ctx.globalCompositeOperation = 'lighter'; ctx.fillStyle = 'rgba(255,130,50,0.35)'; disc(ctx, 4, 0, 12); ctx.fill(); ctx.globalCompositeOperation = 'source-over'; }
     ctx.beginPath(); ctx.moveTo(16, 0); ctx.lineTo(1, -5.5); ctx.lineTo(-3, 0); ctx.lineTo(1, 5.5); ctx.closePath();
-    ctx.fillStyle = hot ? '#ffd29a' : '#e4eaef'; ctx.fill(); ctx.lineWidth = 1.6; ctx.strokeStyle = '#1e2228'; ctx.stroke();
-    ctx.beginPath(); ctx.moveTo(-1, 0); ctx.lineTo(13, 0); ctx.lineWidth = 1; ctx.strokeStyle = hot ? '#ff7a2a' : '#8c99a4'; ctx.stroke();
+    ctx.fillStyle = h.hot ? '#ffd29a' : '#e4eaef'; ctx.fill(); ctx.lineWidth = 1.6; ctx.strokeStyle = '#1e2228'; ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(-1, 0); ctx.lineTo(13, 0); ctx.lineWidth = 1; ctx.strokeStyle = h.hot ? '#ff7a2a' : '#8c99a4'; ctx.stroke();
     ctx.beginPath(); ctx.arc(-6, 0, 3, 0, TAU); ctx.lineWidth = 3.2; ctx.strokeStyle = '#1e2228'; ctx.stroke();
-    ctx.lineWidth = 1.5; ctx.strokeStyle = hot ? '#ffb45a' : '#aeb9c2'; ctx.stroke();
+    ctx.lineWidth = 1.5; ctx.strokeStyle = h.hot ? '#ffb45a' : '#aeb9c2'; ctx.stroke();
     ctx.restore();
   }
-  // 铁索连环: a sagging run of hot links from each bound enemy to the next
-  for (const g of G.links) {
-    const es = g.es.filter(e => !e.dead && e.chainT > 0);
-    for (let i = 1; i < es.length; i++) {
-      const a = es[i - 1], b = es[i], ax = a.x, ay = a.y - a.r * 0.1, bx = b.x, by = b.y - b.r * 0.1;
-      if (!inView((ax + bx) / 2, (ay + by) / 2, 120)) continue;
-      const L = Math.hypot(bx - ax, by - ay), n = Math.max(1, Math.round(L / 7)), ang = Math.atan2(by - ay, bx - ax);
-      ctx.globalAlpha = Math.min(1, Math.min(a.chainT, b.chainT) / 0.2);
-      chainDraw(n, j => { const f = (j + 0.5) / n; return [ax + (bx - ax) * f, ay + (by - ay) * f + Math.sin(f * Math.PI) * 6, ang]; }, true);
-    }
-  }
-  ctx.globalAlpha = 1;
 }
-// a bound enemy: a loop of chain round its middle (the front half shows) with a padlock hanging off it
-function drawBound(e) {
+// a leashed enemy: a collar of chain round its middle (the front half shows) with a padlock hanging off it
+function drawBound(e, hot) {
   const cx = e.x, cy = e.y - e.r * 0.1, rx = e.r * 1.1, ry = e.r * 0.45, n = Math.max(5, Math.round(Math.PI * (rx + ry) / 2 / 6.5));
-  ctx.globalAlpha = Math.min(1, e.chainT / 0.2);
-  chainDraw(n + 1, i => { const th = Math.PI * i / n; return [cx + Math.cos(th) * rx, cy + Math.sin(th) * ry, Math.atan2(Math.cos(th) * ry, -Math.sin(th) * rx)]; }, !!e.link);
+  chainDraw(n + 1, i => { const th = Math.PI * i / n; return [cx + Math.cos(th) * rx, cy + Math.sin(th) * ry, Math.atan2(Math.cos(th) * ry, -Math.sin(th) * rx)]; }, hot);
   blit(SPR.padlock(), cx, cy + ry + 6);
-  ctx.globalAlpha = 1;
 }
 // 人机验证: a sweeping beam of light with a ticked checkbox at its tip
 function drawCaptcha() {
@@ -9119,7 +9694,7 @@ function drawEnemies() {
     const s = enemySprite(e, banned ? 0 : frame, banned ? 'b' : e.flash > 0 ? 'f' : 'n', blink);
     const x = e.x + (banned ? rand(-1.3, 1.3) : 0);
     // a soft squash-and-stretch hop, feet kept on the ground
-    const still = banned || e.stun > 0 || e.frozenT > 0 || e.chainT > 0 || e.paradeT > 0;
+    const still = banned || e.stun > 0 || e.frozenT > 0 || e.paradeT > 0;
     const hop = still ? 0 : Math.sin(e.anim * (e.heavy ? 6 : 10) + e.id);
     const sy = 1 + hop * (e.heavy ? 0.03 : 0.06), sx = 1 - hop * (e.heavy ? 0.025 : 0.05);
     if (e.rage > 0 && !banned) {
@@ -9143,7 +9718,7 @@ function drawEnemies() {
       ctx.drawImage(ice.c, e.x - iw / 2, e.y + s.h / 2 - ih * 0.92, iw, ih);
       ctx.globalAlpha = 1;
     }
-    if (e.chainT > 0 && e.wrapped && !banned) drawBound(e);
+    if (e.leash && !banned) drawBound(e, e.leash.hot);
     if (banned) blit(e.erase ? SPR.breaktag() : SPR.bantag(), e.x, e.y - e.r - 10);
     if (e.elite || e.type === 'reg') {
       if (!banned) blit(SPR.crown(), e.x, e.y - e.r - (e.type === 'reg' ? 24 : 12));
@@ -9703,6 +10278,24 @@ function drawShots() {
       ctx.strokeStyle = `rgba(${b.tint || '255,170,70'},0.55)`; ctx.lineWidth = 4.5; ctx.stroke();
       ctx.strokeStyle = 'rgba(255,248,224,0.95)'; ctx.lineWidth = 1.6; ctx.stroke();
       if (b.star) { ctx.fillStyle = '#fff3c4'; sparkle(ctx, b.x, b.y, 5 + Math.sin(b.rot * 3) * 1.5); }
+      continue;
+    }
+    if (b.kind === 'ball') {
+      // a gradient ball: a fading tail through its last places, a violet glow and a white core marked ∇
+      const tr = b.trail, fade = Math.min(1, b.life / 0.3);
+      ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+      for (let i = 2; i < tr.length; i += 2) {
+        const k = i / tr.length;
+        ctx.strokeStyle = `rgba(${b.evo ? '255,140,200' : '150,120,255'},${0.45 * k * fade})`; ctx.lineWidth = b.r * 1.6 * k;
+        ctx.beginPath(); ctx.moveTo(tr[i - 2], tr[i - 1]); ctx.lineTo(tr[i], tr[i + 1]); ctx.stroke();
+      }
+      const g = ctx.createRadialGradient(b.x, b.y, 0, b.x, b.y, b.r * 2);
+      g.addColorStop(0, `rgba(255,255,255,${fade})`); g.addColorStop(0.35, b.evo ? `rgba(255,150,210,${0.9 * fade})` : `rgba(170,150,255,${0.9 * fade})`); g.addColorStop(1, 'rgba(90,70,255,0)');
+      ctx.fillStyle = g; disc(ctx, b.x, b.y, b.r * 2); ctx.fill();
+      ctx.globalCompositeOperation = 'source-over';
+      ctx.fillStyle = `rgba(70,40,140,${fade})`; ctx.font = `800 ${Math.round(b.r * 1.1)}px ${UI_FONT}`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+      ctx.fillText('∇', b.x, b.y + b.r * 0.08);
+      ctx.globalCompositeOperation = 'lighter';
       continue;
     }
     if (b.kind === 'orb') {
