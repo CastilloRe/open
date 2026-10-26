@@ -10591,8 +10591,7 @@ function updateEnding(dt) {
 // ======================================================================
 let demo = { x: 0, y: 0 };
 
-// the manor garden at night: a lawn, flagstone paths, fountains and flower beds, lanterns, rose bushes and
-// fireflies. Ground-level circles are squashed like the rest of the floor.
+// the manor garden at night: a lawn, lanterns, flower beds, rose bushes and fireflies. Ground-level circles are squashed like the rest of the floor.
 const LAWN = 512;
 // a seamless tile painted once into its own canvas and repeated as a pattern anchored to the world
 function groundPattern(key, size, paint) {
@@ -10693,8 +10692,8 @@ const GARDEN = {
   firefly: () => sprite('firefly', 26, 26, x => { glow(x, 12, '#d8ff8a', 0.5); x.fillStyle = '#f6ffd8'; disc(x, 0, 0, 1.6); x.fill(); }),
 };
 const SMALL_DECOR = ['daisy', 'petals', 'tuft', 'daisy', 'tuft'];
-// ---- the other maps. Each night is set in one of them, drawn at random (or picked on the title): the same lie of the
-// land (see drawTerrain), with its own ground, paths, landmarks, things growing or standing about, lights and motes ----
+// ---- the other maps. Each night is set in one of them, drawn at random (or picked on the title), each with its own
+// ground and patches of other ground, things growing or standing about, lights and drifting motes ----
 // a point on a cubic Bézier, for things that curve
 const bez = (t, a, b, c, d) => { const u = 1 - t; return u * u * u * a + 3 * u * u * t * b + 3 * u * t * t * c + t * t * t * d; };
 // a soft pool of light round a lamp, in any colour
@@ -10932,13 +10931,6 @@ function paintRaisedFloor(x, S) {
     if (rnd() < 0.22) { x.fillStyle = 'rgba(0,0,0,0.45)'; for (let a = 0; a < 6; a++) for (let b = 0; b < 6; b++) { disc(x, X + 12 + a * 8, Y + 12 + b * 8, 1.6); x.fill(); } }
   }
 }
-function paintGrating(x, S) {
-  x.fillStyle = '#091017'; x.fillRect(0, 0, S, S);
-  x.strokeStyle = 'rgba(80,150,190,0.22)'; x.lineWidth = 1.2;
-  x.beginPath();
-  for (let i = -S; i <= S * 2; i += 16) { x.moveTo(i, 0); x.lineTo(i + S, S); x.moveTo(i, 0); x.lineTo(i - S, S); }
-  x.stroke();
-}
 const LED_COL = ['#56ff9a', '#5fe0ff', '#ffc45a'];
 const SERVER = {
   // a server rack: a dark cabinet of units, each with its row of lights (lit live, see the map's lit())
@@ -10995,26 +10987,9 @@ function drift(L, R, T, B, F, n, fn) {
 // rising or falling through a cell, fading in and out at the ends so the wrap doesn't show
 function cycle(t, speed, h, F) { const f = ((t * speed / F + h) % 1 + 1) % 1; return [f, Math.sin(f * Math.PI)]; }
 
-// ---- the lie of the land, the same on every map. Paths run along the lines of a 960 grid, but winding: each stretch
-// between two crossings bends its own way (a bump and an S, both nothing at the crossings, so the stretches meet there).
-// Each map draws its paths in its own way (stepping stones, a trodden trail, cable trays), sets one of its landmarks
-// at each crossing, and lays big patches of other ground about, so the floor isn't one plain colour ----
-const PATH_G = 960, PATH_A = 130, MARK_R = 150;
-function bendAt(a, b, u) {
-  const h1 = hash2(a * 7 + 3, b * 13 + 5), h2 = hash2(a * 11 + 1, b * 5 + 9);
-  return (h1 * 2 - 1) * PATH_A * Math.sin(Math.PI * u) + (h2 * 2 - 1) * PATH_A * 0.5 * Math.sin(TAU * u);
-}
-// the north-south path i where it is at height y, and the east-west path j where it is at x
-const pathX = (i, y) => { const j = Math.floor(y / PATH_G); return i * PATH_G + bendAt(i, j, y / PATH_G - j); };
-const pathY = (j, x) => { const i = Math.floor(x / PATH_G); return j * PATH_G + bendAt(j + 5000, i + 7000, x / PATH_G - i); };
-// how far a point is from the nearest path (measured across, near enough), and whether it's on a crossing's landmark
-function pathDist(x, y) {
-  return Math.min(Math.abs(x - pathX(Math.round(x / PATH_G), y)), Math.abs(y - pathY(Math.round(y / PATH_G), x)));
-}
-function nearMark(x, y, m = 0) {
-  const dx = x - Math.round(x / PATH_G) * PATH_G, dy = (y - Math.round(y / PATH_G) * PATH_G) / 0.66;
-  return dx * dx + dy * dy < (MARK_R + m) ** 2;
-}
+// ---- big patches of other ground, laid about on every map so the floor isn't one plain colour: meadows and clover,
+// fallen petals, ice and drifts, seagrass, perforated tiles... each with a soft, uneven edge, on a coarse grid, placed
+// and sized by hash so they stay put ----
 // a patch of other ground with a soft, uneven edge: its ground is painted, then kept only inside a few soft blobs
 function patchSprite(key, w, h, seed, paint) {
   return sprite(key, w, h, x => {
@@ -11039,15 +11014,7 @@ function scatter(rnd, w, h, n, fn) {
     fn(Math.cos(a) * d * w * 0.46, Math.sin(a) * d * h * 0.42, rnd);
   }
 }
-// a lumpy stone outline, for stepping stones and rocks
-function lumpPath(x, rnd, w, h, dy = 0) {
-  const n = 8, pts = [];
-  for (let i = 0; i < n; i++) { const a = i / n * TAU + rnd() * 0.35, r = 0.84 + rnd() * 0.26; pts.push([Math.cos(a) * w * r, Math.sin(a) * h * r]); }
-  return d => { x.beginPath(); pts.forEach(([px, py], i) => i ? x.lineTo(px, py + (d || 0) + dy) : x.moveTo(px, py + (d || 0) + dy)); x.closePath(); };
-}
-
-function drawTerrain(M, L, R, T, B, t) {
-  // patches of other ground, on a coarse grid, placed and sized by hash
+function drawPatches(M, L, R, T, B) {
   const PC = 400;
   for (let gx = Math.floor(L / PC) - 1; gx <= Math.ceil(R / PC); gx++) {
     for (let gy = Math.floor(T / PC) - 1; gy <= Math.ceil(B / PC); gy++) {
@@ -11060,153 +11027,19 @@ function drawTerrain(M, L, R, T, B, t) {
       ctx.drawImage(s.c, px - w / 2, py - hh / 2, w, hh);
     }
   }
-  // the paths, sampled every 16 along their run
-  const P = M.path, lines = [];
-  for (let i = Math.floor((L - PATH_A) / PATH_G); i <= Math.ceil((R + PATH_A) / PATH_G); i++) {
-    const pts = [];
-    for (let y = Math.floor((T - 60) / 16) * 16; y <= B + 60; y += 16) pts.push([pathX(i, y), y]);
-    lines.push({ v: true, i, pts });
-  }
-  for (let j = Math.floor((T - PATH_A) / PATH_G); j <= Math.ceil((B + PATH_A) / PATH_G); j++) {
-    const pts = [];
-    for (let x = Math.floor((L - 60) / 16) * 16; x <= R + 60; x += 16) pts.push([x, pathY(j, x)]);
-    lines.push({ v: false, i: j, pts });
-  }
-  ctx.lineCap = 'round'; ctx.lineJoin = 'round';
-  for (const [w, style, dx, dy] of P.bands) {
-    ctx.strokeStyle = typeof style === 'function' ? style() : style; ctx.lineWidth = w;
-    ctx.beginPath();
-    for (const { v, pts } of lines) pts.forEach(([x, y], k) => {
-      const X = x + (v ? dx || 0 : dy || 0), Y = y + (v ? dy || 0 : dx || 0);
-      k ? ctx.lineTo(X, Y) : ctx.moveTo(X, Y);
-    });
-    ctx.stroke();
-  }
-  // what lies along them: one thing every `step`, at fixed places so it stays put, none on a landmark
-  if (P.along) for (const { v, i } of lines) {
-    const lo = v ? T : L, hi = v ? B : R;
-    for (let k = Math.floor((lo - 40) / P.step); k <= Math.ceil((hi + 40) / P.step); k++) {
-      const s = k * P.step, x = v ? pathX(i, s) : s, y = v ? s : pathY(i, s);
-      if (nearMark(x, y, 10)) continue;
-      const d = v ? (pathX(i, s + 4) - pathX(i, s - 4)) / 8 : (pathY(i, s + 4) - pathY(i, s - 4)) / 8;
-      const ang = v ? Math.atan2(1, d) : Math.atan2(d, 1);
-      P.along(x, y, hash2(i * 31 + (v ? 7 : 977), k * 17 + 3), k, ang, t);
-    }
-  }
-  // a landmark at each crossing in view
-  for (let i = Math.floor((L - 200) / PATH_G); i <= Math.ceil((R + 200) / PATH_G); i++) {
-    for (let j = Math.floor((T - 200) / PATH_G); j <= Math.ceil((B + 200) / PATH_G); j++) {
-      const n = Math.floor(hash2(i * 3 + 1, j * 7 + 2) * M.marks.length), x = i * PATH_G, y = j * PATH_G;
-      blit(M.marks[n](), x, y);
-      if (M.markFx) M.markFx(n, x, y, t, hash2(i, j));
-    }
-  }
 }
-// lamps along the paths, on alternate sides, clear of the crossings
-function pathLamps(L, R, T, B, off) {
-  const lamps = [], LS = 320;
-  for (let i = Math.floor((L - PATH_A) / PATH_G); i <= Math.ceil((R + PATH_A) / PATH_G); i++) {
-    for (let k = Math.floor((T - 160) / LS); k <= Math.ceil((B + 160) / LS); k++) {
-      const y = k * LS + LS / 2;
-      if (Math.abs(y - Math.round(y / PATH_G) * PATH_G) > MARK_R + 60) lamps.push([pathX(i, y) + (k % 2 ? 1 : -1) * off, y]);
-    }
-  }
-  for (let j = Math.floor((T - PATH_A) / PATH_G); j <= Math.ceil((B + PATH_A) / PATH_G); j++) {
-    for (let k = Math.floor((L - 160) / LS); k <= Math.ceil((R + 160) / LS); k++) {
-      const x = k * LS + LS / 2;
-      if (Math.abs(x - Math.round(x / PATH_G) * PATH_G) > MARK_R + 60) lamps.push([x, pathY(j, x) + (k % 2 ? 1 : -1) * off * 0.8]);
+// the lamps stand about on their own, one to a cell of a coarse grid now and then
+function scatterLamps(L, R, T, B) {
+  const lamps = [], C = 480;
+  for (let gx = Math.floor((L - 160) / C); gx <= Math.ceil((R + 160) / C); gx++) {
+    for (let gy = Math.floor((T - 160) / C); gy <= Math.ceil((B + 160) / C); gy++) {
+      if (hash2(gx * 7 + 29, gy * 3 + 61) > 0.42) continue;
+      lamps.push([(gx + 0.15 + hash2(gx + 71, gy + 13) * 0.7) * C, (gy + 0.15 + hash2(gx + 19, gy + 67) * 0.7) * C]);
     }
   }
   return lamps;
 }
-// footprints, a pair at a time, pointing along the way
-function footprints(x, y, ang, k, col) {
-  ctx.fillStyle = col;
-  ctx.save(); ctx.translate(x, y); ctx.rotate(ang - Math.PI / 2);
-  const sd = k % 2 ? 1 : -1;
-  ctx.beginPath(); ctx.ellipse(sd * 6, 0, 3, 5, 0, 0, TAU); ctx.fill();
-  ctx.restore();
-}
 
-// ---- 夜之庄园: flagstones across a worn earth path; fountains, flower beds and sundials; meadows, clover, bare earth
-GARDEN.stone = k => sprite('gstone' + k, 34, 26, x => {
-  const rnd = seeded(201 + k), w = 10 + rnd() * 4, h = 6.5 + rnd() * 2, shape = lumpPath(x, rnd, w, h);
-  x.fillStyle = 'rgba(0,0,0,0.35)'; shape(2.5); x.fill();
-  shape(); x.fillStyle = vgrad(x, -h, h, '#aaa396', '#6f685d'); x.fill();
-  x.strokeStyle = 'rgba(30,26,20,0.55)'; x.lineWidth = 1; x.stroke();
-  x.fillStyle = 'rgba(255,255,255,0.13)'; x.beginPath(); x.ellipse(-w * 0.2, -h * 0.35, w * 0.45, h * 0.25, 0, 0, TAU); x.fill();
-  if (k % 2) { x.fillStyle = 'rgba(96,140,84,0.55)'; x.beginPath(); x.ellipse(w * 0.4, h * 0.35, w * 0.3, h * 0.25, 0.3, 0, TAU); x.fill(); }
-});
-GARDEN.fountain = () => sprite('m-fountain', 300, 220, x => {
-  x.save(); x.translate(0, 10); x.scale(1, 0.62);
-  x.fillStyle = 'rgba(0,0,0,0.3)'; disc(x, 0, 12, 140); x.fill();
-  // a ring of paving round it
-  for (let i = 0; i < 24; i++) {
-    const a0 = i / 24 * TAU + 0.015, a1 = (i + 1) / 24 * TAU - 0.015, v = 82 + (i * 37 % 11) * 2;
-    x.beginPath(); x.arc(0, 0, 132, a0, a1); x.arc(0, 0, 104, a1, a0, true); x.closePath(); x.fillStyle = `rgb(${v},${v - 4},${v - 12})`; x.fill();
-  }
-  // the basin: a stone rim and dark water with rings on it
-  x.fillStyle = '#c9c0b0'; disc(x, 0, 0, 98); x.fill();
-  x.fillStyle = '#8f877a'; disc(x, 0, 3, 92); x.fill();
-  x.fillStyle = rgrad(x, -26, -30, 96, ['#5a9ac0', '#25506e', '#10283a']); disc(x, 0, 2, 86); x.fill();
-  x.strokeStyle = 'rgba(200,235,255,0.25)'; x.lineWidth = 2;
-  for (const r of [30, 52, 72]) { disc(x, 0, 2, r); x.stroke(); }
-  x.restore();
-  // the middle: a column with a bowl on top, the water spilling over
-  x.fillStyle = 'rgba(0,0,0,0.3)'; x.beginPath(); x.ellipse(0, 18, 20, 7, 0, 0, TAU); x.fill();
-  x.fillStyle = vgrad(x, -40, 16, '#d8d0c0', '#8f877a'); x.fillRect(-7, -38, 14, 54);
-  x.fillStyle = '#c9c0b0'; x.beginPath(); x.ellipse(0, -40, 26, 9, 0, 0, TAU); x.fill();
-  x.fillStyle = '#4f8db2'; x.beginPath(); x.ellipse(0, -41, 21, 6, 0, 0, TAU); x.fill();
-  x.strokeStyle = 'rgba(210,240,255,0.7)'; x.lineWidth = 1.5;
-  for (const sd of [-1, 1]) { x.beginPath(); x.moveTo(sd * 22, -38); x.quadraticCurveTo(sd * 32, -30, sd * 34, -6); x.stroke(); }
-  x.save(); x.translate(0, -52); glow(x, 14, '#bfe8ff', 0.45); x.restore();
-  x.fillStyle = 'rgba(230,248,255,0.85)'; x.beginPath(); x.ellipse(0, -50, 3, 9, 0, 0, TAU); x.fill();
-});
-GARDEN.bed = () => sprite('m-bed', 300, 210, x => {
-  const rnd = seeded(331);
-  x.save(); x.scale(1, 0.62);
-  x.fillStyle = 'rgba(0,0,0,0.28)'; disc(x, 0, 10, 138); x.fill();
-  x.fillStyle = '#b8b0a2'; disc(x, 0, 0, 132); x.fill();
-  x.fillStyle = '#3a2a20'; disc(x, 0, 0, 122); x.fill();
-  x.fillStyle = '#4a3628'; disc(x, 0, 0, 116); x.fill();
-  x.restore();
-  // rings of flowers, a different colour each ring, round a clipped box ball
-  [[100, '#ff9a4a', 30], [76, '#ff9ac0', 24], [52, '#c9a8ff', 18]].forEach(([r, col, n]) => {
-    for (let i = 0; i < n; i++) {
-      const a = i / n * TAU + rnd() * 0.1, fx = Math.cos(a) * r, fy = Math.sin(a) * r * 0.62;
-      x.fillStyle = 'rgba(46,92,56,0.95)'; disc(x, fx, fy + 2, 6.5); x.fill();
-      x.fillStyle = col;
-      for (let p = 0; p < 5; p++) { const b = p / 5 * TAU; disc(x, fx + Math.cos(b) * 2.6, fy - 1 + Math.sin(b) * 2.6, 2); x.fill(); }
-      x.fillStyle = '#ffe08a'; disc(x, fx, fy - 1, 1.3); x.fill();
-    }
-  });
-  x.fillStyle = 'rgba(0,0,0,0.3)'; x.beginPath(); x.ellipse(0, 10, 26, 9, 0, 0, TAU); x.fill();
-  x.fillStyle = rgrad(x, -8, -14, 34, ['#6aa860', '#2e6a3c', '#173a24']); disc(x, 0, -6, 24); x.fill();
-  x.strokeStyle = 'rgba(160,220,140,0.35)'; x.lineWidth = 1.2;
-  for (let i = 0; i < 10; i++) { const a = rnd() * TAU, d = rnd() * 16; x.beginPath(); x.arc(Math.cos(a) * d, -6 + Math.sin(a) * d, 3, 3.6, 5.2); x.stroke(); }
-});
-GARDEN.sundial = () => sprite('m-sundial', 300, 210, x => {
-  x.save(); x.scale(1, 0.62);
-  x.fillStyle = 'rgba(0,0,0,0.28)'; disc(x, 0, 10, 134); x.fill();
-  // pale paving laid in rings
-  for (let ring = 0; ring < 3; ring++) {
-    const r0 = 40 + ring * 30, r1 = r0 + 28, n = 10 + ring * 6;
-    for (let i = 0; i < n; i++) {
-      const a0 = (i + ring * 0.5) / n * TAU + 0.02, a1 = (i + 1 + ring * 0.5) / n * TAU - 0.02, v = 108 + ((i * 7 + ring * 3) % 5) * 6;
-      x.beginPath(); x.arc(0, 0, r1, a0, a1); x.arc(0, 0, r0, a1, a0, true); x.closePath(); x.fillStyle = `rgb(${v},${v - 6},${v - 16})`; x.fill();
-    }
-  }
-  x.fillStyle = 'rgb(150,142,126)'; disc(x, 0, 0, 38); x.fill();
-  // the hours, cut into the stone
-  x.strokeStyle = 'rgba(40,34,26,0.55)'; x.lineWidth = 2;
-  for (let i = 0; i < 12; i++) { const a = i / 12 * TAU; x.beginPath(); x.moveTo(Math.cos(a) * 26, Math.sin(a) * 26); x.lineTo(Math.cos(a) * 34, Math.sin(a) * 34); x.stroke(); }
-  x.restore();
-  // the pedestal and its gnomon
-  x.fillStyle = 'rgba(0,0,0,0.3)'; x.beginPath(); x.ellipse(4, 6, 16, 6, 0, 0, TAU); x.fill();
-  x.fillStyle = vgrad(x, -22, 4, '#d6cdbb', '#8a8272'); x.fillRect(-6, -20, 12, 24);
-  x.fillStyle = '#cfc6b4'; x.beginPath(); x.ellipse(0, -21, 14, 5, 0, 0, TAU); x.fill();
-  x.fillStyle = '#b08a3a'; x.beginPath(); x.moveTo(-1, -22); x.lineTo(9, -22); x.lineTo(-1, -34); x.closePath(); x.fill();
-});
 GARDEN.patches = [
   // a meadow of lighter grass, and wildflowers in it
   () => patchSprite('p-meadow', 320, 210, 401, (x, w, h, rnd) => {
@@ -11243,76 +11076,7 @@ GARDEN.patches = [
     });
   }),
 ];
-GARDEN.path = {
-  bands: [[66, 'rgba(8,12,8,0.35)'], [54, 'rgba(70,58,44,0.8)'], [40, 'rgba(84,70,54,0.6)']], step: 28,
-  along(x, y, h, k, ang) {
-    // two flagstones across the path, staggered; a tuft of grass now and then at the edge
-    const nx = Math.cos(ang + Math.PI / 2), ny = Math.sin(ang + Math.PI / 2), o = (k % 2 ? 1 : -1) * (9 + h * 5);
-    blit(GARDEN.stone(Math.floor(h * 4)), x + nx * o, y + ny * o);
-    if (h > 0.55) blit(GARDEN.stone(Math.floor(h * 13) % 4), x - nx * o * 0.9, y - ny * o * 0.9 + 3);
-    if (h < 0.18) blit(SPR.tuft(), x + nx * (h < 0.09 ? 30 : -30), y + ny * 30);
-  },
-};
-GARDEN.marks = [GARDEN.fountain, GARDEN.bed, GARDEN.sundial];
 
-// ---- 深海: a pale sand trail with ripples and shells; a giant clam, a sunken anchor, a rock pool; sand, seagrass, rock
-SEA.clam = () => sprite('m-clam', 300, 220, x => {
-  x.save(); x.translate(0, 16); x.scale(1, 0.62);
-  x.fillStyle = 'rgba(0,0,0,0.3)'; disc(x, 0, 10, 136); x.fill();
-  // a ring of pale sand round it, dotted with pebbles
-  x.fillStyle = rgrad(x, 0, 0, 132, ['rgba(120,170,160,0.5)', 'rgba(90,140,135,0.4)', 'rgba(60,110,110,0)']); disc(x, 0, 0, 132); x.fill();
-  x.restore();
-  // the shell, open, its ribs fanning out; the pearl inside (it glows, see markFx)
-  x.fillStyle = 'rgba(0,0,0,0.35)'; x.beginPath(); x.ellipse(0, 24, 74, 18, 0, 0, TAU); x.fill();
-  const shell = (top) => {
-    x.beginPath(); x.moveTo(-70, 10);
-    x.quadraticCurveTo(-60, top ? -62 : 46, 0, top ? -70 : 50); x.quadraticCurveTo(60, top ? -62 : 46, 70, 10); x.closePath();
-  };
-  shell(true); x.fillStyle = vgrad(x, -70, 10, '#d8b8e8', '#7a5a9a'); x.fill(); ink(x, 2.2); x.stroke();
-  x.strokeStyle = 'rgba(60,30,80,0.45)'; x.lineWidth = 2;
-  for (let i = -3; i <= 3; i++) { x.beginPath(); x.moveTo(i * 4, 8); x.quadraticCurveTo(i * 14, -30, i * 18, -62 + Math.abs(i) * 4); x.stroke(); }
-  shell(false); x.fillStyle = vgrad(x, 10, 50, '#f0d8f4', '#9a78b8'); x.fill(); ink(x, 2.2); x.stroke();
-  x.fillStyle = rgrad(x, 0, 18, 46, ['#ffe8f4', '#e8b4d8', '#a87ab8']); x.beginPath(); x.ellipse(0, 18, 52, 20, 0, 0, TAU); x.fill();
-  x.fillStyle = rgrad(x, -4, 6, 14, ['#ffffff', '#f4ecff', '#c8b8e8']); disc(x, 0, 10, 11); x.fill();
-});
-SEA.anchor = () => sprite('m-anchor', 300, 210, x => {
-  const rnd = seeded(353);
-  x.save(); x.scale(1, 0.62);
-  x.fillStyle = 'rgba(0,0,0,0.28)'; disc(x, 0, 8, 128); x.fill();
-  x.fillStyle = rgrad(x, 0, 0, 124, ['rgba(70,120,120,0.55)', 'rgba(50,95,100,0.35)', 'rgba(40,80,90,0)']); disc(x, 0, 0, 124); x.fill();
-  x.restore();
-  // a heavy anchor lying on its side, half in the sand, its chain trailing off in loops
-  x.strokeStyle = '#3a4a50'; x.lineWidth = 5; x.lineCap = 'round';
-  for (let i = 0; i < 9; i++) { const a = 0.4 + i * 0.5, cx = 40 + i * 9, cy = -10 + Math.sin(a) * 14; x.beginPath(); x.ellipse(cx, cy, 6, 4, a, 0, TAU); x.stroke(); }
-  x.strokeStyle = '#2a3236'; x.lineWidth = 12;
-  x.beginPath(); x.moveTo(-60, 14); x.lineTo(38, -12); x.stroke();
-  x.beginPath(); x.moveTo(-74, -18); x.quadraticCurveTo(-78, 20, -46, 34); x.moveTo(-74, -18); x.lineTo(-62, -30); x.moveTo(-46, 34); x.lineTo(-30, 30); x.stroke();
-  x.lineWidth = 8; x.beginPath(); x.moveTo(-6, -24); x.lineTo(10, 24); x.stroke();
-  x.strokeStyle = '#56686e'; x.lineWidth = 3;
-  x.beginPath(); x.moveTo(-58, 10); x.lineTo(36, -15); x.stroke();
-  disc(x, 44, -14, 8); x.stroke();
-  // barnacles and weed on it
-  for (let i = 0; i < 14; i++) { x.fillStyle = rnd() < 0.5 ? 'rgba(220,230,210,0.6)' : 'rgba(80,150,100,0.7)'; disc(x, -60 + rnd() * 96, 12 - rnd() * 26 + (rnd() - 0.5) * 6, 1.5 + rnd() * 2); x.fill(); }
-});
-SEA.pool = () => sprite('m-pool', 300, 210, x => {
-  const rnd = seeded(361);
-  x.save(); x.scale(1, 0.62);
-  x.fillStyle = 'rgba(0,0,0,0.3)'; disc(x, 0, 10, 130); x.fill();
-  // a ring of dark rocks, and the clear pool inside
-  for (let i = 0; i < 16; i++) {
-    const a = i / 16 * TAU, r = 108 + rnd() * 10, s = 16 + rnd() * 10;
-    x.fillStyle = rgrad(x, Math.cos(a) * r - 4, Math.sin(a) * r - 4, s * 1.4, ['#6a7a80', '#3a4a52', '#1e2a30']); disc(x, Math.cos(a) * r, Math.sin(a) * r, s); x.fill();
-  }
-  x.fillStyle = rgrad(x, -20, -20, 104, ['#3aa0b0', '#1a6070', '#0c3440']); disc(x, 0, 0, 98); x.fill();
-  x.restore();
-  // anemones swaying in it, and a starfish
-  for (const [ax, ay, col] of [[-36, -10, '#ff7aa8'], [30, 8, '#ffb070'], [4, -26, '#c58cff'], [-6, 22, '#ff7aa8']]) {
-    x.strokeStyle = col; x.lineWidth = 2.2; x.lineCap = 'round';
-    for (let i = 0; i < 9; i++) { const a = i / 9 * TAU; x.beginPath(); x.moveTo(ax, ay); x.quadraticCurveTo(ax + Math.cos(a) * 6, ay + Math.sin(a) * 4 - 4, ax + Math.cos(a) * 10, ay + Math.sin(a) * 6 - 2); x.stroke(); }
-    x.fillStyle = '#fff0e8'; disc(x, ax, ay, 2.6); x.fill();
-  }
-  blit.call(null, SEA.starfish(), 0, 0);
-});
 SEA.patches = [
   () => patchSprite('p-sand', 320, 210, 431, (x, w, h, rnd) => {
     x.fillStyle = '#2f5a5a'; x.fillRect(-w / 2, -h / 2, w, h);
@@ -11330,91 +11094,7 @@ SEA.patches = [
     scatter(rnd, w, h, 40, (px, py, r) => { const s = 3 + r() * 7; x.fillStyle = rgrad(x, px - s * 0.3, py - s * 0.3, s * 1.3, ['#5a7078', '#33464e', '#1a262c']); x.beginPath(); x.ellipse(px, py, s, s * 0.7, r() * 3, 0, TAU); x.fill(); });
   }),
 ];
-SEA.path = {
-  bands: [[64, 'rgba(2,10,16,0.3)'], [52, 'rgba(110,150,140,0.3)'], [36, 'rgba(150,190,175,0.2)']], step: 26,
-  along(x, y, h, k, ang) {
-    ctx.strokeStyle = 'rgba(200,235,220,0.22)'; ctx.lineWidth = 1.4;
-    ctx.save(); ctx.translate(x, y); ctx.rotate(ang);
-    ctx.beginPath(); ctx.moveTo(-3, -18); ctx.quadraticCurveTo(3, 0, -3, 18); ctx.stroke();
-    ctx.restore();
-    if (h < 0.12) blit(SEA.shell(), x + (h - 0.06) * 300, y + 6);
-    else if (h > 0.92) blit(SEA.pebbles(), x - (h - 0.96) * 400, y);
-  },
-};
-SEA.marks = [SEA.clam, SEA.anchor, SEA.pool];
 
-// ---- 樱花庭院: stepping stones through the moss; a koi pond, a raked gravel garden, a mossy islet of rocks; petal
-// carpets, bright moss, fine gravel
-SAKURA.step = k => sprite('tobi' + k, 46, 32, x => {
-  const rnd = seeded(211 + k), w = 15 + rnd() * 4, h = 9 + rnd() * 2, shape = lumpPath(x, rnd, w, h);
-  x.fillStyle = 'rgba(0,0,0,0.4)'; shape(3); x.fill();
-  shape(); x.fillStyle = vgrad(x, -h, h, '#9a96a0', '#5c5862'); x.fill();
-  x.strokeStyle = 'rgba(20,18,24,0.6)'; x.lineWidth = 1; x.stroke();
-  x.fillStyle = 'rgba(255,255,255,0.12)'; x.beginPath(); x.ellipse(-w * 0.2, -h * 0.35, w * 0.5, h * 0.25, 0, 0, TAU); x.fill();
-  x.fillStyle = 'rgba(100,150,96,0.6)'; x.beginPath(); x.ellipse(w * (k % 2 ? 0.5 : -0.55), h * 0.4, w * 0.3, h * 0.25, 0.2, 0, TAU); x.fill();
-  if (k > 1) { x.fillStyle = 'rgba(255,186,210,0.75)'; x.beginPath(); x.ellipse(w * 0.1, -h * 0.1, 3, 1.7, 0.6, 0, TAU); x.fill(); }
-});
-SAKURA.pond = () => sprite('m-koi', 310, 220, x => {
-  const rnd = seeded(371);
-  x.save(); x.scale(1, 0.62);
-  x.fillStyle = 'rgba(0,0,0,0.3)'; disc(x, 0, 10, 136); x.fill();
-  // a lumpy pond edged with rounded stones
-  const shape = lumpPath(x, rnd, 118, 112);
-  shape(); x.fillStyle = '#3a3840'; x.fill();
-  for (let i = 0; i < 22; i++) {
-    const a = i / 22 * TAU, r = 114 + rnd() * 8;
-    x.fillStyle = rgrad(x, Math.cos(a) * r - 4, Math.sin(a) * r - 4, 18, ['#9a96a0', '#5c5862', '#34303a']); disc(x, Math.cos(a) * r, Math.sin(a) * r, 10 + rnd() * 6); x.fill();
-  }
-  x.fillStyle = rgrad(x, -30, -30, 110, ['#2a5a6a', '#14323e', '#0a1c24']); disc(x, 0, 0, 104); x.fill();
-  x.restore();
-  // lily pads with a flower or two
-  for (const [px, py, s] of [[-58, -18, 14], [-40, -2, 10], [52, 16, 13], [62, -6, 9], [8, 30, 11]]) {
-    x.fillStyle = '#3f7a4a'; x.beginPath(); x.moveTo(px, py); x.arc(px, py, s, 0.3, TAU - 0.1); x.closePath(); x.fill();
-    x.strokeStyle = 'rgba(160,220,150,0.4)'; x.lineWidth = 1; x.stroke();
-  }
-  x.fillStyle = '#ffd0e0'; for (const [px, py] of [[-58, -20], [52, 14]]) { for (let p = 0; p < 6; p++) { const a = p / 6 * TAU; x.beginPath(); x.ellipse(px + Math.cos(a) * 3, py + Math.sin(a) * 2, 3, 1.6, a, 0, TAU); x.fill(); } }
-});
-// the koi swim round the pond (drawn live over it)
-SAKURA.koi = k => sprite('koi' + k, 30, 16, x => {
-  x.fillStyle = k ? '#f4f0ea' : '#ff7a3a';
-  x.beginPath(); x.ellipse(0, 0, 10, 4.2, 0, 0, TAU); x.fill();
-  x.beginPath(); x.moveTo(-8, 0); x.lineTo(-14, -4); x.lineTo(-14, 4); x.closePath(); x.fill();
-  x.fillStyle = k ? '#ff6a2a' : '#fff4ea'; x.beginPath(); x.ellipse(2, -1, 4, 2.2, 0.3, 0, TAU); x.fill();
-});
-SAKURA.raked = () => sprite('m-raked', 310, 210, x => {
-  x.save(); x.scale(1, 0.62);
-  x.fillStyle = 'rgba(0,0,0,0.25)'; disc(x, 0, 8, 134); x.fill();
-  x.fillStyle = '#8a8890'; disc(x, 0, 0, 130); x.fill();
-  x.fillStyle = '#b8b6bc'; disc(x, 0, 0, 124); x.fill();
-  // rings raked round three rocks, the rest in straight lines
-  x.strokeStyle = 'rgba(90,88,96,0.5)'; x.lineWidth = 1.6;
-  for (let yy = -120; yy <= 120; yy += 7) { x.beginPath(); x.moveTo(-Math.sqrt(Math.max(0, 124 * 124 - yy * yy)), yy); x.lineTo(Math.sqrt(Math.max(0, 124 * 124 - yy * yy)), yy); x.stroke(); }
-  for (const [rx, ry, rr] of [[-40, -20, 20], [42, 10, 16], [0, 50, 12]]) {
-    x.fillStyle = '#b8b6bc'; disc(x, rx, ry, rr + 26); x.fill();
-    for (let k = 1; k <= 3; k++) { disc(x, rx, ry, rr + k * 7); x.stroke(); }
-  }
-  x.restore();
-  for (const [rx, ry, rr] of [[-40, -20, 20], [42, 10, 16], [0, 50, 12]]) {
-    const y = ry * 0.62;
-    x.fillStyle = 'rgba(0,0,0,0.35)'; x.beginPath(); x.ellipse(rx + 3, y + 5, rr, rr * 0.45, 0, 0, TAU); x.fill();
-    x.fillStyle = rgrad(x, rx - rr * 0.3, y - rr * 0.6, rr * 1.4, ['#8a8690', '#55515c', '#2e2a34']); x.beginPath(); x.ellipse(rx, y - rr * 0.2, rr * 0.95, rr * 0.7, 0, 0, TAU); x.fill();
-    x.fillStyle = 'rgba(100,150,96,0.7)'; x.beginPath(); x.ellipse(rx - rr * 0.2, y - rr * 0.55, rr * 0.5, rr * 0.22, 0, 0, TAU); x.fill();
-  }
-});
-SAKURA.islet = () => sprite('m-islet', 300, 210, x => {
-  const rnd = seeded(383);
-  x.save(); x.scale(1, 0.62);
-  x.fillStyle = 'rgba(0,0,0,0.25)'; disc(x, 0, 8, 128); x.fill();
-  x.fillStyle = rgrad(x, -20, -20, 126, ['#4f7a4c', '#2f5232', '#1c3420']); disc(x, 0, 0, 122); x.fill();
-  x.restore();
-  // a mound of moss with a few stones on it and a thick fall of petals
-  for (let i = 0; i < 120; i++) { const a = rnd() * TAU, d = Math.sqrt(rnd()) * 110; x.fillStyle = `rgba(255,${180 + rnd() * 30 | 0},${206 + rnd() * 20 | 0},${0.5 + rnd() * 0.4})`; x.beginPath(); x.ellipse(Math.cos(a) * d, Math.sin(a) * d * 0.62, 3, 1.7, rnd() * 3, 0, TAU); x.fill(); }
-  for (const [rx, ry, rr] of [[-30, -6, 22], [24, -14, 16], [8, 18, 12], [-52, 16, 10]]) {
-    x.fillStyle = 'rgba(0,0,0,0.35)'; x.beginPath(); x.ellipse(rx + 3, ry + 6, rr, rr * 0.45, 0, 0, TAU); x.fill();
-    x.fillStyle = rgrad(x, rx - rr * 0.3, ry - rr * 0.6, rr * 1.4, ['#8a8690', '#55515c', '#2e2a34']); x.beginPath(); x.ellipse(rx, ry - rr * 0.2, rr, rr * 0.7, 0, 0, TAU); x.fill();
-    x.fillStyle = 'rgba(110,160,100,0.8)'; x.beginPath(); x.ellipse(rx, ry - rr * 0.6, rr * 0.6, rr * 0.25, 0, 0, TAU); x.fill();
-  }
-});
 SAKURA.patches = [
   () => patchSprite('p-petals', 300, 200, 451, (x, w, h, rnd) => {
     x.fillStyle = '#3a2a34'; x.fillRect(-w / 2, -h / 2, w, h);
@@ -11429,76 +11109,7 @@ SAKURA.patches = [
     scatter(rnd, w, h, 600, (px, py, r) => { x.fillStyle = r() < 0.5 ? 'rgba(180,176,186,0.4)' : 'rgba(20,18,24,0.35)'; disc(x, px, py, 0.7 + r()); x.fill(); });
   }),
 ];
-SAKURA.path = {
-  bands: [[50, 'rgba(6,6,10,0.22)']], step: 44,
-  along(x, y, h, k, ang) {
-    const nx = Math.cos(ang + Math.PI / 2), ny = Math.sin(ang + Math.PI / 2), o = (k % 2 ? 1 : -1) * (4 + h * 6);
-    blit(SAKURA.step(Math.floor(h * 4)), x + nx * o, y + ny * o);
-    if (h > 0.8) blit(SAKURA.pile(), x - nx * 22, y - ny * 22 + 6);
-  },
-};
-SAKURA.marks = [SAKURA.pond, SAKURA.raked, SAKURA.islet];
 
-// ---- 雪夜: a trodden trail with footprints; a frozen pond, a campfire ring, snowmen round a sled; ice, drifts, earth
-SNOW.pond = () => sprite('m-ice', 300, 210, x => {
-  const rnd = seeded(391);
-  x.save(); x.scale(1, 0.62);
-  x.fillStyle = 'rgba(0,0,0,0.2)'; disc(x, 0, 8, 134); x.fill();
-  x.fillStyle = rgrad(x, 0, 0, 130, ['#eef4ff', '#c8d4ee', '#9aa8cc']); disc(x, 0, 0, 130); x.fill();
-  x.fillStyle = rgrad(x, -30, -30, 116, ['#c8e4ff', '#7aa4d4', '#3c5a8c']); disc(x, 0, 0, 110); x.fill();
-  // cracks, and the curls skaters left
-  x.strokeStyle = 'rgba(240,250,255,0.55)'; x.lineWidth = 1.2;
-  for (let i = 0; i < 6; i++) { let px = (rnd() - 0.5) * 80, py = (rnd() - 0.5) * 80; x.beginPath(); x.moveTo(px, py); for (let s = 0; s < 5; s++) { px += (rnd() - 0.5) * 34; py += (rnd() - 0.5) * 34; x.lineTo(px, py); } x.stroke(); }
-  x.strokeStyle = 'rgba(255,255,255,0.35)'; x.lineWidth = 2;
-  for (let i = 0; i < 4; i++) { x.beginPath(); x.ellipse((rnd() - 0.5) * 60, (rnd() - 0.5) * 50, 20 + rnd() * 30, 12 + rnd() * 20, rnd() * 3, 0, 4 + rnd() * 2); x.stroke(); }
-  x.fillStyle = 'rgba(255,255,255,0.4)'; x.beginPath(); x.ellipse(-36, -40, 40, 10, -0.3, 0, TAU); x.fill();
-  x.restore();
-});
-SNOW.fire = () => sprite('m-fire', 300, 210, x => {
-  const rnd = seeded(397);
-  x.save(); x.scale(1, 0.62);
-  x.fillStyle = rgrad(x, 0, 0, 132, ['rgba(255,170,90,0.25)', 'rgba(255,140,70,0.08)', 'rgba(255,120,60,0)']); disc(x, 0, 0, 132); x.fill();
-  // the snow melted back round it to dark ground, and logs to sit on
-  x.fillStyle = rgrad(x, 0, 0, 70, ['#2a2018', '#3a3030', 'rgba(60,60,80,0)']); disc(x, 0, 0, 74); x.fill();
-  for (let i = 0; i < 12; i++) { const a = i / 12 * TAU; x.fillStyle = rgrad(x, Math.cos(a) * 40 - 3, Math.sin(a) * 40 - 3, 12, ['#9aa0ac', '#5a606c', '#30343c']); disc(x, Math.cos(a) * 40, Math.sin(a) * 40, 8 + rnd() * 3); x.fill(); }
-  x.fillStyle = '#1a1210'; disc(x, 0, 0, 30); x.fill();
-  x.restore();
-  for (const [lx, ly, a] of [[-92, -10, 0.25], [88, 6, -0.2], [-6, 56, 0.05]]) {
-    x.save(); x.translate(lx, ly); x.rotate(a);
-    x.fillStyle = 'rgba(0,0,0,0.3)'; x.beginPath(); x.ellipse(2, 6, 30, 6, 0, 0, TAU); x.fill();
-    x.fillStyle = vgrad(x, -7, 7, '#7a5236', '#3e2818'); rrPath(x, -28, -7, 56, 14, 7); x.fill();
-    x.fillStyle = '#c8a070'; x.beginPath(); x.ellipse(28, 0, 4, 7, 0, 0, TAU); x.fill();
-    x.fillStyle = 'rgba(240,246,255,0.85)'; rrPath(x, -24, -9, 48, 5, 3); x.fill();
-    x.restore();
-  }
-  // the crossed logs in the middle
-  x.strokeStyle = '#4a3020'; x.lineWidth = 6; x.lineCap = 'round';
-  x.beginPath(); x.moveTo(-16, 8); x.lineTo(14, -6); x.moveTo(-14, -6); x.lineTo(16, 8); x.stroke();
-});
-SNOW.sled = () => sprite('m-sled', 300, 210, x => {
-  const rnd = seeded(401);
-  x.save(); x.scale(1, 0.62);
-  x.fillStyle = rgrad(x, 0, 0, 128, ['rgba(255,255,255,0.35)', 'rgba(220,232,255,0.2)', 'rgba(200,215,245,0)']); disc(x, 0, 0, 128); x.fill();
-  // snow angels pressed into it
-  for (const [ax, ay] of [[-60, 30], [50, 44]]) {
-    x.fillStyle = 'rgba(120,140,190,0.35)';
-    x.beginPath(); x.ellipse(ax, ay, 10, 22, 0, 0, TAU); x.fill();
-    x.beginPath(); x.ellipse(ax, ay - 26, 8, 8, 0, 0, TAU); x.fill();
-    for (const sd of [-1, 1]) { x.beginPath(); x.ellipse(ax + sd * 20, ay - 10, 18, 7, sd * -0.5, 0, TAU); x.fill(); x.beginPath(); x.ellipse(ax + sd * 10, ay + 26, 6, 16, sd * 0.3, 0, TAU); x.fill(); }
-  }
-  x.restore();
-  // a red sled with its rope, and two snowmen keeping an eye on it
-  x.save(); x.translate(10, -6); x.rotate(-0.15);
-  x.fillStyle = 'rgba(0,0,0,0.3)'; x.beginPath(); x.ellipse(2, 12, 34, 7, 0, 0, TAU); x.fill();
-  x.strokeStyle = '#6a4a3a'; x.lineWidth = 3; x.beginPath(); x.moveTo(-34, 8); x.lineTo(30, 8); x.quadraticCurveTo(40, 8, 38, 0); x.stroke();
-  x.fillStyle = '#c8402e'; rrPath(x, -30, -8, 58, 14, 4); x.fill();
-  x.fillStyle = 'rgba(255,255,255,0.3)'; x.fillRect(-26, -6, 50, 3);
-  x.strokeStyle = '#e8d8a0'; x.lineWidth = 1.5; x.beginPath(); x.moveTo(28, -2); x.quadraticCurveTo(50, -10, 60, 6); x.stroke();
-  x.restore();
-  blit(SNOW.snowman(), -70, -30);
-  blit(SNOW.snowman(), 78, -36);
-  for (let i = 0; i < 6; i++) blit(SNOW.mound(i % 3), (rnd() - 0.5) * 220, 50 + (rnd() - 0.5) * 30);
-});
 SNOW.patches = [
   () => patchSprite('p-ice', 300, 200, 471, (x, w, h, rnd) => {
     x.fillStyle = '#5a7ab0'; x.fillRect(-w / 2, -h / 2, w, h);
@@ -11518,50 +11129,7 @@ SNOW.patches = [
     scatter(rnd, w, h, 20, (px, py, r) => { x.fillStyle = 'rgba(230,238,255,0.6)'; x.beginPath(); x.ellipse(px, py, 6 + r() * 6, 2 + r() * 2, 0, 0, TAU); x.fill(); });
   }),
 ];
-SNOW.path = {
-  bands: [[70, 'rgba(240,246,255,0.18)'], [56, 'rgba(10,14,28,0.25)'], [46, 'rgba(120,135,175,0.4)']], step: 22,
-  along(x, y, h, k, ang) { footprints(x, y, ang, k, 'rgba(10,14,30,0.32)'); },
-};
-SNOW.marks = [SNOW.pond, SNOW.fire, SNOW.sled];
 
-// ---- 机房: cable trays with the cables run along them; the core, a cooling grille, a junction box; perforated tiles,
-// taped-off floor, scuffed panels
-SERVER.core = () => sprite('m-core', 300, 210, x => {
-  x.save(); x.scale(1, 0.62);
-  x.fillStyle = 'rgba(0,0,0,0.4)'; disc(x, 0, 8, 134); x.fill();
-  x.fillStyle = '#141c26'; disc(x, 0, 0, 128); x.fill();
-  x.strokeStyle = '#2f3d52'; x.lineWidth = 3; disc(x, 0, 0, 128); x.stroke();
-  x.fillStyle = '#0a1018'; disc(x, 0, 0, 92); x.fill();
-  for (let i = 0; i < 16; i++) { const a = i / 16 * TAU; x.fillStyle = '#1f2a38'; x.save(); x.rotate(a); x.fillRect(96, -6, 28, 12); x.restore(); }
-  x.restore();
-});
-SERVER.grille = () => sprite('m-grille', 300, 210, x => {
-  x.fillStyle = 'rgba(0,0,0,0.4)'; x.fillRect(-122, -76, 244, 156);
-  x.fillStyle = '#18222e'; x.fillRect(-118, -78, 236, 150);
-  for (let j = 0; j < 4; j++) for (let i = 0; i < 6; i++) {
-    const X = -114 + i * 38, Y = -74 + j * 36;
-    x.fillStyle = '#0c141c'; x.fillRect(X, Y, 34, 32);
-    x.fillStyle = 'rgba(120,180,230,0.25)'; for (let a = 0; a < 5; a++) for (let b = 0; b < 4; b++) { disc(x, X + 5 + a * 6, Y + 6 + b * 7, 1.3); x.fill(); }
-  }
-  x.strokeStyle = '#ffc840'; x.lineWidth = 3; x.setLineDash([10, 8]); x.strokeRect(-118, -78, 236, 150); x.setLineDash([]);
-});
-SERVER.hub = () => sprite('m-hub', 300, 210, x => {
-  x.fillStyle = 'rgba(0,0,0,0.4)'; x.beginPath(); x.ellipse(0, 26, 56, 14, 0, 0, TAU); x.fill();
-  // the cables coming in from the four ways and into the box
-  x.lineCap = 'round';
-  ['#3a8cff', '#ffcf3a', '#ff5a7a', '#56ff9a'].forEach((c, i) => {
-    x.strokeStyle = c; x.lineWidth = 3.5;
-    const o = (i - 1.5) * 5;
-    x.beginPath(); x.moveTo(-150, o * 0.6); x.bezierCurveTo(-90, o, -60, o + 10, -34, o * 0.5); x.stroke();
-    x.beginPath(); x.moveTo(150, o * 0.6); x.bezierCurveTo(90, o, 60, o - 10, 34, o * 0.5); x.stroke();
-    x.beginPath(); x.moveTo(o, -105); x.bezierCurveTo(o, -70, o + 6, -40, o * 0.6, -26); x.stroke();
-    x.beginPath(); x.moveTo(o, 105); x.bezierCurveTo(o, 70, o - 6, 40, o * 0.6, 24); x.stroke();
-  });
-  x.fillStyle = '#c9d2dc'; rrPath(x, -36, -30, 72, 54, 4); x.fill();
-  x.fillStyle = '#9aa6b4'; x.fillRect(-36, 16, 72, 8);
-  x.fillStyle = '#1a2230'; rrPath(x, -28, -22, 56, 30, 3); x.fill();
-  for (let i = 0; i < 8; i++) { x.fillStyle = '#0a1018'; x.fillRect(-24 + i * 6.5, -16, 4.5, 6); }
-});
 SERVER.patches = [
   () => patchSprite('p-perf', 300, 200, 491, (x, w, h) => {
     x.fillStyle = '#0c1118'; x.fillRect(-w / 2, -h / 2, w, h);
@@ -11587,78 +11155,11 @@ SERVER.patches = [
     x.lineCap = 'round'; ['#3a8cff', '#ff5a7a'].forEach((c, i) => { x.strokeStyle = c; x.lineWidth = 3; x.beginPath(); x.moveTo(-8 + i * 8, 0); x.quadraticCurveTo(-4 + i * 10, -18, 12 + i * 10, -22); x.stroke(); });
   }),
 ];
-SERVER.path = {
-  bands: [[60, 'rgba(0,0,0,0.5)'], [50, '#0e1620'], [44, () => groundPattern('server-grate', 128, paintGrating)],
-    [3.5, '#3a8cff', -9, 0], [3.5, '#ffcf3a', -3, 0], [3.5, '#ff5a7a', 3, 0], [3.5, '#56ff9a', 9, 0]],
-  step: 64,
-  along(x, y, h, k, ang) {
-    // a bracket across the tray
-    ctx.save(); ctx.translate(x, y); ctx.rotate(ang);
-    ctx.fillStyle = '#4a5a6e'; ctx.fillRect(-2, -24, 4, 48);
-    ctx.restore();
-  },
-};
-SERVER.marks = [SERVER.core, SERVER.grille, SERVER.hub];
-// the core's rings glow, the fountain's water glints, the clam's pearl and the campfire light up, the koi swim
-const MARK_FX = {
-  garden(n, x, y, t, h) {
-    if (n !== 0) return;
-    ctx.globalCompositeOperation = 'lighter';
-    for (let i = 0; i < 5; i++) {
-      const a = Math.sin(t * 2 + i * 1.7 + h * 9);
-      if (a < 0.5) continue;
-      ctx.globalAlpha = (a - 0.5) * 2; ctx.fillStyle = '#e8f8ff';
-      disc(ctx, x + Math.cos(i * 2.3 + h * 7) * 60, y + 12 + Math.sin(i * 2.3 + h * 7) * 30, 1.6); ctx.fill();
-    }
-    ctx.globalAlpha = 1; ctx.globalCompositeOperation = 'source-over';
-  },
-  sea(n, x, y, t) {
-    if (n !== 0) return;
-    ctx.globalCompositeOperation = 'lighter'; ctx.globalAlpha = 0.6 + Math.sin(t * 2.4) * 0.3;
-    blit(GARDEN.lampGlow(), x, y + 22);
-    ctx.globalAlpha = 1; ctx.globalCompositeOperation = 'source-over';
-  },
-  sakura(n, x, y, t, h) {
-    if (n !== 0) return;
-    for (let k = 0; k < 2; k++) {
-      const a = t * (0.35 + k * 0.12) * (k ? -1 : 1) + h * 9 + k * 2, px = x + Math.cos(a) * (46 + k * 18), py = y + Math.sin(a) * (24 + k * 10);
-      ctx.save(); ctx.translate(px, py); ctx.rotate(a + (k ? -Math.PI / 2 : Math.PI / 2)); ctx.globalAlpha = 0.9;
-      blit(SAKURA.koi(k), 0, 0); ctx.restore();
-    }
-    ctx.globalAlpha = 1;
-  },
-  snow(n, x, y, t) {
-    if (n !== 1) return;
-    ctx.globalCompositeOperation = 'lighter';
-    ctx.globalAlpha = 0.75 + Math.sin(t * 9) * 0.1 + Math.sin(t * 13) * 0.08;
-    blit(GARDEN.lampGlow(), x, y);
-    for (let i = 0; i < 3; i++) {
-      const f = Math.sin(t * (7 + i * 3) + i) * 0.15 + 1;
-      ctx.fillStyle = ['rgba(255,120,40,0.85)', 'rgba(255,190,80,0.85)', 'rgba(255,240,180,0.9)'][i];
-      ctx.beginPath(); ctx.moveTo(x - 14 + i * 5, y + 2); ctx.quadraticCurveTo(x - 8 + i * 4, y - 30 * f + i * 8, x + (i - 1) * 2, y - (34 - i * 9) * f); ctx.quadraticCurveTo(x + 8 - i * 4, y - 30 * f + i * 8, x + 14 - i * 5, y + 2); ctx.closePath(); ctx.fill();
-    }
-    ctx.globalAlpha = 1; ctx.globalCompositeOperation = 'source-over';
-  },
-  server(n, x, y, t) {
-    if (n !== 0) return;
-    ctx.save(); ctx.translate(x, y); ctx.scale(1, 0.62);
-    ctx.globalCompositeOperation = 'lighter';
-    for (let k = 0; k < 3; k++) {
-      ctx.strokeStyle = `rgba(95,224,255,${0.25 + 0.2 * Math.sin(t * 2 - k * 0.9)})`; ctx.lineWidth = 3;
-      disc(ctx, 0, 0, 30 + k * 22); ctx.stroke();
-    }
-    ctx.fillStyle = `rgba(95,224,255,${0.5 + 0.3 * Math.sin(t * 3)})`; disc(ctx, 0, 0, 10); ctx.fill();
-    ctx.globalCompositeOperation = 'source-over';
-    ctx.restore();
-    ctx.font = '700 22px ui-monospace, Menlo, monospace'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-    ctx.fillStyle = 'rgba(160,240,255,0.55)'; ctx.fillText('</>', x, y - 52);
-  },
-};
 
 const MAPS = {
   garden: {
-    name: '夜之庄园', g: '园', sub: '草坪、石板小径、喷泉和花坛',
-    base: [LAWN, paintLawn], path: GARDEN.path, patches: GARDEN.patches, marks: GARDEN.marks, markFx: MARK_FX.garden,
+    name: '夜之庄园', g: '园', sub: '草坪、花丛、玫瑰和花园灯笼',
+    base: [LAWN, paintLawn], patches: GARDEN.patches,
     decor: (h, k) => h < 0.07 ? GARDEN.bush(k % ROSE_COL.length) : h < 0.2 ? GARDEN.flowers(k % FLOWER_COL.length) : SPR[SMALL_DECOR[k % SMALL_DECOR.length]](),
     lamp: () => GARDEN.lamp(), glow: () => GARDEN.lampGlow(),
     motes(t, L, R, T, B) {
@@ -11673,7 +11174,7 @@ const MAPS = {
   },
   sea: {
     name: '深海', g: '海', sub: '珊瑚、海藻和发光的水母',
-    base: [LAWN, paintSeabed], path: SEA.path, patches: SEA.patches, marks: SEA.marks, markFx: MARK_FX.sea,
+    base: [LAWN, paintSeabed], patches: SEA.patches,
     decor: (h, k) => h < 0.06 ? SEA.coral(k % 3) : h < 0.15 ? SEA.kelp(k % 3) : [SEA.shell, SEA.starfish, SEA.pebbles, SEA.shell, SEA.pebbles][k % 5](),
     lamp: () => SEA.jelly(), glow: poolGlow('sea', '90,215,255'), bob: 5,
     motes(t, L, R, T, B) {
@@ -11686,8 +11187,8 @@ const MAPS = {
     },
   },
   sakura: {
-    name: '樱花庭院', g: '樱', sub: '踏脚石、锦鲤池和飘落的樱花',
-    base: [LAWN, paintMoss], path: SAKURA.path, patches: SAKURA.patches, marks: SAKURA.marks, markFx: MARK_FX.sakura,
+    name: '樱花庭院', g: '樱', sub: '青苔、石灯笼和飘落的樱花',
+    base: [LAWN, paintMoss], patches: SAKURA.patches,
     decor: (h, k) => h < 0.1 ? SAKURA.rock(k % 3) : [SAKURA.pile, SPR.tuft, SAKURA.pile, SPR.daisy][k % 4](),
     lamp: () => SAKURA.toro(), glow: () => GARDEN.lampGlow(),
     motes(t, L, R, T, B) {
@@ -11704,7 +11205,7 @@ const MAPS = {
   },
   snow: {
     name: '雪夜', g: '雪', sub: '雪松、雪人和暖黄的路灯',
-    base: [LAWN, paintSnow], path: SNOW.path, patches: SNOW.patches, marks: SNOW.marks, markFx: MARK_FX.snow,
+    base: [LAWN, paintSnow], patches: SNOW.patches,
     decor: (h, k) => h < 0.04 ? SNOW.snowman() : h < 0.14 ? SNOW.mound(k % 3) : [SNOW.twig, SNOW.mound.bind(null, 0), SNOW.twig][k % 3](),
     lamp: () => GARDEN.lamp(), glow: () => GARDEN.lampGlow(),
     motes(t, L, R, T, B) {
@@ -11717,7 +11218,7 @@ const MAPS = {
   },
   server: {
     name: '机房', g: '机', sub: '一排排服务器机柜闪着灯',
-    base: [LAWN, paintRaisedFloor], path: SERVER.path, patches: SERVER.patches, marks: SERVER.marks, markFx: MARK_FX.server,
+    base: [LAWN, paintRaisedFloor], patches: SERVER.patches,
     decor: (h, k) => h < 0.09 ? SERVER.rack(k % 3) : h < 0.13 ? SERVER.crac() : [SERVER.vent, SERVER.cable.bind(null, 0), SERVER.cable.bind(null, 1)][k % 3](),
     lamp: () => SERVER.beacon(), glow: poolGlow('server', '80,200,255'),
     // the racks' lights blink, each at its own pace
@@ -11763,15 +11264,14 @@ function drawGround(cx, cy) {
   if (id !== groundId) { if (groundId) cache.delete('pat-' + groundId + '-ground'); groundId = id; }
   ctx.fillStyle = groundPattern(id + '-ground', M.base[0], M.base[1]);
   ctx.fillRect(L, T, R - L, B - T);
-  drawTerrain(M, L, R, T, B, t);
-  // things placed by a hash so they stay put, kept off the paths and the landmarks; kelp sways about its foot
+  drawPatches(M, L, R, T, B);
+  // things placed by a hash so they stay put; kelp sways about its foot
   const C = 170, lit = [];
   for (let gx = Math.floor(L / C); gx <= Math.ceil(R / C); gx++) {
     for (let gy = Math.floor(T / C); gy <= Math.ceil(B / C); gy++) {
       const h = hash2(gx, gy);
       if (h > 0.55) continue;
       const px = (gx + hash2(gx + 17, gy)) * C, py = (gy + hash2(gx, gy + 31)) * C;
-      if (pathDist(px, py) < 64 || nearMark(px, py, 30)) continue;
       const k = Math.floor(h * 1000), s = M.decor(h, k);
       if (s.sway) {
         ctx.save(); ctx.translate(px, py + s.sway); ctx.transform(1, 0, Math.sin(t * 1.2 + px * 0.01) * 0.12, 1, 0, 0);
@@ -11780,8 +11280,8 @@ function drawGround(cx, cy) {
       if (M.lit) lit.push([px, py, h, k]);
     }
   }
-  // lamps along the paths, on alternate sides, and the light they throw
-  const lamps = pathLamps(L, R, T, B, 46);
+  // lamps here and there, and the light they throw
+  const lamps = scatterLamps(L, R, T, B);
   for (const [lx, ly] of lamps) blit(M.lamp(), lx, ly - 30 + (M.bob ? Math.sin(t * 1.4 + lx * 0.02 + ly * 0.03) * M.bob : 0));
   ctx.globalCompositeOperation = 'lighter';
   for (const [lx, ly] of lamps) { ctx.globalAlpha = 0.9 + 0.1 * Math.sin(t * 3 + lx * 0.01 + ly * 0.013); blit(M.glow(), lx, ly - 8); }
@@ -11907,7 +11407,6 @@ function treeAt(gx, gy) {
   const h = hash2(gx * 3 + 101, gy * 7 + 29);
   if (h > 0.4) return null;
   const x = (gx + 0.2 + 0.6 * hash2(gx + 41, gy + 3)) * TREE_C, y = (gy + 0.2 + 0.6 * hash2(gx + 9, gy + 57)) * TREE_C;
-  if (pathDist(x, y) < 100 || nearMark(x, y, 70)) return null;
   return { x, y, k: Math.floor(h * 1000) % 3 };
 }
 const treeDmg = () => 90 + 30 * G.time / 60;
@@ -12273,11 +11772,20 @@ const doorSprite = () => sprite('door', 150, 210, x => {
   x.lineWidth = 3; x.strokeStyle = 'rgba(255,255,255,0.35)'; x.strokeText('？？？', 0, -31.5);
   x.fillStyle = '#111'; x.fillText('？？？', 0, -31.5);
 });
+// whether a tree stands within r of a spot
+function nearTree(x, y, r) {
+  const gx = Math.floor(x / TREE_C), gy = Math.floor(y / TREE_C);
+  for (let i = gx - 1; i <= gx + 1; i++) for (let j = gy - 1; j <= gy + 1; j++) {
+    const p = treeAt(i, j);
+    if (p && (p.x - x) ** 2 + (p.y - y) ** 2 < r * r) return true;
+  }
+  return false;
+}
 function spawnHouse() {
   for (let k = 0; k < 12; k++) {
     const a = rand(0, TAU), d = rand(520, 700), x = P.x + Math.cos(a) * d, y = P.y + Math.sin(a) * d;
-    // not on a walk
-    if ((pathDist(x, y) < 120 || nearMark(x, y, 90)) && k < 11) continue;
+    // not on top of a tree
+    if (k < 11 && nearTree(x, y, 150)) continue;
     G.house = { x, y, t: 0, hold: 0, state: 'out' };
     toast('一扇门出现了', '跟着紫色箭头找到它，站在门前就能进去：门后有个新 BOSS', 'house', '门');
     sfx.chest();
