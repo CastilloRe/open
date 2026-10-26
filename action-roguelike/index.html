@@ -1098,10 +1098,10 @@ const WEAPONS = {
       { cd: 4.5, n: 3, dmg: 20, rate: 5, dur: 8, range: 340 },
     ],
   },
-  // 激光炮: a cannon floating at her shoulder that charges, then holds a thick beam along the way with the most enemies
-  // on it, following them round
+  // 激光炮: she raises both hands, gathers light in them, then holds a thick beam along the way with the most enemies on
+  // it, following them round
   laser: {
-    name: '激光炮', g: '激', desc: '肩膀旁浮着一门激光炮：充能片刻，朝敌人排得最长的方向轰出一道又粗又长的激光，激光会跟着敌人慢慢扫，一路上的敌人每秒受伤十次。',
+    name: '激光炮', g: '激', desc: '她双手抬起，掌心聚起一团光，朝敌人排得最长的方向轰出一道又粗又长的激光；激光会跟着敌人慢慢扫，一路上的敌人每秒受伤十次。',
     evo: { need: 'amplify', name: '歼星炮', desc: '紫色的激光更粗更长、轰得更久，扫过的地面留下一道道燃烧的焦痕。' },
     lv: [
       { cd: 4.0, dmg: 7, len: 360, wid: 18, dur: 0.8 },
@@ -2072,7 +2072,7 @@ function paintFace(expr, plate) {
   }
   return c;
 }
-const FACE_OF = { cast: 'focus', hurt: 'hurt', happy: 'happy', spin: 'happy', angry: 'angry', shy: 'shy', curtsy: 'serene', wave: 'smile' };
+const FACE_OF = { beam: 'focus', cast: 'focus', hurt: 'hurt', happy: 'happy', spin: 'happy', angry: 'angry', shy: 'shy', curtsy: 'serene', wave: 'smile' };
 const BLINKS = ['calm', 'focus', 'angry', 'smile', 'shy', 'dark'];
 function createClaudeModel(T, gltf) {
   let mesh = null;
@@ -2253,6 +2253,11 @@ gl_Position.xy += normalize(normalMatrix * objectNormal).xy * uInk * 2. / uRes *
       case 'attack':
         // flicks her hand toward the target
         goal.aRx = -0.5; goal.aRz = 0.2; goal.lean += 0.06; goal.bob = -0.008; goal.hx = 0.04; break;
+      case 'beam':
+        // 激光炮: both hands raised in front of her, braced, leaning into the beam
+        goal.aLx = goal.aRx = -0.5; goal.aLz = goal.aRz = 0.12; goal.lean = 0.1; goal.bob = -0.012; goal.hx = 0.05; goal.flare = 0.06;
+        if (s.aim != null) yawGoal = s.aim;
+        break;
       case 'cast':
         if (k < 0.45) { goal.lean = -0.12; goal.bob = 0.03; goal.aLz = 0.45; goal.aRz = 0.45; goal.aRx = -0.5; goal.hx = -0.1; goal.flare = 0.05; }
         else { goal.lean = 0.16; goal.bob = -0.015; goal.aRx = -0.5; goal.aLx = 0.3; goal.aLz = 0.3; goal.hx = 0.08; goal.flare = 0.12; }
@@ -2475,6 +2480,11 @@ gl_Position.xy += normalize(normalMatrix * inkDir).xy * uInk * 2. / uRes * gl_Po
       case 'attack':
         // puffs a bubble at the target
         goal.lean = 0.1; goal.hx = 0.12; goal.bob = -0.006; goal.aLx = 0.35; goal.aRx = 0.35; goal.eL = goal.eR = 0.9; goal.aLz = goal.aRz = -0.2; break;
+      case 'beam':
+        // 激光炮: both arms raised straight out in front of her, hands together, braced against the beam
+        goal.lean = 0.12; goal.hx = 0.08; goal.bob = -0.01; goal.aLx = goal.aRx = 1.2; goal.eL = goal.eR = 0.15; goal.aLz = goal.aRz = -0.15; goal.kL = goal.kR = 0.15;
+        if (s.aim != null) yawGoal = s.aim;
+        break;
       case 'gulp':
         // 一口吞: a huge breath in, arms flung wide, then the snap of the jaws
         if (k < 0.55) { goal.lean = -0.16; goal.spine = -0.12; goal.hx = -0.3; goal.aLz = goal.aRz = 0.45; goal.aLx = goal.aRx = -0.2; goal.eL = goal.eR = 0.1; goal.bob = 0.02; }
@@ -2673,7 +2683,7 @@ function size3D() {
   const k = PX * (P ? P.size : 1), ss = Math.min(clamp(2 / PX, 1, 2), 900 / (M3_FH * M3_UNIT * k));
   M3.renderer.setSize(Math.round(M3_FW * M3_UNIT * k * ss), Math.round(M3_FH * M3_UNIT * k * ss), false);
 }
-const POSE_OF = { atk1: 'attack', atk2: 'attack', atk3: 'attack', cast1: 'cast', cast2: 'cast', cast3: 'cast', dash4: 'land', hurt: 'hurt', skirt: 'curtsy', spin: 'spin', happy: 'happy', angry: 'angry', shy: 'shy', wave: 'wave', gulp: 'gulp', eat: 'eat', slack: 'slack', think: 'think' };
+const POSE_OF = { beam: 'beam', atk1: 'attack', atk2: 'attack', atk3: 'attack', cast1: 'cast', cast2: 'cast', cast3: 'cast', dash4: 'land', hurt: 'hurt', skirt: 'curtsy', spin: 'spin', happy: 'happy', angry: 'angry', shy: 'shy', wave: 'wave', gulp: 'gulp', eat: 'eat', slack: 'slack', think: 'think' };
 function modelState() {
   const a = P.anim;
   let pose = '', k = 0;
@@ -2684,7 +2694,7 @@ function modelState() {
   }
   return {
     moving: P.moving, vx: P.dash ? P.dash.dx : P.mvx, vy: P.dash ? P.dash.dy : P.mvy,
-    aim: pose === 'attack' ? Math.atan2(P.aimX || 0, P.aimY || 1) : null,
+    aim: pose === 'attack' || pose === 'beam' ? Math.atan2(P.aimX || 0, P.aimY || 1) : null,
     pose, poseK: clamp(k, 0, 1), dash: !!P.dash,
     ult: G.ult ? G.ult.t : -1, dead: G.ending && !G.ending.win ? G.ending.t : -1,
     dark: P.dark > 0 ? 1 : 0, flash: P.flash > 0 && !(G.ending && !G.ending.win), dive: diveDepth(),
@@ -2729,6 +2739,7 @@ const frameCache = new Map();
 actions.onload = () => { actionsReady = true; frameCache.clear(); cache.clear(); };
 actions.src = 'art/claude-actions.webp';
 function frameSprite(name) {
+  if (name === 'beam') name = 'cast2';
   if (!actionsReady || !FRAMES[name]) return null;
   let s = frameCache.get(name);
   if (s) return s;
@@ -5054,11 +5065,11 @@ function updateWeapons(dt) {
         break;
       }
       case 'laser': {
-        // 激光炮: the cannon floats after her shoulder; it charges for a moment, then holds its beam for a while, turning
-        // after the crowd, and cools down
-        const tx = P.x - P.face * 28, ty = P.y - 54 * P.size + Math.sin(G.time * 2.2) * 3, k = Math.min(1, dt * 10);
-        if (w.cx == null || Math.abs(tx - w.cx) + Math.abs(ty - w.cy) > 300) { w.cx = tx; w.cy = ty; }
-        w.cx += (tx - w.cx) * k; w.cy += (ty - w.cy) * k;
+        // 激光炮: she raises both hands and gathers the light for a moment, then holds the beam for a while, turning after
+        // the crowd, and lowers them to cool down; the beam leaves from between her hands
+        const hands = laserHands(w.aim != null ? w.aim : (P.face > 0 ? 0 : Math.PI));
+        w.cx = hands.x; w.cy = hands.y;
+        if (w.st) { P.aimX = Math.cos(w.aim); P.aimY = Math.sin(w.aim); if (!P.moving) P.face = P.aimX >= 0 ? 1 : -1; }
         const L = s.len * P.area, wid = laserWid(s);
         if (w.st === 'charge') {
           w.ct -= dt;
@@ -5080,6 +5091,7 @@ function updateWeapons(dt) {
         const a = laserAim(w.cx, w.cy, L, wid);
         if (a == null) { w.t = 0.3; break; }
         w.st = 'charge'; w.ct = 0.45; w.aim = w.want = a;
+        playAnim(['beam'], 0.5 + s.dur * P.dur, 3);
         sfx.charge();
         break;
       }
@@ -6601,10 +6613,12 @@ function updateBullets(dt) {
 
 // 模型部署: a turret takes a moment to unfold, then turns its barrel onto the nearest enemy in range and fires at it so
 // many times a second; when its time is up it packs up, and 集群部署's go off instead
-// 激光炮: how thick the beam is; the way along which it would cross the most enemies (the big ones counting for more),
+// 激光炮: how thick the beam is; where it leaves her; the way along which it would cross the most enemies (the big ones counting for more),
 // tried every fifteen degrees; and a tick of the beam, burning whatever is on it, one more beam fanned out for each
 // 多重施法. 歼星炮 leaves burning scorch marks along it
-const laserWid = s => s.wid * P.wid * (1 + (P.area - 1) * 0.5), LASER_K = 1.3, LASER_MZ = 24 * LASER_K;
+const laserWid = s => s.wid * P.wid * (1 + (P.area - 1) * 0.5), LASER_MZ = 0;
+// between her hands, held out a little way toward the aim at chest height
+const laserHands = a => ({ x: P.x + Math.cos(a) * 18 * P.size, y: P.y - 14 * P.size + Math.sin(a) * 10 * P.size });
 function laserAim(ox, oy, len, wid) {
   const pool = [];
   forNear(ox, oy, len, e => { if (targetable(e) && (e.x - ox) ** 2 + (e.y - oy) ** 2 < len * len) pool.push(e); });
@@ -9625,14 +9639,13 @@ function drawHoney(z, a) {
   ctx.fillStyle = '#fff3d6'; ctx.font = `700 9px ${UI_FONT}`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText('蜜', px, py + 1.5);
   ctx.globalAlpha = 1;
 }
-// 激光炮: a sleek white cannon with an orange band floating at her shoulder, turned along its aim. Charging, its muzzle
-// swells with light and a dotted sight line shows where it will fire; firing, the beam is a wide glow, a band of colour and
-// a white-hot core, flickering, with a flare where it ends and specks running down it. 歼星炮's is violet
+// 激光炮: charging, a ball of light swells between her hands, sparks drawn into it, and a dotted sight line shows where she
+// will fire; firing, the beam is a wide glow, a band of colour and a white-hot core, flickering, with a flare where it
+// ends and specks running down it, and the light blazing in her hands. 歼星炮's is violet
 function drawLaser() {
   const w = P.weapons.find(v => v.id === 'laser');
-  if (!w || w.cx == null) return;
+  if (!w || w.cx == null || !w.st) return;
   const t = G.time, evo = w.level === 6, s = wStats(w), L = s.len * P.area, wid = laserWid(s), col = evo ? '170,130,255' : '255,80,130';
-  const aim = w.aim != null ? w.aim : (P.face > 0 ? 0 : Math.PI);
   if (w.st === 'charge') {
     const k = 1 - w.ct / 0.45;
     ctx.setLineDash([6, 7]); ctx.strokeStyle = `rgba(${col},${0.6 * k})`; ctx.lineWidth = 1.5;
@@ -9656,25 +9669,20 @@ function drawLaser() {
     }
     ctx.globalCompositeOperation = 'source-over';
   }
-  ctx.save(); ctx.translate(w.cx, w.cy); ctx.rotate(aim); ctx.scale(LASER_K, LASER_K);
-  if (Math.cos(aim) < 0) ctx.scale(1, -1);
-  if (w.st === 'fire') ctx.translate(-2 + Math.sin(t * 50), 0);
-  ctx.fillStyle = 'rgba(0,0,0,0.25)'; ctx.beginPath(); ctx.ellipse(0, 12, 14, 3, 0, 0, TAU); ctx.fill();
-  ctx.fillStyle = '#2a3240'; rrPath(ctx, -20, -9, 5, 18, 2); ctx.fill();
-  rrPath(ctx, 12, -4.5, 13, 9, 2); ctx.fill();
-  ctx.fillStyle = vgrad(ctx, -7, 7, '#ffffff', '#aab4c2'); rrPath(ctx, -16, -7, 30, 14, 6); ctx.fill();
-  ctx.lineWidth = 1.3; ctx.strokeStyle = '#2a3240'; ctx.stroke();
-  ctx.fillStyle = evo ? '#a07aff' : '#ff7a3a'; ctx.fillRect(-6, -7, 4, 14);
-  ctx.fillStyle = `rgb(${col})`; disc(ctx, 6, 0, 2.2); ctx.fill();
-  if (w.st === 'charge' || w.st === 'fire') {
-    const k = w.st === 'charge' ? 1 - w.ct / 0.45 : 1;
-    ctx.globalCompositeOperation = 'lighter';
-    const g = ctx.createRadialGradient(25, 0, 0, 25, 0, 5 + 11 * k);
-    g.addColorStop(0, 'rgba(255,255,255,0.95)'); g.addColorStop(0.5, `rgba(${col},0.7)`); g.addColorStop(1, `rgba(${col},0)`);
-    ctx.fillStyle = g; disc(ctx, 25, 0, 5 + 11 * k); ctx.fill();
-    ctx.globalCompositeOperation = 'source-over';
+  // the light in her hands
+  const k = w.st === 'charge' ? 1 - w.ct / 0.45 : 1, R = (6 + 10 * k) * (w.st === 'fire' ? 1 + Math.sin(t * 40) * 0.1 : 1);
+  ctx.globalCompositeOperation = 'lighter';
+  const g = ctx.createRadialGradient(w.cx, w.cy, 0, w.cx, w.cy, R * 1.8);
+  g.addColorStop(0, 'rgba(255,255,255,0.95)'); g.addColorStop(0.35, `rgba(${col},0.75)`); g.addColorStop(1, `rgba(${col},0)`);
+  ctx.fillStyle = g; disc(ctx, w.cx, w.cy, R * 1.8); ctx.fill();
+  if (w.st === 'charge') {
+    ctx.fillStyle = `rgba(${col},0.9)`;
+    for (let i = 0; i < 8; i++) {
+      const an = i / 8 * TAU + t * 3, d = 34 * (1 - ((t * 2.5 + i / 8) % 1));
+      disc(ctx, w.cx + Math.cos(an) * d, w.cy + Math.sin(an) * d * 0.7, 1.8); ctx.fill();
+    }
   }
-  ctx.restore();
+  ctx.globalCompositeOperation = 'source-over';
 }
 function drawTurret(z, a) {
   const up = Math.min(1, (z.max - z.life) / 0.35), t = G.time, hx = z.x, hy = z.y - 20 * up, c = Math.cos(z.aim), sn = Math.sin(z.aim);
