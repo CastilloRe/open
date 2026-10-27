@@ -4,6 +4,7 @@
 //      walking the lavender there from the tail's tip along the surface, it stays a narrow tube until it reaches the
 //      hem, where it spreads out. The tube up to there is the tail, and everything within its radius of its centre
 //      line is cut, whatever its colour (the frill of spikes along its top).
+//   1b. The second face. The back of her head is her face again, mirrored; it is painted over with hair.
 //   2. Arms and legs. The rig weighted most of her long hair, the wings and the sleeves' frills to the arm bones and
 //      the whole skirt and the other tail to the legs, so lifting an arm or kicking a leg dragged them along. Limb
 //      weight is kept only within a capsule along each limb's bones, fading out at its edge; what it takes away goes
@@ -106,6 +107,58 @@ function tail(cand, tipOf, reach) {
   for (let t = 0; t < idx.length; t += 3) if (![0, 1, 2].some(k => along[rep[idx[t + k]]] < Infinity)) keep.push(idx[t], idx[t + 1], idx[t + 2]);
   console.log(`front tail cut: ${idx.length / 3} -> ${keep.length / 3} triangles`);
   prim.getIndices().setArray(idx.constructor.from(keep));
+}
+
+// 1b. the second face: the back of her head is a mirror of her face, eyes and all. Over an oval there (the back
+// half of the head, between the choker and the top of the bangs) the colour map is painted over with hair: for each
+// texel of each triangle there, the point of the surface it colours gets a colour from a pattern of strands running
+// down the back of the head, silver to lavender in her hair's own colours, with a band of sheen across; towards the
+// oval's edge it fades into what was there
+{
+  const ALL = idx.length; // the triangle list as it stands after the tail cut
+  const tri = prim.getIndices().getArray(), tex = prim.getMaterial().getBaseColorTexture();
+  const Wt = info.width, Ht = info.height, C = info.channels, img = Buffer.from(px);
+  const cy = 0.775, cz = -0.016, ry = 0.105, rz = 0.118, backX = -0.075;
+  const oval = (y, z) => Math.hypot((y - cy) / ry, (z - cz) / rz);
+  const lo = [204, 193, 224], mid = [228, 219, 238], hi = [245, 241, 250];
+  const hairAt = (x, y, z) => {
+    // strands fanning down from the crown, in clumps of different widths, bent a little as they fall
+    const th = Math.atan2(z - cz, 0.92 - y), a = th * 38 + Math.sin(y * 30 + th * 5) * 0.8;
+    const s1 = Math.sin(a) * 0.45 + Math.sin(a * 1.7 + 1.3 + y * 8) * 0.35 + Math.sin(th * 11 + y * 6) * 0.2;
+    let t = 0.55 + 0.32 * s1;
+    // darker down towards the nape and out at the sides, a band of sheen across the crown
+    t *= 0.8 + 0.2 * Math.min(1, (y - 0.68) / 0.12);
+    const sheen = Math.max(0, 1 - Math.abs(y - 0.84) / 0.025) * (0.6 + 0.4 * Math.sin(z * 90));
+    const c = t < 0.5 ? lo.map((v, k) => v + (mid[k] - v) * t * 2) : mid.map((v, k) => v + (hi[k] - v) * (t - 0.5) * 2);
+    return c.map((v, k) => v + (255 - v) * sheen * 0.5);
+  };
+  let painted = 0, tris = 0;
+  const uvs = UV.getArray();
+  for (let t = 0; t < tri.length; t += 3) {
+    const v = [tri[t], tri[t + 1], tri[t + 2]];
+    const gx = (X(v[0]) + X(v[1]) + X(v[2])) / 3, gy = (Y(v[0]) + Y(v[1]) + Y(v[2])) / 3, gz = (Z(v[0]) + Z(v[1]) + Z(v[2])) / 3;
+    if (gx < backX || oval(gy, gz) > 1) continue;
+    tris++;
+    const q = v.map(i => [uvs[i * 2] * Wt - 0.5, uvs[i * 2 + 1] * Ht - 0.5]);
+    const det = (q[1][1] - q[2][1]) * (q[0][0] - q[2][0]) + (q[2][0] - q[1][0]) * (q[0][1] - q[2][1]);
+    if (Math.abs(det) < 1e-9) continue;
+    const x0 = Math.max(0, Math.floor(Math.min(q[0][0], q[1][0], q[2][0])) - 1), x1 = Math.min(Wt - 1, Math.ceil(Math.max(q[0][0], q[1][0], q[2][0])) + 1);
+    const y0 = Math.max(0, Math.floor(Math.min(q[0][1], q[1][1], q[2][1])) - 1), y1 = Math.min(Ht - 1, Math.ceil(Math.max(q[0][1], q[1][1], q[2][1])) + 1);
+    for (let py = y0; py <= y1; py++) for (let pxx = x0; pxx <= x1; pxx++) {
+      const b0 = ((q[1][1] - q[2][1]) * (pxx - q[2][0]) + (q[2][0] - q[1][0]) * (py - q[2][1])) / det;
+      const b1 = ((q[2][1] - q[0][1]) * (pxx - q[2][0]) + (q[0][0] - q[2][0]) * (py - q[2][1])) / det, b2 = 1 - b0 - b1;
+      // a texel's width over the edge too, so the seams don't show the old colour
+      const m = -1.5 / Math.max(1, Math.sqrt(Math.abs(det)));
+      if (b0 < m || b1 < m || b2 < m) continue;
+      const x = b0 * X(v[0]) + b1 * X(v[1]) + b2 * X(v[2]), y = b0 * Y(v[0]) + b1 * Y(v[1]) + b2 * Y(v[2]), z = b0 * Z(v[0]) + b1 * Z(v[1]) + b2 * Z(v[2]);
+      const c = hairAt(x, y, z), f = Math.min(1, Math.max(0, (1 - oval(y, z)) / 0.15)), o = (py * Wt + pxx) * C;
+      for (let k = 0; k < 3; k++) img[o + k] = Math.round(img[o + k] + (c[k] - img[o + k]) * f);
+      painted++;
+    }
+  }
+  const out = await sharp(img, { raw: { width: Wt, height: Ht, channels: C } }).png().toBuffer();
+  tex.setImage(out).setMimeType('image/png');
+  console.log(`second face painted over: ${tris} triangles, ${painted} texels`);
 }
 
 // 2. arm and leg weights kept to capsules along the bones

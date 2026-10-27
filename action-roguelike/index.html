@@ -2720,9 +2720,8 @@ vec3 swayed(vec3 p) {
 // 龙娘 in 3D: art/dragon.glb, modelled facing -x, so a swing forward about the model's z axis is the other way round
 // from 大肥鱼's. She flies: the model hovers, bobbing; her legs hang, and trail when she flies along; her wings beat,
 // quicker and deeper on the move. Her wings and tail have no bones: _sway (wings, tail) says how freely each vertex
-// moves, and the vertex shader turns the wings about a line through their roots and swings the tail. The model's
-// back is a second front, so she never turns her back fully on the camera
-const DRAGON_SCALE = 0.9, DRAGON_YAW = 1.75;
+// moves, and the vertex shader turns the wings about a line through their roots and swings the tail
+const DRAGON_SCALE = 0.9;
 function createDragonModel(T, gltf) {
   const U = { uWing: { value: 0 }, uSweep: { value: 0 }, uTail: { value: 0 }, uTime: { value: 0 } };
   const SWAY = `attribute vec2 _sway;
@@ -2826,10 +2825,7 @@ vec3 swayed(vec3 p) {
     }
     if (down) { goal.fall = Math.min(1, s.dead / 0.45); goal.aLz = goal.aRz = 0.5; goal.lL = 0.3; goal.beat = 0.05; yawGoal = 0; }
     const prevYaw = cur.yaw;
-    if (yawGoal != null) {
-      yawGoal = clamp(Math.atan2(Math.sin(yawGoal), Math.cos(yawGoal)), -DRAGON_YAW, DRAGON_YAW);
-      cur.yaw += angDiff(yawGoal, cur.yaw) * Math.min(1, dt * (s.moving ? 10 : 6));
-    }
+    if (yawGoal != null) cur.yaw += angDiff(yawGoal, cur.yaw) * Math.min(1, dt * (s.moving ? 10 : 6));
     yawVel += ((cur.yaw - prevYaw) / Math.max(dt, 1e-4) - yawVel) * Math.min(1, dt * 10);
     const r = Math.min(1, dt * 12);
     for (const key in goal) if (key !== 'yaw') cur[key] += (goal[key] - cur[key]) * r;
