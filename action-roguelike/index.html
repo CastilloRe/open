@@ -6320,7 +6320,7 @@ function updateEnemies(dt) {
       if (e.emberAcc >= 0.5) {
         e.emberAcc -= 0.5;
         hit(e, e.ember * emberDps() * 0.5, 'ember', { noCrit: true, noBurst: true, burn: 'ember', quiet: !(e.boss || e.elite || e.type === 'reg') && Math.random() < 0.75 });
-        if (G.parts.length < PART_MAX && inView(e.x, e.y, 40)) puff(e.x + rand(-e.r, e.r) * 0.4, e.y - e.r * 0.5, e.ember > 30 ? 2 : 1, pick(['#b070ff', '#e0b8ff']), 50, 0.45, 2.4, true);
+        if (G.parts.length < PART_MAX && inView(e.x, e.y, 40)) for (let i = 0; i < (e.ember > 30 ? 3 : 2); i++) G.parts.push({ x: e.x + rand(-e.r, e.r) * 0.6, y: e.y - e.r * rand(0.2, 1.2), vx: rand(-15, 15), vy: rand(-90, -40), life: 0.6, max: 0.6, size: rand(1.8, 3), color: pick(['#a060ff', '#d8b0ff', '#8040f0']), add: true });
       }
       if (e.dead) continue;
     }
@@ -11094,35 +11094,44 @@ const sigilSprite = () => sprite('sigil', 80, 80, x => {
   x.fillStyle = 'rgba(150,90,255,0.6)'; sparkle(x, 0, 0, 14);
   x.fillStyle = '#fff'; sparkle(x, 0, 0, 9);
 });
-// 永恒燃烧 on the enemies: violet flames licking up off them, more and bigger the more marks they carry, and the
-// count beside the ones carrying ten or more (and every elite and boss)
-const emberFlame = () => sprite('emberflame', 22, 30, x => {
-  const g = x.createRadialGradient(0, 8, 1, 0, 4, 15);
-  g.addColorStop(0, 'rgba(246,228,255,0.95)'); g.addColorStop(0.3, 'rgba(190,120,255,0.92)'); g.addColorStop(0.7, 'rgba(130,60,235,0.7)'); g.addColorStop(1, 'rgba(100,30,210,0)');
-  x.fillStyle = g;
-  x.beginPath(); x.moveTo(0, -14); x.bezierCurveTo(5, -6, 10, 0, 8, 7); x.bezierCurveTo(6, 13, -6, 13, -8, 7); x.bezierCurveTo(-10, 0, -4, -4, 0, -14); x.fill();
+// 永恒燃烧 on the enemies: a purple fire wrapped round each one, three tongues of flame (deep violet outside, lilac,
+// a pale core low down) flickering through three shapes, a purple glow on the ground under it; it grows with the
+// marks. The count beside the ones carrying ten or more (and every elite and boss)
+const VFIRE = [[1, 0.72, 0.62, 0], [0.86, 0.82, 0.55, 1.1], [0.94, 0.6, 0.78, 2.3]];
+const violetFire = i => sprite('vfire' + i, 40, 52, x => {
+  const [hc, hl, hr, ph] = VFIRE[i];
+  const tongue = (cx, w, h, lean) => {
+    x.beginPath(); x.moveTo(cx - w, 24);
+    x.bezierCurveTo(cx - w * 1.15, 24 - h * 0.45, cx - w * 0.3 + lean, 24 - h * 0.7, cx + lean * 1.4, 24 - h);
+    x.bezierCurveTo(cx + w * 0.4 + lean, 24 - h * 0.65, cx + w * 1.15, 24 - h * 0.4, cx + w, 24);
+    x.closePath(); x.fill();
+  };
+  for (const [col, k] of [['rgba(112,40,225,0.6)', 1], ['rgba(172,100,255,0.75)', 0.72], ['rgba(242,220,255,0.92)', 0.42]]) {
+    x.fillStyle = col;
+    tongue(-8, 8 * k, 34 * hl * k, -3 + Math.sin(ph + 1) * 2);
+    tongue(8, 8 * k, 34 * hr * k, 3 + Math.sin(ph + 2) * 2);
+    tongue(0, 11 * k, 46 * hc * k, Math.sin(ph) * 3);
+  }
 });
 function drawEmbers() {
   if (P.char !== 'dragon') return;
-  // the flame itself, then the same again added on as glow
-  const fl = emberFlame();
+  // the fire, then the same again added on as glow, with the glow on the ground
   for (const pass of [0, 1]) {
-    ctx.globalCompositeOperation = pass ? 'lighter' : 'source-over'; ctx.globalAlpha = pass ? 0.35 : 0.9;
+    ctx.globalCompositeOperation = pass ? 'lighter' : 'source-over'; ctx.globalAlpha = pass ? 0.35 : 0.75;
     for (const e of G.enemies) {
-      if (!(e.ember > 0) || e.dead || e.banned > 0 || !inView(e.x, e.y, e.r + 40)) continue;
-      const s = (0.55 + 0.75 * Math.min(1, e.ember / 40)) * clamp(e.r / 14, 0.8, 4), n = e.ember > 25 ? 3 : e.ember > 8 ? 2 : 1;
-      for (let i = 0; i < n; i++) {
-        const f = 0.85 + 0.15 * Math.sin(G.time * 13 + e.id * 1.7 + i * 2.1), k = s * (i === 1 || n === 1 ? 1 : 0.7);
-        ctx.save(); ctx.translate(e.x + (i - (n - 1) / 2) * e.r * 0.5, e.y - e.r * 0.15); ctx.scale(k * (2 - f), k * f);
-        ctx.drawImage(fl.c, -11, -28, 22, 30);
-        ctx.restore();
+      if (!(e.ember > 0) || e.dead || e.banned > 0 || !inView(e.x, e.y, e.r * 2 + 40)) continue;
+      const k = Math.min(1, e.ember / 30), w = e.r * (1.9 + 0.9 * k), h = w * 1.3;
+      if (pass) {
+        ctx.fillStyle = `rgba(150,80,255,${0.3 + 0.3 * k})`;
+        ctx.beginPath(); ctx.ellipse(e.x, e.y + e.r * 0.75, w * 0.6, w * 0.2, 0, 0, TAU); ctx.fill();
       }
+      ctx.drawImage(violetFire(((G.time * 10 + e.id * 0.37) | 0) % 3).c, e.x - w / 2, e.y + e.r * 0.6 - h, w, h);
     }
   }
   ctx.globalCompositeOperation = 'source-over'; ctx.globalAlpha = 1;
   for (const e of G.enemies) {
     if (!(e.ember >= 10 || (e.ember > 0 && (e.boss || e.elite))) || e.dead || e.banned > 0 || !inView(e.x, e.y, e.r + 40)) continue;
-    blit(textSprite(String(e.ember), e.ember >= EMBER_MAX ? '#ffe27a' : '#f0d0ff', 10), e.x + e.r * 0.9 + 7, e.y - e.r * 0.2);
+    blit(textSprite(String(e.ember), e.ember >= EMBER_MAX ? '#ffe27a' : '#f0d0ff', 10), e.x + e.r * 1.05 + 8, e.y - e.r * 0.2);
   }
 }
 function drawAnalysis() {
