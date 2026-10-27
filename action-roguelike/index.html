@@ -1351,9 +1351,8 @@ const CHARS = {
     tea: { name: '白米饭', g: '饭', item: '白米饭', flavor: '「我去吃饭了，回来再继续干活！」', chest: '一大碗白米饭' },
     victims: '一口吞下', down: '大肥鱼摸鱼去了', winSub: '庄园恢复了安静。大肥鱼终于可以安心去吃饭了。',
   },
-  // no model: she is her illustration, flying
   dragon: {
-    id: 'dragon', name: 'ChatGPT 龙娘', title: '龙娘', art: 'art/dragon.webp', model: null, voice: null,
+    id: 'dragon', name: 'ChatGPT 龙娘', title: '龙娘', art: 'art/dragon.webp', model: 'art/dragon.glb', voice: null,
     alt: 'ChatGPT 龙娘：银白长发、浅紫眼眸，头顶龙角，背后紫色龙翼和龙尾，穿白色和淡紫色的蓬蓬洛丽塔裙',
     start: 'scale', hp: 120, speed: 195, magnet: 100, size: 1,
     lede: '深夜，成群的小号涌进了庄园。龙娘展开翅膀飞上半空：「哼，这点小事难不倒本小姐。」',
@@ -2481,16 +2480,17 @@ gl_Position.xy += normalize(normalMatrix * objectNormal).xy * uInk * 2. / uRes *
 // ======================================================================
 //  大肥鱼 in 3D
 // ======================================================================
-// 大肥鱼 in 3D. art/whale.glb is one skinned mesh with a plain humanoid skeleton (nothing in the hair or the tail),
-// modelled facing +x with her left towards -z. She is posed by turning bones about those model axes
-const WHALE_SCALE = 0.95;
-function createWhaleModel(T, gltf) {
+// 大肥鱼 and 龙娘 are each one skinned mesh on the same plain humanoid skeleton, the automatic rig of the tool their
+// author modelled them in. rigToon does what they share: finds her bones and gives a turn(name, x, y, z) that turns a
+// bone about the model's own axes (written into the bone's frame through its parent's rest orientation, so a child
+// turns on top of whatever its parent did); toon shading with one hard-edged shadow, like 克劳德; an ink outline,
+// the mesh again from the inside on the same skeleton; and, for the parts with no bones, the GLSL `sway` (defining
+// vec3 swayed(vec3 p) from the _sway attribute and the uniforms U), which moves them before the skin does
+function rigToon(T, gltf, U, sway, key) {
   let mesh = null;
   gltf.scene.traverse(o => { if (o.isSkinnedMesh && !mesh) mesh = o; });
   mesh.frustumCulled = false;
   gltf.scene.updateMatrixWorld(true);
-  // each bone's rest turn, and its parent's rest orientation in model space: a turn about a model axis is written
-  // into the bone's own frame through it, so a child turns on top of whatever its parent did
   const bone = {}, rest = new Map();
   for (const b of mesh.skeleton.bones) {
     bone[b.name] = b;
@@ -2504,6 +2504,7 @@ function createWhaleModel(T, gltf) {
   // in model units, so it takes that step itself (any bone's rest transform times its inverse bind matrix)
   const hipI = mesh.skeleton.bones.indexOf(bone.Hip);
   const dq = new T.Matrix4().multiplyMatrices(bone.Hip.matrixWorld, mesh.skeleton.boneInverses[hipI]);
+  U.uDQ = { value: dq }; U.uDQs = { value: new T.Vector3().setFromMatrixScale(dq).x };
   const euler = new T.Euler(), rq = new T.Quaternion();
   const turn = (name, x, y, z) => {
     const b = bone[name];
@@ -2512,44 +2513,19 @@ function createWhaleModel(T, gltf) {
     rq.setFromEuler(euler.set(x, y, z));
     b.quaternion.copy(s.pwi).multiply(rq).multiply(s.pw).multiply(s.q);
   };
-  // root: where she stands and which way she faces; body: whole-body lean and roll; the model inside, turned to face +z
-  const root = new T.Group(), body = new T.Group(), inner = new T.Group();
-  root.add(body); body.add(inner); inner.add(gltf.scene);
-  inner.rotation.y = -Math.PI / 2;
-  inner.scale.setScalar(WHALE_SCALE);
-  gltf.scene.position.set(-hip.x, 0, -hip.z);
-  // drawn like 克劳德: toon shading with one hard-edged shadow, and an ink outline
   const ramp = new T.DataTexture(new Uint8Array([0, 0, 0, 0, 0, 0, 255, 255, 255, 255].flatMap(v => [v, v, v, 255])), 10, 1, T.RGBAFormat);
   ramp.minFilter = ramp.magFilter = T.NearestFilter; ramp.needsUpdate = true;
   const mat = new T.MeshToonMaterial({ map: mesh.material.map, gradientMap: ramp, skinning: true });
   mesh.material = mat;
-  // her hair and tail have no bones: _sway (hair, tail) says how freely each vertex moves, and the vertex shader
-  // moves it before the skin does, for the body and the outline alike
-  const U = {
-    uHair: { value: new T.Vector3() }, uTail: { value: 0 }, uTime: { value: 0 },
-    uDQ: { value: dq }, uDQs: { value: new T.Vector3().setFromMatrixScale(dq).x },
-  };
-  const SWAY = `attribute vec2 _sway;
-uniform vec3 uHair;
-uniform float uTail, uTime, uDQs;
-uniform mat4 uDQ;
-vec3 swayed(vec3 p) {
-  float y = (uDQ * vec4(p, 1.)).y;
-  // a slow breeze with a quicker ripple on top, plus however the hair is trailing; the tail swings side to side
-  vec3 breeze = vec3(sin(uTime * 1.4 + y * 5.) * 0.012 + sin(uTime * 2.6 + y * 16.) * 0.004, 0.,
-    cos(uTime * 1.1 + y * 4.) * 0.012 + cos(uTime * 2.1 + y * 14.) * 0.004);
-  vec3 d = (uHair + breeze) * _sway.x + vec3(0., abs(uTail) * 0.25, uTail) * _sway.y;
-  return p + d / uDQs;
-}`;
   mat.onBeforeCompile = sh => {
     Object.assign(sh.uniforms, U);
     sh.vertexShader = sh.vertexShader
-      .replace('#include <common>', '#include <common>\n' + SWAY)
+      .replace('#include <common>', '#include <common>\n' + sway)
       .replace('#include <begin_vertex>', 'vec3 transformed = swayed(vec3(position));');
   };
-  mat.customProgramCacheKey = () => 'whale-sway';
-  // the outline: the mesh again from the inside on the same skeleton, each vertex pushed out along its skinned normal
-  // by a few pixels; the copies of a vertex along texture seams share one averaged normal, so it has no gaps
+  mat.customProgramCacheKey = () => key + '-sway';
+  // the outline: each vertex pushed out along its skinned normal by a few pixels; the copies of a vertex along
+  // texture seams share one averaged normal, so it has no gaps
   const geo = mesh.geometry, gp = geo.attributes.position, gn = geo.attributes.normal, sums = new Map();
   const keyOf = i => gp.array[i * 3] + ',' + gp.array[i * 3 + 1] + ',' + gp.array[i * 3 + 2];
   for (let i = 0; i < gp.count; i++) {
@@ -2564,7 +2540,7 @@ vec3 swayed(vec3 p) {
   inkMat.onBeforeCompile = sh => {
     Object.assign(sh.uniforms, U, UI);
     sh.vertexShader = sh.vertexShader
-      .replace('#include <common>', '#include <common>\n' + SWAY + '\nattribute vec3 inkNormal;\nuniform float uInk;\nuniform vec2 uRes;')
+      .replace('#include <common>', '#include <common>\n' + sway + '\nattribute vec3 inkNormal;\nuniform float uInk;\nuniform vec2 uRes;')
       .replace('#include <begin_vertex>', 'vec3 transformed = swayed(vec3(position));')
       .replace('#include <skinning_vertex>', `#include <skinning_vertex>
 mat4 inkSkin = skinWeight.x * boneMatX + skinWeight.y * boneMatY + skinWeight.z * boneMatZ + skinWeight.w * boneMatW;
@@ -2574,12 +2550,40 @@ mvPosition.z -= 0.025;
 gl_Position = projectionMatrix * mvPosition;
 gl_Position.xy += normalize(normalMatrix * inkDir).xy * uInk * 2. / uRes * gl_Position.w;`);
   };
-  inkMat.customProgramCacheKey = () => 'whale-ink';
+  inkMat.customProgramCacheKey = () => key + '-ink';
   const hull = new T.SkinnedMesh(geo, inkMat);
   hull.position.copy(mesh.position); hull.quaternion.copy(mesh.quaternion); hull.scale.copy(mesh.scale);
   hull.frustumCulled = false;
   mesh.parent.add(hull);
   hull.bind(mesh.skeleton, mesh.bindMatrix);
+  const ink = (px, w, h) => { UI.uInk.value = px; UI.uRes.value.set(w, h); };
+  return { mesh, bone, turn, mat, hip, head, ink };
+}
+// 大肥鱼 in 3D: art/whale.glb, modelled facing +x with her left towards -z. She is posed by turning bones about those
+// model axes
+const WHALE_SCALE = 0.95;
+function createWhaleModel(T, gltf) {
+  // her hair and tail have no bones: _sway (hair, tail) says how freely each vertex moves
+  const U = { uHair: { value: new T.Vector3() }, uTail: { value: 0 }, uTime: { value: 0 } };
+  const SWAY = `attribute vec2 _sway;
+uniform vec3 uHair;
+uniform float uTail, uTime, uDQs;
+uniform mat4 uDQ;
+vec3 swayed(vec3 p) {
+  float y = (uDQ * vec4(p, 1.)).y;
+  // a slow breeze with a quicker ripple on top, plus however the hair is trailing; the tail swings side to side
+  vec3 breeze = vec3(sin(uTime * 1.4 + y * 5.) * 0.012 + sin(uTime * 2.6 + y * 16.) * 0.004, 0.,
+    cos(uTime * 1.1 + y * 4.) * 0.012 + cos(uTime * 2.1 + y * 14.) * 0.004);
+  vec3 d = (uHair + breeze) * _sway.x + vec3(0., abs(uTail) * 0.25, uTail) * _sway.y;
+  return p + d / uDQs;
+}`;
+  const { turn, mat, hip, head, ink } = rigToon(T, gltf, U, SWAY, 'whale');
+  // root: where she stands and which way she faces; body: whole-body lean and roll; the model inside, turned to face +z
+  const root = new T.Group(), body = new T.Group(), inner = new T.Group();
+  root.add(body); body.add(inner); inner.add(gltf.scene);
+  inner.rotation.y = -Math.PI / 2;
+  inner.scale.setScalar(WHALE_SCALE);
+  gltf.scene.position.set(-hip.x, 0, -hip.z);
 
   // ---------- animation ----------
   // in model terms: lean and the head's hx bow forward; aLx/aRx swing an arm forward, aLz/aRz raise it out to the
@@ -2710,8 +2714,146 @@ gl_Position.xy += normalize(normalMatrix * inkDir).xy * uInk * 2. / uRes * gl_Po
     flash = s.flash ? 1 : Math.max(0, flash - dt * 12);
     mat.emissive.setRGB(flash * 0.5, flash * 0.46, flash * 0.44);
   }
-  const ink = (px, w, h) => { UI.uInk.value = px; UI.uRes.value.set(w, h); };
   return { root, step, ink, faceY: (head.y + 0.1) * WHALE_SCALE };
+}
+
+// 龙娘 in 3D: art/dragon.glb, modelled facing -x, so a swing forward about the model's z axis is the other way round
+// from 大肥鱼's. She flies: the model hovers, bobbing; her legs hang, and trail when she flies along; her wings beat,
+// quicker and deeper on the move. Her wings and tail have no bones: _sway (wings, tail) says how freely each vertex
+// moves, and the vertex shader turns the wings about a line through their roots and swings the tail. The model's
+// back is a second front, so she never turns her back fully on the camera
+const DRAGON_SCALE = 0.9, DRAGON_YAW = 1.75;
+function createDragonModel(T, gltf) {
+  const U = { uWing: { value: 0 }, uSweep: { value: 0 }, uTail: { value: 0 }, uTime: { value: 0 } };
+  const SWAY = `attribute vec2 _sway;
+uniform float uWing, uSweep, uTail, uTime, uDQs;
+uniform mat4 uDQ;
+vec3 swayed(vec3 p) {
+  vec3 m = (uDQ * vec4(p, 1.)).xyz, d = vec3(0.);
+  if (_sway.x > 0.) {
+    // each wing turns about a line running front to back through its root beside her spine, both tips lifting
+    // together, and sweeps back on the downstroke
+    float side = m.z > -0.01 ? 1. : -1., a = -uWing * _sway.x * side;
+    vec2 r = vec2(m.y - 0.62, m.z + 0.01 - side * 0.05);
+    d.yz += vec2(r.x * cos(a) - r.y * sin(a), r.x * sin(a) + r.y * cos(a)) - r;
+    d.x += uSweep * _sway.x * abs(r.y);
+  }
+  // the tail swings side to side, rising a little at the ends of each swing, with a ripple running down it
+  d += vec3(0., abs(uTail) * 0.3 + sin(uTime * 3. - m.x * 20.) * 0.006, uTail + sin(uTime * 2.2 - m.x * 14.) * 0.01) * _sway.y;
+  return p + d / uDQs;
+}`;
+  const { turn, mat, hip, head, ink } = rigToon(T, gltf, U, SWAY, 'dragon');
+  const fwd = (name, x, y, z) => turn(name, x, y, -z);
+  const root = new T.Group(), body = new T.Group(), inner = new T.Group();
+  root.add(body); body.add(inner); inner.add(gltf.scene);
+  inner.rotation.y = Math.PI / 2;
+  inner.scale.setScalar(DRAGON_SCALE);
+  gltf.scene.position.set(-hip.x, 0, -hip.z);
+
+  // ---------- animation ----------
+  // the same joint angles as 大肥鱼's, plus lift (how high she hovers) and beat (how deep her wings beat)
+  const J0 = { yaw: 0, lean: 0, roll: 0, spine: 0, hx: 0, hz: 0, hy: 0, aLx: 0, aLz: 0, aRx: 0, aRz: 0, eL: 0, eR: 0, lL: 0, lR: 0, kL: 0, kR: 0, fall: 0, lift: 0, beat: 0.3 };
+  const cur = Object.assign({}, J0), goal = Object.assign({}, J0);
+  let clock = 0, phase = 0, idle = 0, yawVel = 0, flash = 0;
+  const angDiff = (a, b) => { let d = a - b; while (d > Math.PI) d -= Math.PI * 2; while (d < -Math.PI) d += Math.PI * 2; return d; };
+  function step(dt, s) {
+    clock += dt;
+    const t = clock, down = s.dead >= 0;
+    idle = s.moving || s.pose ? 0 : idle + dt;
+    phase += dt * (s.dash ? 17 : s.moving ? 11 : 7);
+    // hovering with her legs hanging and swaying, arms a little out; flying along, she leans into it with her arms
+    // swept back and her legs trailing
+    const sw = Math.sin(t * 1.7), sw2 = Math.sin(t * 1.7 + 1.4);
+    Object.assign(goal, {
+      lift: down ? 0 : 0.17 + Math.sin(t * 2.4) * 0.03,
+      lean: s.moving ? 0.2 : Math.sin(t * 1.2) * 0.03, roll: s.moving ? 0 : Math.sin(t * 0.8) * 0.03, spine: s.moving ? 0.08 : Math.sin(t * 2.4) * 0.03,
+      hx: s.moving ? -0.12 : Math.sin(t * 1.1) * 0.05, hz: Math.sin(t * 0.9) * 0.06, hy: 0,
+      aLx: s.moving ? -0.4 : Math.sin(t * 1.6) * 0.08, aRx: s.moving ? -0.4 : -Math.sin(t * 1.6) * 0.08,
+      aLz: s.moving ? 0.1 : -0.1, aRz: s.moving ? 0.1 : -0.1, eL: s.moving ? 0.15 : 0.3, eR: s.moving ? 0.15 : 0.3,
+      lL: s.moving ? -0.28 : sw * 0.12, lR: s.moving ? -0.18 : sw2 * 0.12,
+      kL: s.moving ? 0.5 : 0.35 + sw * 0.1, kR: s.moving ? 0.35 : 0.3 + sw2 * 0.1,
+      fall: 0, beat: s.moving ? 0.45 : 0.3,
+    });
+    let yawGoal = null;
+    if (s.moving) yawGoal = Math.atan2(s.vx, s.vy);
+    else if (s.aim != null) yawGoal = s.aim;
+    else if (idle > 1.4) yawGoal = 0.3 * Math.sign(Math.sin(cur.yaw) || 1);
+    const k = s.poseK || 0;
+    if (['happy', 'angry', 'shy', 'curtsy', 'wave', 'hurt', 'think'].includes(s.pose) && !s.moving) yawGoal = 0.3 * Math.sign(Math.sin(cur.yaw) || 1);
+    switch (s.pose) {
+      case 'attack':
+        // 银鳞星语: she points at her target and the scales fly
+        goal.aRx = 1.35; goal.aRz = 0.1; goal.eR = 0.05; goal.lean = 0.06; goal.hx = 0.05; break;
+      case 'beam':
+        goal.lean = 0.12; goal.hx = 0.08; goal.aLx = goal.aRx = 1.2; goal.eL = goal.eR = 0.15; goal.aLz = goal.aRz = -0.15;
+        if (s.aim != null) yawGoal = s.aim;
+        break;
+      case 'cast':
+        // 万象演算: hands drawn in, then flung wide over the circle
+        if (k < 0.4) { goal.aLx = goal.aRx = 0.9; goal.eL = goal.eR = 1.3; goal.aLz = goal.aRz = -0.1; goal.hx = 0.12; goal.lean = 0.08; }
+        else { goal.aLz = goal.aRz = 0.75; goal.aLx = goal.aRx = 0.35; goal.eL = goal.eR = 0.1; goal.hx = -0.12; goal.lean = -0.08; }
+        goal.beat = 0.5; break;
+      case 'hurt':
+        goal.lean = -0.22; goal.hx = -0.2; goal.aLx = goal.aRx = 0.5; goal.aLz = goal.aRz = 0.2; goal.eL = goal.eR = 1.2; goal.kL = goal.kR = 0.8; break;
+      case 'land':
+        goal.lean = 0.12; goal.kL = goal.kR = 0.6 * (1 - k); goal.aLz = goal.aRz = 0.35 * (1 - k); goal.beat = 0.5; break;
+      case 'happy':
+        goal.lift += Math.abs(Math.sin(k * Math.PI * 2)) * 0.06; goal.aLz = goal.aRz = 0.4; goal.aLx = goal.aRx = 0.5; goal.eL = goal.eR = 1.2;
+        goal.hz = Math.sin(t * 10) * 0.12; goal.beat = 0.45; break;
+      case 'angry':
+        // 哼: arms folded, chin up, looking away
+        goal.aLx = goal.aRx = 0.75; goal.aLz = goal.aRz = -0.45; goal.eL = goal.eR = 1.7; goal.hx = -0.15; goal.hy = 0.4; break;
+      case 'shy':
+        goal.aLx = goal.aRx = 0.9; goal.aLz = goal.aRz = -0.3; goal.eL = goal.eR = 2.0; goal.hx = 0.2; goal.hz = 0.18; goal.roll = Math.sin(t * 3) * 0.05; break;
+      case 'think':
+        // a finger to her chin
+        goal.aRx = 0.95; goal.aRz = -0.3; goal.eR = 2.1; goal.aLx = 0.55; goal.aLz = -0.4; goal.eL = 1.3; goal.hz = 0.2; goal.hx = 0.1; break;
+      case 'curtsy': {
+        const b = Math.sin(k * Math.PI);
+        goal.kL = goal.kR = 0.5 + 0.4 * b; goal.lL = goal.lR = 0.25 * b; goal.lean = 0.14 * b; goal.hx = 0.2 * b; goal.aLz = goal.aRz = 0.15; break;
+      }
+      case 'wave':
+        goal.aLz = 0.4; goal.aLx = 0.6; goal.eL = 1.6 + Math.sin(t * 12) * 0.3; goal.hz = 0.12; break;
+    }
+    if (s.dash) {
+      // 折光游翼: a streak forward, arms and legs swept back, wings driving hard
+      goal.lean = 0.45; goal.aLx = goal.aRx = -0.7; goal.aLz = goal.aRz = 0.25; goal.eL = goal.eR = 0.1; goal.lL = goal.lR = -0.5; goal.kL = goal.kR = 0.3; goal.hx = -0.2; goal.beat = 0.6;
+    }
+    if (s.ult >= 0) {
+      // 此即，最优解: she rises and lifts both arms to call the silver dragon up behind her
+      goal.lift += Math.min(1, s.ult / 0.4, Math.max(0, (ULT_DRAGON_T - s.ult) / 0.4)) * 0.2;
+      goal.aLz = goal.aRz = 1.1; goal.aLx = goal.aRx = 0.4; goal.eL = goal.eR = 0.3; goal.hx = -0.3; goal.kL = goal.kR = 0.5; goal.lL = goal.lR = 0.1; goal.beat = 0.55; yawGoal = 0;
+    }
+    if (down) { goal.fall = Math.min(1, s.dead / 0.45); goal.aLz = goal.aRz = 0.5; goal.lL = 0.3; goal.beat = 0.05; yawGoal = 0; }
+    const prevYaw = cur.yaw;
+    if (yawGoal != null) {
+      yawGoal = clamp(Math.atan2(Math.sin(yawGoal), Math.cos(yawGoal)), -DRAGON_YAW, DRAGON_YAW);
+      cur.yaw += angDiff(yawGoal, cur.yaw) * Math.min(1, dt * (s.moving ? 10 : 6));
+    }
+    yawVel += ((cur.yaw - prevYaw) / Math.max(dt, 1e-4) - yawVel) * Math.min(1, dt * 10);
+    const r = Math.min(1, dt * 12);
+    for (const key in goal) if (key !== 'yaw') cur[key] += (goal[key] - cur[key]) * r;
+
+    root.rotation.y = cur.yaw;
+    root.rotation.z = cur.fall * 1.38;
+    // each downstroke lifts her a little
+    root.position.set(cur.fall * 0.42, cur.fall * 0.12 + cur.lift + Math.sin(phase) * 0.01 * cur.beat, 0);
+    body.rotation.set(cur.lean, 0, cur.roll);
+    for (const n of ['Waist', 'Spine01', 'Spine02']) fwd(n, 0, 0, -cur.spine / 3);
+    fwd('Head', cur.hz, cur.hy, -cur.hx);
+    fwd('L_Upperarm', cur.aLz, 0, cur.aLx); fwd('R_Upperarm', -cur.aRz, 0, cur.aRx);
+    fwd('L_Forearm', 0, 0, cur.eL); fwd('R_Forearm', 0, 0, cur.eR);
+    fwd('L_Thigh', 0, 0, cur.lL); fwd('R_Thigh', 0, 0, cur.lR);
+    fwd('L_Calf', 0, 0, -cur.kL); fwd('R_Calf', 0, 0, -cur.kR);
+    U.uWing.value = 0.12 - Math.sin(phase) * cur.beat;
+    U.uSweep.value = Math.max(0, Math.sin(phase)) * cur.beat * 0.25;
+    const glee = s.pose === 'happy' || s.ult >= 0 || P.smug > 0;
+    U.uTail.value = (glee ? Math.sin(t * 12) * 0.05 : Math.sin(t * 2.2) * 0.04) - clamp(yawVel * 0.02, -0.06, 0.06);
+    U.uTime.value = t;
+    flash = s.flash ? 1 : Math.max(0, flash - dt * 12);
+    mat.emissive.setRGB(flash * 0.5, flash * 0.46, flash * 0.5);
+  }
+  return { root, step, ink, faceY: (head.y + 0.08) * DRAGON_SCALE + 0.17 };
 }
 
 // three.js and the chosen heroine's model arrive in the background while the title shows her illustration; until they
@@ -2762,7 +2904,7 @@ function failNote(err) {
 }
 function init3D(id, gltf) {
   const T = window.THREE;
-  const m = M3.models[id] = (id === 'whale' ? createWhaleModel : createClaudeModel)(T, gltf);
+  const m = M3.models[id] = (id === 'whale' ? createWhaleModel : id === 'dragon' ? createDragonModel : createClaudeModel)(T, gltf);
   if (!M3.renderer) initRenderer(T);
   // compile its shaders now, while the title is up, rather than with a stutter on the first frame of the run
   const off = M3.model !== m;
@@ -4215,7 +4357,8 @@ function castDash() {
     P.iframes = Math.max(P.iframes, 0.4); P.anim = null; P.mvx = P.dash.dx; P.mvy = P.dash.dy;
     if (Math.random() < 0.4) say(line('dash'), 1.2);
     G.decoy = { x: P.x, y: P.y, t: MIRAGE_T, mirage: true };
-    G.zones.push({ kind: 'mirage', x: P.x, y: P.y, r: 95 * P.area, life: MIRAGE_T, max: MIRAGE_T, face: P.face, lift: dragonLift(G.time), dmg: (16 + 1.6 * P.level) * (1 + 0.5 * (P.talents.wing || 0)) });
+    const ghost = snapshot3D();
+    G.zones.push({ kind: 'mirage', x: P.x, y: P.y, r: 95 * P.area, life: MIRAGE_T, max: MIRAGE_T, face: P.face, lift: dragonLift(G.time), dmg: (16 + 1.6 * P.level) * (1 + 0.5 * (P.talents.wing || 0)), ghost, tint: ghost && violetWash(ghost) });
     puff(P.x, P.y - 24, 12, '#d8c0ff', 140, 0.5, 3.5, true);
     sfx.dash();
     return;
@@ -4599,6 +4742,7 @@ function castCalc() {
     c.crys.push({ x: Math.cos(a) * r, y: Math.sin(a) * r * CALC_SQ, h: rand(24, 50), w: rand(5, 9), at: rand(0, 0.3), tilt: rand(-0.25, 0.25) });
   }
   G.calc = c;
+  playAnim(['cast1', 'cast2', 'cast3'], 0.7, 3);
   say(line('calc'), 1.4);
   sfx.calc();
 }
@@ -4835,7 +4979,7 @@ function updatePlayer(dt) {
   if (P.moving) P.idleT = 0;
   else if (!P.anim || P.anim.pri === 0) {
     P.idleT += dt;
-    if (P.idleT > 4) { P.idleT = -rand(2, 5); const e = pick(P.char === 'whale' ? ['skirt', 'wave', 'slack'] : M3.ready ? ['skirt', 'spin', 'wave'] : ['skirt', 'spin']); playAnim([e], e === 'wave' ? 1.8 : e === 'slack' ? 1.6 : 1.3, 1); }
+    if (P.idleT > 4) { P.idleT = -rand(2, 5); const e = pick(P.char === 'whale' ? ['skirt', 'wave', 'slack'] : P.char === 'dragon' ? ['skirt', 'wave', 'angry'] : M3.ready ? ['skirt', 'spin', 'wave'] : ['skirt', 'spin']); playAnim([e], e === 'wave' ? 1.8 : e === 'slack' ? 1.6 : 1.3, 1); }
   }
   if (P.char === 'whale') {
     if (P.moving) P.walkT += dt;
@@ -5445,6 +5589,8 @@ function updateWeapons(dt) {
         if (!list.length) { w.t = 0.1; break; }
         w.t = cdOf(s.cd);
         const m = castMult(w);
+        P.aimX = list[0].x - P.x; P.aimY = list[0].y - P.y;
+        if (!P.moving && !P.dash) { P.face = list[0].x >= P.x ? 1 : -1; playAnim(['atk1', 'atk2', 'atk3'], 0.32, 0); }
         for (let j = 0; j < 3; j++) {
           for (let i = 0; i < n; i++) {
             later(j * 0.09 + i * 0.04, () => {
@@ -10787,20 +10933,37 @@ function drawDragonTrail() {
 }
 // 折光游翼's afterimage: her sprite washed in pale violet light, see-through and flickering, its slices sliding a
 // little apart like light through glass
+function violetWash(src) {
+  const c = document.createElement('canvas'), x = c.getContext('2d');
+  c.width = src.width; c.height = src.height;
+  x.drawImage(src, 0, 0);
+  x.globalCompositeOperation = 'source-atop'; x.fillStyle = 'rgba(205,175,255,0.55)'; x.fillRect(0, 0, c.width, c.height);
+  return c;
+}
 let mirageImg = null;
 function mirageSprite() {
   if (!pSprite) return null;
-  if (mirageImg && mirageImg.src === pSprite) return mirageImg;
-  const c = document.createElement('canvas'), x = c.getContext('2d');
-  c.width = pSprite.c.width; c.height = pSprite.c.height;
-  x.drawImage(pSprite.c, 0, 0);
-  x.globalCompositeOperation = 'source-atop'; x.fillStyle = 'rgba(205,175,255,0.55)'; x.fillRect(0, 0, c.width, c.height);
-  return (mirageImg = { src: pSprite, c });
+  if (!mirageImg || mirageImg.src !== pSprite) mirageImg = { src: pSprite, c: violetWash(pSprite.c) };
+  return mirageImg;
 }
 function drawMirage(z) {
+  const k = z.life / z.max, a = Math.min(1, (z.max - z.life) / 0.08) * (0.35 + 0.25 * k) * (0.85 + 0.15 * Math.sin(G.time * 31));
+  if (z.ghost) {
+    // in 3D, a still of her pose as she left it
+    const w = M3_FW * M3_UNIT * P.size, h = M3_FH * M3_UNIT * P.size, x0 = z.x - M3.ax * w, y0 = z.y + SPR_H * 0.38 * P.size - M3.ay * h, off = 2.5 + 1.5 * Math.sin(G.time * 9);
+    ctx.globalCompositeOperation = 'lighter'; ctx.globalAlpha = a;
+    ctx.fillStyle = rgrad(ctx, z.x, z.y - 14 - z.lift, SPR_H * 0.6, ['rgba(190,150,255,0.4)', 'rgba(190,150,255,0)']);
+    disc(ctx, z.x, z.y - 14 - z.lift, SPR_H * 0.6); ctx.fill();
+    ctx.globalCompositeOperation = 'source-over';
+    ctx.drawImage(z.ghost, x0, y0, w, h);
+    ctx.globalCompositeOperation = 'lighter'; ctx.globalAlpha = a * 0.5;
+    ctx.drawImage(z.tint, x0 - off, y0, w, h); ctx.drawImage(z.tint, x0 + off, y0, w, h);
+    ctx.globalCompositeOperation = 'source-over'; ctx.globalAlpha = 1;
+    label(z.x, z.y - SPR_H * 0.7 - z.lift, '残影', '#e6dcff');
+    return;
+  }
   const sp = pSprite, m = mirageSprite();
   if (!sp || !m) return;
-  const k = z.life / z.max, a = Math.min(1, (z.max - z.life) / 0.08) * (0.35 + 0.25 * k) * (0.85 + 0.15 * Math.sin(G.time * 31));
   ctx.save(); ctx.translate(z.x, z.y + SPR_H * 0.38 * P.size - z.lift); ctx.scale(z.face * (sp.face || 1) * P.size, P.size);
   const top = -sp.h + sp.pad + (sp.feet || 0), off = 2.5 + 1.5 * Math.sin(G.time * 9);
   ctx.globalCompositeOperation = 'lighter';
