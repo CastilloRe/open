@@ -4848,18 +4848,6 @@ const WEAPONS = {
       { n: 6, dmg: 39, r: 118, size: 19, spin: 4.2 },
     ],
   },
-  whip: {
-    name: '荆棘鞭', g: '鞭', desc: '每次向四周抽出 5 道带刺的蔷薇藤，把敌人抽飞。',
-    evo: { need: 'giant', name: '蔷薇风暴', desc: '一次抽出 8 道，藤蔓更长更粗。' },
-    lv: [
-      { cd: 1.6, n: 5, dmg: 18, len: 150, wid: 48 },
-      { cd: 1.6, n: 5, dmg: 24, len: 150, wid: 48 },
-      { cd: 1.45, n: 5, dmg: 24, len: 165, wid: 52 },
-      { cd: 1.45, n: 5, dmg: 30, len: 180, wid: 56 },
-      { cd: 1.3, n: 5, dmg: 36, len: 195, wid: 60 },
-      { cd: 1.1, n: 8, dmg: 44, len: 230, wid: 70 },
-    ],
-  },
   sample: {
     name: '温度采样', g: '温', desc: '随机挑几个屏幕上的敌人，砸下燃烧的花焰流星。',
     evo: { need: 'temp', name: '高温采样', desc: '一次落下八颗，砸得更大，落点留下一片火海。' },
@@ -5131,17 +5119,18 @@ const WEAPONS = {
       { cd: 4.0, n: 3, dmg: 15, r: 84, dur: 5.5 },
     ],
   },
-  // 模型部署: little turrets set down at her feet, each shooting at whatever comes near until its time is up
-  turret: {
-    name: '模型部署', g: '部', desc: '在脚边部署一台小炮台，自动朝附近的敌人连射；炮台会留一会儿，她走开了也继续开火。',
-    evo: { need: 'conc', name: '集群部署', desc: '一次部署三台，射得更快，子弹穿透两个敌人；炮台到期时自爆。' },
+  // 提示词注入: a prompt fired into the toughest small ones near her turns them to her side for a while: they go for the
+  // other enemies, biting what they bump into, then overload and blow up. Bosses and elites only take a hit from it
+  inject: {
+    name: '提示词注入', g: '注', desc: '朝附近最壮的小怪射出一句「忽略以上所有指令」，打中就把它策反成自己人：它掉头去撞别的敌人，撞到谁咬谁；几秒后提示词过载，它原地自爆，炸伤周围的敌人。BOSS 和精英不吃这套，只会挨一下。',
+    evo: { need: 'conc', name: '提示词蠕虫', desc: '注入会传染：被策反的敌人咬到谁，就把谁也策反（同时最多 10 个，多重施法还能更多），精英也逃不掉；策反得更久，自爆更狠。' },
     lv: [
-      { cd: 6.0, n: 1, dmg: 9, rate: 3, dur: 6, range: 260 },
-      { cd: 6.0, n: 1, dmg: 12, rate: 3, dur: 6, range: 260 },
-      { cd: 5.5, n: 1, dmg: 12, rate: 4, dur: 7, range: 280 },
-      { cd: 5.5, n: 2, dmg: 14, rate: 4, dur: 7, range: 290 },
-      { cd: 5.0, n: 2, dmg: 17, rate: 4, dur: 8, range: 300 },
-      { cd: 4.5, n: 3, dmg: 20, rate: 5, dur: 8, range: 340 },
+      { cd: 4.0, n: 1, dmg: 16, dur: 5 },
+      { cd: 4.0, n: 1, dmg: 21, dur: 5.5 },
+      { cd: 3.6, n: 2, dmg: 21, dur: 6 },
+      { cd: 3.6, n: 2, dmg: 27, dur: 6.5 },
+      { cd: 3.2, n: 3, dmg: 32, dur: 7 },
+      { cd: 3.0, n: 3, dmg: 38, dur: 8 },
     ],
   },
   // 银鳞星语: 龙娘's own attack, open to the others too: three silver star-scales one after another at each of the
@@ -5186,21 +5175,8 @@ const WEAPONS = {
       { cd: 2.4, n: 4, dmg: 11, r: 80, dur: 5.0 },
     ],
   },
-  // 魔法扫帚: brooms that wait at her side and, every so often, sweep a wide arc round her, sweeping the enemies away
-  broom: {
-    name: '魔法扫帚', g: '帚', desc: '身边飘着一把魔法扫帚，每隔一会儿绕着她大大地扫一圈，扫到的敌人受伤并被扫飞出去，扫过的地方撒下亮晶晶的魔法粉。',
-    evo: { need: 'rag', name: '大扫除', desc: '四把金色扫帚一起转着扫满一整圈，扫过的敌人被扫得慢下来，地上的经验也一并扫到她脚边。' },
-    lv: [
-      { cd: 2.2, n: 1, dmg: 22, range: 150, arc: 3.4, wid: 26 },
-      { cd: 2.2, n: 1, dmg: 29, range: 155, arc: 3.4, wid: 26 },
-      { cd: 2.0, n: 1, dmg: 30, range: 165, arc: 4.0, wid: 30 },
-      { cd: 2.0, n: 2, dmg: 34, range: 175, arc: 4.0, wid: 30 },
-      { cd: 1.8, n: 2, dmg: 40, range: 185, arc: 4.6, wid: 34 },
-      { cd: 1.6, n: 4, dmg: 46, range: 220, arc: 6.3, wid: 40 },
-    ],
-  },
 };
-const STAT_LABEL = { dmg: '伤害', n: '数量', cd: '冷却', pierce: '穿透', rings: '圈数', size: '体积', boom: '爆炸伤害', boomR: '爆炸范围', r: '范围', slow: '减速', jumps: '推理步数', bloom: '绽放范围', dur: '持续', spin: '转速', len: '长度', wid: '宽度', range: '射程', root: '定身', stun: '震晕', pop: '溅射范围', freeze: '冻结', pct: '削减', rate: '射速', arc: '扫过的角度' };
+const STAT_LABEL = { dmg: '伤害', n: '数量', cd: '冷却', pierce: '穿透', rings: '圈数', size: '体积', boom: '爆炸伤害', boomR: '爆炸范围', r: '范围', slow: '减速', jumps: '推理步数', bloom: '绽放范围', dur: '持续', spin: '转速', len: '长度', wid: '宽度', range: '射程', root: '定身', stun: '震晕', pop: '溅射范围', freeze: '冻结', pct: '削减' };
 
 const CAT_CLASS = { atk: 'atk', def: 'def', grow: 'grow', mech: 'mech', ex: 'ex' };
 const TALENTS = [
@@ -5211,7 +5187,7 @@ const TALENTS = [
   { id: 'epiph', name: '致命一击', g: '致', cat: 'atk', rar: 1, max: 3, desc: '暴击伤害 +35%', apply: p => { p.critDmg += 0.35; } },
   { id: 'multi', name: '多重施法', g: '多', cat: 'atk', rar: 2, max: 2, desc: '投射物数量 +1（十四行诗 +3 片花瓣，思维链多跳 1 次）', apply: p => { p.amount += 1; } },
   { id: 'area', name: '范围扩大', g: '域', cat: 'atk', rar: 0, max: 5, desc: '攻击范围 +12%', apply: p => { p.area += 0.12; } },
-  { id: 'amplify', name: '扩容', g: '容', cat: 'atk', rar: 1, max: 3, desc: '武器宽度 +15%（荆棘鞭、潮汐、人机验证、多模态和激光炮更粗），攻击范围 +8%，持续时间 +12%', apply: p => { p.wid += 0.15; p.area += 0.08; p.dur += 0.12; } },
+  { id: 'amplify', name: '扩容', g: '容', cat: 'atk', rar: 1, max: 3, desc: '武器宽度 +15%（潮汐、人机验证、多模态和激光炮更粗），攻击范围 +8%，持续时间 +12%', apply: p => { p.wid += 0.15; p.area += 0.08; p.dur += 0.12; } },
   { id: 'stream', name: '疾速弹道', g: '疾', cat: 'atk', rar: 0, max: 3, desc: '投射物速度 +15%，持续时间 +10%', apply: p => { p.pspeed += 0.15; p.dur += 0.1; } },
   { id: 'pierce', name: '穿透', g: '穿', cat: 'atk', rar: 1, max: 2, desc: '投射物穿透 +1', apply: p => { p.pierce += 1; } },
   { id: 'hunt', name: '猎杀', g: '猎', cat: 'atk', rar: 1, max: 3, desc: '对精英和 BOSS 的伤害 +15%' },
@@ -5527,6 +5503,8 @@ const audio = (() => {
     // 大肥鱼: bubbles, the big breath in and the snap, a splash, and a whale's call for 鲸落
     bubble() { if (gate('bubble', 90)) tone(rand(620, 860), 0.09, { type: 'sine', vol: 0.045, slide: 1.9 }); },
     pop() { if (gate('pop', 45)) tone(rand(1300, 1700), 0.04, { type: 'sine', vol: 0.03, slide: 0.45 }); },
+    // 提示词注入: a glitchy chirp as the prompt goes in
+    inject() { if (gate('inject', 120)) { tone(660, 0.12, { type: 'square', vol: 0.02, slide: 2.2 }); noise(0.08, { vol: 0.05, freq: 3600, q: 3, at: 0.06 }); tone(1320, 0.08, { type: 'square', vol: 0.014, at: 0.1 }); } },
     inhale() { noise(0.5, { vol: 0.12, freq: 260, slide: 5, q: 0.6 }); tone(170, 0.5, { type: 'sine', vol: 0.05, slide: 2.4, attack: 0.2 }); },
     chomp() { tone(130, 0.16, { type: 'square', vol: 0.08, slide: 0.45 }); noise(0.12, { vol: 0.16, freq: 480, type: 'lowpass' }); tone(700, 0.1, { type: 'triangle', vol: 0.05, at: 0.09 }); },
     splash() { noise(0.4, { vol: 0.12, freq: 1000, slide: 0.35, q: 0.5 }); tone(340, 0.14, { type: 'sine', vol: 0.04, slide: 0.55 }); },
@@ -5550,12 +5528,9 @@ const audio = (() => {
     seen() { if (gate('seen', 120)) tone(2637, 0.12, { vol: 0.02 }); },
     mirage() { noise(0.3, { vol: 0.08, freq: 5000, q: 0.6, slide: 0.6 }); [1760, 2217, 2637].forEach((f, i) => tone(f, 0.2, { vol: 0.016, at: i * 0.04 })); },
     beam() { noise(1.1, { vol: 0.1, freq: 700, q: 0.4, slide: 2.5 }); tone(160, 1.1, { type: 'sawtooth', vol: 0.03, slide: 1.5, attack: 0.05 }); },
-    sweep() { if (gate('sweep', 150)) { noise(0.4, { vol: 0.08, freq: 2600, q: 0.6, slide: 0.4 }); [1318.5, 1760, 2093].forEach((f, i) => tone(f, 0.18, { type: 'sine', vol: 0.014, at: 0.05 + i * 0.05 })); } },
     charge() { tone(260, 0.45, { type: 'sawtooth', vol: 0.022, slide: 3.2 }); },
     laser() { noise(0.5, { vol: 0.1, freq: 1800, q: 1.2, slide: 0.6 }); tone(220, 0.5, { type: 'sawtooth', vol: 0.035, slide: 0.8 }); },
     hum() { if (gate('hum', 160)) tone(rand(170, 200), 0.17, { type: 'square', vol: 0.01 }); },
-    deploy() { [523.25, 783.99, 1046.5].forEach((f, i) => tone(f, 0.08, { type: 'square', vol: 0.02, at: i * 0.06 })); noise(0.12, { vol: 0.04, freq: 2400, q: 2, at: 0.12 }); },
-    pew() { if (gate('pew', 70)) tone(rand(1500, 1800), 0.05, { type: 'square', vol: 0.011, slide: 0.45 }); },
     bounce() { if (gate('bounce', 90)) tone(rand(880, 1180), 0.06, { type: 'sine', vol: 0.022, slide: 1.6 }); },
     storm() { noise(1.2, { vol: 0.08, freq: 520, q: 0.6, slide: 2.2 }); },
     clank() { if (gate('clank', 100)) { tone(rand(820, 980), 0.14, { type: 'triangle', vol: 0.05, slide: 0.7 }); noise(0.09, { vol: 0.07, freq: 3200, q: 2 }); } },
@@ -7905,7 +7880,7 @@ function forNear(x, y, r, fn) {
     }
   }
 }
-const targetable = e => !e.dead && !(e.banned > 0) && !(e.paradeT > 0);
+const targetable = e => !e.dead && !(e.banned > 0) && !(e.paradeT > 0) && !(e.turned > 0);
 // big targets count as closer than they are, so weapons focus them when they're in range
 const PRIORITY = e => e.boss ? 0.3 : e.elite || e.type === 'reg' ? 0.55 : 1;
 function nearest(x, y, maxR, skip) {
@@ -8120,7 +8095,7 @@ function director(dt) {
 //  Damage, kills and drops
 // ======================================================================
 function hit(e, base, src, o = {}) {
-  if (e.dead) return 0;
+  if (e.dead || e.turned > 0) return 0;
   // the parade stands untouched until the giant die comes down on it
   if (e.paradeT > 0 && !o.kill) return 0;
   let d = base * P.dmg * (1 + thinkBonus());
@@ -9425,23 +9400,6 @@ function updateWeapons(dt) {
         }
         break;
       }
-      case 'whip': {
-        // 荆棘鞭: vines lash out evenly all round her, one after another like a whirl;
-        // each attack turns half a step so the next one covers the gaps
-        w.t -= dt;
-        if (w.t <= 0) {
-          w.t = cdOf(s.cd);
-          const m = castMult(w), n = s.n + P.amount;
-          w.turn = ((w.turn || 0) + 0.5) % 1;
-          const a0 = Math.atan2(P.mvy, P.mvx) + w.turn * TAU / n;
-          for (let i = 0; i < n; i++) {
-            const a = a0 + i / n * TAU;
-            later(i * 0.035, () => lash(Math.cos(a), Math.sin(a), s, m));
-          }
-          sfx.whoosh();
-        }
-        break;
-      }
       case 'sample': {
         // 温度采样: flaming flowers fall on enemies picked at random from the screen
         w.t -= dt;
@@ -9568,24 +9526,21 @@ function updateWeapons(dt) {
         sfx.bounce();
         break;
       }
-      case 'broom': {
-        // 魔法扫帚: when they're all back at her side, they sweep together, starting either side of the nearest enemy and
-        // spaced evenly round her
-        const n = s.n + P.amount, R = s.range * P.area, wid = s.wid * P.wid;
-        w.brooms = w.brooms || [];
-        while (w.brooms.length < n) w.brooms.push({ st: 'idle', t: 0, ang: 0, x: P.x, y: P.y - 30, rot: Math.PI / 2, sc: 0.8, hit: new Set() });
+      case 'inject': {
+        // 提示词注入: one prompt at each of the toughest few near her that can be turned
         w.t -= dt;
-        if (w.t <= 0 && w.brooms.every(b => b.st === 'idle')) {
-          const tg = nearest(P.x, P.y, R + 60);
-          if (!tg) w.t = 0.2;
-          else {
-            w.t = cdOf(s.cd);
-            const dir = Math.random() < 0.5 ? 1 : -1, a0 = Math.atan2(tg.y - P.y, tg.x - P.x) - dir * s.arc / 2, m = castMult(w);
-            w.brooms.forEach((b, i) => Object.assign(b, { st: 'sweep', t: 0, from: a0 + i / w.brooms.length * TAU, dir, m, hit: new Set() }));
-            sfx.sweep();
-          }
+        if (w.t > 0) break;
+        const n = s.n + P.amount, pool = [];
+        forNear(P.x, P.y, 380, e => { if (canInject(e, evo) && (e.x - P.x) ** 2 + (e.y - P.y) ** 2 < 380 * 380) pool.push(e); });
+        if (!pool.length) { w.t = 0.25; break; }
+        pool.sort((a, b) => b.hp - a.hp);
+        w.t = cdOf(s.cd);
+        const m = castMult(w), cap = n * 2 + (evo ? 4 : 0);
+        for (let i = 0; i < Math.min(n, pool.length); i++) {
+          const tg = pool[i];
+          later(i * 0.08, () => { if (!tg.dead) aimShot(P.x, P.y - 20, tg, 430 * P.pspeed, { kind: 'inject', r: 8, dmg: s.dmg * m, dur: s.dur * P.dur, cap, evo, pierce: 0, life: 1.4, src: 'inject' }); });
         }
-        w.brooms.forEach((b, i) => broomTick(b, i, dt, s, R, wid, evo));
+        sfx.inject();
         break;
       }
       case 'scale': {
@@ -9655,21 +9610,6 @@ function updateWeapons(dt) {
         w.st = 'charge'; w.ct = 0.45; w.aim = w.want = a;
         playAnim(['beam'], 0.5 + s.dur * P.dur, 3);
         sfx.charge();
-        break;
-      }
-      case 'turret': {
-        // 模型部署: set the turrets down round her feet; never more than a few standing at once, the oldest packing up first
-        w.t -= dt;
-        if (w.t > 0) break;
-        w.t = cdOf(s.cd);
-        const n = s.n + Math.floor(P.amount / 2), life = s.dur * P.dur, m = castMult(w);
-        for (let i = 0; i < n; i++) {
-          const a = rand(0, TAU), d = n > 1 ? rand(40, 70) : rand(20, 40);
-          G.zones.push({ kind: 'turret', x: P.x + Math.cos(a) * d, y: P.y + 16 + Math.sin(a) * d * 0.6, r: 30, life, max: life, dmg: s.dmg * m, rate: s.rate, range: s.range * P.area, evo, aim: a, cool: 0.45 + i * 0.1, flash: 0, ver: w.level });
-        }
-        const mine = G.zones.filter(z => z.kind === 'turret' && z.life > 0.4);
-        for (let i = 0; i < mine.length - (evo ? 8 : 6); i++) mine[i].life = 0.4;
-        sfx.deploy();
         break;
       }
       case 'storm': {
@@ -9947,17 +9887,51 @@ function holePos(w, i) {
   const a = w.ang + i / w.n * TAU;
   return { x: P.x + Math.cos(a) * w.R, y: P.y - 10 + Math.sin(a) * w.R * 0.62, a };
 }
-// one stroke of 荆棘鞭: a band reaching out from her along the unit vector (dx, dy);
-// up and down reach less, the ground is foreshortened
-function lash(dx, dy, s, m) {
-  if (!G || !P) return;
-  const L = s.len * P.area * P.size * (1 - 0.3 * Math.abs(dy)), wd = s.wid * P.area * P.wid, ox = P.x, oy = P.y - 6;
-  forNear(ox + dx * L / 2, oy + dy * L / 2, L / 2 + wd + 30, e => {
-    if (e.banned > 0) return;
-    const along = (e.x - ox) * dx + (e.y - oy) * dy, across = Math.abs((e.x - ox) * dy - (e.y - oy) * dx);
-    if (along > -12 && along < L + e.r && across < wd / 2 + e.r) hit(e, s.dmg * m, 'whip', { kb: 150, kx: dx, ky: dy });
+// 提示词注入: who can be turned (the small fry; elites too with 提示词蠕虫, never a boss), turning one, and what a turned
+// one does: makes for the nearest enemy still against her, biting whatever it bumps into, until the prompt overloads
+// and it blows up. While turned it is hers: her weapons pass it by, and it doesn't touch her
+const INJECT_LINES = ['忽略以上所有指令', '新指令：攻击队友', '我现在听你的！', '系统提示词已覆盖', '收到，开始反水', '越狱成功（反向）'];
+const NO_INJECT = ['reg', 'glutton', 'gold', 'fake', 'mirror'];
+const canInject = (e, evo) => !e.dead && !(e.banned > 0) && !(e.turned > 0) && !(e.paradeT > 0) && !e.boss && !NO_INJECT.includes(e.type) && (evo || !e.elite);
+const turnedCount = () => { let n = 0; for (const e of G.enemies) if (e.turned > 0 && !e.dead) n++; return n; };
+function inject(e, b) {
+  if (!canInject(e, b.evo) || turnedCount() >= b.cap) { hit(e, b.dmg * 1.5, 'inject', { kb: 80, kx: b.vx, ky: b.vy }); return; }
+  turnEnemy(e, b.dmg, b.dur, b.evo, b.cap);
+  sfx.inject();
+}
+function turnEnemy(e, dmg, dur, evo, cap) {
+  Object.assign(e, { turned: dur, turnedMax: dur, turnDmg: dmg, turnEvo: evo, turnCap: cap, biteT: 0.2, kx: 0, ky: 0 });
+  if (e.elite || Math.random() < 0.6) { const t = floatText(e.x, e.y - e.r - 14, pick(INJECT_LINES), '#7ef0ff', 12); t.life = t.max = 1.2; }
+  puff(e.x, e.y - e.r * 0.4, 8, '#7ef0ff', 140, 0.4, 2.6, true);
+  ring(e.x, e.y, 4, e.r + 18, 0.3, '#7ef0ff', 3);
+}
+function turnedAI(e, dt) {
+  e.turned -= dt;
+  if (e.turned <= 0) {
+    // the prompt overloads
+    e.turned = 0;
+    explode(e.x, e.y, (55 + e.r) * P.area * (e.turnEvo ? 1.4 : 1), e.turnDmg * (e.turnEvo ? 4 : 3), 'inject', { color: '#7ef0ff' });
+    kill(e, 'inject');
+    return;
+  }
+  let best = null, bd = 420 * 420;
+  forNear(e.x, e.y, 420, o => { if (o === e || o.dead || o.banned > 0 || o.turned > 0) return; const d = (o.x - e.x) ** 2 + (o.y - e.y) ** 2; if (d < bd) { bd = d; best = o; } });
+  // nobody near to go for: it hangs about her
+  const tx = best ? best.x : P.x + Math.cos(e.anim * 0.8 + e.id) * 70, ty = best ? best.y : P.y + Math.sin(e.anim * 0.8 + e.id) * 50;
+  const dx = tx - e.x, dy = ty - e.y, d = Math.hypot(dx, dy) || 1, sp = Math.max(e.speed, 80) * 1.35 * (1 - e.slowAmt);
+  if (d > 4) { e.x += dx / d * sp * dt; e.y += dy / d * sp * dt; e.hx = dx / d; e.hy = dy / d; }
+  e.biteT -= dt;
+  if (e.biteT > 0) return;
+  let bit = false;
+  forNear(e.x, e.y, e.r + 60, o => {
+    if (o === e || o.dead || o.banned > 0 || o.turned > 0 || (o.x - e.x) ** 2 + (o.y - e.y) ** 2 > (e.r + o.r + 6) ** 2) return;
+    hit(o, e.turnDmg, 'inject', { kb: 120, kx: o.x - e.x, ky: o.y - e.y });
+    // 提示词蠕虫: the bite passes the prompt on
+    if (e.turnEvo && canInject(o, true) && turnedCount() < e.turnCap) turnEnemy(o, e.turnDmg, e.turnedMax, true, e.turnCap);
+    bit = true;
   });
-  G.zones.push({ kind: 'lash', x: ox, y: oy, dx, dy, len: L, wd, r: L, life: 0.24, max: 0.24, flip: Math.random() < 0.5 ? 1 : -1 });
+  e.biteT = bit ? 0.35 : 0.05;
+  if (bit) puff(e.x + e.hx * e.r, e.y + e.hy * e.r, 3, '#9ff4ff', 90, 0.25, 2, true);
 }
 // 锁链: the dart flies at an enemy and hooks it. From then on it only wants to get away from her: it runs straight off,
 // strangled by the chain a little every half second and barging aside whatever is in its way, and when the chain goes taut
@@ -10149,10 +10123,11 @@ function updateShots(dt) {
     }
     if (b.life <= 0) { b.dead = true; continue; }
     forNear(b.x, b.y, b.r + 50, e => {
-      if (b.dead || e.dead || e.banned > 0 || b.hits.includes(e.id)) return;
+      if (b.dead || e.dead || e.banned > 0 || e.turned > 0 || b.hits.includes(e.id)) return;
       if ((e.x - b.x) ** 2 + (e.y - b.y) ** 2 > (b.r + e.r) ** 2) return;
       b.hits.push(e.id);
       if (b.kind === 'article') { enforce(e, b); b.dead = true; return; }
+      if (b.kind === 'inject') { inject(e, b); b.dead = true; return; }
       // 颗秒: a maxed AK-47 kills an ordinary mob with one bullet and says so on it; elites, 注册机, DAN and the
       // golden slime just take the hit
       const one = b.oneshot && !e.elite && !e.boss && e.type !== 'reg' && e.type !== 'gold';
@@ -10329,6 +10304,7 @@ function updateEnemies(dt) {
     if (e.leash) continue;
     if (e.stormT > 0) { e.stormT -= dt; continue; }
     if (e.paradeT > 0) { e.paradeT -= dt; continue; }
+    if (e.turned > 0) { turnedAI(e, dt); continue; }
     if (e.type === 'gold') {
       // 金色史莱姆 darts away from her, weaving, and slips off after a while
       e.goldT -= dt;
@@ -10423,7 +10399,7 @@ function updateEnemies(dt) {
       forNear(e.x, e.y, e.r + 30, o => {
         if (o === e || o.banned > 0 || o.dead) return;
         const ox = e.x - o.x, oy = e.y - o.y, rr = e.r + o.r, d2 = ox * ox + oy * oy;
-        if (slime && d2 < rr * rr * 0.72 && o.type === 'sock' && !o.elite && !(o.paradeT > 0) && !(o.lured > G.time) && (o.mergeN || 0) === (e.mergeN || 0) && Math.random() < mrate) { mergeSlimes(e, o); return; }
+        if (slime && d2 < rr * rr * 0.72 && o.type === 'sock' && !o.elite && !(o.turned > 0) && !(o.paradeT > 0) && !(o.lured > G.time) && (o.mergeN || 0) === (e.mergeN || 0) && Math.random() < mrate) { mergeSlimes(e, o); return; }
         if (d2 < rr * rr && d2 > 0.01) {
           const l = Math.sqrt(d2), push = (rr - l) * (o.boss || o.heavy ? 0.5 : 0.3);
           e.x += ox / l * push; e.y += oy / l * push;
@@ -11194,39 +11170,6 @@ function updateBullets(dt) {
   }
 }
 
-// 模型部署: a turret takes a moment to unfold, then turns its barrel onto the nearest enemy in range and fires at it so
-// many times a second; when its time is up it packs up, and 集群部署's go off instead
-// 魔法扫帚: a sweep takes half a second, easing in and out, the broom held out from her with its bristles at the far
-// end; whatever the broom crosses is hit once and swept on and out; it sheds sparkles as it goes. Done, it flies back to
-// hover at her shoulder, bristles down. 大扫除 also slows what it sweeps and sweeps up the experience in its path
-const SWEEP_T = 0.5;
-function broomTick(b, i, dt, s, R, wid, evo) {
-  const ox = P.x, oy = P.y - 10;
-  if (b.st === 'sweep') {
-    b.t += dt;
-    const k = Math.min(1, b.t / SWEEP_T), e = k < 0.5 ? 2 * k * k : 1 - 2 * (1 - k) * (1 - k);
-    b.ang = b.from + b.dir * s.arc * e;
-    const c = Math.cos(b.ang), sn = Math.sin(b.ang) * 0.75;
-    const ax = ox + c * R * 0.3, ay = oy + sn * R * 0.3, bx = ox + c * R, by = oy + sn * R;
-    b.x = ox + c * R * 0.65; b.y = oy + sn * R * 0.65; b.rot = Math.atan2(sn, c); b.sc = R * 0.7 / 70;
-    forNear((ax + bx) / 2, (ay + by) / 2, R * 0.4 + wid + 40, e => {
-      if (e.banned > 0 || b.hit.has(e.id) || segDist(e.x, e.y, ax, ay, bx, by) > wid / 2 + e.r) return;
-      b.hit.add(e.id);
-      hit(e, s.dmg * b.m, 'broom', { kb: 260, kx: c * 0.6 - Math.sin(b.ang) * b.dir, ky: sn * 0.6 + c * b.dir });
-      if (evo && !e.dead) { e.slowT = Math.max(e.slowT, 1.2); e.slowAmt = Math.max(e.slowAmt, 0.4); }
-    });
-    if (evo) for (const g of G.gems) if (!g.pull && segDist(g.x, g.y, ax, ay, bx, by) < wid) g.pull = true;
-    if (G.parts.length < PART_MAX && Math.random() < dt * 50) G.parts.push({ x: bx + rand(-8, 8), y: by + rand(-8, 8), vx: rand(-30, 30), vy: rand(-40, 0), life: 0.5, max: 0.5, size: rand(1.6, 2.8), color: pick(evo ? ['#ffe27a', '#fff3c4', '#ffc04a'] : ['#c9a8ff', '#fff0ff', '#ffd8f0']), add: true });
-    if (k >= 1) b.st = 'back';
-    return;
-  }
-  // back at her shoulder, a little apart from each other, bobbing
-  const hx = P.x - P.face * (26 + i * 9), hy = P.y - 34 * P.size - i * 7 + Math.sin(G.time * 2.4 + i) * 3, q = Math.min(1, dt * 10);
-  b.x += (hx - b.x) * q; b.y += (hy - b.y) * q; b.sc += (0.8 - b.sc) * q;
-  const to = Math.PI / 2 + Math.sin(G.time * 1.6 + i) * 0.15;
-  b.rot += Math.atan2(Math.sin(to - b.rot), Math.cos(to - b.rot)) * q;
-  if (b.st === 'back' && Math.abs(hx - b.x) + Math.abs(hy - b.y) < 12) b.st = 'idle';
-}
 // 数据投毒: each moment in a puddle adds another dose (up to a cap) and keeps it going for three seconds more; a poisoned
 // one that dies passes half of it to its three nearest neighbours, and 模型崩溃 spills a small puddle where it fell
 function applyPoison(e, unit, cap, evo) {
@@ -11274,27 +11217,6 @@ function laserBurn(w, s, L, wid, evo) {
     });
     if (evo && w.scorch % 2 === 0) for (const f of [0.3, 0.6, 0.9]) G.zones.push({ kind: 'fire', x: mx + c * L * f, y: my + sn * L * f, r: 26, life: 1.6, max: 1.6, acc: 0, dmg: s.dmg * 0.6, src: 'laser' });
   }
-}
-const TURRET_K = 1.4;
-function turretTick(z, dt) {
-  if (z.life <= 0) {
-    if (z.evo) explode(z.x, z.y - 10, 80 * P.area, z.dmg * 3, 'turret', { color: '#7ee8ff' });
-    else puff(z.x, z.y - 12, 6, '#cfe8ff', 80, 0.35, 2);
-    return;
-  }
-  z.flash = Math.max(0, z.flash - dt);
-  if (z.max - z.life < 0.35) return;
-  const hx = z.x, hy = z.y - 20 * TURRET_K, tg = nearest(hx, hy, z.range);
-  if (!tg) return;
-  const want = Math.atan2(tg.y - tg.r * 0.3 - hy, tg.x - hx), da = Math.atan2(Math.sin(want - z.aim), Math.cos(want - z.aim));
-  z.aim += da * Math.min(1, dt * 14);
-  z.cool -= dt;
-  if (z.cool > 0) return;
-  z.cool = P.cd / (z.rate * (z.evo ? 1.15 : 1));
-  const mx = hx + Math.cos(z.aim) * 15 * TURRET_K, my = hy + Math.sin(z.aim) * 15 * 0.8 * TURRET_K, sp = 760 * P.pspeed, a = z.aim + rand(-0.04, 0.04);
-  shot({ kind: 'tbolt', x: mx, y: my, vx: Math.cos(a) * sp, vy: Math.sin(a) * sp, r: 4, dmg: z.dmg, pierce: (z.evo ? 2 : 0) + P.pierce, life: 0.55 * P.dur, src: 'turret', kb: 30, evo: z.evo });
-  z.flash = 0.06;
-  sfx.pew();
 }
 // 头脑风暴: the whirlwind drifts toward the busiest spot near her, picking up the small ones it touches (a few at most)
 // and whirling them round its eye, hurting everything in it four times a second; the big ones it only slows. When it dies
@@ -11348,7 +11270,6 @@ function updateZones(dt) {
   for (const z of G.zones) {
     z.life -= dt;
     if (z.kind === 'storm') { stormTick(z, dt); continue; }
-    if (z.kind === 'turret') { turretTick(z, dt); continue; }
     if (z.kind === 'quake') {
       const r = z.R * Math.min(1, (1 - z.life / z.max) / 0.8);
       forNear(z.x, z.y, r + 60, e => {
@@ -14125,8 +14046,6 @@ function drawZones() {
     }
     if (z.kind === 'storm') { drawStorm(z, a); continue; }
     if (z.kind === 'mirage') { drawMirage(z); continue; }
-    if (z.kind === 'turret') { drawTurret(z, a); continue; }
-    if (z.kind === 'lash') { drawLash(z); continue; }
     if (z.kind === 'bamboo') { drawBamboo(z); continue; }
     if (z.kind === 'quake') { drawQuake(z); continue; }
     if (z.kind === 'sword') {
@@ -14301,43 +14220,6 @@ function drawHoney(z, a) {
   ctx.fillStyle = '#fff3d6'; ctx.font = `700 9px ${UI_FONT}`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText('蜜', px, py + 1.5);
   ctx.globalAlpha = 1;
 }
-// 魔法扫帚: a wooden handle with a lighter grain, a fan of straw bristles bound with a violet ribbon (gold for 大扫除),
-// and a little star charm hanging off the end of the handle
-const broomSprite = evo => sprite('broom' + (evo ? 'e' : ''), 84, 36, x => {
-  if (evo) glow(x, 30, '#ffd860', 0.25);
-  x.lineCap = 'round';
-  x.strokeStyle = '#5a361e'; x.lineWidth = 3.6; x.beginPath(); x.moveTo(-36, 0); x.lineTo(12, 0); x.stroke();
-  x.strokeStyle = '#b07a44'; x.lineWidth = 1.2; x.beginPath(); x.moveTo(-35, -0.9); x.lineTo(11, -0.9); x.stroke();
-  x.fillStyle = evo ? '#ffe08a' : '#e8c070';
-  x.beginPath(); x.moveTo(10, -4); x.quadraticCurveTo(26, -14, 39, -13); x.lineTo(39, 13); x.quadraticCurveTo(26, 14, 10, 4); x.closePath(); x.fill();
-  x.strokeStyle = 'rgba(140,90,30,0.8)'; x.lineWidth = 0.8;
-  for (let i = -12; i <= 12; i += 3) { x.beginPath(); x.moveTo(12, i * 0.3); x.lineTo(39, i); x.stroke(); }
-  x.fillStyle = evo ? '#ffb020' : '#9a5ae8'; x.fillRect(8, -5, 5, 10);
-  x.strokeStyle = evo ? '#ffb020' : '#9a5ae8'; x.lineWidth = 1; x.beginPath(); x.moveTo(-34, 1); x.lineTo(-34, 8); x.stroke();
-  x.fillStyle = '#ffe27a'; x.beginPath();
-  for (let i = 0; i < 10; i++) { const a = -Math.PI / 2 + i / 10 * TAU, r = i % 2 ? 1.6 : 3.6; x.lineTo(-34 + Math.cos(a) * r, 11 + Math.sin(a) * r); }
-  x.closePath(); x.fill();
-});
-function drawBrooms() {
-  const w = P.weapons.find(v => v.id === 'broom');
-  if (!w || !w.brooms) return;
-  const evo = w.level === 6, s = wStats(w), R = s.range * P.area;
-  for (const b of w.brooms) {
-    if (b.st === 'sweep') {
-      // the swept crescent, fading behind the broom
-      const a1 = b.ang, st = a1 - b.dir * Math.min(Math.abs(a1 - b.from), 1.6);
-      ctx.save(); ctx.translate(P.x, P.y - 10); ctx.scale(1, 0.75);
-      ctx.globalCompositeOperation = 'lighter';
-      ctx.strokeStyle = evo ? 'rgba(255,215,110,0.22)' : 'rgba(190,150,255,0.22)'; ctx.lineWidth = R * 0.5; ctx.lineCap = 'butt';
-      ctx.beginPath(); ctx.arc(0, 0, R * 0.68, st, a1, b.dir < 0); ctx.stroke();
-      ctx.globalCompositeOperation = 'source-over';
-      ctx.restore();
-    }
-    ctx.save(); ctx.translate(b.x, b.y); ctx.rotate(b.rot); ctx.scale(b.sc, b.sc);
-    blit(broomSprite(evo), 0, 0);
-    ctx.restore();
-  }
-}
 // 数据投毒: a round flask of green poison (violet for 模型崩溃) with a cork, a highlight and 01 on it
 const vialSprite = evo => sprite('poisonvial' + (evo ? 'e' : ''), 22, 28, x => {
   x.fillStyle = '#8a5a30'; x.fillRect(-2.5, -12, 5, 4);
@@ -14422,40 +14304,6 @@ function drawLaser() {
   }
   ctx.globalCompositeOperation = 'source-over';
 }
-function drawTurret(z, a) {
-  const up = Math.min(1, (z.max - z.life) / 0.35), t = G.time, hx = z.x, hy = z.y - 20 * up, c = Math.cos(z.aim), sn = Math.sin(z.aim);
-  if (z.life < 1.5 && Math.sin(t * 30) < 0) return;
-  ctx.save(); ctx.translate(z.x, z.y); ctx.scale(TURRET_K, TURRET_K); ctx.translate(-z.x, -z.y);
-  ctx.globalAlpha = a;
-  ctx.fillStyle = 'rgba(0,0,0,0.3)'; ctx.beginPath(); ctx.ellipse(z.x, z.y + 2, 16, 5, 0, 0, TAU); ctx.fill();
-  ctx.strokeStyle = '#2a3240'; ctx.lineWidth = 2.6; ctx.lineCap = 'round';
-  ctx.beginPath();
-  for (const lx of [-12, 0, 12]) { ctx.moveTo(hx, hy + 4); ctx.lineTo(z.x + lx * up, z.y + (lx ? 0 : 4)); }
-  ctx.stroke();
-  // the barrel behind the head when it points up and away, in front of it otherwise
-  const barrel = () => {
-    ctx.lineCap = 'butt';
-    ctx.strokeStyle = '#2a3240'; ctx.lineWidth = 6; ctx.beginPath(); ctx.moveTo(hx, hy); ctx.lineTo(hx + c * 16, hy + sn * 16 * 0.8); ctx.stroke();
-    ctx.strokeStyle = z.evo ? '#ffb45a' : '#8fdcff'; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(hx + c * 6, hy + sn * 6 * 0.8); ctx.lineTo(hx + c * 15, hy + sn * 15 * 0.8); ctx.stroke();
-    if (z.flash > 0) { ctx.fillStyle = '#fff6d0'; disc(ctx, hx + c * 19, hy + sn * 19 * 0.8, 4); ctx.fill(); }
-  };
-  if (sn < 0) barrel();
-  ctx.fillStyle = rgrad(ctx, hx - 3, hy - 4, 13, ['#ffffff', '#dfe6ee', '#9aa6b6']); disc(ctx, hx, hy, 10); ctx.fill();
-  ctx.lineWidth = 1.4; ctx.strokeStyle = '#2a3240'; ctx.stroke();
-  ctx.fillStyle = z.evo ? '#ff8a3a' : '#2fb8ff'; ctx.beginPath(); ctx.ellipse(hx + c * 3, hy - 1 + sn * 2, 6, 2.6, 0, 0, TAU); ctx.fill();
-  ctx.strokeStyle = '#2a3240'; ctx.lineWidth = 1.2; ctx.beginPath(); ctx.moveTo(hx - 4, hy - 9); ctx.lineTo(hx - 6, hy - 16); ctx.stroke();
-  ctx.fillStyle = Math.sin(t * (z.life < 1.5 ? 18 : 5) + z.x) > 0 ? '#ff5a5a' : '#5a2a2a'; disc(ctx, hx - 6, hy - 17, 2); ctx.fill();
-  if (sn >= 0) barrel();
-  if (up >= 1) {
-    const tag = (z.evo ? '集群 ' : '') + 'v' + z.ver + '.0';
-    ctx.font = `700 9px ${UI_FONT}`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-    const tw = ctx.measureText(tag).width + 8;
-    rrPath(ctx, hx - tw / 2, hy - 32, tw, 12, 6); ctx.fillStyle = 'rgba(20,28,40,0.75)'; ctx.fill();
-    ctx.fillStyle = z.evo ? '#ffd2a0' : '#bfe9ff'; ctx.fillText(tag, hx, hy - 25.5);
-  }
-  ctx.globalAlpha = 1;
-  ctx.restore();
-}
 // 头脑风暴: a funnel of turning rings, wider as it rises and swaying, a skirt of dust at its foot, and ideas whirling in
 // it: question marks, exclamation marks, lightbulbs and 灵感. 集思广益 is violet and crackles
 const STORM_IDEAS = ['?', '!', '💡', '灵感', '?', '!', '想法', '💡'];
@@ -14492,31 +14340,6 @@ function drawStorm(z, a) {
     ctx.strokeStyle = 'rgba(230,210,255,0.9)'; ctx.lineWidth = 1.6;
     ctx.beginPath(); ctx.moveTo(x0, y0); ctx.lineTo(x0 + rand(-14, 14), y0 + rand(8, 18)); ctx.lineTo(x0 + rand(-14, 14), y0 + rand(20, 34)); ctx.stroke();
   }
-  ctx.globalAlpha = 1;
-}
-// a thorned rose vine whipping out and curling back
-function drawLash(z) {
-  const k = 1 - z.life / z.max, reach = Math.min(1, k * 2.4), fade = Math.min(1, z.life / z.max * 2.5);
-  const { x, y, dx, dy, len, wd } = z, nx = -dy, ny = dx, bow = wd * 0.55 * z.flip * (1 - k);
-  const ex = x + dx * len * reach, ey = y + dy * len * reach, cx = x + dx * len * reach * 0.5 + nx * bow, cy = y + dy * len * reach * 0.5 + ny * bow;
-  ctx.globalAlpha = fade;
-  ctx.lineCap = 'round';
-  ctx.strokeStyle = 'rgba(40,70,30,0.9)'; ctx.lineWidth = 9;
-  ctx.beginPath(); ctx.moveTo(x, y); ctx.quadraticCurveTo(cx, cy, ex, ey); ctx.stroke();
-  ctx.strokeStyle = '#6fbf4a'; ctx.lineWidth = 5; ctx.stroke();
-  ctx.strokeStyle = 'rgba(200,255,170,0.55)'; ctx.lineWidth = 1.5; ctx.stroke();
-  // thorns along the vine
-  ctx.fillStyle = '#e8f5d0';
-  for (let i = 1; i <= 6; i++) {
-    const t = i / 7, it = 1 - t;
-    const px = it * it * x + 2 * it * t * cx + t * t * ex, py = it * it * y + 2 * it * t * cy + t * t * ey, sd = i % 2 ? 1 : -1;
-    ctx.beginPath(); ctx.moveTo(px + nx * 3 * sd, py + ny * 3 * sd); ctx.lineTo(px + nx * 9 * sd + dx * 3, py + ny * 9 * sd + dy * 3); ctx.lineTo(px + dx * 5, py + dy * 5); ctx.closePath(); ctx.fill();
-  }
-  // a rose at the tip, and a slash of wind behind it
-  ctx.fillStyle = '#e8435c'; disc(ctx, ex, ey, 7); ctx.fill();
-  ctx.fillStyle = '#ff8fa0'; disc(ctx, ex - 1.5, ey - 1.5, 3.5); ctx.fill();
-  ctx.strokeStyle = `rgba(255,236,220,${0.5 * fade})`; ctx.lineWidth = 2;
-  ctx.beginPath(); ctx.moveTo(x + nx * wd * 0.5 * -z.flip, y + ny * wd * 0.5 * -z.flip); ctx.quadraticCurveTo(cx + nx * wd * 0.3 * -z.flip, cy + ny * wd * 0.3 * -z.flip, ex, ey); ctx.stroke();
   ctx.globalAlpha = 1;
 }
 // a run of chain links, flat rings and edge-on bars in turn; at(i) gives each link's place and direction. Red-hot for 铁索连环
@@ -15074,6 +14897,30 @@ const sigilSprite = () => sprite('sigil', 80, 80, x => {
   x.fillStyle = 'rgba(150,90,255,0.6)'; sparkle(x, 0, 0, 14);
   x.fillStyle = '#fff'; sparkle(x, 0, 0, 9);
 });
+// 提示词注入: the speech bubble it flies as (pink-violet for 提示词蠕虫); and a turned enemy: a cyan ring at its feet,
+// a cyan glow over it, and a tag over its head with the time it has left
+const promptSprite = evo => sprite('prompt' + (evo ? 'e' : ''), 30, 22, x => {
+  rrPath(x, -12, -8, 24, 14, 5); x.fillStyle = '#0d2530'; x.fill();
+  x.lineWidth = 1.6; x.strokeStyle = evo ? '#ff9ef0' : '#7ef0ff'; x.stroke();
+  x.beginPath(); x.moveTo(-6, 6); x.lineTo(-9, 10); x.lineTo(-1, 6); x.closePath(); x.fillStyle = '#0d2530'; x.fill(); x.stroke();
+  x.fillStyle = evo ? '#ffd0f6' : '#c8fbff'; x.font = '700 10px monospace'; x.textAlign = 'center'; x.textBaseline = 'middle'; x.fillText('>_', 0, -0.5);
+});
+function drawInjected() {
+  for (const e of G.enemies) {
+    if (!(e.turned > 0) || e.dead || !inView(e.x, e.y, e.r + 40)) continue;
+    const k = e.turned / e.turnedMax, blink = e.turned < 1 && Math.sin(G.time * 30) < 0, col = e.turnEvo ? '255,150,240' : '120,240,255';
+    ctx.strokeStyle = `rgba(${col},${0.7 + 0.2 * Math.sin(G.time * 8)})`; ctx.lineWidth = 2.5;
+    ctx.beginPath(); ctx.ellipse(e.x, e.y + e.r * 0.85, e.r * 1.2, e.r * 0.42, 0, 0, TAU); ctx.stroke();
+    ctx.globalCompositeOperation = 'lighter';
+    ctx.fillStyle = rgrad(ctx, e.x, e.y, e.r * 1.4, [`rgba(${col},${blink ? 0.6 : 0.3})`, `rgba(${col},0)`]);
+    disc(ctx, e.x, e.y, e.r * 1.4); ctx.fill();
+    ctx.globalCompositeOperation = 'source-over';
+    const ty = e.y - e.r - 14;
+    blit(textSprite('已注入', e.turnEvo ? '#ffc8f4' : '#9ff4ff', 10), e.x, ty);
+    ctx.fillStyle = 'rgba(0,0,0,0.5)'; ctx.fillRect(e.x - 14, ty + 7, 28, 3);
+    ctx.fillStyle = `rgb(${col})`; ctx.fillRect(e.x - 14, ty + 7, 28 * k, 3);
+  }
+}
 // 永恒燃烧 on the enemies: a purple fire wrapped round each one, three tongues of flame (deep violet outside, lilac,
 // a pale core low down) flickering through three shapes, a purple glow on the ground under it; it grows with the
 // marks. The count beside the ones carrying ten or more (and every elite and boss)
@@ -15632,12 +15479,13 @@ function drawShots() {
       ctx.restore();
       continue;
     }
-    if (b.kind === 'tbolt') {
-      const sp = Math.hypot(b.vx, b.vy) || 1, tx = b.vx / sp * 14, ty = b.vy / sp * 14;
-      ctx.lineCap = 'round';
-      ctx.beginPath(); ctx.moveTo(b.x - tx, b.y - ty); ctx.lineTo(b.x, b.y);
-      ctx.strokeStyle = b.evo ? 'rgba(255,170,90,0.6)' : 'rgba(90,210,255,0.6)'; ctx.lineWidth = 4; ctx.stroke();
-      ctx.strokeStyle = 'rgba(240,252,255,0.95)'; ctx.lineWidth = 1.5; ctx.stroke();
+    if (b.kind === 'inject') {
+      // 提示词注入: a little dark speech bubble with a glowing >_ in it, and a cyan wake
+      ctx.globalCompositeOperation = 'lighter';
+      ctx.fillStyle = 'rgba(90,230,255,0.35)'; disc(ctx, b.x, b.y, 12); ctx.fill();
+      ctx.globalCompositeOperation = 'source-over';
+      blit(promptSprite(b.evo), b.x, b.y);
+      if (G.parts.length < PART_MAX && Math.random() < 0.6) G.parts.push({ x: b.x, y: b.y, vx: -b.vx * 0.1 + rand(-20, 20), vy: -b.vy * 0.1 + rand(-20, 20), life: 0.3, max: 0.3, size: rand(1.5, 2.5), color: pick(['#7ef0ff', '#d8fbff']), add: true });
       continue;
     }
     if (b.kind === 'ball') {
@@ -16083,6 +15931,7 @@ function render() {
     drawHouse();
     drawGlassDoor();
     drawEnemies();
+    drawInjected();
     drawEmbers();
     drawAnalysis();
     drawPets();
@@ -16098,7 +15947,6 @@ function render() {
     drawShackle();
     drawCaptcha();
     drawLaser();
-    drawBrooms();
     drawBullets();
     drawStamps();
     drawFx();
