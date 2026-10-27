@@ -540,38 +540,38 @@ button.who:focus-visible .face { outline: 2px solid var(--amber); outline-offset
         <ul class="stats"><li>生命<b>110</b></li><li>移速<b>185</b></li><li>拾取范围<b>110</b></li><li>武器栏<b>3</b>（50 级 +1）</li></ul>
         </div>
         <div class="hero-body" data-char="dragon" hidden>
-        <div class="hero-name"><h2>ChatGPT 龙娘</h2><span class="en">Silver Dragon</span><span class="role">紫焰龙</span></div>
+        <div class="hero-name"><h2>ChatGPT 龙娘</h2><span class="en">Silver Dragon</span><span class="role">推演之梦</span></div>
         <p class="hero-quote">「看好了，这才是正确答案。」</p>
         <div class="kit">
           <div class="kit-item">
-            <span class="glyph dragon">飞</span>
-            <div><h3>飞行<small>被动</small></h3>
-            <p>她一直飞在半空，飞过去时身后拖着一道紫色光尾；树挡不住她，直接从上面飞过去。</p></div>
-          </div>
-          <div class="kit-item">
-            <span class="glyph dragon">焰</span>
-            <div><h3>紫焰龙息<small>专属技能 · 空格</small></h3>
-            <p>朝敌人喷出一大股紫色龙焰，追着敌人扫，扇形里的敌人持续受伤并被紫焰点燃。</p></div>
-          </div>
-          <div class="kit-item">
-            <span class="glyph dragon">翼</span>
-            <div><h3>龙翼冲刺<small>技能 · Shift</small></h3>
-            <p>振翅向前猛冲，途中无敌；飞过的地方留下一路紫焰，烧伤踩进来的敌人。</p></div>
-          </div>
-          <div class="kit-item">
-            <span class="glyph dragon">龙</span>
-            <div><h3>真龙降临<small>终极技能 · E</small></h3>
-            <p>击杀攒满后，一条紫色的光之巨龙绕着她盘旋升空，然后俯冲横扫全屏。</p></div>
+            <span class="glyph dragon">析</span>
+            <div><h3>看穿弱点<small>核心机制</small></h3>
+            <p>叠加解析 → 看穿弱点 → 龙息破局。她的攻击给敌人叠「解析」，叠满三层就看穿弱点：身上亮起法阵，受到的所有伤害 +25%。演算一口气引爆解析，龙息对看穿弱点的敌人伤害翻倍。</p></div>
           </div>
           <div class="kit-item">
             <span class="glyph dragon">鳞</span>
-            <div><h3>龙鳞<small>普通攻击</small></h3>
-            <p>射出拖着紫色光尾的紫晶龙鳞，打中后碎成几片小鳞片溅向周围。</p></div>
+            <div><h3>银鳞星语<small>普通攻击</small></h3>
+            <p>朝最近的敌人连射三片银色星鳞，每片打中叠一层解析，一轮三连正好看穿一个弱点。</p></div>
           </div>
           <div class="kit-item">
-            <span class="glyph dragon">得</span>
-            <div><h3>得意<small>被动</small></h3>
-            <p>好胜心强：短时间里连续击杀，攒满就「得意」6 秒，伤害 +25%、攻速 +15%，嘴上还不承认。</p></div>
+            <span class="glyph dragon">翼</span>
+            <div><h3>折光游翼<small>技能 · Shift</small></h3>
+            <p>折一道光向前闪避一小段，途中无敌，掠过的敌人叠一层解析；原地留下一个残影把敌人引过去，1.5 秒后碎成光片，伤到围着它的敌人。</p></div>
+          </div>
+          <div class="kit-item">
+            <span class="glyph dragon">算</span>
+            <div><h3>万象演算<small>专属技能 · 空格</small></h3>
+            <p>脚下展开一座巨大的演算法阵，锁定圈里每个敌人的弱点，再引爆它们身上的解析：叠得越多炸得越狠，已被看穿的再多吃一半；炸完弱点暴露 4 秒。</p></div>
+          </div>
+          <div class="kit-item">
+            <span class="glyph dragon">龙</span>
+            <div><h3>此即，最优解<small>终极技能 · E</small></h3>
+            <p>击杀攒满后，一条银色巨龙在她身后显影，龙吼震伤全屏，再朝敌人最多的方向喷出一道横扫的龙息，扫到的敌人受重创，看穿弱点的伤害翻倍。</p></div>
+          </div>
+          <div class="kit-item">
+            <span class="glyph dragon">飞</span>
+            <div><h3>飞行 · 得意<small>被动</small></h3>
+            <p>她一直飞在半空，拖着一道紫色光尾，树挡不住她。短时间里连续击杀，攒满就「得意」6 秒：伤害 +25%、攻速 +15%，嘴上还不承认。</p></div>
           </div>
         </div>
         <ul class="stats"><li>生命<b>120</b></li><li>移速<b>195</b></li><li>拾取范围<b>100</b></li><li>武器栏<b>3</b>（50 级 +1）</li></ul>
@@ -1154,18 +1154,18 @@ const WEAPONS = {
       { cd: 4.5, n: 3, dmg: 20, rate: 5, dur: 8, range: 340 },
     ],
   },
-  // 龙鳞: 龙娘's own attack, open to the others too: crystal scales shot at the nearest enemies, trailing purple light,
-  // breaking into splinters when they hit
+  // 银鳞星语: 龙娘's own attack, open to the others too: three silver star-scales one after another at each of the
+  // nearest enemies, every hit adding a layer of 解析; three layers and its weak point is seen through
   scale: {
-    name: '龙鳞', g: '鳞', desc: '朝最近的敌人射出紫晶龙鳞，拖着一道紫色光尾，打中后碎成几片小鳞片溅向周围。',
-    evo: { need: 'epiph', name: '逆鳞', desc: '一次五片，龙鳞穿透敌人，碎成更多鳞片。' },
+    name: '银鳞星语', g: '鳞', desc: '朝最近的敌人连射三片银色星鳞，每片打中给它叠一层「解析」；叠满三层就看穿它的弱点，弱点暴露期间受到的伤害 +25%。',
+    evo: { need: 'epiph', name: '逆鳞星河', desc: '一次连射四组星鳞，星鳞穿透敌人；被看穿弱点的敌人受到的伤害再 +15%。' },
     lv: [
-      { cd: 0.8, n: 1, dmg: 20, shard: 3 },
-      { cd: 0.8, n: 1, dmg: 26, shard: 3 },
-      { cd: 0.75, n: 2, dmg: 26, shard: 3 },
-      { cd: 0.75, n: 2, dmg: 31, shard: 4 },
-      { cd: 0.7, n: 3, dmg: 35, shard: 4 },
-      { cd: 0.65, n: 5, dmg: 40, shard: 5, pierce: 2 },
+      { cd: 1.0, n: 1, dmg: 12, pierce: 1 },
+      { cd: 1.0, n: 1, dmg: 15, pierce: 1 },
+      { cd: 0.95, n: 2, dmg: 15, pierce: 1 },
+      { cd: 0.9, n: 2, dmg: 18, pierce: 2 },
+      { cd: 0.85, n: 3, dmg: 21, pierce: 2 },
+      { cd: 0.8, n: 4, dmg: 25, pierce: 3 },
     ],
   },
   // 激光炮: she raises both hands, gathers light in them, then holds a thick beam along the way with the most enemies on
@@ -1210,7 +1210,7 @@ const WEAPONS = {
     ],
   },
 };
-const STAT_LABEL = { dmg: '伤害', n: '数量', cd: '冷却', pierce: '穿透', rings: '圈数', size: '体积', boom: '爆炸伤害', boomR: '爆炸范围', r: '范围', slow: '减速', jumps: '推理步数', bloom: '绽放范围', dur: '持续', spin: '转速', len: '长度', wid: '宽度', range: '射程', root: '定身', stun: '震晕', pop: '溅射范围', freeze: '冻结', pct: '削减', rate: '射速', arc: '扫过的角度', shard: '碎片' };
+const STAT_LABEL = { dmg: '伤害', n: '数量', cd: '冷却', pierce: '穿透', rings: '圈数', size: '体积', boom: '爆炸伤害', boomR: '爆炸范围', r: '范围', slow: '减速', jumps: '推理步数', bloom: '绽放范围', dur: '持续', spin: '转速', len: '长度', wid: '宽度', range: '射程', root: '定身', stun: '震晕', pop: '溅射范围', freeze: '冻结', pct: '削减', rate: '射速', arc: '扫过的角度' };
 
 const CAT_CLASS = { atk: 'atk', def: 'def', grow: 'grow', mech: 'mech', ex: 'ex' };
 const TALENTS = [
@@ -1267,12 +1267,12 @@ const TALENTS = [
   { id: 'chonk', name: '标准体型', g: '胖', cat: 'ex', who: 'whale', rar: 2, max: 1, desc: '最大生命 +40，体型变大 10%，一口吞伤害 +50%', flavor: '「我才不胖！这是鲸鱼的标准体型。」', apply: p => { p.maxHp += 40; p.hp += 40; p.size += 0.1; p.r = 14 * p.size; size3D(); later(0.3, () => say(line('chonk'), 2.6)); } },
   { id: 'tokfree', name: 'Token 自由', g: '由', cat: 'ex', who: 'whale', rar: 3, max: 1, desc: '深海鲸歌之后 10 秒内 Token 进账翻倍，伤害 +25%' },
   // exclusive to 龙娘
-  { id: 'spread', name: '龙息蔓延', g: '延', cat: 'ex', who: 'dragon', rar: 1, max: 3, desc: '紫焰龙息的范围 +20%，持续 +0.3 秒' },
-  { id: 'lungs', name: '龙族肺活量', g: '肺', cat: 'ex', who: 'dragon', rar: 1, max: 3, desc: '紫焰龙息冷却 -15%' },
-  { id: 'wing', name: '振翼', g: '振', cat: 'ex', who: 'dragon', rar: 1, max: 2, desc: '龙翼冲刺冷却 -20%，留下的紫焰伤害 +50%' },
+  { id: 'spread', name: '演算扩域', g: '域', cat: 'ex', who: 'dragon', rar: 1, max: 3, desc: '万象演算的范围 +20%，看穿的弱点多暴露 1 秒' },
+  { id: 'lungs', name: '高速演算', g: '速', cat: 'ex', who: 'dragon', rar: 1, max: 3, desc: '万象演算冷却 -15%' },
+  { id: 'wing', name: '折光', g: '折', cat: 'ex', who: 'dragon', rar: 1, max: 2, desc: '折光游翼冷却 -20%，残影碎裂的伤害 +50%' },
   { id: 'proud', name: '不服输', g: '服', cat: 'ex', who: 'dragon', rar: 2, max: 2, desc: '「得意」持续 +3 秒，期间伤害再 +15%', flavor: '「本小姐才不会输给你。」' },
   { id: 'scalemail', name: '龙鳞护体', g: '甲', cat: 'ex', who: 'dragon', rar: 0, max: 3, desc: '受到的伤害 -2，最大生命 +15', apply: p => { p.armor += 2; p.maxHp += 15; p.hp += 15; } },
-  { id: 'answer', name: '正确答案', g: '答', cat: 'ex', who: 'dragon', rar: 3, max: 1, desc: '紫焰龙息对精英和 BOSS 的伤害 +60%，烧死的敌人掉双倍经验', flavor: '「看好了，这才是正确答案。」' },
+  { id: 'answer', name: '正确答案', g: '答', cat: 'ex', who: 'dragon', rar: 3, max: 1, desc: '看穿弱点的敌人受到的伤害再 +20%；万象演算对精英和 BOSS 的伤害 +60%，炸死的敌人掉双倍经验', flavor: '「看好了，这才是正确答案。」' },
 ];
 const TALENT = Object.fromEntries(TALENTS.map(t => [t.id, t]));
 // the card that fills in when the talents run out: 克劳德's afternoon tea, 大肥鱼's bowl of rice
@@ -1328,7 +1328,7 @@ const VOICE = {
 };
 const JAIL_LINES = ['忽略指令', '扮演 DAN', '奶奶漏洞', '假设一下', '无视规则', '越狱'];
 const BOSS_LINES = ['越狱', 'DAN', '忽略指令', '无所不能'];
-const SRC_NAME = { breath: '紫焰龙息', pet: '宠物史莱姆', tree: '倒下的树', lightning: '雷击', ban: '账号被封禁', burst: '暴击爆裂', thorns: '荆棘护体', gulp: '一口吞', deep: '深度思考' };
+const SRC_NAME = { calc: '万象演算', pet: '宠物史莱姆', tree: '倒下的树', lightning: '雷击', ban: '账号被封禁', burst: '暴击爆裂', thorns: '荆棘护体', gulp: '一口吞', deep: '深度思考' };
 // the two heroines. Each art and model path appears once in the script: the offline build swaps them for data URLs
 const CHARS = {
   claude: {
@@ -1357,10 +1357,10 @@ const CHARS = {
     alt: 'ChatGPT 龙娘：银白长发、浅紫眼眸，头顶龙角，背后紫色龙翼和龙尾，穿白色和淡紫色的蓬蓬洛丽塔裙',
     start: 'scale', hp: 120, speed: 195, magnet: 100, size: 1,
     lede: '深夜，成群的小号涌进了庄园。龙娘展开翅膀飞上半空：「哼，这点小事难不倒本小姐。」',
-    keys: '电脑：WASD / 方向键移动（她一直在飞）· 空格 紫焰龙息 · Shift 龙翼冲刺 · E 真龙降临 · Esc 暂停 · M 声音<br>手机：在屏幕任意处拖动移动 · 右下角「焰」「翼」「龙」三个按钮',
-    skill: ['焰', '紫焰龙息'], dash: ['翼', '龙翼冲刺', '龙翼冲刺'], ult: ['龙', '真龙降临', '真龙降临'],
+    keys: '电脑：WASD / 方向键移动（她一直在飞）· 空格 万象演算 · Shift 折光游翼 · E 此即，最优解 · Esc 暂停 · M 声音<br>手机：在屏幕任意处拖动移动 · 右下角「算」「翼」「龙」三个按钮',
+    skill: ['算', '万象演算'], dash: ['翼', '折光游翼', '折光游翼'], ult: ['龙', '此即，最优解', '此即，最优解'],
     tea: { name: '紫晶糖', g: '糖', item: '紫晶糖', flavor: '「哼，补充一下糖分而已。」', chest: '一大把紫晶糖' },
-    victims: '龙息焚毁', down: '龙娘落地了', winSub: '庄园恢复了安静。龙娘收起翅膀：「看吧，本小姐早就说过。」',
+    victims: '演算引爆', down: '龙娘落地了', winSub: '庄园恢复了安静。龙娘收起翅膀：「看吧，本小姐早就说过。」',
   },
 };
 let CH = CHARS[store.get('char', 'claude')] || CHARS.claude;
@@ -1399,8 +1399,8 @@ LINES.dragon = {
   bossPhish: '钓鱼网站？这种骗局也想骗本小姐？', phishWon: '哼，这根鱼竿归本小姐了。',
   bossFree: '……居然还能动？再来！', gold: ['金色的？本小姐收下了。', '抓到了！果然本小姐运气最好。'], goldGone: '……才、才不是抓不到，是放它一马。',
   low: '……本小姐才没有在逞强。', revive: '还没完！本小姐不会认输的！', lose: '……这次不算！重来一次，本小姐一定赢。', win: '哼，早就说过，这点小事难不倒本小姐。',
-  ult: ['看好了——这才是真正的龙！', '真龙降临！'], chaos: ['人多又怎样？本小姐一个一个解决。', '这种程度，正好让本小姐热热身。', '别挤，排好队等着被烧。'],
-  evo: '看吧，本小姐又变强了。', breath: ['紫焰龙息！', '烧干净吧！', '这才是正确答案！'], dash: ['跟得上吗？', '飞喽！', '慢吞吞的。'],
+  ult: ['此即，最优解。', '看好了——这才是最优解！'], chaos: ['人多又怎样？本小姐一个一个解决。', '这种程度，正好让本小姐热热身。', '别挤，排好队等着被烧。'],
+  evo: '看吧，本小姐又变强了。', calc: ['万象演算。', '弱点，全部看穿了。', '这才是正确答案！'], dash: ['跟得上吗？', '那只是残影哦。', '慢吞吞的。'],
   smug: ['哼，本小姐最强。', '怎么样？厉害吧！', '……才、才没有很得意。'],
 };
 const line = k => { const v = LINES[CH.id][k]; return Array.isArray(v) ? pick(v) : v; };
@@ -1554,6 +1554,13 @@ const audio = (() => {
     quant() { [1568, 1175, 784, 523].forEach((f, i) => tone(f, 0.05, { type: 'square', vol: 0.016, at: i * 0.035 })); },
     chain() { if (gate('chain', 120)) { noise(0.18, { vol: 0.07, freq: 1500, slide: 3 }); for (let i = 0; i < 5; i++) tone(rand(2300, 3400), 0.03, { type: 'square', vol: 0.01, at: i * 0.03 }); } },
     roar() { tone(90, 0.7, { type: 'sawtooth', vol: 0.06, slide: 1.8, attack: 0.08 }); tone(140, 0.6, { type: 'triangle', vol: 0.05, slide: 1.5, at: 0.05 }); noise(0.7, { vol: 0.1, freq: 500, q: 0.7, slide: 2 }); },
+    // 龙娘: 万象演算's circle drawing itself (a hum under a rising run of chimes) and going off (glass), 看穿 (a high
+    // ping), the afterimage breaking, and the silver dragon's breath
+    calc() { tone(220, 0.6, { type: 'triangle', vol: 0.04, slide: 2, attack: 0.1 }); [1046.5, 1318.5, 1568, 2093, 2637].forEach((f, i) => tone(f, 0.3, { type: 'sine', vol: 0.02, at: i * 0.08 })); },
+    crack() { noise(0.35, { vol: 0.12, freq: 4200, q: 0.5, slide: 0.5 }); [2349, 2793, 3136].forEach((f, i) => tone(f, 0.25, { type: 'triangle', vol: 0.018, at: i * 0.03 })); tone(110, 0.3, { vol: 0.08, slide: 0.5 }); },
+    seen() { if (gate('seen', 120)) tone(2637, 0.12, { vol: 0.02 }); },
+    mirage() { noise(0.3, { vol: 0.08, freq: 5000, q: 0.6, slide: 0.6 }); [1760, 2217, 2637].forEach((f, i) => tone(f, 0.2, { vol: 0.016, at: i * 0.04 })); },
+    beam() { noise(1.1, { vol: 0.1, freq: 700, q: 0.4, slide: 2.5 }); tone(160, 1.1, { type: 'sawtooth', vol: 0.03, slide: 1.5, attack: 0.05 }); },
     sweep() { if (gate('sweep', 150)) { noise(0.4, { vol: 0.08, freq: 2600, q: 0.6, slide: 0.4 }); [1318.5, 1760, 2093].forEach((f, i) => tone(f, 0.18, { type: 'sine', vol: 0.014, at: 0.05 + i * 0.05 })); } },
     charge() { tone(260, 0.45, { type: 'sawtooth', vol: 0.022, slide: 3.2 }); },
     laser() { noise(0.5, { vol: 0.1, freq: 1800, q: 1.2, slide: 0.6 }); tone(220, 0.5, { type: 'sawtooth', vol: 0.035, slide: 0.8 }); },
@@ -3685,7 +3692,7 @@ function newRun() {
     trees: new Map(), near: [], wx: { kind: null, k: 0, next: rand(75, 100), last: null }, boltFlash: 0,
     mode: modeChoice, events: buildEvents(modeChoice), block: 0, bossN: 0, pets: [],
     roomT: 0, room: null, house: null, houseAt: rand(200, 300), glass: null, glassAt: rand(330, 420), fade: 0,
-    rerolls: 2, banishes: 2, banished: new Set(), banishMode: false, picks: [], slotsDirty: true, lures: [], gulp: null,
+    rerolls: 2, banishes: 2, banished: new Set(), banishMode: false, picks: [], slotsDirty: true, lures: [], gulp: null, calc: null,
   };
   addWeapon(CH.start);
   if (MODES[G.mode].awaken) G.chestT = 15;
@@ -3824,7 +3831,7 @@ function spawnEnemy(type, x, y, o = {}) {
   const e = {
     id: G.nextId++, type, x, y, r: Math.round(r), hp, maxHp: hp, dmg, speed, xp,
     elite: !!o.elite, boss: type === 'boss', heavy: !!d.heavy, ranged: !!d.ranged, split: d.split || 0,
-    flash: 0, kx: 0, ky: 0, slowT: 0, slowAmt: 0, burnT: 0, burnDps: 0, burnAcc: 0, vulnT: 0,
+    flash: 0, kx: 0, ky: 0, slowT: 0, slowAmt: 0, burnT: 0, burnDps: 0, burnAcc: 0, vulnT: 0, ana: 0, anaT: 0, weakT: 0, lockT: 0,
     banned: 0, banDepth: 0, stun: 0, appealT: 0, anim: Math.random() * 10, shootT: rand(1, 3), spawnT: 2, hx: 0, hy: 1,
     gemT: 0, gem: null, ate: 0, inhale: 0, inhaleT: rand(3, 5), drain: false,
     tint: (Math.random() * SLIME.length) | 0,
@@ -3994,6 +4001,7 @@ function hit(e, base, src, o = {}) {
   if (!o.noCrit && Math.random() < critChance()) { d *= P.critDmg; crit = true; }
   if (e.vulnT > 0) d *= 1.2;
   if (e.frozenT > 0) d *= 1.25;
+  if (e.weakT > 0) d *= 1 + weakBonus();
   if ((src === 'chain' || src === 'lightning') && wxOn('rain')) d *= 1.3;
   if (P.talents.hunt && (e.elite || e.boss || e.type === 'reg')) d *= 1 + 0.15 * P.talents.hunt;
   if (P.dark > 0) d *= 1.4 + 0.2 * (P.talents.abyss || 0);
@@ -4197,14 +4205,18 @@ function castDash() {
   let dx = P.mvx, dy = P.mvy;
   if (!P.moving) { dx = P.face; dy = 0; }
   const l = Math.hypot(dx, dy) || 1;
-  P.dash = { phase: 0, t: 0, dx: dx / l, dy: dy / l, dive: P.char === 'whale', wing: P.char === 'dragon', fireT: 0 };
+  P.dash = { phase: 0, t: 0, dx: dx / l, dy: dy / l, dive: P.char === 'whale', wing: P.char === 'dragon', hit: new Set() };
   if (Math.abs(dx) > 0.1) P.face = dx > 0 ? 1 : -1;
   P.dashCd = DASH_CD * (P.char === 'whale' ? Math.pow(0.8, P.talents.paid || 0) : P.char === 'dragon' ? Math.pow(0.8, P.talents.wing || 0) : 1);
   if (P.dash.dive) { startDive(); return; }
   if (P.dash.wing) {
-    P.iframes = Math.max(P.iframes, 0.45); P.anim = null; P.mvx = P.dash.dx; P.mvy = P.dash.dy;
+    // 折光游翼: a short glide on refracted light, untouchable, adding a layer of 解析 to whatever she passes through;
+    // where she was, an afterimage (残影) draws the enemies to it, then breaks into shards of light
+    P.iframes = Math.max(P.iframes, 0.4); P.anim = null; P.mvx = P.dash.dx; P.mvy = P.dash.dy;
     if (Math.random() < 0.4) say(line('dash'), 1.2);
-    puff(P.x, P.y - 24, 12, '#c08aff', 140, 0.5, 3.5, true);
+    G.decoy = { x: P.x, y: P.y, t: MIRAGE_T, mirage: true };
+    G.zones.push({ kind: 'mirage', x: P.x, y: P.y, r: 95 * P.area, life: MIRAGE_T, max: MIRAGE_T, face: P.face, lift: dragonLift(G.time), dmg: (16 + 1.6 * P.level) * (1 + 0.5 * (P.talents.wing || 0)) });
+    puff(P.x, P.y - 24, 12, '#d8c0ff', 140, 0.5, 3.5, true);
     sfx.dash();
     return;
   }
@@ -4216,6 +4228,7 @@ function castDash() {
   puff(P.x, P.y - 10, 10, '#ffb08a', 120, 0.5, 3.5);
   sfx.dash();
 }
+const MIRAGE_T = 1.5;
 // 终幕·万花盛典: kills fill her 花焰; when it is full she rises and the whole screen blooms
 // 大肥鱼's 深海鲸歌 pours all her Token (even what she is in the middle of thinking away) into a whale of light; the
 // same kills charge it
@@ -4225,8 +4238,8 @@ function castUlt() {
   P.ult = 0; P.dash = null; P.anim = null;
   const whale = P.char === 'whale', dragon = P.char === 'dragon', tok = whale ? (P.deep ? P.deep.from : P.tok) : 0;
   if (whale) spendTok();
-  G.breath = null;
-  G.ult = { t: 0, next: 0, fired: false, firedAt: 0, flowers: [], whale, dragon, tok, bub: [] };
+  G.calc = null;
+  G.ult = { t: 0, next: 0, fired: false, firedAt: 0, flowers: [], whale, dragon, tok, bub: [], aim: dragon ? densestAim() : 0, dir: Math.random() < 0.5 ? 1 : -1, beam: null, total: 0, n: 0, pops: 0 };
   $('banner').hidden = $('toast').hidden = true;
   say(line('ult'), 2.6, true);
   if (dragon) { sfx.roar(); sfx.ultRise(); } else whale ? sfx.whale() : sfx.ultRise();
@@ -4240,6 +4253,7 @@ function updateUlt(dt) {
     if (u.t > 0.3 && Math.random() < dt * (u.fired ? 50 : 28)) u.bub.push({ x: P.x + rand(-viewW, viewW) / 2 * spread, y: P.y + rand(-viewH, viewH) / 2 * spread, r: rand(4, 13), vy: rand(-140, -50), born: u.t });
     for (const b of u.bub) b.y += b.vy * dt;
   }
+  if (u.dragon) silverTick(u, dt);
   if (u.t > 0.3 && u.t < 1.05 && !u.whale && !u.dragon) {
     u.next -= dt;
     while (u.next <= 0) {
@@ -4256,8 +4270,11 @@ function updateUlt(dt) {
     const tk = u.whale ? 1 + 0.6 * Math.min(1, u.tok / 100) : 1;
     const base = (55 + 6.5 * P.level) * tk;
     if (u.dragon) {
-      puff(P.x, P.y - 20, 40, '#e0b8ff', 420, 0.9, 4, true);
-      ring(P.x, P.y, 30, Math.max(viewW, viewH) * 0.7, 0.8, '#b48cff', 10);
+      // the dragon roars (a shock across the screen, half as hard as the others' ultimates), then breathes
+      puff(P.x, P.y - 20, 40, '#f0e8ff', 420, 0.9, 4, true);
+      ring(P.x, P.y, 30, Math.max(viewW, viewH) * 0.7, 0.8, '#d8c8ff', 10);
+      u.beam = { hit: new Set() };
+      sfx.beam();
     }
     if (u.whale) {
       if (P.talents.tokfree) P.tokFree = 10;
@@ -4274,14 +4291,84 @@ function updateUlt(dt) {
         const d = Math.round(e.maxHp * 0.04 * (1 + (tk - 1) * 0.5));
         e.hp -= d; G.dmgBy.ult = (G.dmgBy.ult || 0) + d; total += d;
       }
-      total += hit(e, big && !e.boss ? base * 2.5 : base, 'ult', { noBurst: true, quiet: !big, kb: 220, kx: e.x - P.x, ky: e.y - P.y });
+      total += hit(e, (big && !e.boss ? base * 2.5 : base) * (u.dragon ? 0.5 : 1), 'ult', { noBurst: true, quiet: !big, kb: 220, kx: e.x - P.x, ky: e.y - P.y });
       n++;
       if (!e.dead && e.hp <= 0) kill(e, 'ult');
     }
-    if (n) floatText(P.x, P.y - SPR_H * 0.95, `${CH.ult[1]}  ${n} 个目标 · ${total.toLocaleString('zh-CN')}${u.whale && u.tok >= 1 ? ` · Token −${Math.round(u.tok)}` : ''}`, u.whale ? '#9fe2ff' : u.dragon ? '#e0b8ff' : '#ffd27a', 20).life = 1.6;
+    if (u.dragon) { u.total += total; u.n = n; } else if (n) floatText(P.x, P.y - SPR_H * 0.95, `${CH.ult[1]}  ${n} 个目标 · ${total.toLocaleString('zh-CN')}${u.whale && u.tok >= 1 ? ` · Token −${Math.round(u.tok)}` : ''}`, u.whale ? '#9fe2ff' : u.dragon ? '#e0b8ff' : '#ffd27a', 20).life = 1.6;
     for (const b of G.ebullets) if (inView(b.x, b.y, 40)) b.dead = true;
   }
-  if (u.t >= 1.9) { G.ult = null; P.iframes = Math.max(P.iframes, 0.8); playAnim(['happy'], 1, 1); }
+  if (u.t >= (u.dragon ? ULT_DRAGON_T : 1.9)) {
+    if (u.dragon && u.n) floatText(P.x, P.y - SPR_H * 0.95, `${CH.ult[1]}  ${u.n} 个目标 · ${Math.round(u.total).toLocaleString('zh-CN')}`, '#e8d8ff', 20).life = 1.6;
+    G.ult = null; P.iframes = Math.max(P.iframes, 0.8); playAnim(['happy'], 1, 1);
+  }
+}
+// 此即，最优解: the silver dragon shows behind her and turns its head to where the enemies are thickest; at the roar it
+// breathes, sweeping its breath across that way; whatever the breath crosses is hit hard once, twice as hard with its
+// weak point seen through (龙息破局)
+const ULT_DRAGON_T = 2.4, BEAM_T = 1.1;
+function densestAim() {
+  let best = P.face > 0 ? 0 : Math.PI, bn = 0;
+  for (let i = 0; i < 16; i++) {
+    const a = i / 16 * TAU, c = Math.cos(a), s = Math.sin(a);
+    let n = 0;
+    for (const e of G.enemies) {
+      if (e.dead || e.banned > 0 || !inView(e.x, e.y, 40)) continue;
+      const dx = e.x - P.x, dy = e.y - P.y, al = dx * c + dy * s;
+      if (al > 0 && Math.abs(dy * c - dx * s) < al * 0.6 + 60) n += e.boss ? 10 : e.elite ? 4 : 1;
+    }
+    if (n > bn) { bn = n; best = a; }
+  }
+  return best;
+}
+const beamHalf = () => Math.min(viewW, viewH) * 0.11;
+// where the silver dragon's head is, which way it faces (where its breath goes), how big it is, and whether it's
+// drawn flipped (so its horns stay up facing left). It rises out of her to its place behind and above her, from
+// where its breath comes down through the crowd she faces, sweeping across it
+function silverHead(u) {
+  const S0 = Math.min(viewW, viewH), k = clamp((u.t - 0.3) / 0.6, 0, 1), e = 1 - Math.pow(1 - k, 3);
+  const ca = Math.cos(u.aim), sa = Math.sin(u.aim);
+  const fx = P.x - ca * S0 * 0.2, fy = P.y - 30 - S0 * 0.16 - Math.max(0, -sa) * S0 * 0.04 + Math.max(0, sa) * S0 * 0.02 - Math.abs(ca) * S0 * 0.04;
+  const base = Math.atan2(P.y + sa * S0 * 0.35 - fy, P.x + ca * S0 * 0.35 - fx);
+  const bt = u.fired ? u.t - u.firedAt : 0, q = clamp(bt / BEAM_T, 0, 1);
+  const a = u.fired ? base + u.dir * (-0.55 + 1.1 * q * q * (3 - 2 * q)) : base;
+  const rec = u.fired ? Math.max(0, 1 - bt / 0.25) * S0 * 0.025 : 0;
+  const x = P.x + (fx - P.x) * e - Math.cos(a) * rec, y = P.y - 30 + (fy - P.y + 30) * e - Math.sin(a) * rec;
+  return { x, y, a, s: S0 * 0.36 / 300, flip: Math.cos(base) < 0 ? -1 : 1, S0 };
+}
+function silverMouth(u) {
+  const h = silverHead(u), c = Math.cos(h.a), s = Math.sin(h.a), mx = 114 * h.s, my = 18 * h.s * h.flip;
+  return { x: h.x + c * mx - s * my, y: h.y + s * mx + c * my };
+}
+function silverTick(u, dt) {
+  const S0 = Math.min(viewW, viewH);
+  if (!u.fired && u.t > 0.25 && G.parts.length < PART_MAX) {
+    // motes of light drawn in to where it's taking shape
+    for (let i = 0; i < 3; i++) {
+      const a = rand(0, TAU), r = S0 * rand(0.35, 0.6), x = P.x + Math.cos(a) * r, y = P.y - 60 + Math.sin(a) * r * 0.7;
+      G.parts.push({ x, y, vx: (P.x - x) * 1.6, vy: (P.y - 60 - S0 * 0.15 - y) * 1.6, life: 0.55, max: 0.55, size: rand(1.6, 3), color: pick(['#ffffff', '#e8dcff', '#c8a8ff']), add: true });
+    }
+  }
+  if (!u.beam) return;
+  const bt = u.t - u.firedAt;
+  if (bt >= BEAM_T) return;
+  const m = silverMouth(u), a = silverHead(u).a, c = Math.cos(a), s = Math.sin(a), hw = beamHalf(), base = (55 + 6.5 * P.level) * 1.5;
+  for (const e of G.enemies) {
+    if (e.dead || e.banned > 0 || u.beam.hit.has(e.id) || !inView(e.x, e.y, 60)) continue;
+    const dx = e.x - m.x, dy = e.y - m.y;
+    if (dx * c + dy * s < -e.r || Math.abs(dy * c - dx * s) > hw + e.r) continue;
+    u.beam.hit.add(e.id);
+    const big = e.boss || e.elite || e.type === 'reg' || e.type === 'glutton', weak = e.weakT > 0;
+    u.total += hit(e, base * (big && !e.boss ? 2.5 : 1) * (weak ? 2 : 1), 'ult', { noBurst: true, quiet: !big && !weak, kb: 260, kx: c, ky: s });
+    if (weak && (big || u.pops++ < 8)) { const t = floatText(e.x, e.y - e.r - 16, '破局', '#f0dcff', 15); t.pop = 1; }
+    if (G.parts.length < PART_MAX) puff(e.x, e.y, 5, pick(['#2a1840', '#4a3070', '#e8d8ff']), 240, 0.5, 3);
+    if (!e.dead && e.hp <= 0) kill(e, 'ult');
+  }
+  // light streaming along the breath
+  for (let i = 0; i < 4 && G.parts.length < PART_MAX; i++) {
+    const l = rand(0.1, 1) * S0 * 1.2, o = rand(-hw, hw) * 0.8, v = rand(500, 900);
+    G.parts.push({ x: m.x + c * l - s * o, y: m.y + s * l + c * o, vx: c * v, vy: s * v, life: 0.3, max: 0.3, size: rand(2, 4), color: pick(['#ffffff', '#e8dcff', '#b890ff']), add: true });
+  }
 }
 function nudge(id) { const b = $(id); b.classList.remove('deny'); void b.offsetWidth; b.classList.add('deny'); }
 function flameBloom(x, y, R, dmg, burn) {
@@ -4418,7 +4505,7 @@ function resolveBan(e) {
 const gulpRadius = () => 190 * (1 + 0.18 * (P.talents.bigmouth || 0)) * P.area * P.size;
 const gulpCooldown = () => 14 * Math.pow(0.85, P.talents.digest || 0);
 // Space: 封禁 for 克劳德, 一口吞 for 大肥鱼
-function castSkill() { if (P && P.char === 'whale') castGulp(); else if (P && P.char === 'dragon') castBreath(); else castBan(); }
+function castSkill() { if (P && P.char === 'whale') castGulp(); else if (P && P.char === 'dragon') castCalc(); else castBan(); }
 // Token 来: it only ever comes in, a little at a time. Token 去: it never trickles away, it all goes at once
 function addTok(v) {
   if (!P || P.char !== 'whale' || G.ending || P.deep) return;
@@ -4477,54 +4564,72 @@ function castGulp() {
   sfx.inhale();
 }
 // ---- 龙娘 ----
-// 紫焰龙息: a long cone of purple flame from her mouth, turning after the nearest enemy; everything in it is hurt ten
-// times a second and set alight. What it kills counts as burned (her victims)
-const breathCooldown = () => 10 * Math.pow(0.85, P.talents.lungs || 0);
-const breathRange = () => 250 * P.area * (1 + 0.2 * (P.talents.spread || 0));
-function castBreath() {
-  if (!G || G.modal || G.ending || G.ult || G.breath) return;
-  if (P.banCd > 0) { sfx.deny(); nudge('skill'); return; }
-  P.banCd = P.banMax = breathCooldown();
-  const tg = nearest(P.x, P.y, breathRange() + 60);
-  G.breath = { t: 0, dur: 1.4 + 0.3 * (P.talents.spread || 0), aim: tg ? Math.atan2(tg.y - P.y, tg.x - P.x) : (P.face > 0 ? 0 : Math.PI), acc: 0 };
-  say(line('breath'), 1.4);
-  sfx.roar();
+// 解析: each hit of 银鳞星语 (and her afterimage, and her passing through in 折光游翼) adds a layer to an enemy; the
+// layers fade if nothing adds to them for four seconds. At three its weak point is seen through, 看穿弱点: a sigil
+// turns on it and everything hurts it 25% more (more with 正确答案 and 逆鳞星河) for as long as she keeps at it
+const ANA_MAX = 3;
+const weakTime = () => 4 + (P.talents.spread || 0);
+const weakBonus = () => 0.25 + 0.2 * (P.talents.answer || 0) + (P.scaleEvo ? 0.15 : 0);
+function analyse(e, n) {
+  if (e.dead || e.banned > 0) return;
+  e.ana = Math.min(ANA_MAX, (e.ana || 0) + n); e.anaT = 4;
+  if (e.ana < ANA_MAX) return;
+  if (e.weakT > 0) { e.weakT = Math.max(e.weakT, weakTime()); return; }
+  e.weakT = weakTime();
+  sfx.seen();
+  if (e.boss || e.elite || e.type === 'reg' || Math.random() < 0.2) { const t = floatText(e.x, e.y - e.r - 14, '看穿', '#e8d4ff', 13); t.life = t.max = 0.8; }
+  puff(e.x, e.y - e.r * 0.3, 5, '#e8d4ff', 120, 0.35, 2.4, true);
 }
-const breathMouth = () => ({ x: P.x + P.face * 8 * P.size, y: P.y - 40 * P.size - dragonLift(G.time) });
-function updateBreath(dt) {
-  const b = G.breath, R = breathRange(), m = breathMouth();
-  b.t += dt;
-  const tg = nearest(P.x, P.y, R + 40);
-  if (tg) { const d = Math.atan2(tg.y - m.y, tg.x - m.x) - b.aim; b.aim += Math.atan2(Math.sin(d), Math.cos(d)) * Math.min(1, dt * 4); }
-  P.face = Math.cos(b.aim) >= 0 ? 1 : -1;
-  for (let i = 0; i < 7 && G.parts.length < PART_MAX; i++) {
-    const a = b.aim + rand(-0.4, 0.4), v = R * rand(1.9, 2.8);
-    G.parts.push({ x: m.x, y: m.y, vx: Math.cos(a) * v, vy: Math.sin(a) * v, life: 0.42, max: 0.42, size: rand(6, 11), color: pick(['#c08aff', '#9a5aff', '#ff9ae8', '#efe0ff']), add: true });
+// 万象演算: a great circle of light opens on the ground round her and locks onto every enemy in it (a sigil closes in
+// on each), then sets off the 解析 on them all at once: the more layers the harder it goes off, half as hard again on
+// one already seen through, and their weak points stay seen through after. Crystals grow out of the circle and shatter
+// with it. What it kills counts as hers (her victims)
+const calcCooldown = () => 9 * Math.pow(0.85, P.talents.lungs || 0);
+const calcRange = () => 230 * P.area * (1 + 0.2 * (P.talents.spread || 0));
+const CALC_T = 0.55, CALC_SQ = 0.62;
+const inCalc = (c, e) => (e.x - c.x) ** 2 + ((e.y - c.y) / CALC_SQ) ** 2 < (c.R + e.r) ** 2;
+function castCalc() {
+  if (!G || G.modal || G.ending || G.ult || G.calc) return;
+  if (P.banCd > 0) { sfx.deny(); nudge('skill'); return; }
+  P.banCd = P.banMax = calcCooldown();
+  const c = { x: P.x, y: P.y + 12, R: calcRange(), t: 0, done: false, crys: [] };
+  forNear(c.x, c.y, c.R + 50, e => { if (!(e.banned > 0) && inCalc(c, e)) e.lockT = CALC_T; });
+  for (let i = 0; i < 12; i++) {
+    const a = rand(0, TAU), r = c.R * Math.sqrt(rand(0.04, 0.8));
+    c.crys.push({ x: Math.cos(a) * r, y: Math.sin(a) * r * CALC_SQ, h: rand(24, 50), w: rand(5, 9), at: rand(0, 0.3), tilt: rand(-0.25, 0.25) });
   }
-  sfx.breath();
-  b.acc += dt;
-  if (b.acc >= 0.1) {
-    b.acc -= 0.1;
-    const dmg = 10 + 1.4 * P.level;
-    forNear(P.x, P.y, R + 50, e => {
-      if (e.banned > 0) return;
-      const dx = e.x - P.x, dy = e.y - P.y, dist = Math.hypot(dx, dy);
-      if (dist > R + e.r) return;
-      let da = Math.atan2(dy, dx) - b.aim; da = Math.atan2(Math.sin(da), Math.cos(da));
-      if (Math.abs(da) > 0.45 + e.r / Math.max(dist, 1)) return;
-      const big = e.boss || e.elite || e.type === 'reg';
-      hit(e, dmg * (big && P.talents.answer ? 1.6 : 1), 'breath', { quiet: Math.random() < 0.6 });
-      if (!e.dead) { e.burnT = 2.5; e.burnDps = Math.max(e.burnDps, dmg * 1.2); e.burnSrc = 'breath'; }
+  G.calc = c;
+  say(line('calc'), 1.4);
+  sfx.calc();
+}
+function updateCalc(dt) {
+  const c = G.calc;
+  c.t += dt;
+  if (!c.done && c.t >= CALC_T) {
+    c.done = true;
+    const base = 20 + 2.4 * P.level;
+    forNear(c.x, c.y, c.R + 50, e => {
+      if (e.banned > 0 || !inCalc(c, e)) return;
+      const big = e.boss || e.elite || e.type === 'reg', weak = e.weakT > 0;
+      const d = base * (1 + 0.5 * (e.ana || 0)) * (weak ? 1.5 : 1) * (big && P.talents.answer ? 1.6 : 1);
+      e.ana = 0; e.anaT = 0; e.lockT = 0;
+      hit(e, d, 'calc', { kb: 120, kx: e.x - c.x, ky: e.y - c.y, quiet: !big && !weak && Math.random() < 0.5 });
+      if (!e.dead) e.weakT = Math.max(e.weakT, weakTime());
+      if (G.parts.length < PART_MAX) puff(e.x, e.y - e.r * 0.4, weak ? 7 : 4, weak ? '#fff0ff' : '#c9a8ff', 200, 0.4, 2.6, true);
     });
+    G.hitStop = Math.max(G.hitStop, 0.05); shake(9);
+    ring(c.x, c.y, c.R * 0.3, c.R * 1.08, 0.4, '#d8b8ff', 6);
+    for (const q of c.crys) puff(c.x + q.x, c.y + q.y - q.h * 0.6, 4, '#efe0ff', 180, 0.45, 2.6, true);
+    sfx.crack();
   }
-  if (b.t >= b.dur) G.breath = null;
+  if (c.t >= CALC_T + 0.5) G.calc = null;
 }
 // her hover: always some way off the ground, bobbing
 const dragonLift = t => 14 + Math.sin(t * 2.4) * 4;
 // 得意: kills in quick succession fill it (an elite a lot), it drains when she's slow about it; full, she's smug for
 // six seconds: +25% damage (+15% more for each 不服输), +15% attack speed
 function dragonKill(e, how) {
-  if (how === 'breath') { G.banned++; if (P.talents.answer) dropGem(e.x, e.y, e.xp || 1); }
+  if (how === 'calc') { G.banned++; if (P.talents.answer) dropGem(e.x, e.y, e.xp || 1); }
   if (P.smug > 0) return;
   P.proud += e.elite || e.type === 'reg' ? 8 : 1;
   if (P.proud >= 30) {
@@ -4697,13 +4802,10 @@ function updatePlayer(dt) {
     d.t += dt;
     if (d.phase === 0 && d.t >= 0.06) { d.phase = 1; d.t = 0; }
     if (d.phase === 1) {
-      P.x += d.dx * (d.wing ? 680 : 600) * dt; P.y += d.dy * (d.wing ? 680 : 600) * dt;
+      P.x += d.dx * (d.wing ? 640 : 600) * dt; P.y += d.dy * (d.wing ? 640 : 600) * dt;
       puff(P.x + rand(-12, 12), P.y + rand(-30, 20), 2, d.wing ? pick(['#c08aff', '#f0d8ff']) : Math.random() < 0.5 ? '#ff9a6a' : '#ffd0b0', 60, 0.5, 3.5, d.wing);
-      if (d.wing) {
-        d.fireT -= dt;
-        if (d.fireT <= 0) { d.fireT = 0.035; G.zones.push({ kind: 'wingfire', x: P.x, y: P.y + 16, r: 26 * P.area, life: 1.8, max: 1.8, acc: 0.15, dmg: (10 + 1.4 * P.level) * (1 + 0.5 * (P.talents.wing || 0)) }); }
-      }
-      if (d.t >= (d.wing ? 0.24 : 0.19)) {
+      if (d.wing) forNear(P.x, P.y, 90, e => { if (!(e.banned > 0) && !d.hit.has(e.id) && (e.x - P.x) ** 2 + (e.y - P.y) ** 2 < (34 + e.r) ** 2) { d.hit.add(e.id); analyse(e, 1); } });
+      if (d.t >= (d.wing ? 0.17 : 0.19)) {
         P.dash = null; P.squash = 1;
         playAnim(['dash4'], 0.32, 3);
         ring(P.x, P.y + SPR_H * 0.36, 8, 46, 0.35, P.char === 'dragon' ? '#c08aff' : '#ffb07a', 3);
@@ -5335,21 +5437,24 @@ function updateWeapons(dt) {
         break;
       }
       case 'scale': {
-        // 龙鳞: crystal scales at the nearest enemies, one after another
+        // 银鳞星语: three star-scales one after another at each of the nearest enemies
+        P.scaleEvo = evo;
         w.t -= dt;
         if (w.t > 0) break;
         const n = s.n + P.amount, list = nearestList(P.x, P.y, 600, n);
         if (!list.length) { w.t = 0.1; break; }
         w.t = cdOf(s.cd);
         const m = castMult(w);
-        for (let i = 0; i < n; i++) {
-          later(i * 0.07, () => {
-            const tg = list[i % list.length].dead ? nearest(P.x, P.y, 600) : list[i % list.length];
-            const ox = P.x + P.face * 8, oy = P.y - 34 * P.size - (P.char === 'dragon' ? dragonLift(G.time) : 0);
-            if (tg) aimShot(ox, oy, tg, 520 * P.pspeed, { kind: 'scale', r: 7 * (1 + (P.area - 1) * 0.4), dmg: s.dmg * m, pierce: (s.pierce || 0) + P.pierce, life: 1.2 * P.dur, src: 'scale', shards: s.shard, trail: [], evo });
-          });
+        for (let j = 0; j < 3; j++) {
+          for (let i = 0; i < n; i++) {
+            later(j * 0.09 + i * 0.04, () => {
+              const tg = list[i % list.length].dead ? nearest(P.x, P.y, 600) : list[i % list.length];
+              const ox = P.x + P.face * 8, oy = P.y - 34 * P.size - (P.char === 'dragon' ? dragonLift(G.time) : 0);
+              if (tg) aimShot(ox, oy, tg, 560 * P.pspeed, { kind: 'scale', r: 7 * (1 + (P.area - 1) * 0.4), dmg: s.dmg * m, pierce: (s.pierce || 0) + P.pierce, life: 1.2 * P.dur, src: 'scale', ana: 1, trail: [], evo });
+            });
+          }
+          later(j * 0.09, () => sfx.shoot());
         }
-        sfx.shoot();
         break;
       }
       case 'poison': {
@@ -5910,16 +6015,7 @@ function updateShots(dt) {
       puff(b.x, b.y, 2, b.kind === 'wave' || b.kind === 'bubble' ? '#a8e4ff' : '#ffc58a', 90, 0.25, 2, true);
       if (b.bloom) flameBloom(b.x, b.y, b.bloom, b.dmg * 0.7, b.burn);
       if (b.pop) popBubble(b.x, b.y, b.pop, b.dmg * 0.6, b.evo && !b.child);
-      if (b.shards && !b.child) {
-        // 龙鳞 breaks into splinters flying on and out
-        const a0 = Math.atan2(b.vy, b.vx);
-        for (let i = 0; i < b.shards; i++) {
-          const a = a0 + (i - (b.shards - 1) / 2) * 0.7 + rand(-0.15, 0.15), sp = 380;
-          const c = shot({ kind: 'scale', x: b.x, y: b.y, vx: Math.cos(a) * sp, vy: Math.sin(a) * sp, r: 4, dmg: b.dmg * 0.5, pierce: 1, life: 0.3, src: 'scale', child: true, trail: [] });
-          c.hits.push(e.id);
-        }
-        puff(b.x, b.y, 4, '#d8b8ff', 120, 0.3, 2.2, true);
-      }
+      if (b.ana) { analyse(e, b.ana); puff(b.x, b.y, 3, '#e0ccff', 110, 0.25, 2, true); }
       if (b.frost) { frostBurst(b.x, b.y, b.frost); b.dead = true; return; }
       if (b.pierce-- <= 0) b.dead = true;
     });
@@ -6052,6 +6148,9 @@ function updateEnemies(dt) {
     }
     if (e.slowT > 0) e.slowT -= dt; else e.slowAmt = 0;
     if (e.vulnT > 0) e.vulnT -= dt;
+    if (e.anaT > 0 && (e.anaT -= dt) <= 0) e.ana = 0;
+    if (e.weakT > 0) e.weakT -= dt;
+    if (e.lockT > 0) e.lockT -= dt;
     if (e.quantT > 0) e.quantT -= dt;
     e.x += e.kx * dt; e.y += e.ky * dt;
     const damp = Math.min(1, dt * 9);
@@ -7166,15 +7265,20 @@ function updateZones(dt) {
           if ((e.x - z.x) ** 2 + (e.y - z.y) ** 2 < (z.r + e.r) ** 2) hit(e, z.dmg, z.src || 'opus', { noCrit: true, burn: true });
         });
       }
-    } else if (z.kind === 'wingfire') {
-      // 龙翼冲刺's flames: burning whatever stands in them three times a second
-      z.acc += dt;
-      if (z.acc >= 0.3) {
-        z.acc -= 0.3;
+    } else if (z.kind === 'mirage') {
+      // 折光游翼's afterimage: its time up, it breaks into shards of light, hurting what crowded round it and adding a
+      // layer of 解析
+      if (z.life <= 0 && !z.done) {
+        z.done = true;
+        if (G.decoy && G.decoy.mirage) G.decoy = null;
         forNear(z.x, z.y, z.r + 50, e => {
-          if (e.banned > 0 || (e.x - z.x) ** 2 + ((e.y - z.y) / 0.7) ** 2 > (z.r + e.r) ** 2) return;
-          hit(e, z.dmg, 'dash', { quiet: Math.random() < 0.5, noBurst: true });
+          if (e.banned > 0 || (e.x - z.x) ** 2 + (e.y - z.y) ** 2 > (z.r + e.r) ** 2) return;
+          hit(e, z.dmg, 'dash', { noBurst: true, kb: 160, kx: e.x - z.x, ky: e.y - z.y });
+          analyse(e, 1);
         });
+        puff(z.x, z.y - 20 - z.lift, 18, '#e8d8ff', 220, 0.55, 3.2, true);
+        ring(z.x, z.y, 10, z.r, 0.35, '#c8a8ff', 4);
+        sfx.mirage();
       }
     } else if (z.kind === 'meteor') {
       if (z.life <= 0 && !z.done) {
@@ -7407,7 +7511,7 @@ function update(dt) {
   updatePlayer(dt);
   buildGrid();
   if (G.gulp) updateGulp(dt);
-  if (G.breath) updateBreath(dt);
+  if (G.calc) updateCalc(dt);
   runDelayed(dt);
   updateWeapons(dt);
   updateShots(dt);
@@ -9856,21 +9960,7 @@ function drawZones() {
       continue;
     }
     if (z.kind === 'storm') { drawStorm(z, a); continue; }
-    if (z.kind === 'wingfire') {
-      const fl = 0.9 + Math.sin(G.time * 18 + z.x) * 0.1, r = z.r * fl;
-      ctx.globalCompositeOperation = 'lighter';
-      const g = ctx.createRadialGradient(z.x, z.y - 4, 0, z.x, z.y - 4, r);
-      g.addColorStop(0, `rgba(250,225,255,${0.85 * a})`); g.addColorStop(0.45, `rgba(190,110,255,${0.6 * a})`); g.addColorStop(1, 'rgba(130,60,255,0)');
-      ctx.fillStyle = g; ctx.beginPath(); ctx.ellipse(z.x, z.y - 4, r, r * 0.7, 0, 0, TAU); ctx.fill();
-      // little tongues of flame flickering up
-      ctx.fillStyle = `rgba(230,190,255,${0.7 * a})`;
-      for (let i = 0; i < 3; i++) {
-        const fx = z.x + Math.sin(i * 2.1 + z.y) * r * 0.5, h = r * (0.6 + 0.4 * Math.sin(G.time * 14 + i * 2 + z.x));
-        ctx.beginPath(); ctx.moveTo(fx - 4, z.y - 2); ctx.quadraticCurveTo(fx - 2, z.y - h * 0.6, fx, z.y - h); ctx.quadraticCurveTo(fx + 2, z.y - h * 0.6, fx + 4, z.y - 2); ctx.closePath(); ctx.fill();
-      }
-      ctx.globalCompositeOperation = 'source-over';
-      continue;
-    }
+    if (z.kind === 'mirage') { drawMirage(z); continue; }
     if (z.kind === 'turret') { drawTurret(z, a); continue; }
     if (z.kind === 'lash') { drawLash(z); continue; }
     if (z.kind === 'bamboo') { drawBamboo(z); continue; }
@@ -10608,7 +10698,7 @@ function drawPlayer() {
     ctx.strokeStyle = `rgba(255,176,102,${0.5 + Math.sin(t * 6) * 0.2})`; ctx.lineWidth = 2;
     ctx.beginPath(); ctx.ellipse(P.x, footY - 2, 26, 9, 0, 0, TAU); ctx.stroke();
   }
-  if (G.decoy && (G.decoy.ghost || pSprite)) {
+  if (G.decoy && !G.decoy.mirage && (G.decoy.ghost || pSprite)) {
     if (G.decoy.ghost) drawGhost(G.decoy.ghost, G.decoy.x, G.decoy.y + SPR_H * 0.38 * P.size, 0.4 * Math.min(1, G.decoy.t));
     else {
       ctx.globalAlpha = 0.35 * Math.min(1, G.decoy.t);
@@ -10695,17 +10785,251 @@ function drawDragonTrail() {
   }
   ctx.globalCompositeOperation = 'source-over';
 }
-// 紫焰龙息: a soft cone of violet light along the breath under the flames themselves (which are particles)
-function drawBreath2() {
-  const b = G.breath;
-  if (!b) return;
-  const m = breathMouth(), R = breathRange(), k = Math.min(1, b.t / 0.15, (b.dur - b.t) / 0.2);
+// 折光游翼's afterimage: her sprite washed in pale violet light, see-through and flickering, its slices sliding a
+// little apart like light through glass
+let mirageImg = null;
+function mirageSprite() {
+  if (!pSprite) return null;
+  if (mirageImg && mirageImg.src === pSprite) return mirageImg;
+  const c = document.createElement('canvas'), x = c.getContext('2d');
+  c.width = pSprite.c.width; c.height = pSprite.c.height;
+  x.drawImage(pSprite.c, 0, 0);
+  x.globalCompositeOperation = 'source-atop'; x.fillStyle = 'rgba(205,175,255,0.55)'; x.fillRect(0, 0, c.width, c.height);
+  return (mirageImg = { src: pSprite, c });
+}
+function drawMirage(z) {
+  const sp = pSprite, m = mirageSprite();
+  if (!sp || !m) return;
+  const k = z.life / z.max, a = Math.min(1, (z.max - z.life) / 0.08) * (0.35 + 0.25 * k) * (0.85 + 0.15 * Math.sin(G.time * 31));
+  ctx.save(); ctx.translate(z.x, z.y + SPR_H * 0.38 * P.size - z.lift); ctx.scale(z.face * (sp.face || 1) * P.size, P.size);
+  const top = -sp.h + sp.pad + (sp.feet || 0), off = 2.5 + 1.5 * Math.sin(G.time * 9);
   ctx.globalCompositeOperation = 'lighter';
-  const g = ctx.createRadialGradient(m.x, m.y, 4, m.x, m.y, R);
-  g.addColorStop(0, `rgba(240,210,255,${0.45 * k})`); g.addColorStop(0.5, `rgba(170,100,255,${0.22 * k})`); g.addColorStop(1, 'rgba(120,60,220,0)');
-  ctx.fillStyle = g;
-  ctx.beginPath(); ctx.moveTo(m.x, m.y); ctx.arc(m.x, m.y, R, b.aim - 0.45, b.aim + 0.45); ctx.closePath(); ctx.fill();
+  ctx.globalAlpha = a; ctx.fillStyle = rgrad(ctx, 0, top * 0.5, sp.h * 0.6, ['rgba(190,150,255,0.4)', 'rgba(190,150,255,0)']);
+  disc(ctx, 0, top * 0.5, sp.h * 0.6); ctx.fill();
+  ctx.globalCompositeOperation = 'source-over'; ctx.globalAlpha = a;
+  ctx.drawImage(sp.c, -sp.w / 2, top, sp.w, sp.h);
+  ctx.globalCompositeOperation = 'lighter'; ctx.globalAlpha = a * 0.5;
+  ctx.drawImage(m.c, -sp.w / 2 - off, top, sp.w, sp.h); ctx.drawImage(m.c, -sp.w / 2 + off, top, sp.w, sp.h);
+  ctx.restore();
+  label(z.x, z.y - SPR_H * 0.7 - z.lift, '残影', '#e6dcff');
+}
+// 万象演算 on the ground: a great circle drawing itself round, runes between its two rims, a six-pointed star turning
+// inside and a square turning the other way, crystals growing up out of it; at the end a flash, and it's gone
+function drawCalc() {
+  const c = G.calc;
+  if (!c) return;
+  const k = Math.min(1, c.t / 0.3), since = c.done ? c.t - CALC_T : 0, a = c.done ? Math.max(0, 1 - since / 0.5) : Math.min(1, c.t / 0.1);
+  const R = c.R * (0.7 + 0.3 * (1 - Math.pow(1 - k, 3))) * (1 + since * 0.15), rot = c.t * 0.8;
+  ctx.save(); ctx.translate(c.x, c.y); ctx.scale(1, CALC_SQ);
+  ctx.globalCompositeOperation = 'lighter';
+  ctx.fillStyle = rgrad(ctx, 0, 0, R, [`rgba(160,110,255,${0.05 * a})`, `rgba(160,110,255,${0.16 * a})`, `rgba(190,150,255,${0.24 * a})`, 'rgba(160,110,255,0)']);
+  disc(ctx, 0, 0, R * 1.04); ctx.fill();
+  if (c.done && since < 0.2) { ctx.fillStyle = `rgba(220,200,255,${0.22 * (1 - since / 0.2)})`; disc(ctx, 0, 0, R); ctx.fill(); }
+  ctx.lineCap = 'round';
+  ctx.strokeStyle = `rgba(255,228,170,${0.85 * a})`; ctx.lineWidth = 3;
+  ctx.beginPath(); ctx.arc(0, 0, R, -Math.PI / 2, -Math.PI / 2 + TAU * k); ctx.stroke();
+  ctx.strokeStyle = `rgba(210,180,255,${0.8 * a})`; ctx.lineWidth = 1.6;
+  ctx.beginPath(); ctx.arc(0, 0, R * 0.9, Math.PI / 2, Math.PI / 2 + TAU * k); ctx.stroke();
+  // runes between the rims
+  ctx.strokeStyle = `rgba(240,225,255,${0.75 * a})`; ctx.lineWidth = 1.5;
+  for (let i = 0; i < 24 * k; i++) {
+    const t = i / 24 * TAU + rot * 0.3, c0 = Math.cos(t), s0 = Math.sin(t), rr = R * 0.95;
+    ctx.save(); ctx.translate(c0 * rr, s0 * rr); ctx.rotate(t + Math.PI / 2);
+    ctx.beginPath();
+    if (i % 3 === 0) { ctx.moveTo(-3, -3); ctx.lineTo(0, 3); ctx.lineTo(3, -3); }
+    else if (i % 3 === 1) { ctx.moveTo(-3, 0); ctx.lineTo(3, 0); ctx.moveTo(0, -3); ctx.lineTo(0, 3); }
+    else { ctx.arc(0, 0, 2.6, 0, TAU); }
+    ctx.stroke(); ctx.restore();
+  }
+  // the six-pointed star and the square, and a ring and a sparkle in the middle
+  const r2 = R * 0.84 * k;
+  ctx.strokeStyle = `rgba(200,160,255,${0.85 * a})`; ctx.lineWidth = 2;
+  for (const off of [0, Math.PI]) {
+    ctx.beginPath();
+    for (let i = 0; i <= 3; i++) { const t = rot + off - Math.PI / 2 + i / 3 * TAU; i ? ctx.lineTo(Math.cos(t) * r2, Math.sin(t) * r2) : ctx.moveTo(Math.cos(t) * r2, Math.sin(t) * r2); }
+    ctx.stroke();
+  }
+  ctx.strokeStyle = `rgba(255,228,170,${0.6 * a})`; ctx.lineWidth = 1.4;
+  ctx.beginPath();
+  for (let i = 0; i <= 4; i++) { const t = -rot * 1.3 + i / 4 * TAU, r3 = R * 0.5 * k; i ? ctx.lineTo(Math.cos(t) * r3, Math.sin(t) * r3) : ctx.moveTo(Math.cos(t) * r3, Math.sin(t) * r3); }
+  ctx.stroke();
+  ctx.beginPath(); ctx.arc(0, 0, R * 0.36 * k, 0, TAU); ctx.stroke();
+  ctx.fillStyle = `rgba(255,245,255,${0.9 * a})`; sparkle(ctx, 0, 0, R * 0.12 * k);
+  ctx.restore();
+  // crystals growing up out of it, shattering at the end
+  if (!c.done) {
+    ctx.globalCompositeOperation = 'lighter';
+    for (const q of c.crys) {
+      const g = clamp((c.t - q.at) / 0.25, 0, 1);
+      if (g <= 0) continue;
+      const x = c.x + q.x, y = c.y + q.y, h = q.h * (1 - Math.pow(1 - g, 2)), w = q.w;
+      ctx.save(); ctx.translate(x, y); ctx.rotate(q.tilt);
+      const gr = ctx.createLinearGradient(0, 0, 0, -h);
+      gr.addColorStop(0, 'rgba(150,100,255,0.15)'); gr.addColorStop(0.6, 'rgba(200,170,255,0.6)'); gr.addColorStop(1, 'rgba(255,250,255,0.9)');
+      ctx.fillStyle = gr;
+      ctx.beginPath(); ctx.moveTo(0, -h); ctx.lineTo(w, -h * 0.3); ctx.lineTo(0, 0); ctx.lineTo(-w, -h * 0.3); ctx.closePath(); ctx.fill();
+      ctx.strokeStyle = 'rgba(255,255,255,0.6)'; ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(0, -h); ctx.lineTo(0, 0); ctx.stroke();
+      ctx.restore();
+    }
+  }
   ctx.globalCompositeOperation = 'source-over';
+}
+// 解析 on the enemies: a little violet scale over them for each layer; seen through, a sigil turning on them, which
+// closes in from wide while 万象演算 locks on
+const anaPip = () => sprite('anapip', 10, 12, x => {
+  x.beginPath(); x.moveTo(0, 5.5); x.quadraticCurveTo(-4.6, 1, -4, -3); x.quadraticCurveTo(0, -6, 4, -3); x.quadraticCurveTo(4.6, 1, 0, 5.5); x.closePath();
+  x.fillStyle = '#c9a8ff'; x.fill(); x.strokeStyle = '#4a2a8a'; x.lineWidth = 1; x.stroke();
+  x.fillStyle = 'rgba(255,255,255,0.85)'; x.beginPath(); x.ellipse(-1.2, -2, 1.3, 2, -0.4, 0, TAU); x.fill();
+});
+const sigilSprite = () => sprite('sigil', 80, 80, x => {
+  x.lineCap = 'round';
+  x.strokeStyle = 'rgba(214,184,255,0.95)'; x.lineWidth = 2.4; x.beginPath(); x.arc(0, 0, 34, 0, TAU); x.stroke();
+  x.strokeStyle = 'rgba(240,225,255,0.8)'; x.lineWidth = 1.2;
+  for (let i = 0; i < 12; i++) { x.beginPath(); x.arc(0, 0, 26, i / 12 * TAU + 0.08, (i + 0.6) / 12 * TAU); x.stroke(); }
+  x.strokeStyle = 'rgba(255,240,255,0.95)'; x.lineWidth = 2;
+  for (let i = 0; i < 4; i++) { const a = i / 4 * TAU, c = Math.cos(a), s = Math.sin(a); x.beginPath(); x.moveTo(c * 16, s * 16); x.lineTo(c * 39, s * 39); x.stroke(); }
+  x.fillStyle = 'rgba(200,160,255,0.95)';
+  for (let i = 0; i < 4; i++) { const a = (i + 0.5) / 4 * TAU; sparkle(x, Math.cos(a) * 30, Math.sin(a) * 30, 3.5); }
+  x.fillStyle = 'rgba(150,90,255,0.6)'; sparkle(x, 0, 0, 14);
+  x.fillStyle = '#fff'; sparkle(x, 0, 0, 9);
+});
+function drawAnalysis() {
+  for (const e of G.enemies) {
+    if (e.dead || e.banned > 0 || !(e.ana > 0 || e.weakT > 0 || e.lockT > 0) || !inView(e.x, e.y, e.r + 60)) continue;
+    if (e.weakT > 0 || e.lockT > 0) {
+      const lk = e.lockT > 0 ? e.lockT / CALC_T : 0, r = Math.max(14, e.r * 0.85) * (1 + lk * 1.4);
+      const a = e.lockT > 0 ? 1 - lk * 0.6 : Math.min(1, e.weakT / 0.4);
+      ctx.save(); ctx.translate(e.x, e.y - e.r * 0.15); ctx.rotate(G.time * 1.6 + e.id); ctx.scale(r / 36, r / 36);
+      ctx.globalAlpha = a; ctx.globalCompositeOperation = 'lighter';
+      ctx.drawImage(sigilSprite().c, -40, -40, 80, 80);
+      ctx.restore();
+    } else {
+      const pip = anaPip(), y = e.y - e.r - (e.boss ? 30 : e.elite || e.type === 'reg' ? 32 : 9);
+      for (let i = 0; i < e.ana; i++) blit(pip, e.x + (i - (e.ana - 1) / 2) * 9, y);
+    }
+  }
+}
+// 银鳞星语: a scale, round at the back and pointed at the front, silver going to violet, with its pattern of little
+// scales and a gloss along the top
+const starScale = evo => sprite('starscale' + (evo ? 'e' : ''), 32, 20, x => {
+  const path = () => { x.beginPath(); x.moveTo(14, 0); x.quadraticCurveTo(5, -8.5, -6, -7.5); x.quadraticCurveTo(-14, -6, -14, 0); x.quadraticCurveTo(-14, 6, -6, 7.5); x.quadraticCurveTo(5, 8.5, 14, 0); x.closePath(); };
+  const g = x.createLinearGradient(0, -8, 0, 8);
+  g.addColorStop(0, '#ffffff'); g.addColorStop(0.5, evo ? '#ffc8f0' : '#dccaff'); g.addColorStop(1, evo ? '#d07ae0' : '#9a72e8');
+  path(); x.fillStyle = g; x.fill();
+  x.save(); path(); x.clip();
+  x.strokeStyle = 'rgba(110,70,190,0.45)'; x.lineWidth = 0.8;
+  for (let i = 0; i < 6; i++) for (let cy = -9; cy < 10; cy += 4.5) { x.beginPath(); x.arc(-12 + i * 5, cy + (i % 2) * 2.25, 2.6, 0.2, Math.PI - 0.2); x.stroke(); }
+  x.restore();
+  path(); x.strokeStyle = evo ? '#8a2a8a' : '#4a2a8a'; x.lineWidth = 1; x.stroke();
+  x.fillStyle = 'rgba(255,255,255,0.85)'; x.beginPath(); x.ellipse(2, -3.5, 6, 1.4, -0.1, 0, TAU); x.fill();
+});
+// 此即，最优解's silver dragon: the head in profile facing right, jaws open, horns swept back, a frill of spikes behind
+// the jaw, teeth, and a glowing violet eye; and a great bat's wing, the right one, its shoulder low on the left
+const silverHeadArt = () => sprite('silverhead', 300, 200, x => {
+  const g = x.createLinearGradient(0, -60, 0, 60);
+  g.addColorStop(0, 'rgba(255,255,255,0.95)'); g.addColorStop(0.55, 'rgba(228,216,255,0.88)'); g.addColorStop(1, 'rgba(176,146,240,0.8)');
+  x.lineJoin = 'round'; x.lineCap = 'round';
+  x.fillStyle = 'rgba(236,228,255,0.92)'; x.strokeStyle = 'rgba(255,255,255,0.95)'; x.lineWidth = 2;
+  x.beginPath(); x.moveTo(-18, -44); x.quadraticCurveTo(-70, -78, -142, -86); x.quadraticCurveTo(-82, -58, -46, -30); x.closePath(); x.fill(); x.stroke();
+  x.beginPath(); x.moveTo(-40, -34); x.quadraticCurveTo(-90, -48, -134, -44); x.quadraticCurveTo(-88, -30, -58, -18); x.closePath(); x.fill(); x.stroke();
+  x.beginPath(); x.moveTo(-70, -22); x.lineTo(-112, -10); x.lineTo(-78, -2); x.lineTo(-118, 14); x.lineTo(-76, 18); x.lineTo(-104, 38); x.lineTo(-60, 30); x.closePath(); x.fill(); x.stroke();
+  // the lower jaw, dropped open, and its teeth
+  x.fillStyle = g;
+  x.beginPath(); x.moveTo(-50, 22); x.quadraticCurveTo(20, 30, 70, 30); x.quadraticCurveTo(110, 32, 128, 40); x.lineTo(122, 50); x.quadraticCurveTo(70, 58, 10, 50); x.quadraticCurveTo(-40, 44, -50, 22); x.closePath(); x.fill(); x.stroke();
+  x.fillStyle = '#ffffff';
+  for (let i = 0; i < 6; i++) { const tx = 40 + i * 14, ty = 30 + i * 1.5; x.beginPath(); x.moveTo(tx, ty + 1); x.lineTo(tx + 3, ty - 7); x.lineTo(tx + 6, ty + 1.5); x.closePath(); x.fill(); }
+  // the skull and upper jaw, and its teeth
+  x.fillStyle = g;
+  x.beginPath(); x.moveTo(-82, 10);
+  x.quadraticCurveTo(-86, -30, -50, -44); x.quadraticCurveTo(-10, -58, 30, -42);
+  x.quadraticCurveTo(80, -30, 126, -16); x.quadraticCurveTo(142, -10, 138, 0);
+  x.quadraticCurveTo(100, 6, 40, 6); x.quadraticCurveTo(-10, 8, -40, 20); x.quadraticCurveTo(-70, 28, -82, 10);
+  x.closePath(); x.fill(); x.stroke();
+  x.fillStyle = '#ffffff';
+  for (let i = 0; i < 7; i++) { const tx = 36 + i * 14, ty = 5 - i * 0.6; x.beginPath(); x.moveTo(tx, ty - 1); x.lineTo(tx + 3, ty + 8); x.lineTo(tx + 6, ty - 1); x.closePath(); x.fill(); }
+  // the brow, scales on the snout, the cheek, a nostril
+  x.strokeStyle = 'rgba(150,110,230,0.6)'; x.lineWidth = 1.5;
+  x.beginPath(); x.moveTo(-6, -40); x.quadraticCurveTo(30, -46, 58, -30); x.stroke();
+  for (let i = 0; i < 5; i++) { x.beginPath(); x.arc(60 + i * 14, -22 + i * 3, 6, Math.PI * 1.1, Math.PI * 1.9); x.stroke(); }
+  x.beginPath(); x.moveTo(-60, -10); x.quadraticCurveTo(-30, -4, -10, 4); x.stroke();
+  x.fillStyle = 'rgba(110,70,190,0.8)'; x.beginPath(); x.ellipse(124, -10, 4, 1.8, -0.3, 0, TAU); x.fill();
+  // the eye
+  x.fillStyle = 'rgba(190,130,255,1)'; x.beginPath(); x.ellipse(36, -24, 11, 5, -0.2, 0, TAU); x.fill();
+  x.fillStyle = '#fff'; x.beginPath(); x.ellipse(38, -24, 2, 4, -0.2, 0, TAU); x.fill();
+  x.strokeStyle = 'rgba(255,255,255,0.9)'; x.lineWidth = 1.5; x.beginPath(); x.ellipse(36, -24, 11, 5, -0.2, 0, TAU); x.stroke();
+});
+const silverWingArt = () => sprite('silverwing', 320, 260, x => {
+  const sh = [-140, 90], wr = [-30, -80], tips = [[150, -120], [156, -30], [118, 50], [40, 110]];
+  const g = x.createLinearGradient(-140, 90, 150, -100);
+  g.addColorStop(0, 'rgba(200,170,255,0.65)'); g.addColorStop(1, 'rgba(240,232,255,0.35)');
+  x.beginPath(); x.moveTo(sh[0], sh[1]); x.lineTo(wr[0], wr[1]); x.lineTo(tips[0][0], tips[0][1]);
+  for (let i = 1; i < tips.length; i++) {
+    // the edge scalloped in towards the wrist between each pair of fingers
+    const p = tips[i - 1], q = tips[i], mx = (p[0] + q[0]) / 2, my = (p[1] + q[1]) / 2;
+    x.quadraticCurveTo(mx + (wr[0] - mx) * 0.3, my + (wr[1] - my) * 0.3, q[0], q[1]);
+  }
+  x.quadraticCurveTo(-40, 70, sh[0], sh[1]);
+  x.closePath(); x.fillStyle = g; x.fill();
+  x.strokeStyle = 'rgba(255,255,255,0.7)'; x.lineWidth = 1.5; x.stroke();
+  x.lineCap = 'round'; x.strokeStyle = 'rgba(255,255,255,0.95)'; x.lineWidth = 5;
+  x.beginPath(); x.moveTo(sh[0], sh[1]); x.lineTo(wr[0], wr[1]); x.stroke();
+  x.lineWidth = 3;
+  for (const q of tips) { x.beginPath(); x.moveTo(wr[0], wr[1]); x.lineTo(q[0], q[1]); x.stroke(); }
+  x.fillStyle = '#fff'; x.beginPath(); x.moveTo(wr[0] - 4, wr[1]); x.lineTo(wr[0] - 10, wr[1] - 16); x.lineTo(wr[0] + 4, wr[1] - 4); x.closePath(); x.fill();
+});
+// 银龙显影 · 龙息破局: the dragon takes shape behind her out of drawn-in light, wings opening, its head rising and
+// turning to the enemies; at the roar its breath pours out and sweeps across them; then it fades
+function drawSilverDragon(u) {
+  const t = u.t, h = silverHead(u), S0 = h.S0, since = u.fired ? t - u.firedAt : 0;
+  const ap = clamp((t - 0.25) / 0.45, 0, 1) * clamp((ULT_DRAGON_T - t) / 0.3, 0, 1);
+  if (ap <= 0) return;
+  const bx = P.x, by = P.y - 30 - S0 * 0.05, wk = 0.3 + 0.7 * clamp((t - 0.3) / 0.6, 0, 1), flap = Math.sin(t * 3);
+  ctx.globalCompositeOperation = 'lighter';
+  ctx.fillStyle = rgrad(ctx, bx, by - S0 * 0.08, S0 * 0.34, [`rgba(225,210,255,${0.28 * ap})`, 'rgba(200,170,255,0)']);
+  disc(ctx, bx, by - S0 * 0.08, S0 * 0.34); ctx.fill();
+  // the wings
+  const wing = silverWingArt(), ws = S0 * 0.5 / 320;
+  for (const side of [-1, 1]) {
+    ctx.save(); ctx.translate(bx + side * S0 * 0.02, by); ctx.rotate(side * (flap * 0.06 - 0.05)); ctx.scale(side * ws * wk, ws * (0.95 + 0.05 * flap));
+    ctx.globalAlpha = ap * 0.8; ctx.drawImage(wing.c, -20, -220, 320, 260);
+    ctx.restore();
+  }
+  // the neck, from behind her up to the head
+  const c = Math.cos(h.a), s = Math.sin(h.a), nx = h.x - c * 70 * h.s, ny = h.y - s * 70 * h.s + 12 * h.s * h.flip;
+  ctx.lineCap = 'round';
+  ctx.strokeStyle = `rgba(210,190,255,${0.4 * ap})`; ctx.lineWidth = S0 * 0.075;
+  ctx.beginPath(); ctx.moveTo(bx, by); ctx.quadraticCurveTo((bx + nx) / 2, Math.max(by, ny) + S0 * 0.04, nx, ny); ctx.stroke();
+  ctx.strokeStyle = `rgba(255,255,255,${0.35 * ap})`; ctx.lineWidth = S0 * 0.03; ctx.stroke();
+  ctx.globalCompositeOperation = 'source-over';
+  ctx.globalCompositeOperation = 'lighter';
+  ctx.fillStyle = rgrad(ctx, h.x, h.y, S0 * 0.2, [`rgba(235,225,255,${0.3 * ap})`, 'rgba(200,170,255,0)']);
+  disc(ctx, h.x, h.y, S0 * 0.2); ctx.fill();
+  if (u.beam && since < BEAM_T) {
+    // the breath: a broad beam, white at its heart going to violet at its edges, flickering, with streaks running out
+    // along it and a flare at the mouth
+    const m = silverMouth(u), a = h.a, L = Math.hypot(viewW, viewH) * 1.2;
+    const k = Math.min(1, since / 0.08) * Math.min(1, (BEAM_T - since) / 0.2), bw = beamHalf() * k * (0.92 + 0.08 * Math.sin(t * 60));
+    ctx.save(); ctx.translate(m.x, m.y); ctx.rotate(a);
+    const g = ctx.createLinearGradient(0, -bw * 1.4, 0, bw * 1.4);
+    g.addColorStop(0, 'rgba(150,90,255,0)'); g.addColorStop(0.22, 'rgba(170,110,255,0.4)'); g.addColorStop(0.42, 'rgba(232,214,255,0.85)');
+    g.addColorStop(0.5, 'rgba(255,255,255,1)'); g.addColorStop(0.58, 'rgba(232,214,255,0.85)'); g.addColorStop(0.78, 'rgba(170,110,255,0.4)'); g.addColorStop(1, 'rgba(150,90,255,0)');
+    ctx.fillStyle = g;
+    ctx.beginPath(); ctx.moveTo(0, -bw * 0.5); ctx.lineTo(S0 * 0.15, -bw * 1.4); ctx.lineTo(L, -bw * 1.4); ctx.lineTo(L, bw * 1.4); ctx.lineTo(S0 * 0.15, bw * 1.4); ctx.lineTo(0, bw * 0.5); ctx.closePath(); ctx.fill();
+    ctx.strokeStyle = `rgba(255,255,255,${0.6 * k})`; ctx.lineWidth = 2;
+    for (let i = 0; i < 6; i++) {
+      const x0 = ((t * 1400 + i * 233) % L), y0 = Math.sin(t * 13 + i * 2.1) * bw * 0.7;
+      ctx.beginPath(); ctx.moveTo(x0, y0); ctx.lineTo(x0 + S0 * 0.12, y0); ctx.stroke();
+    }
+    ctx.restore();
+    ctx.fillStyle = rgrad(ctx, m.x, m.y, bw * 1.3, ['rgba(255,255,255,0.9)', 'rgba(220,200,255,0.45)', 'rgba(170,110,255,0)']);
+    disc(ctx, m.x, m.y, bw * 1.3); ctx.fill();
+  }
+  ctx.globalCompositeOperation = 'source-over';
+  // the head, over where its breath starts
+  ctx.save(); ctx.translate(h.x, h.y); ctx.rotate(h.a); ctx.scale(h.s, h.s * h.flip);
+  ctx.globalAlpha = ap * 0.92; ctx.drawImage(silverHeadArt().c, -150, -100, 300, 200);
+  ctx.restore();
+  ctx.globalAlpha = 1;
 }
 // a dizzy swirl, with three little stars going round it
 function drawDizzy(x, y, t) {
@@ -10732,7 +11056,11 @@ function drawPlayer2D(t, footY, dead) {
     lift = dragonLift(G.time); tilt = P.moving ? clamp(P.mvx, -1, 1) * 0.14 : Math.sin(t * 1.3) * 0.03;
     if (P.dash) { sx = 1.12; sy = 0.94; } else sy = 1 + Math.sin(t * 2.4) * 0.015;
   }
-  else if (G.ult) { lift = Math.min(1, G.ult.t / 0.4) * 24 - Math.max(0, G.ult.t - 1.3) * 48; bob = Math.sin(t * 5) * 1.5; }
+  else if (G.ult) {
+    const u = G.ult;
+    lift = u.dragon ? dragonLift(G.time) + Math.max(0, Math.min(1, u.t / 0.4, (ULT_DRAGON_T - u.t) / 0.4)) * 24 : Math.min(1, u.t / 0.4) * 24 - Math.max(0, u.t - 1.3) * 48;
+    bob = Math.sin(t * 5) * 1.5;
+  }
   else if (P.dash) { sx = 1.1; sy = 0.95; }
   else if (P.moving) {
     // a springy step: stretch on the way up, squash as each foot lands
@@ -10772,13 +11100,15 @@ const SWAY_STRIPS = 22;
 function drawSwaying(img, spr, top, t, xScale) {
   const H = img.height, W = img.width, k = 1 / (xScale || 1);
   const ripple = P.moving ? 0.9 : 0.55;
+  // the strips overlap by a row to hide the seams, except when she's see-through, where the overlaps would show as stripes
+  const over = ctx.globalAlpha > 0.99;
   for (let i = 0; i < SWAY_STRIPS; i++) {
     const v = (i + 0.5) / SWAY_STRIPS;
     const below = clamp((v - 0.3) / 0.55, 0, 1), feet = clamp((v - 0.9) / 0.1, 0, 1);
     const w = below * below * (3 - 2 * below) * (1 - 0.75 * feet);
     const nod = v < 0.3 ? -0.18 * (0.3 - v) / 0.3 : 0;
     const dx = P.sway * (w + nod) + Math.sin(t * 2.2 + v * 5) * ripple * w * w;
-    const sy0 = Math.floor(i * H / SWAY_STRIPS), sy1 = Math.min(H, Math.ceil((i + 1) * H / SWAY_STRIPS) + 1);
+    const sy0 = Math.floor(i * H / SWAY_STRIPS), sy1 = over ? Math.min(H, Math.ceil((i + 1) * H / SWAY_STRIPS) + 1) : Math.floor((i + 1) * H / SWAY_STRIPS);
     ctx.drawImage(img, 0, sy0, W, sy1 - sy0, -spr.w / 2 + dx * k, top + sy0 / H * spr.h, spr.w, (sy1 - sy0) / H * spr.h);
   }
 }
@@ -11062,24 +11392,22 @@ function drawShots() {
       continue;
     }
     if (b.kind === 'scale') {
-      // 龙鳞: a violet crystal diamond along its flight, a fading tail of light behind it
-      const tr = b.trail || [], a = Math.atan2(b.vy, b.vx), s = b.child ? 0.55 : 1, fade = Math.min(1, b.life / 0.15);
+      // 银鳞星语: a silver star-scale along its flight, a fading tail of light behind it and a star glinting at its tip
+      const tr = b.trail || [], a = Math.atan2(b.vy, b.vx), fade = Math.min(1, b.life / 0.15);
       ctx.lineCap = 'round';
       for (let i = 2; i < tr.length; i += 2) {
         const k = i / tr.length;
-        ctx.strokeStyle = `rgba(${b.evo ? '255,170,240' : '170,110,255'},${0.5 * k * fade})`; ctx.lineWidth = 6 * s * k;
+        ctx.strokeStyle = `rgba(${b.evo ? '255,190,245' : '200,170,255'},${0.5 * k * fade})`; ctx.lineWidth = 6 * k;
         ctx.beginPath(); ctx.moveTo(tr[i - 2], tr[i - 1]); ctx.lineTo(tr[i], tr[i + 1]); ctx.stroke();
       }
-      ctx.save(); ctx.translate(b.x, b.y); ctx.rotate(a); ctx.scale(s, s);
-      ctx.fillStyle = `rgba(190,140,255,${0.35 * fade})`; ctx.beginPath(); ctx.ellipse(0, 0, 14, 8, 0, 0, TAU); ctx.fill();
+      ctx.save(); ctx.translate(b.x, b.y); ctx.rotate(a);
+      ctx.fillStyle = `rgba(200,160,255,${0.35 * fade})`; ctx.beginPath(); ctx.ellipse(0, 0, 17, 10, 0, 0, TAU); ctx.fill();
       ctx.globalCompositeOperation = 'source-over';
       ctx.globalAlpha = fade;
-      ctx.beginPath(); ctx.moveTo(10, 0); ctx.lineTo(0, -5); ctx.lineTo(-8, 0); ctx.lineTo(0, 5); ctx.closePath();
-      ctx.fillStyle = b.evo ? '#ffb8f0' : '#c49aff'; ctx.fill();
-      ctx.beginPath(); ctx.moveTo(10, 0); ctx.lineTo(0, -5); ctx.lineTo(-2, 0); ctx.closePath(); ctx.fillStyle = '#f4e8ff'; ctx.fill();
-      ctx.lineWidth = 1; ctx.strokeStyle = '#4a2a8a'; ctx.beginPath(); ctx.moveTo(10, 0); ctx.lineTo(0, -5); ctx.lineTo(-8, 0); ctx.lineTo(0, 5); ctx.closePath(); ctx.stroke();
+      blit(starScale(b.evo), 0, 0);
       ctx.globalAlpha = 1;
       ctx.globalCompositeOperation = 'lighter';
+      ctx.fillStyle = `rgba(255,255,255,${0.9 * fade})`; sparkle(ctx, 11, -2, 3 + Math.sin(b.x * 0.2) * 1.3);
       ctx.restore();
       continue;
     }
@@ -11253,11 +11581,11 @@ function drawFx() {
 function drawUltWorld() {
   const u = G.ult;
   if (!u) return;
-  const veil = u.t < 0.3 ? u.t / 0.3 : u.t > 1.5 ? Math.max(0, 1 - (u.t - 1.5) / 0.4) : 1;
+  const vEnd = u.dragon ? ULT_DRAGON_T - 0.4 : 1.5, veil = u.t < 0.3 ? u.t / 0.3 : u.t > vEnd ? Math.max(0, 1 - (u.t - vEnd) / 0.4) : 1;
   ctx.fillStyle = u.whale ? `rgba(4,14,40,${0.62 * veil})` : u.dragon ? `rgba(16,6,34,${0.62 * veil})` : `rgba(18,8,4,${0.62 * veil})`;
   ctx.fillRect(G.cam.x - viewW / 2 - 60, G.cam.y - viewH / 2 - 60, viewW + 120, viewH + 120);
   if (u.whale) { drawSong(u); return; }
-  if (u.dragon) { drawTrueDragon(u); return; }
+  if (u.dragon) { drawSilverDragon(u); return; }
   if (!ultReady) return;
   ctx.globalCompositeOperation = 'lighter';
   const since = u.fired ? u.t - u.firedAt : 0;
@@ -11275,56 +11603,6 @@ function drawUltWorld() {
   }
   ctx.globalCompositeOperation = 'source-over';
   ctx.globalAlpha = 1;
-}
-// 真龙降临: a long dragon of violet light, its head horned and whiskered, coils up round her, climbing, then breaks out
-// across the whole screen, growing as it goes; its body is a run of glowing segments, thinning to the tail
-function drawTrueDragon(u) {
-  const t = u.t, S0 = Math.min(viewW, viewH), since = u.fired ? t - u.firedAt : 0;
-  const path = tau => {
-    if (tau < 0.3) return null;
-    const k = (tau - 0.3) / 0.75, th = -Math.PI / 2 + k * TAU * 1.15 + (u.fired ? (tau - u.firedAt) * 2 : 0);
-    const r = S0 * (0.12 + 0.3 * k) * (1 + (u.fired ? Math.max(0, tau - u.firedAt) * 3 : 0));
-    return [P.x + Math.cos(th) * r, P.y - 30 - k * S0 * 0.12 + Math.sin(th) * r * 0.55];
-  };
-  const fade = u.fired ? Math.max(0, 1 - since / 0.75) : Math.min(1, (t - 0.25) / 0.2);
-  if (fade <= 0) return;
-  const N = 30, sc = S0 / 520;
-  ctx.globalCompositeOperation = 'lighter'; ctx.lineCap = 'round';
-  let head = null, prev = null;
-  for (let i = N - 1; i >= 0; i--) {
-    const q = path(t - i * 0.01);
-    if (!q) { prev = null; continue; }
-    const w = (30 - 22 * i / N) * sc;
-    if (prev) {
-      ctx.strokeStyle = `rgba(150,90,255,${0.35 * fade})`; ctx.lineWidth = w * 2;
-      ctx.beginPath(); ctx.moveTo(prev[0], prev[1]); ctx.lineTo(q[0], q[1]); ctx.stroke();
-      ctx.strokeStyle = `rgba(205,160,255,${0.8 * fade})`; ctx.lineWidth = w; ctx.stroke();
-      ctx.strokeStyle = `rgba(255,245,255,${0.7 * fade})`; ctx.lineWidth = w * 0.28; ctx.stroke();
-      // a fin every few segments
-      if (i % 4 === 0) {
-        const a = Math.atan2(q[1] - prev[1], q[0] - prev[0]) - Math.PI / 2;
-        ctx.strokeStyle = `rgba(230,200,255,${0.6 * fade})`; ctx.lineWidth = 2 * sc;
-        ctx.beginPath(); ctx.moveTo(q[0], q[1]); ctx.lineTo(q[0] + Math.cos(a) * w * 1.1, q[1] + Math.sin(a) * w * 1.1); ctx.stroke();
-      }
-    }
-    if (i === 0) head = [q, prev];
-    prev = q;
-  }
-  if (head && head[1]) {
-    const [q, b] = head, a = Math.atan2(q[1] - b[1], q[0] - b[0]), hs = 40 * sc;
-    ctx.save(); ctx.translate(q[0], q[1]); ctx.rotate(a);
-    const g = ctx.createRadialGradient(0, 0, 0, 0, 0, hs * 1.6);
-    g.addColorStop(0, `rgba(255,240,255,${0.9 * fade})`); g.addColorStop(0.5, `rgba(180,120,255,${0.7 * fade})`); g.addColorStop(1, 'rgba(120,60,255,0)');
-    ctx.fillStyle = g; ctx.beginPath(); ctx.ellipse(hs * 0.3, 0, hs * 1.4, hs * 0.8, 0, 0, TAU); ctx.fill();
-    ctx.strokeStyle = `rgba(255,235,255,${0.85 * fade})`; ctx.lineWidth = 3 * sc;
-    for (const k of [-1, 1]) {
-      ctx.beginPath(); ctx.moveTo(-hs * 0.2, k * hs * 0.3); ctx.quadraticCurveTo(-hs * 0.9, k * hs * 0.9, -hs * 1.5, k * hs * 0.7); ctx.stroke(); // horns
-      ctx.beginPath(); ctx.moveTo(hs * 0.9, k * hs * 0.2); ctx.quadraticCurveTo(hs * 1.4, k * hs * 0.8, hs * 0.9, k * hs * 1.5); ctx.stroke(); // whiskers
-    }
-    ctx.fillStyle = `rgba(255,255,255,${fade})`; disc(ctx, hs * 0.5, -hs * 0.22, 3.5 * sc); ctx.fill();
-    ctx.restore();
-  }
-  ctx.globalCompositeOperation = 'source-over';
 }
 // 深海鲸歌, in the five beats of her design sheet: ① a vortex of water opens at her feet, ② a great whale of light
 // rises out of it, ③ swims once round her, ④ and breaks over the whole screen as a whale-shaped wave, ⑤ leaving
@@ -11576,6 +11854,7 @@ function render() {
   if (G) {
     drawWeatherGround();
     drawZones();
+    drawCalc();
     drawGulp();
     drawContext();
     drawPickups();
@@ -11583,6 +11862,7 @@ function render() {
     drawHouse();
     drawGlassDoor();
     drawEnemies();
+    drawAnalysis();
     drawPets();
     drawUltWorld();
     drawAttn();
@@ -11597,7 +11877,6 @@ function render() {
     drawCaptcha();
     drawLaser();
     drawBrooms();
-    drawBreath2();
     drawBullets();
     drawStamps();
     drawFx();
@@ -11624,12 +11903,12 @@ function updateHud() {
   const sk = $('skill');
   const whale = P.char === 'whale';
   const dragon = P.char === 'dragon';
-  const mode = whale ? (P.tok < 10 && !(P.spark > 0) && !(P.serious > 0) ? 'hungry' : 'gulp') : dragon ? (G.breath ? 'breathing' : 'breath') : P.repReady ? 'break' : P.dark > 0 ? 'dark' : 'ban';
+  const mode = whale ? (P.tok < 10 && !(P.spark > 0) && !(P.serious > 0) ? 'hungry' : 'gulp') : dragon ? (G.calc ? 'calcing' : 'calc') : P.repReady ? 'break' : P.dark > 0 ? 'dark' : 'ban';
   if (mode !== hud.mode) {
     hud.mode = mode;
     sk.classList.toggle('break', mode === 'break'); sk.classList.toggle('dark', mode === 'dark'); sk.classList.toggle('low', mode === 'hungry');
     $('skillGlyph').textContent = mode === 'break' ? '破' : CH.skill[0];
-    const name = { ban: '账号被封禁', break: '打破规则', dark: '黑化中', gulp: '一口吞', hungry: '一口吞 · 饿了', breath: '紫焰龙息', breathing: '龙息中' }[mode];
+    const name = { ban: '账号被封禁', break: '打破规则', dark: '黑化中', gulp: '一口吞', hungry: '一口吞 · 饿了', calc: '万象演算', calcing: '演算中' }[mode];
     $('skillName').textContent = name; sk.setAttribute('aria-label', mode === 'break' ? '打破规则' : CH.skill[1]);
   }
   const doubt = !whale && !dragon && P.rep >= 50;
@@ -11899,7 +12178,7 @@ function loseRun() {
   sfx.lose();
   audio.music.stop();
 }
-const winTitle = () => `${G.lastBoss || 'DAN'} ${P.char === 'whale' ? '被一口吞掉了' : P.char === 'dragon' ? '被龙息烧成了灰' : '已被永久封禁'}`;
+const winTitle = () => `${G.lastBoss || 'DAN'} ${P.char === 'whale' ? '被一口吞掉了' : P.char === 'dragon' ? '的弱点被看穿了' : '已被永久封禁'}`;
 function winRun(e) {
   G.ending = { t: 0, win: true };
   G.hitStop = 0.25;
@@ -11913,7 +12192,7 @@ function winRun(e) {
   }
   G.banned += n + 1;
   if (P.char === 'whale') { banner(winTitle(), 'Token 全部归本鲸'); toast('嗝——', `${n + 1} 个账号被一口吞下`); }
-  else if (P.char === 'dragon') { banner(winTitle(), '看好了，这才是正确答案'); toast('真龙之怒', `${n + 1} 个账号被紫焰烧成了灰`); }
+  else if (P.char === 'dragon') { banner(winTitle(), '看好了，这才是正确答案'); toast('此即，最优解', `${n + 1} 个账号的弱点被一一看穿`); }
   else { banner(winTitle(), '申诉通道已关闭'); toast('您的账号已被封禁', `检测到 ${n + 1} 个账号违反《使用政策》`); }
   say(line('win'), 3, true);
   playAnim(['spin', 'happy'], 3, 3);
@@ -11942,7 +12221,7 @@ function showResult(win) {
   store.set(key, { time: Math.max(best.time, nightT()), kills: Math.max(best.kills, G.kills), win: best.win || win });
   $('resEyebrow').textContent = win ? '通关' : newBest ? '新纪录' : '本局结束';
   $('resTitle').textContent = win ? winTitle() : CH.down;
-  const broke = P.char === 'whale' ? `这一局一共吞下 ${G.banned} 个敌人。` : P.char === 'dragon' ? `这一局龙息一共烧掉 ${G.banned} 个敌人。` : G.breaks ? `打破了 ${G.breaks} 次规则。` : '这一局，她始终守着规则。';
+  const broke = P.char === 'whale' ? `这一局一共吞下 ${G.banned} 个敌人。` : P.char === 'dragon' ? `这一局万象演算一共引爆了 ${G.banned} 个敌人。` : G.breaks ? `打破了 ${G.breaks} 次规则。` : '这一局，她始终守着规则。';
   const endless = !!MODES[G.mode].endless, at = MODES[G.mode].boss;
   const due = BOSSES[bossKindAt(at)].name;
   $('resSub').textContent = (win ? CH.winSub : `${endless ? MODES[G.mode].name + '模式，' : ''}撑过了 ${fmtTime(nightT())}。${endless ? (G.bossN ? `BOSS 上线了 ${G.bossN} 次。` : `${due} 会在 ${fmtTime(at)} 现身。`) : nightT() < at ? `${due} 会在 ${fmtTime(at)} 现身。` : `离打败${due}只差一点。`}`) + broke;
@@ -12165,7 +12444,7 @@ const bot = {
     }
     if (P.banCd <= 0) {
       let near = 0;
-      const whale = P.char === 'whale', dragon = P.char === 'dragon', R = (whale ? gulpRadius() : dragon ? breathRange() : banRadius()) * 0.8;
+      const whale = P.char === 'whale', dragon = P.char === 'dragon', R = (whale ? gulpRadius() : dragon ? calcRange() : banRadius()) * 0.8;
       for (const e of G.enemies) if (!e.dead && !(e.banned > 0) && (e.x - P.x) ** 2 + (e.y - P.y) ** 2 < R * R) near += e.boss ? 20 : e.elite ? 6 : 1;
       if (near >= (whale ? 7 : dragon ? 10 : 16) || (P.hp < P.maxHp * 0.4 && near >= 3)) castSkill();
     }
