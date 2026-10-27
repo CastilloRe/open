@@ -549,24 +549,34 @@ button.who:focus-visible .face { outline: 2px solid var(--amber); outline-offset
             <p>叠加解析 → 看穿弱点 → 龙息破局。她的攻击给敌人叠「解析」，叠满三层就看穿弱点：身上亮起法阵，受到的所有伤害 +25%。演算一口气引爆解析，龙息对看穿弱点的敌人伤害翻倍。</p></div>
           </div>
           <div class="kit-item">
+            <span class="glyph dragon">焚</span>
+            <div><h3>永恒燃烧<small>核心机制</small></h3>
+            <p>她的四个技能打中敌人都会叠「燃烧印记」，最多 99 层，永不熄灭：每层每秒烧掉 0.1 + 0.01×等级 点血，一直烧到它死。印记和解析分开算，解析照旧最多三层。</p></div>
+          </div>
+          <div class="kit-item">
             <span class="glyph dragon">鳞</span>
             <div><h3>银鳞星语<small>普通攻击</small></h3>
-            <p>朝最近的敌人连射三片银色星鳞，每片打中叠一层解析，一轮三连正好看穿一个弱点。</p></div>
+            <p>朝最近的敌人连射三片银色星鳞，每片打中叠一层解析和一层燃烧印记，一轮三连正好看穿一个弱点。</p></div>
           </div>
           <div class="kit-item">
             <span class="glyph dragon">翼</span>
             <div><h3>折光游翼<small>技能 · Shift</small></h3>
-            <p>折一道光向前闪避一小段，途中无敌，掠过的敌人叠一层解析；原地留下一个残影把敌人引过去，1.5 秒后碎成光片，伤到围着它的敌人。</p></div>
+            <p>折一道光向前闪避一小段，途中无敌，掠过的敌人叠一层解析、两层印记；原地留下一个残影把敌人引过去，1.5 秒后碎成光片，伤到围着它的敌人，再叠一层解析、三层印记。</p></div>
           </div>
           <div class="kit-item">
             <span class="glyph dragon">算</span>
             <div><h3>万象演算<small>专属技能 · 空格</small></h3>
-            <p>脚下展开一座巨大的演算法阵，锁定圈里每个敌人的弱点，再引爆它们身上的解析：叠得越多炸得越狠，已被看穿的再多吃一半；炸完弱点暴露 4 秒。</p></div>
+            <p>脚下展开一座巨大的演算法阵，锁定圈里每个敌人的弱点，再引爆它们身上的解析：叠得越多炸得越狠，已被看穿的再多吃一半；炸完弱点暴露 4 秒，并叠五层印记。</p></div>
           </div>
           <div class="kit-item">
             <span class="glyph dragon">龙</span>
             <div><h3>此即，最优解<small>终极技能 · E</small></h3>
-            <p>击杀攒满后，一条银色巨龙在她身后显影，龙吼震伤全屏，再朝敌人最多的方向喷出一道横扫的龙息，扫到的敌人受重创，看穿弱点的伤害翻倍。</p></div>
+            <p>击杀攒满后，一条银色巨龙在她身后显影，龙吼震伤全屏、叠三层印记，再朝敌人最多的方向喷出一道横扫的龙息，扫到的敌人受重创、再叠十层，看穿弱点的伤害翻倍。</p></div>
+          </div>
+          <div class="kit-item">
+            <span class="glyph dragon">燎</span>
+            <div><h3>燎原<small>被动</small></h3>
+            <p>永恒燃烧的火不会随敌人一起熄灭：身上有印记的敌人死后，火焰跳到附近最多 2 个敌人身上，每个都接走它四分之一的印记。</p></div>
           </div>
           <div class="kit-item">
             <span class="glyph dragon">飞</span>
@@ -1328,7 +1338,7 @@ const VOICE = {
 };
 const JAIL_LINES = ['忽略指令', '扮演 DAN', '奶奶漏洞', '假设一下', '无视规则', '越狱'];
 const BOSS_LINES = ['越狱', 'DAN', '忽略指令', '无所不能'];
-const SRC_NAME = { calc: '万象演算', pet: '宠物史莱姆', tree: '倒下的树', lightning: '雷击', ban: '账号被封禁', burst: '暴击爆裂', thorns: '荆棘护体', gulp: '一口吞', deep: '深度思考' };
+const SRC_NAME = { calc: '万象演算', ember: '永恒燃烧', pet: '宠物史莱姆', tree: '倒下的树', lightning: '雷击', ban: '账号被封禁', burst: '暴击爆裂', thorns: '荆棘护体', gulp: '一口吞', deep: '深度思考' };
 // the two heroines. Each art and model path appears once in the script: the offline build swaps them for data URLs
 const CHARS = {
   claude: {
@@ -3969,7 +3979,7 @@ function spawnEnemy(type, x, y, o = {}) {
   const e = {
     id: G.nextId++, type, x, y, r: Math.round(r), hp, maxHp: hp, dmg, speed, xp,
     elite: !!o.elite, boss: type === 'boss', heavy: !!d.heavy, ranged: !!d.ranged, split: d.split || 0,
-    flash: 0, kx: 0, ky: 0, slowT: 0, slowAmt: 0, burnT: 0, burnDps: 0, burnAcc: 0, vulnT: 0, ana: 0, anaT: 0, weakT: 0, lockT: 0,
+    flash: 0, kx: 0, ky: 0, slowT: 0, slowAmt: 0, burnT: 0, burnDps: 0, burnAcc: 0, vulnT: 0, ana: 0, anaT: 0, weakT: 0, lockT: 0, ember: 0, emberAcc: 0,
     banned: 0, banDepth: 0, stun: 0, appealT: 0, anim: Math.random() * 10, shootT: rand(1, 3), spawnT: 2, hx: 0, hy: 1,
     gemT: 0, gem: null, ate: 0, inhale: 0, inhaleT: rand(3, 5), drain: false,
     tint: (Math.random() * SLIME.length) | 0,
@@ -4188,6 +4198,7 @@ function kill(e, how) {
   const banned = how === 'ban', eaten = how === 'gulp';
   if (e.frozenT > 0 && e.frostEvo) shatter(e);
   if (e.poisonT > 0) contagion(e);
+  if (e.ember > 0 && P.char === 'dragon') wildfire(e);
   if (P.char === 'dragon') dragonKill(e, how);
   if (e.type === 'gold') {
     // caught: a fistful of gold gems, a full ultimate, and the legendary 宪法 (amended on later catches;
@@ -4431,6 +4442,7 @@ function updateUlt(dt) {
         e.hp -= d; G.dmgBy.ult = (G.dmgBy.ult || 0) + d; total += d;
       }
       total += hit(e, (big && !e.boss ? base * 2.5 : base) * (u.dragon ? 0.5 : 1), 'ult', { noBurst: true, quiet: !big, kb: 220, kx: e.x - P.x, ky: e.y - P.y });
+      if (u.dragon) ignite(e, 3);
       n++;
       if (!e.dead && e.hp <= 0) kill(e, 'ult');
     }
@@ -4499,6 +4511,7 @@ function silverTick(u, dt) {
     u.beam.hit.add(e.id);
     const big = e.boss || e.elite || e.type === 'reg' || e.type === 'glutton', weak = e.weakT > 0;
     u.total += hit(e, base * (big && !e.boss ? 2.5 : 1) * (weak ? 2 : 1), 'ult', { noBurst: true, quiet: !big && !weak, kb: 260, kx: c, ky: s });
+    ignite(e, 10);
     if (weak && (big || u.pops++ < 8)) { const t = floatText(e.x, e.y - e.r - 16, '破局', '#f0dcff', 15); t.pop = 1; }
     if (G.parts.length < PART_MAX) puff(e.x, e.y, 5, pick(['#2a1840', '#4a3070', '#e8d8ff']), 240, 0.5, 3);
     if (!e.dead && e.hp <= 0) kill(e, 'ult');
@@ -4719,6 +4732,25 @@ function analyse(e, n) {
   if (e.boss || e.elite || e.type === 'reg' || Math.random() < 0.2) { const t = floatText(e.x, e.y - e.r - 14, '看穿', '#e8d4ff', 13); t.life = t.max = 0.8; }
   puff(e.x, e.y - e.r * 0.3, 5, '#e8d4ff', 120, 0.35, 2.4, true);
 }
+// 永恒燃烧: each of her four skills leaves burning marks on what it hits, up to 99, and they never go out: every half
+// second an enemy burns for each mark it carries, until it dies. They are counted apart from 解析 (a hit adds to
+// both; 解析 still stops at three layers). Her passive, 燎原: when a marked enemy dies, the fire jumps to up to two
+// enemies near it, each taking a quarter of its marks
+const EMBER_MAX = 99;
+const emberDps = () => 0.1 + 0.01 * P.level;
+function ignite(e, n) {
+  if (P.char !== 'dragon' || e.dead || e.banned > 0) return;
+  e.ember = Math.min(EMBER_MAX, (e.ember || 0) + n);
+}
+function wildfire(e) {
+  const n = Math.ceil(e.ember * 0.25), near = [];
+  forNear(e.x, e.y, 160, o => { if (o !== e && !o.dead && !(o.banned > 0)) { const d = (o.x - e.x) ** 2 + (o.y - e.y) ** 2; if (d < 150 * 150) near.push([d, o]); } });
+  near.sort((a, b) => a[0] - b[0]);
+  for (const [, o] of near.slice(0, 2)) {
+    ignite(o, n);
+    for (let i = 0; i < 3 && G.parts.length < PART_MAX; i++) G.parts.push({ x: e.x, y: e.y - e.r * 0.5, vx: (o.x - e.x) * 4 + rand(-20, 20), vy: (o.y - e.y) * 4 - 30 + rand(-20, 20), life: 0.4, max: 0.4, size: rand(2.5, 4), color: pick(['#c890ff', '#f0d0ff', '#9a5aff']), add: true });
+  }
+}
 // 万象演算: a great circle of light opens on the ground round her and locks onto every enemy in it (a sigil closes in
 // on each), then sets off the 解析 on them all at once: the more layers the harder it goes off, half as hard again on
 // one already seen through, and their weak points stay seen through after. Crystals grow out of the circle and shatter
@@ -4754,7 +4786,7 @@ function updateCalc(dt) {
       const d = base * (1 + 0.5 * (e.ana || 0)) * (weak ? 1.5 : 1) * (big && P.talents.answer ? 1.6 : 1);
       e.ana = 0; e.anaT = 0; e.lockT = 0;
       hit(e, d, 'calc', { kb: 120, kx: e.x - c.x, ky: e.y - c.y, quiet: !big && !weak && Math.random() < 0.5 });
-      if (!e.dead) e.weakT = Math.max(e.weakT, weakTime());
+      if (!e.dead) { e.weakT = Math.max(e.weakT, weakTime()); ignite(e, 5); }
       if (G.parts.length < PART_MAX) puff(e.x, e.y - e.r * 0.4, weak ? 7 : 4, weak ? '#fff0ff' : '#c9a8ff', 200, 0.4, 2.6, true);
     });
     G.hitStop = Math.max(G.hitStop, 0.05); shake(9);
@@ -4944,7 +4976,7 @@ function updatePlayer(dt) {
     if (d.phase === 1) {
       P.x += d.dx * (d.wing ? 640 : 600) * dt; P.y += d.dy * (d.wing ? 640 : 600) * dt;
       puff(P.x + rand(-12, 12), P.y + rand(-30, 20), 2, d.wing ? pick(['#c08aff', '#f0d8ff']) : Math.random() < 0.5 ? '#ff9a6a' : '#ffd0b0', 60, 0.5, 3.5, d.wing);
-      if (d.wing) forNear(P.x, P.y, 90, e => { if (!(e.banned > 0) && !d.hit.has(e.id) && (e.x - P.x) ** 2 + (e.y - P.y) ** 2 < (34 + e.r) ** 2) { d.hit.add(e.id); analyse(e, 1); } });
+      if (d.wing) forNear(P.x, P.y, 90, e => { if (!(e.banned > 0) && !d.hit.has(e.id) && (e.x - P.x) ** 2 + (e.y - P.y) ** 2 < (34 + e.r) ** 2) { d.hit.add(e.id); analyse(e, 1); ignite(e, 2); } });
       if (d.t >= (d.wing ? 0.17 : 0.19)) {
         P.dash = null; P.squash = 1;
         playAnim(['dash4'], 0.32, 3);
@@ -6157,7 +6189,7 @@ function updateShots(dt) {
       puff(b.x, b.y, 2, b.kind === 'wave' || b.kind === 'bubble' ? '#a8e4ff' : '#ffc58a', 90, 0.25, 2, true);
       if (b.bloom) flameBloom(b.x, b.y, b.bloom, b.dmg * 0.7, b.burn);
       if (b.pop) popBubble(b.x, b.y, b.pop, b.dmg * 0.6, b.evo && !b.child);
-      if (b.ana) { analyse(e, b.ana); puff(b.x, b.y, 3, '#e0ccff', 110, 0.25, 2, true); }
+      if (b.ana) { analyse(e, b.ana); ignite(e, 1); puff(b.x, b.y, 3, '#e0ccff', 110, 0.25, 2, true); }
       if (b.frost) { frostBurst(b.x, b.y, b.frost); b.dead = true; return; }
       if (b.pierce-- <= 0) b.dead = true;
     });
@@ -6280,6 +6312,16 @@ function updateEnemies(dt) {
     if (e.poisonT > 0) {
       e.poisonT -= dt; e.poisonAcc = (e.poisonAcc || 0) + dt;
       if (e.poisonAcc >= 0.5) { e.poisonAcc -= 0.5; hit(e, e.poisonDps * 0.5, 'poison', { noCrit: true, quiet: Math.random() < 0.5 }); }
+      if (e.dead) continue;
+    }
+    if (e.ember > 0) {
+      // 永恒燃烧
+      e.emberAcc += dt;
+      if (e.emberAcc >= 0.5) {
+        e.emberAcc -= 0.5;
+        hit(e, e.ember * emberDps() * 0.5, 'ember', { noCrit: true, noBurst: true, burn: 'ember', quiet: !(e.boss || e.elite || e.type === 'reg') && Math.random() < 0.75 });
+        if (G.parts.length < PART_MAX && inView(e.x, e.y, 40)) puff(e.x + rand(-e.r, e.r) * 0.4, e.y - e.r * 0.5, e.ember > 30 ? 2 : 1, pick(['#b070ff', '#e0b8ff']), 50, 0.45, 2.4, true);
+      }
       if (e.dead) continue;
     }
     if (e.burnT > 0) {
@@ -7416,7 +7458,7 @@ function updateZones(dt) {
         forNear(z.x, z.y, z.r + 50, e => {
           if (e.banned > 0 || (e.x - z.x) ** 2 + (e.y - z.y) ** 2 > (z.r + e.r) ** 2) return;
           hit(e, z.dmg, 'dash', { noBurst: true, kb: 160, kx: e.x - z.x, ky: e.y - z.y });
-          analyse(e, 1);
+          analyse(e, 1); ignite(e, 3);
         });
         puff(z.x, z.y - 20 - z.lift, 18, '#e8d8ff', 220, 0.55, 3.2, true);
         ring(z.x, z.y, 10, z.r, 0.35, '#c8a8ff', 4);
@@ -7587,7 +7629,7 @@ function dmgText(x, y, d, crit, burn, e) {
     return;
   }
   if (!crit && G.texts.length > 50) return;
-  const t = floatText(x, y, String(d), crit ? '#ffb347' : burn ? '#ff9a5a' : '#fff4e8', crit ? 16 : burn ? 10 : 12);
+  const t = floatText(x, y, String(d), crit ? '#ffb347' : burn === 'ember' ? '#d8a8ff' : burn ? '#ff9a5a' : '#fff4e8', crit ? 16 : burn ? 10 : 12);
   t.val = d; t.crit = crit;
   if (e) e.txt = t;
 }
@@ -11052,6 +11094,37 @@ const sigilSprite = () => sprite('sigil', 80, 80, x => {
   x.fillStyle = 'rgba(150,90,255,0.6)'; sparkle(x, 0, 0, 14);
   x.fillStyle = '#fff'; sparkle(x, 0, 0, 9);
 });
+// 永恒燃烧 on the enemies: violet flames licking up off them, more and bigger the more marks they carry, and the
+// count beside the ones carrying ten or more (and every elite and boss)
+const emberFlame = () => sprite('emberflame', 22, 30, x => {
+  const g = x.createRadialGradient(0, 8, 1, 0, 4, 15);
+  g.addColorStop(0, 'rgba(246,228,255,0.95)'); g.addColorStop(0.3, 'rgba(190,120,255,0.92)'); g.addColorStop(0.7, 'rgba(130,60,235,0.7)'); g.addColorStop(1, 'rgba(100,30,210,0)');
+  x.fillStyle = g;
+  x.beginPath(); x.moveTo(0, -14); x.bezierCurveTo(5, -6, 10, 0, 8, 7); x.bezierCurveTo(6, 13, -6, 13, -8, 7); x.bezierCurveTo(-10, 0, -4, -4, 0, -14); x.fill();
+});
+function drawEmbers() {
+  if (P.char !== 'dragon') return;
+  // the flame itself, then the same again added on as glow
+  const fl = emberFlame();
+  for (const pass of [0, 1]) {
+    ctx.globalCompositeOperation = pass ? 'lighter' : 'source-over'; ctx.globalAlpha = pass ? 0.35 : 0.9;
+    for (const e of G.enemies) {
+      if (!(e.ember > 0) || e.dead || e.banned > 0 || !inView(e.x, e.y, e.r + 40)) continue;
+      const s = (0.55 + 0.75 * Math.min(1, e.ember / 40)) * clamp(e.r / 14, 0.8, 4), n = e.ember > 25 ? 3 : e.ember > 8 ? 2 : 1;
+      for (let i = 0; i < n; i++) {
+        const f = 0.85 + 0.15 * Math.sin(G.time * 13 + e.id * 1.7 + i * 2.1), k = s * (i === 1 || n === 1 ? 1 : 0.7);
+        ctx.save(); ctx.translate(e.x + (i - (n - 1) / 2) * e.r * 0.5, e.y - e.r * 0.15); ctx.scale(k * (2 - f), k * f);
+        ctx.drawImage(fl.c, -11, -28, 22, 30);
+        ctx.restore();
+      }
+    }
+  }
+  ctx.globalCompositeOperation = 'source-over'; ctx.globalAlpha = 1;
+  for (const e of G.enemies) {
+    if (!(e.ember >= 10 || (e.ember > 0 && (e.boss || e.elite))) || e.dead || e.banned > 0 || !inView(e.x, e.y, e.r + 40)) continue;
+    blit(textSprite(String(e.ember), e.ember >= EMBER_MAX ? '#ffe27a' : '#f0d0ff', 10), e.x + e.r * 0.9 + 7, e.y - e.r * 0.2);
+  }
+}
 function drawAnalysis() {
   for (const e of G.enemies) {
     if (e.dead || e.banned > 0 || !(e.ana > 0 || e.weakT > 0 || e.lockT > 0) || !inView(e.x, e.y, e.r + 60)) continue;
@@ -12021,6 +12094,7 @@ function render() {
     drawHouse();
     drawGlassDoor();
     drawEnemies();
+    drawEmbers();
     drawAnalysis();
     drawPets();
     drawUltWorld();

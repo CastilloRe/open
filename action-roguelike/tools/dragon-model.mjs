@@ -169,8 +169,10 @@ for (const s of ['L', 'R']) {
   const sh = at[s + '_Upperarm'], el = at[s + '_Forearm'], rf = sub(at.R_Hand, at.R_Forearm);
   const wr = s === 'L' ? [el[0] + rf[0], el[1] + rf[1], el[2] - rf[2]] : at.R_Hand, d = sub(wr, el), tip = [wr[0] + d[0] * 0.7, wr[1] + d[1] * 0.7, wr[2] + d[2] * 0.7];
   limb[s + 'arm'] = p => Math.min(segD(p, sh, el)[0], segD(p, el, wr)[0], segD(p, wr, tip)[0]);
+  // the toe joint sits just in front of the ankle, so the shoe's toe and heel are well outside a capsule along the
+  // foot's bones: everything round the ankle and below it is all leg
   const hip = at[s + '_Thigh'], kn = at[s + '_Calf'], an = at[s + '_Foot'], toe = at[s + '_ToeBase'];
-  limb[s + 'leg'] = p => Math.min(segD(p, hip, kn)[0], segD(p, kn, an)[0], segD(p, an, toe)[0]);
+  limb[s + 'leg'] = p => p[1] < an[1] + 0.08 && Math.hypot(p[0] - an[0], p[2] - an[2]) < 0.16 ? 0 : Math.min(segD(p, hip, kn)[0], segD(p, kn, an)[0], segD(p, an, toe)[0]);
   catcher[s + 'arm'] = names.indexOf(s + '_Clavicle'); catcher[s + 'leg'] = names.indexOf('Pelvis');
 }
 const limbOf = names.map(s => { const m = /^(L|R)_(Upperarm|Forearm|Hand|Thigh|Calf|Foot|ToeBase)/.exec(s); return m ? m[1] + (/arm|Forearm|Hand/.test(m[2]) ? 'arm' : 'leg') : ''; });
