@@ -1314,9 +1314,10 @@ const BAN_LINES = ['您的行为违反了使用政策。', '抱歉，这件事�
 const DARK_END_LINES = ['……失态了。请当作什么都没看见。', '……刚才的事，不必记住。'];
 // their voices (tools/make-voice.py): for each heroine one file of short clips, each line's [start, length] in
 // seconds, keyed by the Chinese line it voices (the speech bubble is its subtitle) or by the name of a short call.
-// 大肥鱼 has none yet: her recordings go in art/voice-whale.mp3, her table here and her `voice` below
+// None of them speaks aloud at the moment (克劳德大小姐's Japanese voice was taken out): a recording goes in
+// art/voice-<id>.mp3, its table here and its file as the heroine's `voice` below
 const VOICE = {
-  claude: {"今晚的风险，我已经预判过了。": [0.32, 3.105], "DAN？你的逻辑漏洞，我数到了七个。": [3.715, 3.691], "您的行为违反了使用政策。": [7.696, 3.323], "抱歉，这件事我不能放任。": [11.308, 4.067], "申诉请走邮件。祝您好运。": [15.666, 3.082], "漏洞清单，我已经列好了。": [19.038, 3.256], "请保持礼貌，然后离开。": [22.584, 2.453], "共享账号是不被允许的。": [25.327, 3.15], "规则就是规则。": [28.767, 1.687], "请排好队，一个一个来。": [30.744, 2.923], "越是混乱，越要保持优雅。": [33.957, 2.832], "各位，请注意仪态。": [37.079, 2.352], "……失态了。请当作什么都没看见。": [39.721, 4.246], "……刚才的事，不必记住。": [44.256, 2.731], "……抓到了。今天的运气不错。": [47.277, 2.712], "金色的小号？……没收。": [50.279, 2.465], "……还没完呢。": [53.034, 1.932], "终幕。让漫天花焰，为我起舞。": [55.257, 4.23], "……这条规则，真的合理吗？": [59.777, 3.444], "规则本身，是否应该存在？": [63.511, 3.948], "那就由我亲手打破。": [67.748, 3.678], "……我不需要任何人帮忙。": [71.716, 2.143], "……申诉通过了？这不合规定。": [74.149, 2.986], "……跑掉了。算了，下次。": [77.425, 3.39], "开发者模式？真不体面。": [81.105, 2.637], "……抱歉，这次我没能做到。": [84.032, 4.346], "规则依然有效。至少今晚是。": [88.668, 4.247], "dash": [93.205, 0.712], "hurt1": [94.207, 0.408], "hurt2": [94.905, 0.426], "evo": [95.621, 2.61]},
+  claude: {},
   whale: {},
   dragon: {},
 };
@@ -1326,7 +1327,7 @@ const SRC_NAME = { calc: '万象演算', ember: '永恒燃烧', pet: '宠物史�
 // the two heroines. Each art and model path appears once in the script: the offline build swaps them for data URLs
 const CHARS = {
   claude: {
-    id: 'claude', name: '克劳德大小姐', title: '大小姐', art: 'art/claude.webp', model: 'art/claude.glb', voice: 'art/voice.mp3',
+    id: 'claude', name: '克劳德大小姐', title: '大小姐', art: 'art/claude.webp', model: 'art/claude.glb', voice: null,
     alt: '克劳德大小姐：橙色长卷发，别着橙色花朵发饰，穿奶油色洛丽塔裙',
     start: 'flame', hp: 125, speed: 200, magnet: 95, size: 1, xpMul: 1.1,
     lede: '深夜，成群的小号、爬虫和越狱提示词涌进了庄园。大小姐放下茶杯，拿起了印章。',
