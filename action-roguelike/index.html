@@ -884,19 +884,19 @@ const WEAPONS = {
       { cd: 1.6, n: 8, dmg: 34, r: 72 },
     ],
   },
-  // AK-47: one rifle in her hand, aimed bursts; each level fires a round more, hits harder and earns a better finish,
-  // like a rank: 普通 (single shots), 白银, 黄金, 铂金, 钻石, and 星耀 on full auto once evolved
+  // AK-47: one rifle in her hand, single aimed shots; each level hits harder and earns a better finish, like a rank:
+  // 普通, 白银, 黄金, 铂金, 钻石, and 星耀 once evolved. 多重施法 adds a shot at another enemy
   ak47: {
-    name: 'AK-47', g: '枪', skins: ['普通', '白银', '黄金', '铂金', '钻石', '星耀'], oneshot: 5, oneshotP: 0.3,
-    desc: '握在手里的步枪，向最近的敌人点射。每升一级多连发一发、伤害更高，外观也跟着升级：普通单发、白银两连发、黄金三连发、铂金四连发、钻石五连发；满级后每发子弹有 30% 的概率「颗秒」普通怪。',
-    evo: { need: 'hunt', name: 'AK-47 · 星耀', desc: '星耀外观：全自动扫射，一梭子十发，子弹拖着星光，还能多穿透一个敌人。' },
+    name: 'AK-47', g: '枪', skins: ['普通', '白银', '黄金', '铂金', '钻石', '星耀'], oneshot: 5,
+    desc: '握在手里的步枪，向最近的敌人单发点射；多重施法每层多开一枪，打向另一个敌人。每升一级伤害更高，外观也跟着升级：普通、白银、黄金、铂金、钻石；满级后一发「颗秒」普通怪。',
+    evo: { need: 'hunt', name: 'AK-47 · 星耀', desc: '星耀外观：子弹拖着星光，伤害再提升，还能穿透两个敌人。' },
     lv: [
-      { cd: 0.55, rounds: 1, dmg: 34 },
-      { cd: 0.8, rounds: 2, dmg: 40 },
-      { cd: 1.0, rounds: 3, dmg: 42 },
-      { cd: 1.05, rounds: 4, dmg: 44 },
-      { cd: 1.1, rounds: 5, dmg: 46 },
-      { cd: 1.25, rounds: 10, dmg: 28, pierce: 1 },
+      { cd: 0.55, dmg: 34 },
+      { cd: 0.55, dmg: 49 },
+      { cd: 0.55, dmg: 68 },
+      { cd: 0.55, dmg: 90 },
+      { cd: 0.55, dmg: 120 },
+      { cd: 0.5, dmg: 145, pierce: 2 },
     ],
   },
   // the five elements, 五行: 金 flying swords, 木 bamboo shoots, 水 a tide, 火 dragon's breath, 土 an earthquake
@@ -1200,7 +1200,7 @@ const WEAPONS = {
     ],
   },
 };
-const STAT_LABEL = { dmg: '伤害', n: '数量', rounds: '连发', cd: '冷却', pierce: '穿透', rings: '圈数', size: '体积', boom: '爆炸伤害', boomR: '爆炸范围', r: '范围', slow: '减速', jumps: '推理步数', bloom: '绽放范围', dur: '持续', spin: '转速', len: '长度', wid: '宽度', range: '射程', root: '定身', stun: '震晕', pop: '溅射范围', freeze: '冻结', pct: '削减' };
+const STAT_LABEL = { dmg: '伤害', n: '数量', cd: '冷却', pierce: '穿透', rings: '圈数', size: '体积', boom: '爆炸伤害', boomR: '爆炸范围', r: '范围', slow: '减速', jumps: '推理步数', bloom: '绽放范围', dur: '持续', spin: '转速', len: '长度', wid: '宽度', range: '射程', root: '定身', stun: '震晕', pop: '溅射范围', freeze: '冻结', pct: '削减' };
 
 const CAT_CLASS = { atk: 'atk', def: 'def', grow: 'grow', mech: 'mech', ex: 'ex' };
 const TALENTS = [
@@ -3913,6 +3913,8 @@ function forNear(x, y, r, fn) {
   }
 }
 const targetable = e => !e.dead && !(e.banned > 0) && !(e.paradeT > 0) && !(e.turned > 0);
+// 颗秒: a maxed AK-47 kills an ordinary mob with one bullet; elites, 注册机, DAN, the golden slime and 宝箱怪 just take the hit
+const oneshotable = e => !e.elite && !e.boss && e.type !== 'reg' && e.type !== 'gold' && e.type !== 'mimic';
 // big targets count as closer than they are, so weapons focus them when they're in range
 const PRIORITY = e => e.boss ? 0.3 : e.elite || e.type === 'reg' ? 0.55 : 1;
 function nearest(x, y, maxR, skip) {
@@ -5223,29 +5225,27 @@ function updateWeapons(dt) {
         break;
       }
       case 'ak47': {
-        // one rifle in her hand: bursts of `rounds` at the nearest enemy, each round turning to whoever is nearest
-        // then (a level-1 rifle fires single shots, 星耀 a magazine on full auto); one more bullet beside each per 多重施法
+        // one rifle in her hand: single aimed shots at the nearest enemy; each 多重施法 is one more shot right after,
+        // turned to the nearest one the shots before it won't already have killed (not a bullet beside the first one,
+        // which looked like the same shot and hit the same mob)
         w.kick = Math.max(0, (w.kick || 0) - dt * 10); w.flash = Math.max(0, (w.flash || 0) - dt);
         const tg = nearest(P.x, P.y, 640);
         if (tg) w.aim = Math.atan2(tg.y - (P.y - 10 * P.size), tg.x - P.x);
         else if (w.aim == null) w.aim = P.face > 0 ? 0 : Math.PI;
         w.t -= dt;
         if (w.t <= 0 && tg) {
-          // the burst fits in three quarters of the cooldown, however short that gets
-          w.t = cdOf(s.cd); w.rounds = s.rounds; w.roundT = 0; w.gap = Math.min(0.09, w.t * 0.75 / s.rounds); w.mult = castMult(w);
+          // the shots of one pull fit in half the cooldown, however short that gets
+          const n = 1 + P.amount;
+          w.t = cdOf(s.cd); w.rounds = n; w.roundT = 0; w.gap = Math.min(0.08, w.t * 0.5 / n); w.mult = castMult(w);
           (w.doomed ||= new Set()).clear();
         } else if (w.t < 0) w.t = 0;
         if (!(w.rounds > 0) || !tg || (w.roundT -= dt) > 0) break;
         w.rounds--; w.roundT = w.gap;
-        // each round goes to the nearest one the burst's earlier rounds won't already have killed
         const to = nearest(P.x, P.y, 640, w.doomed) || tg;
         w.aim = Math.atan2(to.y - (P.y - 10 * P.size), to.x - P.x);
-        if (s.dmg * w.mult >= to.hp) w.doomed.add(to.id);
-        const mz = gunMuzzle(w), k = 1 + P.amount, skin = AK_SKINS[w.level - 1];
-        for (let j = 0; j < k; j++) {
-          const a = w.aim + (j - (k - 1) / 2) * 0.08, sp = 1050 * P.pspeed;
-          shot({ kind: 'bullet', x: mz.x, y: mz.y, vx: Math.cos(a) * sp, vy: Math.sin(a) * sp, r: 4.5, dmg: s.dmg * w.mult, pierce: (s.pierce || 0) + P.pierce, life: 0.65 * P.dur, src: 'ak47', kb: 50, tint: skin.tracer, star: w.level === 6, oneshot: w.level >= WEAPONS.ak47.oneshot });
-        }
+        if (s.dmg * w.mult >= to.hp || (w.level >= WEAPONS.ak47.oneshot && oneshotable(to))) w.doomed.add(to.id);
+        const mz = gunMuzzle(w), skin = AK_SKINS[w.level - 1], sp = 1050 * P.pspeed;
+        shot({ kind: 'bullet', x: mz.x, y: mz.y, vx: Math.cos(w.aim) * sp, vy: Math.sin(w.aim) * sp, r: 4.5, dmg: s.dmg * w.mult, pierce: (s.pierce || 0) + P.pierce, life: 0.65 * P.dur, src: 'ak47', kb: 50, tint: skin.tracer, star: w.level === 6, oneshot: w.level >= WEAPONS.ak47.oneshot });
         // a brass casing flicks out of the side
         if (G.parts.length < PART_MAX) G.parts.push({ x: mz.bx, y: mz.by, vx: -Math.cos(w.aim) * 60 + rand(-30, 30), vy: -110 + rand(-30, 20), life: 0.35, max: 0.35, size: 2.2, color: '#e8b84a', add: false });
         w.kick = 1; w.flash = 0.07;
@@ -6209,9 +6209,7 @@ function updateShots(dt) {
       b.hits.push(e.id);
       if (b.kind === 'article') { enforce(e, b); b.dead = true; return; }
       if (b.kind === 'inject') { inject(e, b); b.dead = true; return; }
-      // 颗秒: a maxed AK-47's bullet now and then kills an ordinary mob outright and says so on it; elites, 注册机,
-      // DAN, the golden slime and 宝箱怪 just take the hit
-      const one = b.oneshot && !e.elite && !e.boss && e.type !== 'reg' && e.type !== 'gold' && e.type !== 'mimic' && Math.random() < WEAPONS.ak47.oneshotP;
+      const one = b.oneshot && oneshotable(e);
       hit(e, b.dmg, b.src, { kb: b.kb != null ? b.kb : 80, kx: b.vx, ky: b.vy, kill: one, quiet: one });
       if (one && e.dead) { const t = floatText(e.x, e.y - e.r - 6, '颗秒', '#ffe27a', 17); t.pop = 1; t.life = t.max = 1.1; }
       if (b.split && !b.child) {
@@ -12341,7 +12339,7 @@ function weaponCard(o, i) {
   } else {
     title = d.skins ? `${d.name} · ${d.skins[w.level]}` : `${d.name} Lv ${w.level + 1}`; tag = '升级'; desc = statDiff(d.lv[w.level - 1], d.lv[w.level]);
     if (d.skins) desc += `，换上「${d.skins[w.level]}」外观`;
-    if (d.oneshot === w.level + 1) desc += `，解锁「颗秒」：每发子弹 ${Math.round(d.oneshotP * 100)}% 概率秒杀普通怪`;
+    if (d.oneshot === w.level + 1) desc += '，解锁「颗秒」：一发秒杀普通怪';
     meta = w.level + 1 === 5 ? `<span>满级后带上「${TALENT[d.evo.need].name}」再开宝箱即可进化</span>` : '';
   }
   return `<button class="card ${o.kind === 'evo' ? 'evo' : o.kind === 'new' ? 'r1' : ''}" type="button" data-i="${i}">
