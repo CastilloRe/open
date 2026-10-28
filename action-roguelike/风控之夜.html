@@ -5266,7 +5266,11 @@ const ENEMY = {
   fake: { name: '深度伪造', r: 46, hp: 100, speed: 60, dmg: 10, xp: 0 },
   mirror: { name: '冒牌的你', r: 16, hp: 100, speed: 170, dmg: 8, xp: 0 },
   minnow: { name: '鱼苗', r: 10, hp: 12, speed: 120, dmg: 6, xp: 1 },
+  // a chest left lying too long, up on its legs (mimicWakes)
+  mimic: { name: '宝箱怪', r: 20, hp: 240, speed: 86, dmg: 13, xp: 12, heavy: true },
 };
+// 宝箱怪: a chest not picked up starts to rattle after MIMIC_WARN seconds out in the night, and at MIMIC_T it gets up
+const MIMIC_WARN = 30, MIMIC_T = 42;
 const SPAWN_TABLE = [
   { type: 'sock', from: 0, w: () => 10 },
   { type: 'crawler', from: 45, w: t => 2 + t / 60 },
@@ -5509,6 +5513,10 @@ const audio = (() => {
     pop() { if (gate('pop', 45)) tone(rand(1300, 1700), 0.04, { type: 'sine', vol: 0.03, slide: 0.45 }); },
     // 提示词注入: a glitchy chirp as the prompt goes in
     inject() { if (gate('inject', 120)) { tone(660, 0.12, { type: 'square', vol: 0.02, slide: 2.2 }); noise(0.08, { vol: 0.05, freq: 3600, q: 3, at: 0.06 }); tone(1320, 0.08, { type: 'square', vol: 0.014, at: 0.1 }); } },
+    // 宝箱怪: the lid rattling, the growl as it gets up, the snap of its jaws
+    rattle() { if (gate('rattle', 150)) for (let i = 0; i < 2; i++) { noise(0.04, { vol: 0.07, freq: 1400, q: 2, at: i * 0.09 }); tone(260 - i * 40, 0.05, { type: 'square', vol: 0.02, at: i * 0.09 }); } },
+    mimic() { tone(110, 0.35, { type: 'sawtooth', vol: 0.07, slide: 0.6 }); noise(0.2, { vol: 0.12, freq: 600, type: 'lowpass' }); tone(90, 0.12, { type: 'square', vol: 0.06, at: 0.25 }); },
+    snap() { if (gate('snap', 200)) { tone(200, 0.08, { type: 'square', vol: 0.04, slide: 0.5 }); noise(0.06, { vol: 0.08, freq: 900, type: 'lowpass' }); } },
     inhale() { noise(0.5, { vol: 0.12, freq: 260, slide: 5, q: 0.6 }); tone(170, 0.5, { type: 'sine', vol: 0.05, slide: 2.4, attack: 0.2 }); },
     chomp() { tone(130, 0.16, { type: 'square', vol: 0.08, slide: 0.45 }); noise(0.12, { vol: 0.16, freq: 480, type: 'lowpass' }); tone(700, 0.1, { type: 'triangle', vol: 0.05, at: 0.09 }); },
     splash() { noise(0.4, { vol: 0.12, freq: 1000, slide: 0.35, q: 0.5 }); tone(340, 0.14, { type: 'sine', vol: 0.04, slide: 0.55 }); },
@@ -7999,6 +8007,40 @@ function spawnMapChest() {
   const a = rand(0, TAU), d = rand(380, 560);
   G.items.push({ type: 'chest', x: P.x + Math.cos(a) * d, y: P.y + Math.sin(a) * d, t: 0, map: true });
 }
+// the chest she left lying gets up on its legs; a gold one comes out gold, and tougher
+function mimicWakes(it) {
+  it.dead = true;
+  const e = spawnEnemy('mimic', it.x, it.y);
+  if (it.gold) { e.gold = true; e.hp = e.maxHp *= 2.5; e.dmg *= 1.2; e.xp *= 2.5; e.r = Math.round(e.r * 1.15); }
+  e.mouth = 1; e.act = 'rest'; e.actT = 0.6; e.lungeT = rand(1.2, 2); e.born = G.time;
+  ring(it.x, it.y, 10, 90, 0.45, '#ff7a4a', 5);
+  puff(it.x, it.y, 14, '#8f5532', 180, 0.5, 3);
+  if (inView(it.x, it.y, 40)) { floatText(it.x, it.y - 44, '宝箱怪！', '#ffb08a', 17).pop = 1; shake(4); }
+  sfx.mimic();
+  G.mimicN = (G.mimicN || 0) + 1;
+  if (G.mimicN === 1) toast('宝箱怪！', '宝箱放太久没捡，长腿跑了——打倒它，宝箱还给你', 'gold', '怪');
+}
+// 宝箱怪: scuttles after her, and close up rears back, lid wide, and throws itself at her
+function mimicAI(e, dt, dx, dy, d, sp) {
+  if (e.act === 'rear') {
+    e.mouth = Math.min(1, e.mouth + dt * 5);
+    if ((e.actT -= dt) <= 0) { e.act = 'lunge'; e.actT = 0.4; e.hx = dx / d; e.hy = dy / d; sfx.snap(); }
+    return;
+  }
+  if (e.act === 'lunge') {
+    e.x += e.hx * sp * 4 * dt; e.y += e.hy * sp * 4 * dt;
+    if ((e.actT -= dt) <= 0) { e.act = 'rest'; e.actT = 0.45; }
+    return;
+  }
+  if (e.act === 'rest') {
+    e.mouth = Math.max(0, e.mouth - dt * 2.5);
+    if ((e.actT -= dt) <= 0) e.act = null;
+    sp *= 0.3;
+  } else e.mouth = 0.1 + 0.1 * Math.abs(Math.sin(e.anim * 7));
+  e.hx = dx / d; e.hy = dy / d;
+  e.x += e.hx * sp * dt; e.y += e.hy * sp * dt;
+  if (!e.act && (e.lungeT -= dt) <= 0 && d < 170) { e.act = 'rear'; e.actT = 0.5; e.lungeT = rand(2.4, 3.2); }
+}
 // 觉醒's bosses: twice the size, five times the health, and they hit a third harder
 function awakenBoss(e) { e.r = Math.round(e.r * 2); e.hp *= 5; e.maxHp *= 5; e.dmg *= 1.3; }
 function spawnBoss() {
@@ -8182,7 +8224,12 @@ function kill(e, how) {
   if (e.split && !banned && !eaten) {
     for (let i = 0; i < e.split; i++) spawnEnemy('sock', e.x + rand(-16, 16), e.y + rand(-16, 16));
   }
-  if (e.elite || e.type === 'reg') {
+  if (e.type === 'mimic') {
+    // the chest it was, hers again
+    G.items.push({ type: 'chest', x: e.x, y: e.y, t: 0, gold: !!e.gold });
+    ring(e.x, e.y, 10, 90, 0.5, '#f0b43c', 4);
+    puff(e.x, e.y, 10, '#8f5532', 160, 0.45, 3);
+  } else if (e.elite || e.type === 'reg') {
     G.items.push({ type: 'chest', x: e.x, y: e.y, t: 0, gold: true });
     if (Math.random() < 0.35) G.items.push({ type: 'magnet', x: e.x + 26, y: e.y, t: 0 });
     ring(e.x, e.y, 10, 90, 0.5, '#f0b43c', 4);
@@ -10342,6 +10389,8 @@ function updateEnemies(dt) {
       copyAI(e, dt, dx, dy, d, sp);
     } else if (e.type === 'mirror') {
       mirrorAI(e, dt, dx, dy, d, sp);
+    } else if (e.type === 'mimic') {
+      mimicAI(e, dt, dx, dy, d, sp);
     } else if (e.ranged) {
       let k = d > 300 ? 1 : d < 200 ? -0.6 : 0;
       e.x += (dx / d * k + (-dy / d) * 0.35) * sp * dt;
@@ -10878,6 +10927,90 @@ function drawMirror(e) {
   ctx.fillStyle = '#ff6ad0'; ctx.fillRect(e.x - w / 2, foot + 5, w * clamp(e.hp / e.maxHp, 0, 1), 4);
   label(e.x, e.y - SPR_H * 0.78 * s, '冒牌的你', '#ff9ad8');
   if (e.banned > 0) blit(SPR.bantag(), e.x, e.y - SPR_H * 0.95 * s);
+}
+// 宝箱怪's body, drawn like the chest sprite at k times its size: the lid up by `gap` on two rows of teeth with eyes in
+// the dark between them, the tongue out, and `legs` (0–1) of four little legs under it, stepping with `walk`
+function drawMimicBody(x, y, k, o) {
+  const g = o.gap || 0, L = (o.legs || 0) * 12, w = o.walk || 0;
+  const wood = o.grey ? ['#6e6868', '#8a8484'] : o.flash ? ['#f4e2d2', '#fff2e4'] : o.gold ? ['#a87418', '#d9a23a'] : ['#6b3d22', '#8f5532'];
+  const band = o.grey ? '#aaa2a2' : o.gold ? '#fff0a0' : '#f0b43c', line = '#2a160d';
+  ctx.save(); ctx.translate(x, y); ctx.scale(k, k);
+  ctx.fillStyle = 'rgba(0,0,0,0.35)'; ctx.beginPath(); ctx.ellipse(0, 15, 18 + L * 0.2, 5, 0, 0, TAU); ctx.fill();
+  ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+  if (L > 0) {
+    // the legs, in two pairs that step in turn, knees out
+    for (const [lx, ph] of [[-12, 0], [-5, 1], [5, 0], [12, 1]]) {
+      const a = w + ph * Math.PI, sd = Math.sign(lx), up = Math.max(0, Math.sin(a)) * 4 * (o.legs || 0);
+      const hy = 15 - L, fx = lx + Math.cos(a) * 3 + sd * 2, fy = 15 - up, kx = lx + sd * 5, ky = (hy + fy) / 2 - 1;
+      ctx.beginPath(); ctx.moveTo(lx, hy); ctx.lineTo(kx, ky); ctx.lineTo(fx, fy);
+      ctx.strokeStyle = line; ctx.lineWidth = 4.4; ctx.stroke();
+      ctx.strokeStyle = o.grey ? '#777' : o.gold ? '#c08a30' : '#8a5a34'; ctx.lineWidth = 2.4; ctx.stroke();
+      ctx.fillStyle = line; ctx.beginPath(); ctx.ellipse(fx + sd * 1.5, fy, 3, 1.6, 0, 0, TAU); ctx.fill();
+    }
+  }
+  ctx.translate(0, -L); ctx.rotate(o.tilt || 0);
+  ctx.lineWidth = 1.6; ctx.strokeStyle = line;
+  const th = clamp((g - 2) * 0.45, 0, 5);
+  if (g > 1) {
+    // the dark inside, and its eyes
+    rrPath(ctx, -15, -3 - g, 30, g + 1, 2); ctx.fillStyle = '#2a0610'; ctx.fill();
+    if (g > 4 && !o.grey) {
+      const ey = -3 - g * 0.42, er = Math.min(3, (g - 2) * 0.4);
+      for (const sd of [-1, 1]) {
+        ctx.fillStyle = 'rgba(255,70,40,0.35)'; disc(ctx, sd * 6, ey, er * 2); ctx.fill();
+        ctx.fillStyle = '#ffd23a'; disc(ctx, sd * 6, ey, er); ctx.fill();
+        ctx.fillStyle = '#1a0606'; ctx.fillRect(sd * 6 - 0.6, ey - er * 0.8, 1.2, er * 1.6);
+      }
+    }
+  }
+  rrPath(ctx, -16, -4, 32, 19, 3); ctx.fillStyle = wood[0]; ctx.fill(); ctx.stroke();
+  ctx.fillStyle = band; ctx.fillRect(-11, -4, 3, 19); ctx.fillRect(8, -4, 3, 19);
+  const teeth = dir => {
+    ctx.fillStyle = '#fff8e8'; ctx.strokeStyle = line; ctx.lineWidth = 0.8;
+    ctx.beginPath();
+    for (let i = 0; i < 6; i++) { const tx = -13.5 + i * 5.2, ty = dir < 0 ? -4 : -2; ctx.moveTo(tx, ty); ctx.lineTo(tx + 4, ty); ctx.lineTo(tx + 2, ty + dir * th); ctx.closePath(); }
+    ctx.fill(); ctx.stroke();
+  };
+  if (th > 0) teeth(-1);
+  if (o.tongue && g > 8) {
+    const wg = Math.sin(G.time * 14) * 2.5;
+    ctx.beginPath(); ctx.moveTo(-5, -4); ctx.quadraticCurveTo(-6 + wg, 7, wg, 10); ctx.quadraticCurveTo(6 + wg, 7, 5, -4); ctx.closePath();
+    ctx.fillStyle = o.grey ? '#9a8a8e' : '#e0506a'; ctx.fill(); ctx.strokeStyle = '#6a1424'; ctx.lineWidth = 1.2; ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(0, -3); ctx.lineTo(wg * 0.6, 6); ctx.stroke();
+  }
+  ctx.translate(0, -g);
+  ctx.lineWidth = 1.6; ctx.strokeStyle = line;
+  rrPath(ctx, -17, -15, 34, 13, 6); ctx.fillStyle = wood[1]; ctx.fill(); ctx.stroke();
+  ctx.fillStyle = band; ctx.fillRect(-11, -15, 3, 13); ctx.fillRect(8, -15, 3, 13);
+  if (th > 0) teeth(1);
+  ctx.fillStyle = band; ctx.lineWidth = 1.6; ctx.strokeStyle = line; disc(ctx, 0, -2, 4.5); ctx.fill(); ctx.stroke();
+  ctx.fillStyle = o.grey ? '#888' : '#e8823a'; disc(ctx, 0, -2, 2); ctx.fill();
+  ctx.restore();
+}
+function drawMimic(e) {
+  const banned = e.banned > 0, still = banned || e.stun > 0 || e.frozenT > 0 || e.paradeT > 0, k = e.r / 20, act = still ? null : e.act;
+  if (act === 'rear') {
+    ctx.fillStyle = `rgba(255,60,40,${0.18 + Math.sin(G.time * 30) * 0.06})`;
+    ctx.beginPath(); ctx.ellipse(e.x, e.y + e.r * 0.8, e.r * 1.5, e.r * 0.55, 0, 0, TAU); ctx.fill();
+  }
+  const x = e.x + (act === 'rear' || banned ? rand(-1.4, 1.4) : 0);
+  drawMimicBody(x, e.y + 3 * k, k, {
+    gap: still ? 2 : 2 + e.mouth * 16, legs: 1, walk: still ? 0 : e.anim * (act === 'lunge' ? 26 : 13),
+    gold: e.gold, flash: e.flash > 0, grey: banned, tilt: still ? 0 : e.hx * (act === 'lunge' ? 0.3 : 0.1), tongue: act === 'lunge' || act === 'rest',
+  });
+  if (e.frozenT > 0 && !banned) {
+    const ice = SPR.ice(), iw = e.r * 3, ih = e.r * 3.1;
+    ctx.globalAlpha = Math.min(1, e.frozenT / 0.25);
+    ctx.drawImage(ice.c, e.x - iw / 2, e.y + e.r - ih * 0.92, iw, ih);
+    ctx.globalAlpha = 1;
+  }
+  if (e.leash && !banned) drawBound(e, e.leash.hot);
+  if (e.poisonT > 0 && !banned) drawPoisoned(e);
+  if (banned) blit(e.erase ? SPR.breaktag() : SPR.bantag(), e.x, e.y - e.r - 22 * k);
+  const w = e.r * 2, by = e.y + e.r + 6;
+  ctx.fillStyle = 'rgba(0,0,0,0.55)'; ctx.fillRect(e.x - w / 2, by, w, 4);
+  ctx.fillStyle = e.gold ? '#f0b43c' : '#ff8a5a'; ctx.fillRect(e.x - w / 2, by, w * clamp(e.hp / e.maxHp, 0, 1), 4);
+  if (G.time - (e.born || 0) < 4 && !banned) label(e.x, e.y - e.r - 26 * k, e.gold ? '金宝箱怪' : '宝箱怪', '#ffcf9a');
 }
 // the spot beside her it is about to swap itself into
 function drawSwapMark(z) {
@@ -11482,6 +11615,15 @@ function updatePickups(dt) {
     if (it.dead) continue;
     it.t += dt;
     if (it.type === 'bait' && it.t > 10) { it.dead = true; puff(it.x, it.y, 6, '#c8d8ff', 80, 0.4, 3); continue; }
+    // a chest left lying: it ages only out in the night (not while she's in a house), rattles, and gets up
+    if (it.type === 'chest' && !G.room && (it.age = (it.age || 0) + dt) > MIMIC_WARN) {
+      if (it.age >= MIMIC_T) { mimicWakes(it); continue; }
+      it.shk = (it.shk || 0) - dt;
+      if ((it.rat = (it.rat ?? 0) - dt) <= 0) {
+        it.rat = 1.6 - (it.age - MIMIC_WARN) / (MIMIC_T - MIMIC_WARN) * 1.1; it.shk = 0.32;
+        if (inView(it.x, it.y, 40)) { floatText(it.x + rand(-10, 10), it.y - 34, '咔哒', '#ffcf9a', 12); sfx.rattle(); }
+      }
+    }
     const d2 = (P.x - it.x) ** 2 + (P.y - it.y) ** 2;
     if (d2 > 30 * 30) continue;
     if (it.type === 'gchest' && !(G.room && G.room.trial && G.room.trial.open)) continue;
@@ -14451,12 +14593,20 @@ function drawPickups() {
     if (it.type === 'gchest') { drawTrialChest(it); continue; }
     const bob = Math.sin(it.t * 3) * 2;
     if (it.type === 'chest') {
+      // its glow goes from gold to red as it wakes
+      const w = it.age > MIMIC_WARN ? clamp((it.age - MIMIC_WARN) / (MIMIC_T - MIMIC_WARN), 0, 1) : 0;
       ctx.globalCompositeOperation = 'lighter';
-      const R = it.gold ? 58 : 40;
+      const R = it.gold ? 58 : 40, rgb = `255,${200 - 140 * w | 0},${90 - 50 * w | 0}`;
       const g = ctx.createRadialGradient(it.x, it.y, 0, it.x, it.y, R);
-      g.addColorStop(0, `rgba(255,200,90,${(it.gold ? 0.4 : 0.25) + Math.sin(it.t * 4) * 0.08})`); g.addColorStop(1, 'rgba(255,200,90,0)');
+      g.addColorStop(0, `rgba(${rgb},${(it.gold ? 0.4 : 0.25) + Math.sin(it.t * 4) * 0.08})`); g.addColorStop(1, `rgba(${rgb},0)`);
       ctx.fillStyle = g; disc(ctx, it.x, it.y, R); ctx.fill();
       ctx.globalCompositeOperation = 'source-over';
+      if (w > 0) {
+        // waking: it shakes and its lid pops up on teeth, then it peeks out all the time, and at the end its legs come out
+        // (between rattles, still shut, it is the plain chest sprite)
+        const shk = it.shk > 0, gap = Math.max(w > 0.65 ? 3 + (w - 0.65) * 14 : 0, shk ? 5 + 5 * w : 0), legs = clamp((w - 0.85) / 0.15, 0, 1);
+        if (gap || legs) { drawMimicBody(it.x + (shk ? rand(-1.5, 1.5) * (1 + w) : 0), it.y + bob, 1, { gap, legs }); continue; }
+      }
     }
     blit(it.type === 'fruit' ? FRUIT[it.kind]() : SPR[it.type === 'tea' && P.char === 'whale' ? 'rice' : it.type === 'tea' && P.char === 'dragon' ? 'jcandy' : it.type](), it.x, it.y + bob);
   }
@@ -14486,6 +14636,7 @@ function drawEnemies() {
     }
     if (e.type === 'fake') { drawFake(e); continue; }
     if (e.type === 'mirror') { drawMirror(e); continue; }
+    if (e.type === 'mimic') { drawMimic(e); continue; }
     const banned = e.banned > 0;
     const frame = e.type === 'crawler' ? ((e.anim * 10) | 0) % 2 : e.type === 'jail' ? ((e.anim * 7) | 0) % 2 : e.type === 'heavy' || e.type === 'reg' || e.type === 'carpool' ? ((e.anim * 3) | 0) % 2 : 0;
     // each mob blinks on its own rhythm; banned ones keep their eyes shut
@@ -15892,12 +16043,12 @@ function drawScreen() {
   // edge arrows towards chests and elites that are off screen
   const top = 110;
   if (!G.ult) {
-    if (!G.room) for (const it of G.items) if (it.type === 'chest') edgeArrow(it.x, it.y, '#f0b43c', top);
+    if (!G.room) for (const it of G.items) if (it.type === 'chest' && !it.dead) edgeArrow(it.x, it.y, it.age > MIMIC_WARN ? '#ff7a4a' : '#f0b43c', top);
     if (G.house && G.house.state === 'out' && !G.room) edgeArrow(G.house.x, G.house.y - 60, '#c08cff', top);
     if (G.glass && G.glass.state === 'out' && !G.room) edgeArrow(G.glass.x, G.glass.y - 60, `hsl(${(G.time * 90) % 360},90%,70%)`, top);
     // in the trial: the shards still to find, and the chest once it's open
     if (G.room && G.room.trial) for (const it of G.items) if (!it.dead && (it.type === 'shard' || (it.type === 'gchest' && G.room.trial.open))) edgeArrow(it.x, it.y, it.type === 'shard' ? GLASS_COL[it.col] : '#ffe08a', top);
-    for (const e of G.enemies) if (!e.dead && (e.marked || e.boss)) edgeArrow(e.x, e.y, e.boss ? '#ff4fb3' : '#ffd27a', top);
+    for (const e of G.enemies) if (!e.dead && (e.marked || e.boss || e.type === 'mimic')) edgeArrow(e.x, e.y, e.boss ? '#ff4fb3' : e.type === 'mimic' ? '#ff7a4a' : '#ffd27a', top);
   }
   if (joy) {
     ctx.strokeStyle = 'rgba(247,238,226,0.3)'; ctx.lineWidth = 2;
