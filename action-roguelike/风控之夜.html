@@ -4868,7 +4868,7 @@ const WEAPONS = {
   // like a rank: 普通 (single shots), 白银, 黄金, 铂金, 钻石, and 星耀 on full auto once evolved; 多重施法 adds rounds
   ak47: {
     name: 'AK-47', g: '枪', skins: ['普通', '白银', '黄金', '铂金', '钻石', '星耀'], oneshot: 5,
-    desc: '握在手里的步枪，向最近的敌人点射，每一发都打向不同的敌人。每升一级多连发一发、伤害更高，外观也跟着升级：普通单发、白银两连发、黄金三连发、铂金四连发、钻石五连发；多重施法每层再多一发。满级后每轮的第一发「颗秒」普通怪。',
+    desc: '握在手里的步枪，向最近的敌人点射，每一发都打向不同的敌人。每升一级多连发一发、伤害更高，外观也跟着升级：普通单发、白银两连发、黄金三连发、铂金四连发、钻石五连发；多重施法每层再多一发。满级后停下来站定的第一发「颗秒」普通怪。',
     evo: { need: 'hunt', name: 'AK-47 · 星耀', desc: '星耀外观：全自动扫射，一梭子十发，子弹拖着星光，还能多穿透一个敌人。' },
     lv: [
       { cd: 0.55, rounds: 1, dmg: 34 },
@@ -7893,7 +7893,7 @@ function forNear(x, y, r, fn) {
   }
 }
 const targetable = e => !e.dead && !(e.banned > 0) && !(e.paradeT > 0) && !(e.turned > 0);
-// 颗秒: the first round of a maxed AK-47's burst kills an ordinary mob outright; elites, 注册机, DAN, the golden
+// 颗秒: a maxed AK-47's first round after she stops kills an ordinary mob outright; elites, 注册机, DAN, the golden
 // slime and 宝箱怪 just take the hit
 const oneshotable = e => !e.elite && !e.boss && e.type !== 'reg' && e.type !== 'gold' && e.type !== 'mimic';
 // big targets count as closer than they are, so weapons focus them when they're in range
@@ -9208,8 +9208,10 @@ function updateWeapons(dt) {
       case 'ak47': {
         // one rifle in her hand: bursts at the nearest enemies, a round more each level (single shots at level 1, a
         // magazine on full auto at 星耀) and each 多重施法; every round turns to the nearest one the rounds before it
-        // won't already have killed. Only the first round of a burst can 颗秒
+        // won't already have killed. 颗秒 is the first round after she stops: once she has moved (or dashed), the next
+        // round fired standing still carries it
         w.kick = Math.max(0, (w.kick || 0) - dt * 10); w.flash = Math.max(0, (w.flash || 0) - dt);
+        if (P.moving || P.dash) w.ready = true;
         const tg = nearest(P.x, P.y, 640);
         // mid-burst the barrel stays on the one the last round went to, so the rounds leave along it
         const at = w.rounds > 0 && w.at && targetable(w.at) ? w.at : tg;
@@ -9219,12 +9221,13 @@ function updateWeapons(dt) {
         if (w.t <= 0 && tg) {
           // the burst fits in three quarters of the cooldown, however short that gets
           const n = s.rounds + P.amount;
-          w.t = cdOf(s.cd); w.rounds = n; w.roundT = 0; w.gap = Math.min(0.09, w.t * 0.75 / n); w.mult = castMult(w); w.first = true;
+          w.t = cdOf(s.cd); w.rounds = n; w.roundT = 0; w.gap = Math.min(0.09, w.t * 0.75 / n); w.mult = castMult(w);
           (w.doomed ||= new Set()).clear();
         } else if (w.t < 0) w.t = 0;
         if (!(w.rounds > 0) || !tg || (w.roundT -= dt) > 0) break;
-        const one = w.first && w.level >= WEAPONS.ak47.oneshot;
-        w.rounds--; w.roundT = w.gap; w.first = false;
+        const one = w.level >= WEAPONS.ak47.oneshot && w.ready !== false && !P.moving && !P.dash;
+        if (one) w.ready = false;
+        w.rounds--; w.roundT = w.gap;
         const to = nearest(P.x, P.y, 640, w.doomed) || tg;
         w.at = to; w.aim = Math.atan2(to.y - (P.y - 10 * P.size), to.x - P.x);
         if (s.dmg * w.mult >= to.hp || (one && oneshotable(to))) w.doomed.add(to.id);
@@ -15475,6 +15478,11 @@ function drawGuns(behind) {
     }
     ctx.globalAlpha = 1;
   }
+  // 颗秒 loaded (it goes with the first round once she stands still): a gold glint at the muzzle
+  if (w.level >= WEAPONS.ak47.oneshot && w.ready !== false) {
+    ctx.fillStyle = '#ffe27a'; ctx.globalAlpha = 0.7 + Math.sin(t * 10) * 0.3;
+    sparkle(ctx, 46, -3, 6); ctx.globalAlpha = 1;
+  }
   if (w.flash > 0) {
     ctx.globalCompositeOperation = 'lighter';
     blit(SPR.muzzle(), 44, -3);
@@ -16333,7 +16341,7 @@ function weaponCard(o, i) {
   } else {
     title = d.skins ? `${d.name} · ${d.skins[w.level]}` : `${d.name} Lv ${w.level + 1}`; tag = '升级'; desc = statDiff(d.lv[w.level - 1], d.lv[w.level]);
     if (d.skins) desc += `，换上「${d.skins[w.level]}」外观`;
-    if (d.oneshot === w.level + 1) desc += '，解锁「颗秒」：每轮第一发秒杀普通怪';
+    if (d.oneshot === w.level + 1) desc += '，解锁「颗秒」：停下来站定的第一发秒杀普通怪';
     meta = w.level + 1 === 5 ? `<span>满级后带上「${TALENT[d.evo.need].name}」再开宝箱即可进化</span>` : '';
   }
   return `<button class="card ${o.kind === 'evo' ? 'evo' : o.kind === 'new' ? 'r1' : ''}" type="button" data-i="${i}">
