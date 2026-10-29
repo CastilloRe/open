@@ -6,10 +6,10 @@
     python3 tarot/tools/add-art.py --rebuild
 
 「牌」可以是编号（0–21 大阿卡纳，22 起依次是权杖、圣杯、宝剑、星币，每组王牌到国王 14 张），
-也可以是中文名（星星、圣杯三、宝剑国王）或英文名（The Star、Three of Cups）。
+也可以是中文名（星星、圣杯三、宝剑国王）或英文名（The Star、Three of Cups）；写「牌背」或 back 就是牌背。
 
 图片会从中间裁成 2:3，宽超过 1024 时缩到 1024×1536，存成 tarot/art/<编号>.webp，
-然后重新生成 tarot/art/manifest.js，网页就会用这张插画。--rebuild 只重新生成清单。
+（牌背是 back.webp），然后重新生成 tarot/art/manifest.js，网页就会用这张插画。--rebuild 只重新生成清单。
 需要 Pillow（pip install pillow）。
 """
 import re
@@ -35,6 +35,8 @@ CARDS = list(MAJORS) + [(s + r, f'{re_} of {se}') for s, se in SUITS for r, re_ 
 
 def card_id(name):
     name = name.strip()
+    if name in ('牌背', '背面') or name.lower() == 'back':
+        return 'back'
     if name.isdigit() and 0 <= int(name) < len(CARDS):
         return int(name)
     for i, (zh, en) in enumerate(CARDS):
@@ -49,11 +51,14 @@ def rebuild():
         m = re.fullmatch(r'(\d+)\.(webp|png|jpe?g)', f.name, re.I)
         if m and int(m.group(1)) < len(CARDS):
             files[int(m.group(1))] = f.name
+    back = next((f.name for f in sorted(ART.iterdir()) if re.fullmatch(r'back\.(webp|png|jpe?g)', f.name, re.I)), None)
     lines = ['// 由 tools/add-art.py 生成：有插画的牌的编号 → 文件名', 'window.TAROT_ART = {']
     lines += [f"  {i}: '{name}',  // {CARDS[i][0]}" for i, name in sorted(files.items())]
+    if back:
+        lines.append(f"  back: '{back}',  // 牌背")
     lines.append('};')
     (ART / 'manifest.js').write_text('\n'.join(lines) + '\n', encoding='utf-8')
-    print(f'清单里有 {len(files)} 张插画：' + '、'.join(CARDS[i][0] for i in sorted(files)))
+    print(f'清单里有 {len(files)} 张插画：' + '、'.join(CARDS[i][0] for i in sorted(files)) + ('，加上牌背' if back else ''))
 
 
 def add(path, card):
@@ -69,12 +74,13 @@ def add(path, card):
         im = im.crop((0, (h - nh) // 2, w, (h - nh) // 2 + nh))
     if im.width > 1024:
         im = im.resize((1024, 1536), Image.LANCZOS)
+    label = ('牌背', 'back') if i == 'back' else CARDS[i]
     for old in ART.glob(f'{i}.*'):
         if old.suffix.lower() in ('.webp', '.png', '.jpg', '.jpeg'):
             old.unlink()
     out = ART / f'{i}.webp'
     im.save(out, 'WEBP', quality=84, method=6)
-    print(f'{CARDS[i][0]}（{CARDS[i][1]}）→ {out.relative_to(ART.parent.parent)}，{out.stat().st_size // 1024} KB')
+    print(f'{label[0]}（{label[1]}）→ {out.relative_to(ART.parent.parent)}，{out.stat().st_size // 1024} KB')
     rebuild()
 
 

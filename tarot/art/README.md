@@ -2,7 +2,9 @@
 
 有插画的牌会直接显示插画，没有插画的牌用代码画的黑金牌面（版式照着插画做，混在一起也不突兀）。目前有插画的是：
 
-- 17 星星（The Star）
+- 22 张大阿卡纳全部，加上牌背（`back.webp`）。
+- 星星（17）是 1024×1536 的原图；其余 21 张和牌背是从一张拼图里切出来、拉回 2:3 的，每张约 360×540，在单张指引这种大尺寸下会略软，有原图可以用下面的命令直接替换。
+- 小阿卡纳 56 张还没有插画。
 
 ## 加一张插画
 
@@ -11,6 +13,7 @@ python3 tarot/tools/add-art.py 图片路径 牌名
 # 例如
 python3 tarot/tools/add-art.py ~/Downloads/fool.png 愚者
 python3 tarot/tools/add-art.py ~/Downloads/x.png "Three of Cups"
+python3 tarot/tools/add-art.py ~/Downloads/back.png 牌背
 ```
 
 脚本会把图从中间裁成 2:3、缩到 1024×1536、存成 `art/<编号>.webp`，并更新 `art/manifest.js`。牌名可以写中文名、英文名或编号。需要 Pillow（`pip install pillow`）。
@@ -50,7 +53,7 @@ ornate tarot card illustration, vertical 2:3, anime-style semi-realistic paintin
 | XIV | 节制 | TEMPERANCE | BALANCE • HARMONY • PATIENCE | a winged young angel with a sun disc on his brow, one foot in a pool and one on land, pouring a stream of light between two golden cups, irises by the water, a path leading to mountains crowned with light |
 | XV | 恶魔 | THE DEVIL | BONDAGE • DESIRE • SHADOW | a seductive dark young demon lord with ram horns and bat wings on a black pedestal, an inverted pentagram glowing above him, two figures below in loose chains they could slip off |
 | XVI | 塔 | THE TOWER | UPHEAVAL • REVELATION • SUDDEN CHANGE | a tall tower on a crag struck by lightning, its crown blown off, flames bursting from the windows, a young man falling through the air with his robes flying, golden sparks raining down |
-| XVII | 星星 | THE STAR | HOPE • HEALING • RENEWAL | 已经有了 |
+| XVII | 星星 | THE STAR | HOPE • HEALING • RENEWAL | a young man kneeling at the water's edge beneath a great eight-pointed star, pouring water from two golden jugs, one stream into the pool and one onto the land |
 | XVIII | 月亮 | THE MOON | ILLUSION • INTUITION • THE UNKNOWN | a young man standing by a still pool at night beneath an enormous full moon, a dog and a wolf howling at the moon, a crayfish crawling from the water, a winding path between two towers |
 | XIX | 太阳 | THE SUN | JOY • SUCCESS • VITALITY | a joyful young man riding a white horse with a red banner, sunflowers over a stone wall, a huge radiant sun filling the sky |
 | XX | 审判 | JUDGEMENT | AWAKENING • CALLING • RENEWAL | a handsome winged angel blowing a golden trumpet with a banner from the clouds, people rising from open coffins floating on water, snowy mountains |
