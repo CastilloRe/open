@@ -6,7 +6,7 @@
 
 按《肉鸽游戏设计方案》做的可玩版本，目前有三位角色：**克劳德大小姐（Claude）**、**大肥鱼（蓝色鲸鱼娘）** 和 **ChatGPT 龙娘（银白龙娘）**，在标题页下方点头像切换（会记住上次选的）。一局默认 10 分钟（标题页可以换成 20 分钟、无尽或觉醒）：在敌潮里活下来、捡经验升级、开宝箱拿武器，10:00 时 BOSS「DAN」现身，封禁它就算通关。立绘在 `action-roguelike/art/claude.webp`，是从角色设计图里抠出来的；动作帧在 `art/claude-actions.webp`，从 GPT 画的动作设定图里逐帧抠出、打包成一张图集；大招用的特写和发光花朵在 `art/claude-ult.webp`，同样取自设定图。游戏里的她是 3D 模型 `art/claude.glb`，由作者用 AI 建模工具做的模型压缩而来。
 
-另外，`tarot/index.html` 是一个塔罗占卜小网页「星夜塔罗」，说明见 [`tarot/README.md`](tarot/README.md)。
+另外，`tarot/index.html` 是一个龙娘当看板娘的塔罗占卜网页「推演之梦」，说明见 [`tarot/README.md`](tarot/README.md)。
 
 ## 克劳德大小姐（花焰法师）
 

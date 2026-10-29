@@ -2,315 +2,351 @@
 <html lang="zh-CN">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>星夜塔罗</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>推演之梦</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700&family=Noto+Serif+SC:wght@500;700;900&display=swap" rel="stylesheet">
 <style>
+/* 版式：一列手机宽的「App」，每一步一个页面；淡紫色哥特大厅做底，金线描边，深靛蓝按钮 */
 :root {
-  --bg: #07060f;
-  --ink: #f1e8d4;
-  --muted: #9d93b5;
-  --gold: #d9b46a;
-  --gold2: #f6dc95;
-  --gold3: #fff4cf;
-  --violet: #b48cff;
-  --line: rgba(217, 180, 106, .3);
-  --rev: #ff8f8f;
-  --cw: 110px;
+  color-scheme: light;
+  --ink: #2b2766;
+  --ink-soft: #6b6497;
+  --lav: #eee8fb;
+  --lav-deep: #d6c9f3;
+  --violet: #8a74d6;
+  --paper: #fcfaff;
+  --cream: #fff8ea;
+  --gold: #c39b52;
+  --gold-hi: #ecd291;
+  --navy: #26225e;
+  --navy-2: #3a3590;
+  --rev: #c0526b;
   --serif: "Noto Serif SC", "Songti SC", "Noto Serif CJK SC", "Source Han Serif SC", "STSong", serif;
   --latin: "Cinzel", Georgia, "Times New Roman", serif;
-  --foil: linear-gradient(115deg, #fff4cf 0%, #e2b65c 22%, #9c6f26 42%, #f6dc95 58%, #c08f3a 78%, #fff1c1 100%);
+  --sans: system-ui, -apple-system, "PingFang SC", "Microsoft YaHei", sans-serif;
+  --cw: 110px;
 }
 * { box-sizing: border-box; }
-html { color-scheme: dark; }
+[hidden] { display: none !important; }
+html, body { margin: 0; }
 body {
-  margin: 0;
   min-height: 100vh;
   color: var(--ink);
-  font: 16px/1.75 system-ui, -apple-system, "PingFang SC", "Microsoft YaHei", sans-serif;
+  font: 15px/1.75 var(--sans);
   background:
-    radial-gradient(60vw 40vw at 15% 10%, rgba(110, 60, 200, .28), transparent 70%),
-    radial-gradient(50vw 40vw at 90% 30%, rgba(30, 110, 170, .18), transparent 70%),
-    radial-gradient(70vw 50vw at 50% 110%, rgba(160, 60, 120, .2), transparent 70%),
-    var(--bg);
+    radial-gradient(120% 60% at 50% 0%, #fdfbff 0%, rgba(253, 251, 255, 0) 60%),
+    radial-gradient(80% 50% at 10% 100%, rgba(186, 160, 240, .45), transparent 70%),
+    radial-gradient(80% 50% at 90% 100%, rgba(160, 180, 245, .35), transparent 70%),
+    linear-gradient(180deg, #f6f2fe 0%, var(--lav) 45%, var(--lav-deep) 100%);
   background-attachment: fixed;
   overflow-x: hidden;
 }
-#sky { position: fixed; inset: 0; width: 100%; height: 100%; z-index: -1; pointer-events: none; }
 button, input, textarea { font: inherit; color: inherit; }
+button { cursor: pointer; }
+:focus-visible { outline: 2px solid var(--violet); outline-offset: 2px; }
+#sky { position: fixed; inset: 0; width: 100%; height: 100%; pointer-events: none; z-index: 0; }
 
-/* ---------- 标题 ---------- */
-header { position: relative; text-align: center; padding: 64px 16px 22px; overflow: hidden; }
-.zodiac {
-  position: absolute; left: 50%; top: 50%; width: 380px; height: 380px; margin: -190px 0 0 -190px;
-  opacity: .22; animation: spin 240s linear infinite; pointer-events: none;
+/* ---------- App 外框 ---------- */
+.app {
+  position: relative; z-index: 1; max-width: 460px; min-height: 100vh; margin: 0 auto;
+  padding: 0 max(16px, env(safe-area-inset-right, 0px)) 120px max(16px, env(safe-area-inset-left, 0px));
 }
-@keyframes spin { to { transform: rotate(360deg); } }
-header h1 {
-  position: relative; margin: 0; font-family: var(--serif); font-weight: 900; font-size: 48px; letter-spacing: .38em; padding-left: .38em;
-  background: var(--foil); background-size: 220% 100%; -webkit-background-clip: text; background-clip: text; color: transparent;
-  animation: foil 7s ease-in-out infinite; filter: drop-shadow(0 0 22px rgba(246, 220, 149, .35));
+.app::before {
+  content: ''; position: fixed; top: 8px; bottom: 8px; left: 50%; width: min(444px, calc(100% - 16px)); transform: translateX(-50%);
+  border: 1px solid rgba(195, 155, 82, .55); border-radius: 22px; pointer-events: none; z-index: 2;
+  box-shadow: inset 0 0 0 4px rgba(255, 255, 255, .35), inset 0 0 0 5px rgba(195, 155, 82, .3);
 }
-@keyframes foil { 0%, 100% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } }
-header .en { position: relative; font-family: var(--latin); letter-spacing: .6em; font-size: 12px; color: var(--gold); margin-top: 4px; padding-left: .6em; }
-header p { position: relative; margin: 10px 0 0; color: var(--muted); font-size: 14px; letter-spacing: .18em; }
-.divider { display: flex; align-items: center; gap: 12px; justify-content: center; color: var(--gold); margin: 14px auto 0; max-width: 280px; font-size: 12px; }
-.divider::before, .divider::after { content: ''; flex: 1; height: 1px; background: linear-gradient(90deg, transparent, var(--gold)); }
-.divider::after { background: linear-gradient(90deg, var(--gold), transparent); }
+.hall { position: fixed; top: 0; left: 50%; transform: translateX(-50%); width: min(460px, 100%); height: 70vh; pointer-events: none; z-index: 0; opacity: .75; }
+.flowers { position: fixed; bottom: 0; left: 50%; transform: translateX(-50%); width: min(460px, 100%); height: 110px; pointer-events: none; z-index: 0; }
 
-main { max-width: 1000px; margin: 0 auto; padding: 8px 16px 56px; }
-.view { display: none; }
-.view.on { display: block; animation: rise .7s cubic-bezier(.2, .8, .2, 1); }
-@keyframes rise { from { opacity: 0; transform: translateY(14px); filter: blur(4px); } to { opacity: 1; transform: none; filter: none; } }
+/* ---------- 顶栏 ---------- */
+.bar {
+  position: sticky; top: 0; z-index: 5; display: grid; grid-template-columns: 44px 1fr 44px; align-items: center;
+  padding: calc(14px + env(safe-area-inset-top, 0px)) 4px 6px;
+}
+.bar .round {
+  width: 40px; height: 40px; border-radius: 50%; display: grid; place-items: center; padding: 0;
+  background: rgba(255, 255, 255, .75); border: 1.5px solid var(--gold); color: var(--navy);
+  box-shadow: 0 0 0 3px rgba(255, 255, 255, .6), 0 4px 12px rgba(80, 60, 160, .15);
+}
+.bar .round svg { width: 20px; height: 20px; }
+.bar .round[hidden] { display: grid !important; visibility: hidden; }
+.emblem { justify-self: center; width: 58px; height: 58px; }
 
-/* ---------- 面板 ---------- */
+/* ---------- 页面 ---------- */
+.screen { display: none; }
+.screen.on { display: block; animation: rise .55s cubic-bezier(.2, .8, .2, 1); }
+@keyframes rise { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: none; } }
+.head { text-align: center; margin: 2px 0 16px; }
+.head h2 {
+  margin: 0; font: 900 26px/1.3 var(--serif); letter-spacing: .12em; color: var(--ink); text-wrap: balance;
+  text-shadow: 0 0 14px rgba(255, 255, 255, .95), 0 0 2px #fff;
+}
+.head p { margin: 2px 0 0; color: var(--ink-soft); font-size: 13px; letter-spacing: .12em; }
+
 .panel {
-  position: relative; border-radius: 16px; padding: 22px;
-  background: linear-gradient(160deg, rgba(40, 30, 80, .55), rgba(12, 9, 28, .78));
-  border: 1px solid var(--line);
-  box-shadow: 0 0 0 1px rgba(0, 0, 0, .4) inset, 0 20px 50px rgba(0, 0, 0, .45);
-  backdrop-filter: blur(6px);
+  position: relative; background: rgba(252, 250, 255, .9); border-radius: 16px; padding: 18px;
+  border: 1px solid var(--gold); box-shadow: inset 0 0 0 3px var(--paper), inset 0 0 0 4px rgba(195, 155, 82, .45), 0 10px 30px rgba(70, 50, 150, .12);
 }
-.panel.ornate::before, .panel.ornate::after {
-  content: ''; position: absolute; width: 26px; height: 26px; border: 1.5px solid var(--gold); pointer-events: none;
-}
-.panel.ornate::before { top: 8px; left: 8px; border-right: none; border-bottom: none; border-top-left-radius: 8px; }
-.panel.ornate::after { bottom: 8px; right: 8px; border-left: none; border-top: none; border-bottom-right-radius: 8px; }
-h2 { font-family: var(--serif); font-weight: 700; color: var(--gold2); font-size: 20px; margin: 0 0 12px; letter-spacing: .12em; }
-label.field { display: block; margin-bottom: 20px; }
-label.field span, .choice-names label span { display: block; color: var(--muted); font-size: 14px; margin-bottom: 8px; }
-textarea, input[type=text] {
-  width: 100%; background: rgba(5, 4, 14, .65); border: 1px solid var(--line); border-radius: 10px;
-  padding: 12px 14px; outline: none; resize: vertical; transition: border-color .2s, box-shadow .2s;
-}
-textarea { font-family: var(--serif); font-size: 17px; }
-textarea:focus, input[type=text]:focus { border-color: var(--gold); box-shadow: 0 0 0 3px rgba(217, 180, 106, .15), 0 0 24px rgba(217, 180, 106, .15); }
-
-.spreads { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 12px; margin-bottom: 20px; }
-.spread {
-  position: relative; display: grid; grid-template-columns: 54px 1fr; gap: 12px; align-items: center; text-align: left;
-  background: rgba(5, 4, 14, .5); border: 1px solid var(--line); border-radius: 12px; padding: 12px 14px; cursor: pointer;
-  transition: border-color .25s, background .25s, transform .25s, box-shadow .25s; overflow: hidden;
-}
-.spread svg { width: 54px; height: 54px; display: block; }
-.spread b { display: block; font-family: var(--serif); color: var(--gold2); font-weight: 700; letter-spacing: .06em; }
-.spread small { color: var(--muted); font-size: 12.5px; line-height: 1.55; display: block; margin-top: 2px; }
-.spread em { position: absolute; top: 10px; right: 12px; font-style: normal; color: var(--gold); font-size: 11px; font-family: var(--latin); letter-spacing: .1em; }
-.spread:hover { border-color: var(--gold); transform: translateY(-2px); }
-.spread[aria-pressed=true] {
-  border-color: var(--gold2); background: linear-gradient(160deg, rgba(217, 180, 106, .18), rgba(5, 4, 14, .5));
-  box-shadow: 0 0 0 1px var(--gold2) inset, 0 0 30px rgba(246, 220, 149, .18);
-}
-.choice-names { display: none; gap: 12px; margin-bottom: 20px; }
-.choice-names.on { display: grid; grid-template-columns: 1fr 1fr; }
-
-.row { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
-.toggle { display: inline-flex; align-items: center; gap: 8px; color: var(--muted); font-size: 14px; cursor: pointer; }
-.toggle input { accent-color: var(--gold); width: 16px; height: 16px; }
-.spacer { flex: 1; }
+.panel h3 { margin: 0 0 6px; font: 900 16px/1.5 var(--serif); color: var(--ink); letter-spacing: .08em; }
+.panel p { margin: 0; color: #403a78; }
 
 .btn {
-  position: relative; overflow: hidden; border: 1px solid var(--gold2); cursor: pointer;
-  background: linear-gradient(180deg, #f7dc9a, #c4943f 55%, #9c6d24); color: #1d1406;
-  font-family: var(--serif); font-weight: 900; letter-spacing: .3em; padding: 11px 28px 11px calc(28px + .3em); border-radius: 999px;
-  box-shadow: 0 0 0 3px rgba(217, 180, 106, .14), 0 8px 30px rgba(217, 180, 106, .3), 0 1px 0 rgba(255, 255, 255, .5) inset;
+  position: relative; overflow: hidden; display: block; width: min(300px, 100%); margin: 0 auto; padding: 13px 20px;
+  border-radius: 999px; border: 1.5px solid var(--gold-hi);
+  background: linear-gradient(180deg, var(--navy-2), var(--navy)); color: #fff4d8;
+  font: 900 18px/1.2 var(--serif); letter-spacing: .3em; text-indent: .3em;
+  box-shadow: 0 0 0 3px rgba(195, 155, 82, .45), 0 0 0 5px rgba(255, 255, 255, .5), 0 10px 24px rgba(38, 34, 94, .35);
   transition: transform .2s, box-shadow .2s;
 }
 .btn::after {
   content: ''; position: absolute; top: 0; bottom: 0; left: -60%; width: 40%;
-  background: linear-gradient(100deg, transparent, rgba(255, 255, 255, .65), transparent); transform: skewX(-20deg);
+  background: linear-gradient(100deg, transparent, rgba(255, 255, 255, .35), transparent); transform: skewX(-20deg);
   animation: sweep 4.5s ease-in-out infinite;
 }
 @keyframes sweep { 0%, 60% { left: -60%; } 100% { left: 130%; } }
-.btn:hover { transform: translateY(-2px); box-shadow: 0 0 0 4px rgba(217, 180, 106, .2), 0 10px 40px rgba(246, 220, 149, .45), 0 1px 0 rgba(255, 255, 255, .5) inset; }
-.btn.ghost { background: rgba(5, 4, 14, .5); color: var(--gold2); box-shadow: none; border-color: var(--line); letter-spacing: .12em; padding: 9px 20px 9px calc(20px + .12em); font-weight: 700; }
-.btn.ghost::after { display: none; }
-.btn.ghost:hover { border-color: var(--gold); background: rgba(217, 180, 106, .1); box-shadow: 0 0 24px rgba(217, 180, 106, .15); }
-
-details.history { margin-top: 20px; border-top: 1px solid var(--line); padding-top: 14px; }
-details.history summary { cursor: pointer; color: var(--muted); font-size: 14px; letter-spacing: .1em; }
-.hist-list { list-style: none; padding: 0; margin: 12px 0 0; display: grid; gap: 8px; }
-.hist-list button {
-  width: 100%; text-align: left; background: rgba(5, 4, 14, .5); border: 1px solid var(--line);
-  border-radius: 10px; padding: 9px 14px; cursor: pointer; font-size: 14px; transition: border-color .2s;
+.btn:hover { transform: translateY(-2px); }
+.btn:disabled { opacity: .5; cursor: default; transform: none; }
+.btn.light {
+  background: linear-gradient(180deg, #fff, var(--cream)); color: var(--navy); border-color: var(--gold);
+  box-shadow: 0 0 0 3px rgba(255, 255, 255, .7), 0 6px 16px rgba(70, 50, 150, .12); letter-spacing: .2em; text-indent: .2em; font-size: 16px;
 }
-.hist-list button:hover { border-color: var(--gold); }
-.hist-list .q { font-family: var(--serif); }
-.hist-list .meta { color: var(--muted); font-size: 12px; }
-.hist-clear { margin-top: 10px; background: none; border: none; color: var(--muted); font-size: 12px; cursor: pointer; text-decoration: underline; }
+.btn.light::after { display: none; }
+.btn-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.btn-row .btn { width: 100%; font-size: 16px; letter-spacing: .2em; text-indent: .2em; }
+.link { display: block; margin: 12px auto 0; background: none; border: none; color: var(--ink-soft); font-size: 13px; text-decoration: underline; text-underline-offset: 3px; }
+.foot { margin-top: 22px; }
 
-/* ---------- 洗牌 ---------- */
-.vortex { position: relative; height: 420px; }
-.vortex .circle { position: absolute; left: 50%; top: 50%; width: 360px; height: 360px; margin: -180px 0 0 -180px; animation: spin 6s linear infinite, glow 2.6s ease-in-out; opacity: .8; }
-@keyframes glow { 0% { opacity: 0; transform: scale(.6) rotate(0); } 40% { opacity: .9; } }
+/* ---------- 首页 ---------- */
+.hero { text-align: center; margin-top: 6px; }
+.hero h1 {
+  margin: 0; font: 900 46px/1.15 var(--serif); letter-spacing: .14em; color: #fff; text-wrap: balance;
+  text-shadow: 0 0 1px var(--ink), 0 0 2px var(--ink), 0 2px 0 #4a3f9e, 0 0 22px rgba(138, 116, 214, .85), 0 0 40px rgba(255, 255, 255, .9);
+}
+.hero .sub { display: flex; align-items: center; justify-content: center; gap: 10px; margin-top: 8px; color: var(--ink-soft); font-size: 13px; letter-spacing: .3em; }
+.hero .sub::before, .hero .sub::after { content: ''; width: 40px; height: 1px; background: linear-gradient(90deg, transparent, var(--gold)); }
+.hero .sub::after { background: linear-gradient(90deg, var(--gold), transparent); }
+.mascot { position: relative; display: grid; place-items: center; margin: 4px auto 0; }
+.mascot img { width: min(320px, 82%); height: auto; filter: drop-shadow(0 12px 22px rgba(90, 70, 170, .3)); animation: float 5s ease-in-out infinite; }
+@keyframes float { 50% { transform: translateY(-8px); } }
+.bubble {
+  position: relative; max-width: 300px; margin: -6px auto 18px; padding: 10px 16px; border-radius: 16px; text-align: center;
+  background: rgba(255, 255, 255, .92); border: 1px solid var(--gold); color: #403a78; font: 500 14px/1.6 var(--serif);
+  box-shadow: 0 6px 18px rgba(70, 50, 150, .12);
+}
+.bubble::before { content: ''; position: absolute; top: -7px; left: 50%; width: 12px; height: 12px; margin-left: -6px; background: inherit; border-left: 1px solid var(--gold); border-top: 1px solid var(--gold); transform: rotate(45deg); }
+.nav3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-top: 22px; }
+.nav3 button { background: none; border: none; display: grid; justify-items: center; gap: 4px; color: var(--ink); font-size: 13px; letter-spacing: .08em; }
+.nav3 .ico {
+  width: 44px; height: 44px; display: grid; place-items: center; border-radius: 12px; transform: rotate(45deg);
+  border: 1.5px solid var(--gold); background: rgba(255, 255, 255, .8); box-shadow: 0 4px 12px rgba(70, 50, 150, .12);
+}
+.nav3 .ico svg { width: 20px; height: 20px; transform: rotate(-45deg); color: var(--navy); }
+
+/* ---------- 选牌阵 ---------- */
+.opts { display: grid; gap: 10px; }
+.opt {
+  display: grid; grid-template-columns: 74px 1fr; gap: 14px; align-items: center; text-align: left; padding: 12px 14px;
+  background: rgba(252, 250, 255, .92); border: 1px solid rgba(195, 155, 82, .6); border-radius: 14px;
+  box-shadow: inset 0 0 0 3px var(--paper), inset 0 0 0 4px rgba(195, 155, 82, .25);
+  transition: transform .2s, box-shadow .2s, background .2s;
+}
+.opt:hover { transform: translateY(-1px); }
+.opt[aria-pressed=true] {
+  background: linear-gradient(160deg, #fffdf6, var(--cream)); border-color: var(--gold);
+  box-shadow: inset 0 0 0 3px #fffdf6, inset 0 0 0 4px var(--gold), 0 0 0 3px rgba(236, 210, 145, .55), 0 8px 22px rgba(195, 155, 82, .25);
+}
+.opt b { display: block; font: 900 17px/1.4 var(--serif); letter-spacing: .1em; color: var(--ink); }
+.opt .pos { display: block; color: var(--ink); font-size: 13px; letter-spacing: .1em; }
+.opt small { display: block; color: var(--ink-soft); font-size: 12px; line-height: 1.5; }
+.minis { position: relative; height: 58px; }
+.minis i {
+  position: absolute; top: 4px; width: 32px; height: 48px; border-radius: 4px; left: calc(50% - 16px + var(--dx));
+  transform: rotate(var(--r)); background: url("art/back.webp") center / cover, linear-gradient(160deg, #3a3590, #1d1a4f);
+  border: 1px solid var(--gold); box-shadow: 0 3px 8px rgba(30, 20, 80, .3);
+}
+.stepper { display: none; align-items: center; gap: 10px; margin-top: 6px; }
+.opt[aria-pressed=true] .stepper { display: flex; }
+.stepper span[role=button] {
+  width: 28px; height: 28px; border-radius: 50%; display: grid; place-items: center; border: 1px solid var(--gold);
+  background: #fff; color: var(--navy); font-weight: 700; line-height: 1;
+}
+.stepper output { font: 700 16px var(--latin); min-width: 1.5em; text-align: center; }
+
+/* ---------- 问题 ---------- */
+.ask textarea {
+  width: 100%; min-height: 128px; resize: vertical; border: none; outline: none; background: transparent;
+  font: 500 16px/1.8 var(--serif); color: var(--ink);
+}
+.ask textarea::placeholder { color: #9a93bf; }
+.ab { display: none; gap: 10px; margin-top: 12px; }
+.ab.on { display: grid; grid-template-columns: 1fr 1fr; }
+.ab label { font-size: 12px; color: var(--ink-soft); }
+.ab input { display: block; width: 100%; margin-top: 4px; padding: 8px 10px; border-radius: 10px; border: 1px solid rgba(195, 155, 82, .6); background: #fff; outline: none; }
+.ab input:focus { border-color: var(--violet); }
+.mascot.small img { width: min(190px, 52%); }
+.toggles { display: flex; justify-content: center; gap: 10px; margin: 4px 0 20px; flex-wrap: wrap; }
+.pill {
+  padding: 7px 16px; border-radius: 999px; border: 1px solid var(--gold); background: rgba(255, 255, 255, .85); color: var(--ink);
+  font-size: 13px; letter-spacing: .1em;
+}
+.pill[aria-pressed=true] { background: linear-gradient(180deg, var(--navy-2), var(--navy)); color: #fff4d8; border-color: var(--gold-hi); }
+
+/* ---------- 洗牌与抽牌 ---------- */
+.ritual { position: relative; min-height: 360px; }
+.ritual .circle {
+  position: absolute; left: 50%; bottom: 0; width: 340px; height: 340px; margin-left: -170px; opacity: .9;
+  animation: spin 40s linear infinite; filter: drop-shadow(0 0 10px rgba(255, 255, 255, .9));
+}
+.ritual .glow { position: absolute; left: 50%; bottom: 60px; width: 260px; height: 160px; margin-left: -130px; border-radius: 50%; background: radial-gradient(closest-side, rgba(255, 255, 255, .95), rgba(190, 170, 250, .5) 50%, transparent); filter: blur(6px); }
+@keyframes spin { to { transform: rotate(360deg); } }
+.vortex { position: absolute; left: 50%; bottom: 170px; width: 0; height: 0; }
 .vortex .c {
-  position: absolute; left: 50%; top: 50%; width: 76px; height: 114px; margin: -57px 0 0 -38px;
+  position: absolute; left: -32px; top: -48px; width: 64px; height: 96px;
   animation: orbit 2.6s cubic-bezier(.65, 0, .35, 1) both; animation-delay: var(--dl);
 }
-.vortex .c > * { width: 100%; height: 100%; display: block; filter: drop-shadow(0 0 10px rgba(246, 220, 149, .35)); }
+.vortex .c > * { width: 100%; height: 100%; display: block; border-radius: 5px; filter: drop-shadow(0 4px 10px rgba(40, 30, 110, .35)); }
 @keyframes orbit {
   0% { transform: rotate(0) translateY(0) scale(.9); }
-  30% { transform: rotate(var(--a)) translateY(-130px) scale(1); }
-  72% { transform: rotate(calc(var(--a) + 300deg)) translateY(-130px) scale(1); }
-  100% { transform: rotate(calc(var(--a) + 360deg)) translateY(0) scale(.9); }
+  30% { transform: rotate(var(--a)) translateY(-110px) scale(1); }
+  72% { transform: rotate(calc(var(--a) + 300deg)) translateY(-110px) scale(1); }
+  100% { transform: rotate(calc(var(--a) + 360deg)) translateY(0) scale(.9); opacity: 0; }
 }
-.center-note { text-align: center; color: var(--gold2); font-family: var(--serif); letter-spacing: .4em; animation: pulse 1.6s ease-in-out infinite; }
-@keyframes pulse { 50% { opacity: .45; } }
-
-/* ---------- 抽牌 ---------- */
-.pick-head { text-align: center; margin-bottom: 6px; }
-.pick-head h2 { font-size: 24px; margin-bottom: 4px; }
-.pick-head p { margin: 0; color: var(--muted); font-size: 14px; letter-spacing: .08em; }
-.slots { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; margin: 14px 0 6px; }
-.slots span { font-size: 12px; padding: 2px 12px; border-radius: 999px; border: 1px solid var(--line); color: var(--muted); transition: all .3s; }
-.slots span.done { border-color: var(--gold); color: #1d1406; background: linear-gradient(180deg, #f7dc9a, #c4943f); }
-.slots span.next { border-color: var(--gold2); color: var(--gold2); box-shadow: 0 0 16px rgba(246, 220, 149, .35); animation: pulse 1.4s ease-in-out infinite; }
-.fan { position: relative; margin: 0 auto; }
+.fan { position: relative; margin: 0 auto; display: none; }
+.ritual.ready .fan { display: block; }
+.ritual.ready .vortex { display: none; }
 .fan button {
-  position: absolute; padding: 0; border: none; background: none; cursor: pointer; border-radius: 4px;
-  transform: rotate(var(--a)); transition: transform .25s cubic-bezier(.2, .8, .2, 1), opacity .35s, filter .25s;
-  animation: fanIn .9s cubic-bezier(.2, .8, .2, 1) backwards; animation-delay: var(--dl);
+  position: absolute; padding: 0; border: none; background: none; border-radius: 4px;
+  transform: rotate(var(--a)); transition: opacity .35s;
+  animation: fanIn .8s cubic-bezier(.2, .8, .2, 1) backwards; animation-delay: var(--dl);
 }
 @keyframes fanIn { from { transform: rotate(0) translateY(40px); opacity: 0; } }
 .fan button > * {
-  width: 100%; height: 100%; display: block; filter: drop-shadow(-3px 2px 4px rgba(0, 0, 0, .7));
-  transition: transform .25s cubic-bezier(.2, .8, .2, 1), filter .25s; pointer-events: none;
+  width: 100%; height: 100%; display: block; border-radius: 4px; pointer-events: none;
+  filter: drop-shadow(-2px 2px 4px rgba(30, 20, 80, .35)); transition: transform .25s cubic-bezier(.2, .8, .2, 1), filter .25s;
 }
-/* 只抬起图案，按钮本身不动，点击区域才不会在按下和松开之间挪走 */
-.fan button:focus-visible { outline: none; }
-.fan button:hover > *, .fan button:focus-visible > * {
-  transform: translateY(-22px); filter: drop-shadow(0 0 12px rgba(246, 220, 149, .8)) brightness(1.15);
-}
-.fan button.taken { transform: rotate(var(--a)) translateY(-120px) scale(.7); opacity: 0; pointer-events: none; }
-.pick-foot { display: flex; justify-content: center; gap: 10px; margin-top: 10px; }
+.fan button:hover > *, .fan button:focus-visible > * { transform: translateY(-18px); filter: drop-shadow(0 0 12px rgba(236, 210, 145, .95)) brightness(1.1); }
+.fan button.taken { opacity: 0; pointer-events: none; }
+.hint { text-align: center; color: #403a78; font: 500 14px/1.7 var(--serif); margin: 10px 0 4px; }
+.slots { display: flex; flex-wrap: wrap; justify-content: center; gap: 6px; margin: 8px 0 14px; }
+.slots span { font-size: 12px; padding: 1px 10px; border-radius: 999px; border: 1px solid rgba(195, 155, 82, .5); color: var(--ink-soft); background: rgba(255, 255, 255, .7); }
+.slots span.done { background: linear-gradient(180deg, var(--navy-2), var(--navy)); color: #fff4d8; border-color: var(--gold-hi); }
+.slots span.next { border-color: var(--violet); color: var(--ink); box-shadow: 0 0 10px rgba(138, 116, 214, .4); }
 
 /* ---------- 牌阵 ---------- */
-.reading-head { text-align: center; margin-bottom: 4px; }
-.reading-head .q { font-family: var(--serif); font-weight: 700; font-size: 22px; color: var(--ink); text-shadow: 0 0 20px rgba(180, 140, 255, .35); }
-.reading-head .s { color: var(--gold); font-size: 12px; letter-spacing: .3em; font-family: var(--latin); }
-.stage-wrap { padding: 34px 0 22px; }
+.stage-wrap { padding: 18px 0 8px; }
 .stage { position: relative; margin: 0 auto; }
 .slot {
   position: absolute; width: var(--cw); height: calc(var(--cw) * 1.5); pointer-events: none;
-  animation: deal .8s cubic-bezier(.2, .8, .2, 1) backwards;
+  animation: deal .7s cubic-bezier(.2, .8, .2, 1) backwards;
 }
-@keyframes deal { from { opacity: 0; transform: translateY(-160px) rotate(-14deg) scale(.7); } }
+@keyframes deal { from { opacity: 0; transform: translateY(-120px) rotate(-10deg) scale(.75); } }
 .slot.major::before {
-  content: ''; position: absolute; inset: -22%; border-radius: 30%; z-index: -1;
-  background: radial-gradient(closest-side, rgba(180, 140, 255, .55), rgba(246, 220, 149, .15) 60%, transparent);
-  filter: blur(8px); animation: aura 3.2s ease-in-out infinite;
+  content: ''; position: absolute; inset: -18%; border-radius: 30%; z-index: -1;
+  background: radial-gradient(closest-side, rgba(255, 255, 255, .95), rgba(170, 140, 255, .45) 55%, transparent);
+  filter: blur(6px); animation: aura 3.2s ease-in-out infinite;
 }
-@keyframes aura { 50% { opacity: .45; transform: scale(.94); } }
+@keyframes aura { 50% { opacity: .55; transform: scale(.95); } }
 .rot { position: absolute; inset: 0; perspective: 900px; cursor: pointer; pointer-events: auto; }
 .rot.cross { transform: rotate(90deg); }
-.tilt { position: absolute; inset: 0; transform-style: preserve-3d; transform: rotateX(var(--rx, 0deg)) rotateY(var(--ry, 0deg)); transition: transform .25s ease-out; }
-.inner { position: absolute; inset: 0; transition: transform 1s cubic-bezier(.3, .7, .2, 1.15); transform-style: preserve-3d; }
+.inner { position: absolute; inset: 0; transition: transform .9s cubic-bezier(.3, .7, .2, 1.15); transform-style: preserve-3d; }
 .flipped .inner { transform: rotateY(180deg); }
 .back, .face {
-  position: absolute; inset: 0; backface-visibility: hidden; -webkit-backface-visibility: hidden;
-  border-radius: calc(var(--cw) * .06); overflow: hidden; box-shadow: 0 12px 30px rgba(0, 0, 0, .65), 0 0 0 1px rgba(246, 220, 149, .15);
+  position: absolute; inset: 0; backface-visibility: hidden; -webkit-backface-visibility: hidden; overflow: hidden;
+  border-radius: calc(var(--cw) * .06); box-shadow: 0 8px 20px rgba(40, 30, 110, .3), 0 0 0 1px rgba(195, 155, 82, .5);
 }
-.back svg, .back img, .face svg, .face img { width: 100%; height: 100%; display: block; object-fit: cover; user-select: none; }
+.back > *, .face > * { width: 100%; height: 100%; display: block; object-fit: cover; user-select: none; }
 .face { transform: rotateY(180deg); }
 .face.rev > * { transform: rotate(180deg); }
-.face::after {
-  content: ''; position: absolute; inset: 0; pointer-events: none; mix-blend-mode: screen; opacity: 0; transition: opacity .3s;
-  background:
-    radial-gradient(circle at var(--mx, 50%) var(--my, 30%), rgba(255, 244, 207, .45), transparent 42%),
-    linear-gradient(125deg, transparent 25%, rgba(255, 110, 220, .16) 40%, rgba(110, 220, 255, .16) 50%, rgba(255, 230, 140, .2) 60%, transparent 75%);
-  background-size: 100% 100%, 260% 260%;
-  background-position: 0 0, var(--sx, 50%) var(--sy, 50%);
-}
-.rot.hover .face::after { opacity: 1; }
-.rot.shine .face::after { animation: shine 1.4s ease-out; }
-@keyframes shine { 0% { opacity: 1; background-position: 0 0, 0% 0%; } 100% { opacity: 0; background-position: 0 0, 100% 100%; } }
-.rot:not(.flipped):hover .back { box-shadow: 0 0 0 2px var(--gold2), 0 0 34px rgba(246, 220, 149, .55); }
 .rot:not(.flipped) .back { animation: beckon 2.4s ease-in-out infinite; }
-@keyframes beckon { 50% { box-shadow: 0 12px 30px rgba(0, 0, 0, .65), 0 0 18px rgba(246, 220, 149, .28); } }
-.rot.flash .face { box-shadow: 0 0 0 2px var(--gold2), 0 0 40px rgba(246, 220, 149, .7); }
+@keyframes beckon { 50% { box-shadow: 0 8px 20px rgba(40, 30, 110, .3), 0 0 18px rgba(236, 210, 145, .9); } }
 .badge {
-  position: absolute; top: -11px; left: -11px; z-index: 3; width: 24px; height: 24px; border-radius: 50%;
-  background: #0b0918; border: 1px solid var(--gold); color: var(--gold2); font: 700 12px/22px var(--latin); text-align: center;
-  box-shadow: 0 0 10px rgba(246, 220, 149, .3);
+  position: absolute; top: -10px; left: -10px; z-index: 3; width: 22px; height: 22px; border-radius: 50%;
+  background: var(--navy); border: 1px solid var(--gold-hi); color: #fff4d8; font: 700 11px/20px var(--latin); text-align: center;
 }
-.rot.cross .badge { top: auto; bottom: -11px; }
-
+.rot.cross .badge { top: auto; bottom: -10px; }
+.cap { position: absolute; left: -20%; right: -20%; top: calc(100% + 8px); text-align: center; line-height: 1.35; pointer-events: none; }
+.cap b { display: block; font: 900 14px/1.4 var(--serif); color: var(--ink); letter-spacing: .1em; }
+.cap small { display: block; color: var(--ink-soft); font-size: 12px; }
+.cap small.rev { color: var(--rev); }
 .burst { position: absolute; left: 50%; top: 50%; width: 0; height: 0; pointer-events: none; z-index: 6; }
-.burst::before, .burst::after {
+.burst::before {
   content: ''; position: absolute; left: calc(var(--cw) * -.6); top: calc(var(--cw) * -.6); width: calc(var(--cw) * 1.2); height: calc(var(--cw) * 1.2);
-  border-radius: 50%; border: 2px solid var(--gold3); box-shadow: 0 0 30px var(--gold2), inset 0 0 30px var(--gold2);
+  border-radius: 50%; border: 2px solid #fff; box-shadow: 0 0 24px var(--gold-hi), inset 0 0 24px var(--gold-hi);
   animation: ring .9s ease-out forwards;
 }
-.burst::after { animation-delay: .12s; border-width: 1px; opacity: 0; }
-@keyframes ring { 0% { transform: scale(.15); opacity: 1; } 100% { transform: scale(2.1); opacity: 0; } }
+@keyframes ring { 0% { transform: scale(.15); opacity: 1; } 100% { transform: scale(2); opacity: 0; } }
 .burst i {
-  position: absolute; width: 5px; height: 5px; margin: -2.5px; border-radius: 50%; background: var(--gold3);
-  box-shadow: 0 0 10px 3px var(--gold2); animation: spark 1s cubic-bezier(.1, .8, .3, 1) forwards;
+  position: absolute; width: 5px; height: 5px; margin: -2.5px; border-radius: 50%; background: #fff;
+  box-shadow: 0 0 10px 3px var(--gold-hi); animation: spark 1s cubic-bezier(.1, .8, .3, 1) forwards;
 }
+.burst.major::before { box-shadow: 0 0 34px var(--violet), inset 0 0 30px var(--violet); }
+.burst.major i { box-shadow: 0 0 12px 4px var(--violet); }
 @keyframes spark { from { transform: rotate(var(--a)) translateY(0); opacity: 1; } to { transform: rotate(var(--a)) translateY(calc(var(--d) * -1)); opacity: 0; } }
-.burst.major::before, .burst.major::after { border-color: #e6d6ff; box-shadow: 0 0 50px var(--violet), inset 0 0 40px var(--violet); }
-.burst.major i { background: #f3ebff; box-shadow: 0 0 12px 4px var(--violet); }
-.arcana-call {
-  position: absolute; left: 50%; bottom: calc(100% + 18px); transform: translateX(-50%); white-space: nowrap; z-index: 7; pointer-events: none;
-  font: 700 11px/1 var(--latin); letter-spacing: .4em; color: #efe4ff; text-shadow: 0 0 12px var(--violet), 0 0 2px #fff;
-  animation: call 2.2s ease-out forwards;
-}
-@keyframes call { 0% { opacity: 0; transform: translate(-50%, 10px); } 20%, 70% { opacity: 1; transform: translate(-50%, 0); } 100% { opacity: 0; transform: translate(-50%, -6px); } }
 
-.stage-actions { display: flex; justify-content: center; gap: 10px; flex-wrap: wrap; margin-bottom: 26px; }
+/* ---------- 牌义解析 ---------- */
+.detail-top { display: grid; grid-template-columns: 48% 1fr; gap: 16px; align-items: start; }
+.bigcard { position: relative; border-radius: 10px; padding: 6px; background: linear-gradient(160deg, #fffdf6, var(--cream)); border: 1px solid var(--gold); box-shadow: 0 10px 26px rgba(70, 50, 150, .2); }
+.bigcard .card { aspect-ratio: 2 / 3; max-width: 100%; border-radius: 7px; overflow: hidden; }
+.bigcard .card > * { width: 100%; height: 100%; display: block; object-fit: cover; }
+.bigcard .card.rev > * { transform: rotate(180deg); }
+.info { min-width: 0; }
+.info .where { font-size: 12px; color: var(--ink-soft); letter-spacing: .12em; }
+.info h3 { margin: 2px 0 0; font: 900 28px/1.25 var(--serif); letter-spacing: .1em; color: var(--ink); }
+.info .en { font: 500 13px/1.4 var(--latin); color: var(--ink-soft); letter-spacing: .12em; }
+.tags { display: flex; flex-wrap: wrap; gap: 6px; margin: 10px 0; }
+.tag { font-size: 12px; padding: 1px 10px; border-radius: 999px; border: 1px solid var(--gold); background: var(--cream); color: #7a5a1e; }
+.tag.rev { border-color: var(--rev); color: var(--rev); background: #fff3f5; }
+.tag.maj { border-color: var(--violet); color: #5b45b0; background: #f3effe; }
+.kwline { font: 500 13px/1.7 var(--serif); color: #403a78; }
+.sec { margin-top: 14px; }
+.sec + .sec { border-top: 1px dashed rgba(195, 155, 82, .5); padding-top: 14px; }
+.pager { display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: 10px; margin-top: 18px; }
+.pager .btn { width: 100%; font-size: 14px; letter-spacing: .1em; text-indent: .1em; padding: 10px 8px; }
+.pager output { font: 700 15px var(--latin); color: var(--ink); }
 
-/* ---------- 解读 ---------- */
-.entries { display: grid; gap: 14px; }
-.entry { display: grid; grid-template-columns: 100px 1fr; gap: 18px; align-items: start; transition: box-shadow .4s, border-color .4s, opacity .4s; }
-.entry.flash { box-shadow: 0 0 0 1px var(--gold2), 0 0 34px rgba(246, 220, 149, .3); }
-.entry.major { border-color: rgba(180, 140, 255, .55); background: linear-gradient(160deg, rgba(70, 40, 130, .5), rgba(12, 9, 28, .8)); }
-.entry.reveal { animation: rise .7s cubic-bezier(.2, .8, .2, 1); }
-.entry .thumb { width: 100px; height: 150px; border-radius: 6px; overflow: hidden; box-shadow: 0 8px 20px rgba(0, 0, 0, .6), 0 0 0 1px rgba(246, 220, 149, .2); }
-.entry .thumb > * { width: 100%; height: 100%; display: block; object-fit: cover; }
-.entry .thumb.rev > * { transform: rotate(180deg); }
-.entry.pending { opacity: .5; }
-.entry h3 { margin: 0; font-family: var(--serif); font-weight: 900; font-size: 20px; color: var(--gold2); letter-spacing: .04em; }
-.entry h3 .pos { display: block; color: var(--gold); font: 500 12px/1.6 var(--latin); letter-spacing: .2em; margin-bottom: 2px; }
-.entry h3 .pos b { font-family: var(--serif); font-weight: 500; letter-spacing: .1em; }
-.tag { display: inline-block; font: 600 11px/1.7 system-ui, sans-serif; padding: 0 9px; border-radius: 999px; margin-left: 8px; vertical-align: 3px; border: 1px solid var(--gold); color: var(--gold2); letter-spacing: .1em; }
-.tag.rev { border-color: var(--rev); color: var(--rev); }
-.tag.maj { border-color: var(--violet); color: #dccbff; }
-.entry .pd { color: var(--muted); font-size: 13px; margin: 4px 0 8px; }
-.kws { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 8px; }
-.kws span { font-size: 12px; background: rgba(217, 180, 106, .12); border: 1px solid rgba(217, 180, 106, .25); color: var(--gold2); border-radius: 6px; padding: 0 8px; }
-.entry p { margin: 0; }
-.entry .extra { color: var(--muted); font-size: 12px; margin-top: 6px; letter-spacing: .05em; }
+/* ---------- 整体解读 ---------- */
+.thumbs { display: grid; grid-template-columns: repeat(auto-fit, minmax(64px, 1fr)); gap: 10px; justify-items: center; margin-bottom: 16px; }
+.thumbs.many { grid-template-columns: repeat(5, 1fr); }
+.thumb { display: grid; justify-items: center; gap: 4px; background: none; border: none; padding: 0; width: 100%; max-width: 92px; }
+.thumb .card { width: 100%; aspect-ratio: 2 / 3; border-radius: 5px; overflow: hidden; box-shadow: 0 4px 10px rgba(40, 30, 110, .25); }
+.thumb .card > * { width: 100%; height: 100%; display: block; object-fit: cover; }
+.thumb .card.rev > * { transform: rotate(180deg); }
+.thumb b { font: 900 13px/1.3 var(--serif); color: var(--ink); }
+.thumb small { font-size: 11px; color: var(--ink-soft); line-height: 1.2; }
+.thumb small.rev { color: var(--rev); }
+.advice { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
+.advice li { position: relative; padding-left: 20px; color: #403a78; }
+.advice li::before { content: '◆'; position: absolute; left: 0; top: 0; color: var(--gold); font-size: 11px; line-height: 2.3; }
 
-.summary { margin-top: 18px; display: none; }
-.summary.on { display: block; animation: rise .8s cubic-bezier(.2, .8, .2, 1); }
-.summary h2 { text-align: center; font-size: 22px; letter-spacing: .4em; padding-left: .4em; }
-.energy { display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; margin: 6px 0 18px; }
-.energy div { text-align: center; }
-.energy .lab { font-size: 12px; color: var(--muted); letter-spacing: .1em; }
-.energy .num { font: 700 24px/1.2 var(--latin); }
-.energy .bar { height: 4px; border-radius: 2px; background: rgba(255, 255, 255, .08); overflow: hidden; margin-top: 4px; }
-.energy .bar i { display: block; height: 100%; border-radius: 2px; box-shadow: 0 0 10px currentColor; transform-origin: left; animation: grow 1.2s cubic-bezier(.2, .8, .2, 1) backwards .3s; }
-@keyframes grow { from { transform: scaleX(0); } }
-.summary ul { margin: 0; padding: 0; list-style: none; display: grid; gap: 8px; }
-.summary li { position: relative; padding-left: 22px; }
-.summary li::before { content: '✦'; position: absolute; left: 0; color: var(--gold); }
-.note { color: var(--muted); font-size: 12px; text-align: center; margin-top: 32px; opacity: .8; }
+/* ---------- 图鉴、记录、设置 ---------- */
+.gal { display: grid; gap: 12px; }
+.gal .panel { display: grid; grid-template-columns: 64px 1fr; gap: 14px; align-items: start; }
+.gal svg { width: 64px; height: 64px; }
+.gal ol { margin: 6px 0 10px; padding-left: 1.3em; font-size: 13px; color: #403a78; }
+.gal .use { padding: 5px 14px; border-radius: 999px; border: 1px solid var(--gold); background: #fff; color: var(--navy); font-size: 13px; }
+.recs { display: grid; gap: 10px; }
+.rec { text-align: left; width: 100%; padding: 12px 14px; border-radius: 14px; border: 1px solid rgba(195, 155, 82, .6); background: rgba(252, 250, 255, .92); }
+.rec .q { font: 700 15px/1.5 var(--serif); color: var(--ink); }
+.rec .meta { font-size: 12px; color: var(--ink-soft); }
+.empty { text-align: center; color: var(--ink-soft); padding: 24px 8px; }
+.set { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 12px 0; }
+.set + .set { border-top: 1px dashed rgba(195, 155, 82, .5); }
+.set b { display: block; font: 700 15px var(--serif); }
+.set small { color: var(--ink-soft); font-size: 12px; }
+.switch { position: relative; flex: none; width: 50px; height: 28px; border-radius: 999px; border: 1px solid var(--gold); background: #e6def8; padding: 0; transition: background .2s; }
+.switch::after { content: ''; position: absolute; top: 2px; left: 2px; width: 22px; height: 22px; border-radius: 50%; background: #fff; box-shadow: 0 1px 4px rgba(0, 0, 0, .2); transition: transform .2s; }
+.switch[aria-checked=true] { background: linear-gradient(180deg, var(--navy-2), var(--navy)); }
+.switch[aria-checked=true]::after { transform: translateX(22px); }
+.danger { padding: 6px 14px; border-radius: 999px; border: 1px solid var(--rev); background: #fff; color: var(--rev); font-size: 13px; }
+.note { text-align: center; color: var(--ink-soft); font-size: 11px; margin-top: 18px; }
 
-@media (max-width: 560px) {
-  header { padding-top: 44px; }
-  header h1 { font-size: 36px; }
-  .zodiac { width: 300px; height: 300px; margin: -150px 0 0 -150px; }
-  .panel { padding: 18px 16px; }
-  .entry { grid-template-columns: 68px 1fr; gap: 12px; }
-  .entry .thumb { width: 68px; height: 102px; }
-  .entry h3 { font-size: 18px; }
-  .choice-names.on { grid-template-columns: 1fr; }
-  .vortex { height: 360px; }
-  .vortex .circle { width: 300px; height: 300px; margin: -150px 0 0 -150px; }
-  .energy { gap: 6px; }
-  .energy .num { font-size: 20px; }
+@media (max-width: 380px) {
+  .hero h1 { font-size: 40px; }
+  .detail-top { grid-template-columns: 1fr; }
+  .bigcard { width: 68%; margin: 0 auto; }
 }
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; }
@@ -344,74 +380,116 @@ details.history summary { cursor: pointer; color: var(--muted); font-size: 14px;
     <radialGradient id="g-pentacles"><stop offset="0" stop-color="#7be0a0" stop-opacity=".45"/><stop offset="1" stop-color="#7be0a0" stop-opacity="0"/></radialGradient>
   </defs>
 </svg>
-<header>
-  <svg class="zodiac" id="zodiac" viewBox="-100 -100 200 200" aria-hidden="true"></svg>
-  <h1>星夜塔罗</h1>
-  <div class="en">STARRY · NIGHT · TAROT</div>
-  <div class="divider">✦</div>
-  <p>七十八张牌 · 静心提问 · 凭直觉抽取</p>
-</header>
-<main>
-  <section class="view on" id="v-intro">
-    <div class="panel ornate">
-      <label class="field">
-        <span>心里默念你的问题（可以不写，但问得越具体，牌越好读）</span>
-        <textarea id="question" rows="2" maxlength="200" placeholder="例如：接下来三个月，我该如何推进手上的项目？"></textarea>
-      </label>
-      <h2>选择牌阵</h2>
-      <div class="spreads" id="spreads"></div>
-      <div class="choice-names" id="choice-names">
-        <label><span>选项 A 是什么？</span><input type="text" id="opt-a" maxlength="20" placeholder="比如：留在现在的公司"></label>
-        <label><span>选项 B 是什么？</span><input type="text" id="opt-b" maxlength="20" placeholder="比如：接下新的 offer"></label>
-      </div>
-      <div class="row">
-        <label class="toggle"><input type="checkbox" id="allow-rev" checked> 包含逆位牌</label>
-        <span class="spacer"></span>
-        <button class="btn" id="go">洗牌</button>
-      </div>
-      <details class="history" id="history" hidden>
-        <summary>最近的占卜</summary>
-        <ul class="hist-list" id="hist-list"></ul>
-        <button class="hist-clear" id="hist-clear">清空记录</button>
-      </details>
+<svg class="hall" id="hall" viewBox="0 0 460 600" preserveAspectRatio="xMidYMin slice" aria-hidden="true"></svg>
+<svg class="flowers" id="flowers" viewBox="0 0 460 120" preserveAspectRatio="xMidYMax slice" aria-hidden="true"></svg>
+
+<div class="app">
+  <div class="bar">
+    <button class="round" id="nav-back" aria-label="返回" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg></button>
+    <svg class="emblem" id="emblem" viewBox="-50 -50 100 100" aria-hidden="true"></svg>
+    <button class="round" id="nav-home" aria-label="回到首页" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><path d="M4 11l8-6 8 6v8H4z"/><path d="M10 19v-5h4v5"/></svg></button>
+  </div>
+
+  <section class="screen on" id="s-home">
+    <div class="hero">
+      <h1>推演之梦<br>龙娘</h1>
+      <div class="sub">星辰指引 · 命运回响</div>
+    </div>
+    <div class="mascot"><img src="art/dragon.webp" alt="银白长发、紫色龙角和龙翼的龙娘" width="655" height="899"></div>
+    <div class="bubble" id="home-line">哼，想知道命运的走向？本小姐就勉为其难，帮你推演一次吧。</div>
+    <button class="btn" id="start">开始占卜</button>
+    <div class="nav3">
+      <button data-go="gallery"><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="5" y="4" width="10" height="15" rx="1.5"/><path d="M9 7.5h10.5V20H11"/></svg></span>牌阵图鉴</button>
+      <button data-go="records"><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="5" y="3.5" width="14" height="17" rx="1.5"/><path d="M8.5 8h7M8.5 12h7M8.5 16h4"/></svg></span>我的记录</button>
+      <button data-go="settings"><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="12" cy="12" r="3.2"/><path d="M12 3v3M12 18v3M3 12h3M18 12h3M5.6 5.6l2.1 2.1M16.3 16.3l2.1 2.1M5.6 18.4l2.1-2.1M16.3 7.7l2.1-2.1"/></svg></span>设置</button>
     </div>
   </section>
 
-  <section class="view" id="v-shuffle">
-    <div class="vortex" id="vortex"></div>
-    <p class="center-note">命运之轮正在转动</p>
+  <section class="screen" id="s-spreads">
+    <div class="head"><h2>选择牌阵</h2><p>星辰会指引你，找到想要的答案</p></div>
+    <div class="opts" id="opts"></div>
+    <div class="foot"><button class="btn" id="to-question">下一步</button></div>
   </section>
 
-  <section class="view" id="v-pick">
-    <div class="pick-head">
-      <h2 id="pick-title"></h2>
-      <p>不必多想，哪张牌在召唤你，就点哪张。</p>
+  <section class="screen" id="s-question">
+    <div class="head"><h2>请输入你的问题</h2><p>在星光下，聆听内心的声音</p></div>
+    <div class="panel ask">
+      <textarea id="question" aria-label="你的问题" maxlength="200" placeholder="例如：&#10;我现在的职业选择是否正确？&#10;这段感情的未来会如何？&#10;接下来我需要注意什么？"></textarea>
+      <div class="ab" id="ab">
+        <label for="opt-a">选项 A<input type="text" id="opt-a" maxlength="16" placeholder="比如：留下"></label>
+        <label for="opt-b">选项 B<input type="text" id="opt-b" maxlength="16" placeholder="比如：跳槽"></label>
+      </div>
     </div>
+    <div class="mascot small"><img src="art/dragon.webp" alt="" width="655" height="899"></div>
+    <div class="toggles">
+      <button class="pill" id="anon" aria-pressed="false">保持匿名</button>
+      <button class="pill" id="autosave" aria-pressed="true">保存到记录</button>
+    </div>
+    <button class="btn" id="to-draw">开始洗牌</button>
+  </section>
+
+  <section class="screen" id="s-draw">
+    <div class="head"><h2 id="draw-title">星辰洗牌</h2><p id="draw-sub">请静下心来，集中你的意念</p></div>
     <div class="slots" id="slots"></div>
-    <div class="fan" id="fan"></div>
-    <div class="pick-foot">
-      <button class="btn ghost" id="pick-auto">替我随机抽</button>
-      <button class="btn ghost" id="pick-back">返回</button>
+    <div class="ritual" id="ritual">
+      <div class="glow"></div>
+      <svg class="circle" id="circle" viewBox="-100 -100 200 200" aria-hidden="true"></svg>
+      <div class="vortex" id="vortex"></div>
+      <div class="fan" id="fan"></div>
     </div>
+    <p class="hint" id="draw-hint">当你准备好时<br>点击卡牌，抽取属于你的命运之牌</p>
+    <button class="link" id="pick-auto">替我随机抽</button>
   </section>
 
-  <section class="view" id="v-reading">
-    <div class="reading-head">
-      <div class="q" id="r-question"></div>
-      <div class="s" id="r-spread"></div>
-    </div>
+  <section class="screen" id="s-reveal">
+    <div class="head"><h2 id="reveal-title">抽取你的牌</h2><p id="reveal-sub">凭直觉，一张一张翻开</p></div>
     <div class="stage-wrap"><div class="stage" id="stage"></div></div>
-    <div class="stage-actions">
-      <button class="btn" id="flip-all">全部翻开</button>
-      <button class="btn ghost" id="copy">复制结果</button>
-      <button class="btn ghost" id="again">再占一次</button>
+    <div class="foot">
+      <button class="btn light" id="flip-all">全部翻开</button>
+      <button class="btn" id="to-detail" hidden>继续解读</button>
     </div>
-    <div class="entries" id="entries"></div>
-    <div class="panel ornate summary" id="summary"></div>
   </section>
 
-  <p class="note">塔罗是一面帮助自我反思的镜子，不能代替医疗、法律、财务等专业意见。</p>
-</main>
+  <section class="screen" id="s-detail">
+    <div class="head"><h2>牌义解析</h2><p>深入理解每一张牌的启示</p></div>
+    <div class="panel" id="detail"></div>
+    <div class="pager">
+      <button class="btn light" id="prev">← 上一张</button>
+      <output id="page"></output>
+      <button class="btn light" id="next">下一张 →</button>
+    </div>
+  </section>
+
+  <section class="screen" id="s-overall">
+    <div class="head"><h2>整体解读</h2><p>星辰为你编织的完整指引</p></div>
+    <div class="panel" id="overall"></div>
+    <div class="foot btn-row">
+      <button class="btn light" id="save">保存记录</button>
+      <button class="btn" id="again">重新占卜</button>
+    </div>
+    <button class="link" id="copy">复制这次的解读</button>
+  </section>
+
+  <section class="screen" id="s-gallery">
+    <div class="head"><h2>牌阵图鉴</h2><p>每个位置都在回答一个问题</p></div>
+    <div class="gal" id="gal"></div>
+  </section>
+
+  <section class="screen" id="s-records">
+    <div class="head"><h2>我的记录</h2><p>星辰记得你问过的每一个问题</p></div>
+    <div class="recs" id="recs"></div>
+  </section>
+
+  <section class="screen" id="s-settings">
+    <div class="head"><h2>设置</h2><p>调成你喜欢的推演方式</p></div>
+    <div class="panel">
+      <div class="set"><div><b>包含逆位牌</b><small>洗牌时每张牌有一半机会倒过来</small></div><button class="switch" id="set-rev" role="switch" aria-checked="true" aria-label="包含逆位牌"></button></div>
+      <div class="set"><div><b>默认保存到记录</b><small>抽完牌自动存进「我的记录」</small></div><button class="switch" id="set-save" role="switch" aria-checked="true" aria-label="默认保存到记录"></button></div>
+      <div class="set"><div><b>清空记录</b><small id="rec-count">记录只存在这台设备的浏览器里</small></div><button class="danger" id="clear">清空</button></div>
+    </div>
+    <p class="note">塔罗是一面帮助自我反思的镜子，不能代替医疗、法律、财务等专业意见。</p>
+  </section>
+</div>
 
 <script src="art/manifest.js"></script>
 <script>
@@ -603,37 +681,57 @@ SUITS.forEach(suit => RANKS.forEach((rank, r) => {
 }));
 
 // ---------- 牌阵 ----------
-// x 以牌宽为单位，y 以牌高为单位
+// x 以牌宽为单位，y 以牌高为单位；caps 为真时牌下面写位置名（行距留出写字的地方）
+
+const ROW = 1.4;
 
 const SPREADS = {
   one: {
-    name: '单张指引', count: '1 张', desc: '一张牌，一个回答。适合每日指引或简单的问题。',
-    w: 1, h: 1, max: 240,
+    name: '单张神谕', brief: '当前的核心指引', desc: '简洁直接的答案',
+    w: 1, h: 1, max: 190, caps: true,
     pos: [{ n: '指引', d: '此刻你最需要知道的事。', x: 0, y: 0 }],
   },
   three: {
-    name: '时间之流', count: '3 张', desc: '过去、现在、未来，看清事情的来龙去脉。',
-    w: 3.4, h: 1, max: 180,
+    name: '三张牌阵', brief: '过去 · 现在 · 未来', desc: '看清事情的来龙去脉',
+    w: 3.4, h: 1, max: 118, caps: true,
     pos: [
       { n: '过去', d: '已经发生、仍在影响你的事。', x: 0, y: 0 },
       { n: '现在', d: '你此刻所处的状态与课题。', x: 1.2, y: 0 },
       { n: '未来', d: '照现在的方向走下去，最可能的走向。', x: 2.4, y: 0 },
     ],
   },
-  choice: {
-    name: '二选一', count: '5 张', desc: '在两条路之间犹豫时，看看各自通往哪里。',
-    w: 3.4, h: 2.1, max: 150,
+  love: {
+    name: '恋爱牌阵', brief: '关系 · 现状 · 建议', desc: '探索情感的可能性',
+    w: 3.4, h: 1, max: 118, caps: true,
     pos: [
-      { n: '现状', d: '你做这个选择时的处境与心态。', x: 1.2, y: 0.55 },
-      { n: '{A}·过程', d: '选了它之后，会经历些什么。', x: 0, y: 1.1 },
+      { n: '关系', d: '你们之间真正的连结是什么。', x: 0, y: 0 },
+      { n: '现状', d: '这段关系此刻的状态。', x: 1.2, y: 0 },
+      { n: '建议', d: '接下来你可以怎么做。', x: 2.4, y: 0 },
+    ],
+  },
+  career: {
+    name: '事业牌阵', brief: '现状 · 挑战 · 发展', desc: '洞察职业与机遇',
+    w: 3.4, h: 1, max: 118, caps: true,
+    pos: [
+      { n: '现状', d: '你在工作上的处境。', x: 0, y: 0 },
+      { n: '挑战', d: '眼前要跨过的难关。', x: 1.2, y: 0 },
+      { n: '发展', d: '照这样走下去的发展方向。', x: 2.4, y: 0 },
+    ],
+  },
+  choice: {
+    name: '二选一', brief: '现状 · 两条路的过程与结果', desc: '在两条路之间犹豫时',
+    w: 3.4, h: 1 + ROW, max: 100, caps: true,
+    pos: [
+      { n: '现状', d: '你做这个选择时的处境与心态。', x: 1.2, y: ROW / 2 },
+      { n: '{A}·过程', d: '选了它之后，会经历些什么。', x: 0, y: ROW },
       { n: '{A}·结果', d: '这条路最可能的结果。', x: 0, y: 0 },
-      { n: '{B}·过程', d: '选了它之后，会经历些什么。', x: 2.4, y: 1.1 },
+      { n: '{B}·过程', d: '选了它之后，会经历些什么。', x: 2.4, y: ROW },
       { n: '{B}·结果', d: '这条路最可能的结果。', x: 2.4, y: 0 },
     ],
   },
   celtic: {
-    name: '凯尔特十字', count: '10 张', desc: '最经典的十张牌阵，全面梳理一件复杂的事。',
-    w: 5.2, h: 4.3, max: 125,
+    name: '凯尔特十字', brief: '十张牌 · 全面梳理', desc: '复杂的事，一次看清',
+    w: 5.2, h: 4.3, max: 100,
     pos: [
       { n: '现状', d: '问题的核心，你此刻的处境。', x: 1.4, y: 1.65 },
       { n: '阻碍', d: '横在你面前的挑战（有时也是助力）。', x: 1.4, y: 1.65, cross: true },
@@ -647,7 +745,25 @@ const SPREADS = {
       { n: '结果', d: '综合以上，事情最可能的结局。', x: 4.2, y: 0 },
     ],
   },
+  custom: {
+    name: '自定义牌阵', brief: '自由选择牌位数量', desc: '一到七张，想抽几张抽几张',
+    caps: true, pos: [],
+  },
 };
+
+// 自定义牌阵按张数现排：四张以内一排，再多分两排
+function customSpread(n) {
+  const rows = n <= 4 ? 1 : 2, per = Math.ceil(n / rows);
+  const pos = Array.from({ length: n }, (_, i) => {
+    const row = Math.floor(i / per), inRow = Math.min(per, n - row * per), k = i - row * per;
+    return { n: `第 ${i + 1} 张`, d: '凭直觉解读这张牌给你的提示。', x: (per - inRow) * 0.6 + k * 1.2, y: row * ROW };
+  });
+  return { ...SPREADS.custom, w: per * 1.2 - 0.2, h: 1 + (rows - 1) * ROW, max: rows === 1 && n <= 2 ? 150 : 100, pos };
+}
+
+function spreadOf(key, n) {
+  return key === 'custom' ? customSpread(n) : SPREADS[key];
+}
 
 // ---------- 牌面绘制 ----------
 // 牌是 2:3 的竖版（viewBox 100×150），版式照着「星星」那张插画：星空底、金色细框、四角星芒圆章、
@@ -906,76 +1022,6 @@ function layoutIcon(sp) {
   }).join('')}</svg>`;
 }
 
-// ---------- 星空与黄道 ----------
-
-const STILL = matchMedia('(prefers-reduced-motion: reduce)').matches;
-
-(function sky() {
-  const cv = document.getElementById('sky'), ctx = cv.getContext('2d');
-  let W, H, stars = [], shoot = null;
-  function resize() {
-    const dpr = Math.min(2, devicePixelRatio || 1);
-    W = innerWidth; H = innerHeight;
-    cv.width = W * dpr; cv.height = H * dpr;
-    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-    stars = Array.from({ length: Math.round(W * H / 4200) }, () => ({
-      x: Math.random() * W, y: Math.random() * H, r: Math.random() * 1.25 + .2,
-      p: Math.random() * 6.28, s: .4 + Math.random() * 1.6, v: .02 + Math.random() * .07, gold: Math.random() < .14,
-    }));
-    if (STILL) draw(0);
-  }
-  function draw(t) {
-    ctx.clearRect(0, 0, W, H);
-    for (const s of stars) {
-      ctx.globalAlpha = .25 + .75 * (.5 + .5 * Math.sin(s.p + t * .001 * s.s));
-      ctx.fillStyle = s.gold ? '#f6dc95' : '#e2e8ff';
-      ctx.beginPath(); ctx.arc(s.x, s.y, s.r, 0, 6.283); ctx.fill();
-      if (s.r > 1.2) { ctx.globalAlpha *= .25; ctx.beginPath(); ctx.arc(s.x, s.y, s.r * 3, 0, 6.283); ctx.fill(); }
-      if (!STILL) { s.y -= s.v; if (s.y < -3) { s.y = H + 3; s.x = Math.random() * W; } }
-    }
-    ctx.globalAlpha = 1;
-    if (STILL) return;
-    if (!shoot && Math.random() < .004) {
-      shoot = { x: W * (.3 + Math.random() * .7), y: H * Math.random() * .4, vx: -(7 + Math.random() * 5), vy: 3 + Math.random() * 2.5, l: 1 };
-    }
-    if (shoot) {
-      const tx = shoot.x - shoot.vx * 14, ty = shoot.y - shoot.vy * 14;
-      const g = ctx.createLinearGradient(shoot.x, shoot.y, tx, ty);
-      g.addColorStop(0, `rgba(255,244,207,${shoot.l})`); g.addColorStop(1, 'rgba(255,244,207,0)');
-      ctx.strokeStyle = g; ctx.lineWidth = 1.6;
-      ctx.beginPath(); ctx.moveTo(shoot.x, shoot.y); ctx.lineTo(tx, ty); ctx.stroke();
-      shoot.x += shoot.vx; shoot.y += shoot.vy; shoot.l -= .014;
-      if (shoot.l <= 0 || shoot.x < -100 || shoot.y > H + 100) shoot = null;
-    }
-  }
-  function loop(t) { if (!document.hidden) draw(t); requestAnimationFrame(loop); }
-  addEventListener('resize', resize);
-  resize();
-  if (!STILL) requestAnimationFrame(loop);
-})();
-
-function magicCircle(signs) {
-  const glyphs = ['♈', '♉', '♊', '♋', '♌', '♍', '♎', '♏', '♐', '♑', '♒', '♓'];
-  let g = '';
-  if (signs) {
-    glyphs.forEach((z, k) => {
-      const [x, y] = polar(0, 0, 80, -Math.PI / 2 + k * Math.PI / 6);
-      g += `<text x="${f1(x)}" y="${f1(y)}" text-anchor="middle" dominant-baseline="central" font-size="11" fill="#f6dc95"
-        font-family="'Segoe UI Symbol','Noto Sans Symbols','DejaVu Sans',serif">${z}︎</text>`;
-    });
-  }
-  return `<circle r="96" fill="none" stroke="#d9b46a" stroke-width=".8"/>
-    <circle r="91" fill="none" stroke="#d9b46a" stroke-width=".3" stroke-dasharray="2 3"/>
-    ${rays(0, 0, 72, 86, 91, 88.5, 'stroke="#d9b46a" stroke-width=".5"')}
-    <circle r="70" fill="none" stroke="#d9b46a" stroke-width=".6"/>
-    <polygon points="${polygon(0, 0, 70, 6, -Math.PI / 2)}" fill="none" stroke="#d9b46a" stroke-width=".5"/>
-    <polygon points="${polygon(0, 0, 70, 3, -Math.PI / 2)}" fill="none" stroke="#b48cff" stroke-width=".5"/>
-    <polygon points="${polygon(0, 0, 70, 3, Math.PI / 2)}" fill="none" stroke="#b48cff" stroke-width=".5"/>
-    <circle r="35" fill="none" stroke="#d9b46a" stroke-width=".5"/>
-    ${g}`;
-}
-document.getElementById('zodiac').innerHTML = magicCircle(true);
-
 // ---------- 解读 ----------
 
 function joinCn(list) {
@@ -1056,9 +1102,129 @@ function energyHTML(reading) {
       <div class="bar"><i style="width:${(x.c / n) * 100}%;background:${x.color};color:${x.color}"></i></div></div>`).join('')}</div>`;
 }
 
+// ---------- 背景：星屑与花瓣、哥特大厅、花丛、徽记、魔法阵 ----------
+
+const STILL = matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+(function sky() {
+  const cv = document.getElementById('sky'), ctx = cv.getContext('2d');
+  let W, H, motes = [];
+  function resize() {
+    const dpr = Math.min(2, devicePixelRatio || 1);
+    W = innerWidth; H = innerHeight;
+    cv.width = W * dpr; cv.height = H * dpr;
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    motes = Array.from({ length: Math.round(W * H / 9000) }, () => ({
+      x: Math.random() * W, y: Math.random() * H, r: .6 + Math.random() * 1.6, p: Math.random() * 6.28,
+      s: .5 + Math.random() * 1.5, v: .08 + Math.random() * .25, petal: Math.random() < .22, rot: Math.random() * 6.28,
+      c: Math.random() < .5 ? '#d9b46a' : Math.random() < .5 ? '#a48ae6' : '#ffffff',
+    }));
+    if (STILL) draw(0);
+  }
+  function sparkle(x, y, r) {
+    ctx.beginPath();
+    ctx.moveTo(x, y - r * 2.2); ctx.lineTo(x + r * .45, y - r * .45); ctx.lineTo(x + r * 2.2, y); ctx.lineTo(x + r * .45, y + r * .45);
+    ctx.lineTo(x, y + r * 2.2); ctx.lineTo(x - r * .45, y + r * .45); ctx.lineTo(x - r * 2.2, y); ctx.lineTo(x - r * .45, y - r * .45);
+    ctx.closePath(); ctx.fill();
+  }
+  function draw(t) {
+    ctx.clearRect(0, 0, W, H);
+    for (const m of motes) {
+      ctx.globalAlpha = .25 + .6 * (.5 + .5 * Math.sin(m.p + t * .0012 * m.s));
+      ctx.fillStyle = m.petal ? '#c9b6f2' : m.c;
+      if (m.petal) {
+        ctx.save(); ctx.translate(m.x, m.y); ctx.rotate(m.rot + t * .0004);
+        ctx.beginPath(); ctx.ellipse(0, 0, m.r * 2.6, m.r * 1.3, 0, 0, 6.283); ctx.fill(); ctx.restore();
+        if (!STILL) { m.y += m.v; m.x += Math.sin(t * .001 + m.p) * .3; if (m.y > H + 6) { m.y = -6; m.x = Math.random() * W; } }
+      } else {
+        sparkle(m.x, m.y, m.r);
+        if (!STILL) { m.y -= m.v * .4; if (m.y < -6) { m.y = H + 6; m.x = Math.random() * W; } }
+      }
+    }
+    ctx.globalAlpha = 1;
+  }
+  function loop(t) { if (!document.hidden) draw(t); requestAnimationFrame(loop); }
+  addEventListener('resize', resize);
+  resize();
+  if (!STILL) requestAnimationFrame(loop);
+})();
+
+// 背后的哥特大厅：一排尖拱窗和柱子，用很淡的紫线画
+document.getElementById('hall').innerHTML = (() => {
+  let g = '';
+  [[-10, 92], [100, 80], [196, 68], [282, 80], [378, 92]].forEach(([x, w], k) => {
+    const top = k === 2 ? 40 : 90, mid = x + w / 2, spring = top + w * .9;
+    g += `<path d="M${x},560V${spring}Q${x},${top + 10} ${mid},${top}Q${x + w},${top + 10} ${x + w},${spring}V560" fill="rgba(255,255,255,.35)" stroke="#b9a6ea" stroke-width="1.2"/>
+      <path d="M${mid},${top + 14}V560M${x + 8},${spring + 30}H${x + w - 8}" stroke="#cdbff1" stroke-width=".8"/>
+      <circle cx="${mid}" cy="${top + w * .55}" r="${w * .2}" fill="none" stroke="#cdbff1" stroke-width=".8"/>`;
+  });
+  [44, 140, 320, 416].forEach(x => {
+    g += `<rect x="${x - 5}" y="120" width="10" height="460" fill="rgba(214,201,243,.55)"/><rect x="${x - 9}" y="112" width="18" height="10" rx="2" fill="#d6c9f3"/>`;
+  });
+  return `<defs><linearGradient id="hall-fade" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff" stop-opacity="1"/><stop offset="1" stop-color="#fff" stop-opacity="0"/></linearGradient>
+    <mask id="hall-mask"><rect width="460" height="600" fill="url(#hall-fade)"/></mask></defs><g mask="url(#hall-mask)">${g}</g>`;
+})();
+
+// 底部花丛：五瓣小花，白和淡紫
+document.getElementById('flowers').innerHTML = (() => {
+  let s = 7, g = '';
+  const rnd = () => (s = (s * 9301 + 49297) % 233280) / 233280;
+  for (let k = 0; k < 70; k++) {
+    const x = rnd() * 460, edge = Math.min(x, 460 - x) / 230, y = 120 - rnd() * (30 + (1 - edge) * 80) - 6;
+    const r = 3 + rnd() * 5, c = rnd() < .5 ? '#ffffff' : rnd() < .6 ? '#c9b6f2' : '#a48ae6';
+    let petals = '';
+    for (let p = 0; p < 5; p++) petals += `<ellipse cx="0" cy="${-r * .55}" rx="${r * .42}" ry="${r * .6}" transform="rotate(${p * 72})"/>`;
+    g += `<path d="M${x.toFixed(1)},120Q${(x + (rnd() - .5) * 10).toFixed(1)},${((y + 120) / 2).toFixed(1)} ${x.toFixed(1)},${y.toFixed(1)}" stroke="#9fb59a" stroke-width="1" fill="none" opacity=".6"/>
+      <g transform="translate(${x.toFixed(1)} ${y.toFixed(1)}) rotate(${(rnd() * 72).toFixed(0)})" fill="${c}" stroke="#b39ce6" stroke-width=".4">${petals}<circle r="${(r * .22).toFixed(1)}" fill="#ecd291" stroke="none"/></g>`;
+  }
+  return g;
+})();
+
+document.getElementById('emblem').innerHTML = `
+  <circle r="30" fill="rgba(255,255,255,.8)" stroke="#c39b52" stroke-width="1.4"/>
+  <circle r="26" fill="none" stroke="#c39b52" stroke-width=".5" stroke-dasharray="1.5 2"/>
+  ${rays(0, 0, 32, 31, 46, 38, 'stroke="#c39b52" stroke-width=".8" opacity=".75"')}
+  <path d="${starPath(0, 0, 22, 4, 4)}" fill="url(#g-gold-i)" transform="scale(1)"/>
+  <path d="${starPath(0, 0, 12, 3, 4)}" fill="#fff6dc" transform="rotate(45)"/>
+  <circle r="3" fill="#fff"/>`;
+
+function magicCircle() {
+  const glyphs = ['♈', '♉', '♊', '♋', '♌', '♍', '♎', '♏', '♐', '♑', '♒', '♓'];
+  const signs = glyphs.map((z, k) => {
+    const [x, y] = polar(0, 0, 80, -Math.PI / 2 + k * Math.PI / 6);
+    return `<text x="${f1(x)}" y="${f1(y)}" text-anchor="middle" dominant-baseline="central" font-size="11" fill="#8a74d6"
+      font-family="'Segoe UI Symbol','Noto Sans Symbols','DejaVu Sans',serif">${z}︎</text>`;
+  }).join('');
+  return `<circle r="96" fill="rgba(255,255,255,.25)" stroke="#c39b52" stroke-width="1"/>
+    <circle r="91" fill="none" stroke="#c39b52" stroke-width=".4" stroke-dasharray="2 3"/>
+    ${rays(0, 0, 72, 86, 91, 88.5, 'stroke="#c39b52" stroke-width=".6"')}
+    <circle r="70" fill="none" stroke="#a48ae6" stroke-width=".8"/>
+    <polygon points="${polygon(0, 0, 70, 6, -Math.PI / 2)}" fill="none" stroke="#c39b52" stroke-width=".6"/>
+    <polygon points="${polygon(0, 0, 70, 3, -Math.PI / 2)}" fill="none" stroke="#a48ae6" stroke-width=".6"/>
+    <polygon points="${polygon(0, 0, 70, 3, Math.PI / 2)}" fill="none" stroke="#a48ae6" stroke-width=".6"/>
+    <circle r="35" fill="none" stroke="#c39b52" stroke-width=".6"/>
+    <path d="${starPath(0, 0, 30, 5, 8)}" fill="rgba(255,246,220,.7)" stroke="#c39b52" stroke-width=".4"/>
+    ${signs}`;
+}
+document.getElementById('circle').innerHTML = magicCircle();
+
 // ---------- 状态 ----------
 
-const state = { question: '', spread: 'three', labels: { A: '选择 A', B: '选择 B' }, allowRev: true, deck: [], picks: [], reading: [], flipped: new Set() };
+const $ = s => document.querySelector(s);
+const $$ = s => [...document.querySelectorAll(s)];
+const esc = s => String(s).replace(/[&<>"']/g, ch => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[ch]));
+
+const SKEY = 'dream-tarot-settings', HKEY = 'dream-tarot-history';
+const settings = Object.assign({ rev: true, save: true }, (() => { try { return JSON.parse(localStorage.getItem(SKEY)) || {}; } catch { return {}; } })());
+function saveSettings() { try { localStorage.setItem(SKEY, JSON.stringify(settings)); } catch { /* 无痕模式等情况下不保存 */ } }
+
+const state = {
+  spread: 'three', custom: 4, question: '', labels: { A: '选择 A', B: '选择 B' }, anon: false, autosave: settings.save,
+  deck: [], picks: [], reading: [], flipped: new Set(), page: 0, saved: false, fromRecords: false,
+};
+
+const curSpread = () => spreadOf(state.spread, state.spread === 'custom' ? state.custom : 0);
+const posName = p => p.n.replace('{A}', state.labels.A).replace('{B}', state.labels.B);
 
 function rand() {
   const a = new Uint32Array(1);
@@ -1067,7 +1233,7 @@ function rand() {
 }
 
 function shuffled() {
-  const d = DECK.map(card => ({ card, rev: state.allowRev && rand() < 0.5 }));
+  const d = DECK.map(card => ({ card, rev: settings.rev && rand() < 0.5 }));
   for (let i = d.length - 1; i > 0; i--) {
     const j = Math.floor(rand() * (i + 1));
     [d[i], d[j]] = [d[j], d[i]];
@@ -1075,109 +1241,166 @@ function shuffled() {
   return d;
 }
 
-const posName = p => p.n.replace('{A}', state.labels.A).replace('{B}', state.labels.B);
-const esc = s => String(s).replace(/[&<>"']/g, ch => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[ch]));
-const $ = s => document.querySelector(s);
+// ---------- 页面切换 ----------
 
-function show(id) {
-  document.querySelectorAll('.view').forEach(v => v.classList.toggle('on', v.id === id));
-  window.scrollTo({ top: 0, behavior: STILL ? 'auto' : 'smooth' });
+let current = 'home';
+const BACK_TO = { spreads: 'home', question: 'spreads', draw: 'question', detail: 'reveal', overall: 'detail', gallery: 'home', records: 'home', settings: 'home' };
+const ENTER = {};
+
+function go(id) {
+  current = id;
+  $$('.screen').forEach(s => s.classList.toggle('on', s.id === 's-' + id));
+  $('#nav-back').hidden = $('#nav-home').hidden = id === 'home';
+  window.scrollTo({ top: 0, behavior: 'auto' });
+  if (ENTER[id]) ENTER[id]();
 }
+
+$('#nav-back').addEventListener('click', () => {
+  if (current === 'reveal') go(state.fromRecords ? 'records' : 'question');
+  else go(BACK_TO[current] || 'home');
+});
+$('#nav-home').addEventListener('click', () => go('home'));
+$$('[data-go]').forEach(b => b.addEventListener('click', () => go(b.dataset.go)));
 
 // ---------- 首页 ----------
 
-function renderSpreads() {
-  $('#spreads').innerHTML = Object.entries(SPREADS).map(([k, s]) =>
-    `<button class="spread" data-k="${k}" aria-pressed="${k === state.spread}">${layoutIcon(s)}<span><em>${s.count}</em><b>${s.name}</b><small>${s.desc}</small></span></button>`).join('');
-  $('#choice-names').classList.toggle('on', state.spread === 'choice');
+const LINES = [
+  '哼，想知道命运的走向？本小姐就勉为其难，帮你推演一次吧。',
+  '星辰已经排好了，你还在犹豫什么？',
+  '本小姐的推演，可是从来没有失手过的……大概。',
+  '问吧问吧，难得本小姐今天心情不错。',
+];
+ENTER.home = () => { $('#home-line').textContent = LINES[Math.floor(rand() * LINES.length)]; };
+$('#start').addEventListener('click', () => go('spreads'));
+
+// ---------- 选择牌阵 ----------
+
+const MINI = {
+  one: [[0, 0]], three: [[-20, -6], [0, 0], [20, 6]], love: [[-14, -8], [0, 0], [14, 8]], career: [[-20, 0], [0, 0], [20, 0]],
+  choice: [[-22, -10], [-11, -5], [0, 0], [11, 5], [22, 10]], celtic: [[-16, 0], [0, 0], [0, 90], [16, 0]], custom: [[-12, -8], [12, 8]],
+};
+function minis(key) {
+  return `<span class="minis" aria-hidden="true">${MINI[key].map(([dx, r]) => `<i style="--dx:${dx}px;--r:${r}deg"></i>`).join('')}</span>`;
 }
 
-$('#spreads').addEventListener('click', e => {
-  const b = e.target.closest('.spread');
+function renderOpts() {
+  $('#opts').innerHTML = Object.entries(SPREADS).map(([k, s]) => `
+    <button class="opt" data-k="${k}" aria-pressed="${k === state.spread}">
+      ${minis(k)}
+      <span><b>${s.name}</b><span class="pos">${s.brief}</span><small>${s.desc}</small>
+      ${k === 'custom' ? `<span class="stepper"><span role="button" tabindex="0" data-step="-1" aria-label="少一张">−</span><output id="custom-n">${state.custom}</output><span role="button" tabindex="0" data-step="1" aria-label="多一张">+</span><small>张</small></span>` : ''}
+      </span>
+    </button>`).join('');
+}
+ENTER.spreads = renderOpts;
+
+$('#opts').addEventListener('click', e => {
+  const step = e.target.closest('[data-step]');
+  if (step) {
+    state.custom = Math.max(1, Math.min(7, state.custom + +step.dataset.step));
+    $('#custom-n').textContent = state.custom;
+    return;
+  }
+  const b = e.target.closest('.opt');
   if (!b) return;
   state.spread = b.dataset.k;
-  renderSpreads();
+  $$('.opt').forEach(o => o.setAttribute('aria-pressed', o === b));
 });
+$('#opts').addEventListener('keydown', e => {
+  const step = e.target.closest('[data-step]');
+  if (step && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); e.stopPropagation(); step.click(); }
+});
+$('#to-question').addEventListener('click', () => go('question'));
 
-$('#go').addEventListener('click', () => {
+// ---------- 输入问题 ----------
+
+ENTER.question = () => {
+  $('#ab').classList.toggle('on', state.spread === 'choice');
+  $('#autosave').setAttribute('aria-pressed', state.autosave);
+  $('#anon').setAttribute('aria-pressed', state.anon);
+};
+$('#anon').addEventListener('click', () => { state.anon = !state.anon; ENTER.question(); });
+$('#autosave').addEventListener('click', () => { state.autosave = !state.autosave; ENTER.question(); });
+$('#to-draw').addEventListener('click', () => {
   state.question = $('#question').value.trim();
-  state.allowRev = $('#allow-rev').checked;
-  state.labels = {
-    A: $('#opt-a').value.trim() || '选择 A',
-    B: $('#opt-b').value.trim() || '选择 B',
-  };
+  state.labels = { A: $('#opt-a').value.trim() || '选择 A', B: $('#opt-b').value.trim() || '选择 B' };
   state.deck = shuffled();
   state.picks = [];
-  runShuffle();
+  state.fromRecords = false;
+  go('draw');
 });
 
-function runShuffle() {
+// ---------- 星辰洗牌与抽牌 ----------
+
+let drawTimer;
+ENTER.draw = () => {
   const n = 12;
-  $('#vortex').innerHTML = `<svg class="circle" viewBox="-100 -100 200 200" aria-hidden="true">${magicCircle(true)}</svg>` +
-    Array.from({ length: n }, (_, i) =>
-      `<div class="c" style="--a:${i * 360 / n}deg;--dl:${i * 0.03}s">${BACK_HTML}</div>`).join('');
-  show('v-shuffle');
-  setTimeout(renderPick, STILL ? 300 : 2900);
-}
-
-// ---------- 抽牌：扇形牌堆 ----------
-
-function renderPick() {
-  const sp = SPREADS[state.spread];
-  $('#pick-title').textContent = `请抽 ${sp.pos.length} 张牌`;
+  const ritual = $('#ritual');
+  ritual.classList.remove('ready');
+  $('#vortex').innerHTML = Array.from({ length: n }, (_, i) =>
+    `<div class="c" style="--a:${i * 360 / n}deg;--dl:${i * 0.03}s">${BACK_HTML}</div>`).join('');
   $('#fan').innerHTML = state.deck.map((_, i) => `<button data-i="${i}" aria-label="第 ${i + 1} 张牌">${BACK_HTML}</button>`).join('');
+  $('#draw-title').textContent = '星辰洗牌';
+  $('#draw-sub').textContent = '请静下心来，集中你的意念';
+  $('#draw-hint').hidden = $('#pick-auto').hidden = true;
   renderSlots();
-  show('v-pick');
-  layoutFan();
-}
+  clearTimeout(drawTimer);
+  drawTimer = setTimeout(() => {
+    if (current !== 'draw') return;
+    ritual.classList.add('ready');
+    const n2 = curSpread().pos.length;
+    $('#draw-title').textContent = '抽取你的牌';
+    $('#draw-sub').textContent = `请凭直觉选择${'一两三四五六七八九十'[n2 - 1]}张牌`;
+    $('#draw-hint').hidden = $('#pick-auto').hidden = false;
+    layoutFan();
+  }, STILL ? 200 : 2700);
+};
 
 function layoutFan() {
   const fan = $('#fan');
-  const W = fan.parentElement.clientWidth;
+  const W = $('#ritual').clientWidth;
   const coarse = matchMedia('(pointer: coarse)').matches;
-  const w = W < 600 ? 46 : 60, h = Math.round(w * 1.5);
-  const minSliver = coarse ? 16 : 13;
-  const total = state.deck.length;
+  const w = 44, h = 66, total = state.deck.length;
+  const minSliver = coarse ? 15 : 12;
   let rows, N, S, R;
   for (rows = 1; rows <= 6; rows++) {
     N = Math.ceil(total / rows);
-    S = rows === 1 ? 150 : 112;
-    R = Math.min(900, (W - w - 12) / (2 * Math.sin(S / 2 * Math.PI / 180)));
+    S = rows === 1 ? 150 : 120;
+    R = Math.min(700, (W - w - 8) / (2 * Math.sin(S / 2 * Math.PI / 180)));
     if (R * S * Math.PI / 180 / N >= minSliver) break;
   }
-  // 一排的高度：顶上留出悬停抬起的空间，加上两端的牌旋转后伸到最低的那一点
   const half = S / 2 * Math.PI / 180;
-  const rowH = 30 + h / 2 + R * (1 - Math.cos(half)) + w / 2 * Math.sin(half) + h / 2 * Math.cos(half) + 12;
+  const rowH = 26 + h / 2 + R * (1 - Math.cos(half)) + w / 2 * Math.sin(half) + h / 2 * Math.cos(half) + 4;
   fan.style.width = W + 'px';
-  fan.style.height = rows * rowH + 10 + 'px';
+  fan.style.height = rows * rowH + 'px';
+  $('#ritual').style.minHeight = Math.max(360, rows * rowH + 40) + 'px';
   fan.querySelectorAll('button').forEach((b, i) => {
     const row = Math.floor(i / N), k = i % N, n = Math.min(N, total - row * N);
     const a = n === 1 ? 0 : -S / 2 + S * k / (n - 1);
-    Object.assign(b.style, {
-      width: w + 'px', height: h + 'px', left: (W - w) / 2 + 'px', top: row * rowH + 30 + 'px',
-      transformOrigin: `50% ${h / 2 + R}px`, zIndex: k,
-    });
+    Object.assign(b.style, { width: w + 'px', height: h + 'px', left: (W - w) / 2 + 'px', top: row * rowH + 26 + 'px', transformOrigin: `50% ${h / 2 + R}px`, zIndex: k });
     b.style.setProperty('--a', a.toFixed(2) + 'deg');
-    b.style.setProperty('--dl', (i * 0.008).toFixed(3) + 's');
+    b.style.setProperty('--dl', (i * 0.006).toFixed(3) + 's');
   });
 }
 
 function renderSlots() {
-  const sp = SPREADS[state.spread];
+  const sp = curSpread();
   $('#slots').innerHTML = sp.pos.map((p, i) =>
-    `<span class="${i < state.picks.length ? 'done' : i === state.picks.length ? 'next' : ''}">${i + 1} ${esc(posName(p))}</span>`).join('');
+    `<span class="${i < state.picks.length ? 'done' : i === state.picks.length ? 'next' : ''}">${esc(posName(p))}</span>`).join('');
 }
 
 function pick(i) {
-  const sp = SPREADS[state.spread];
+  const sp = curSpread();
   if (state.picks.length >= sp.pos.length || state.picks.includes(i)) return;
   state.picks.push(i);
   $(`#fan button[data-i="${i}"]`).classList.add('taken');
   renderSlots();
   if (state.picks.length === sp.pos.length) {
     state.reading = state.picks.map(k => state.deck[k]);
-    saveHistory();
-    setTimeout(() => openReading(false), 600);
+    state.saved = false;
+    if (state.autosave) saveHistory();
+    state.flipped = new Set();
+    setTimeout(() => go('reveal'), 500);
   }
 }
 
@@ -1185,29 +1408,35 @@ $('#fan').addEventListener('click', e => {
   const b = e.target.closest('button');
   if (b) pick(+b.dataset.i);
 });
-
 $('#pick-auto').addEventListener('click', () => {
-  const need = SPREADS[state.spread].pos.length;
+  const need = curSpread().pos.length;
   const timer = setInterval(() => {
-    if (state.picks.length >= need || !$('#v-pick').classList.contains('on')) return clearInterval(timer);
+    if (state.picks.length >= need || current !== 'draw') return clearInterval(timer);
     let i;
     do { i = Math.floor(rand() * state.deck.length); } while (state.picks.includes(i));
     pick(i);
-  }, 240);
+  }, 220);
 });
 
-$('#pick-back').addEventListener('click', () => show('v-intro'));
+// ---------- 翻牌 ----------
 
-// ---------- 牌阵与解读 ----------
+function capHTML(i) {
+  const sp = curSpread();
+  if (!sp.caps) return '';
+  const p = sp.pos[i];
+  if (!state.flipped.has(i)) return `<b>${esc(posName(p))}</b>`;
+  const { card, rev } = state.reading[i];
+  return `<b>${card.name}</b><small class="${rev ? 'rev' : ''}">${esc(posName(p))} · ${rev ? '逆位' : '正位'}</small>`;
+}
 
 function layoutStage() {
-  const sp = SPREADS[state.spread];
-  const avail = $('.stage-wrap').clientWidth - 24;
-  const cw = Math.max(48, Math.min(sp.max, Math.floor(avail / sp.w)));
+  const sp = curSpread();
+  const avail = $('.stage-wrap').clientWidth - 8;
+  const cw = Math.max(44, Math.min(sp.max, Math.floor(avail / sp.w)));
   const stage = $('#stage');
   stage.style.setProperty('--cw', cw + 'px');
   stage.style.width = sp.w * cw + 'px';
-  stage.style.height = sp.h * cw * 1.5 + 'px';
+  stage.style.height = sp.h * cw * 1.5 + (sp.caps ? 46 : 0) + 'px';
   stage.querySelectorAll('.slot').forEach(el => {
     const p = sp.pos[+el.dataset.i];
     el.style.left = p.x * cw + 'px';
@@ -1215,227 +1444,253 @@ function layoutStage() {
   });
 }
 
-function openReading(allFlipped) {
-  const sp = SPREADS[state.spread];
-  state.flipped = new Set(allFlipped ? sp.pos.map((_, i) => i) : []);
-  $('#r-question').textContent = state.question ? `「${state.question}」` : '心中所问';
-  $('#r-spread').textContent = `${sp.name} · ${sp.pos.length} 张`;
-
+ENTER.reveal = () => {
+  const sp = curSpread();
   $('#stage').innerHTML = state.reading.map(({ card, rev }, i) => {
     const p = sp.pos[i];
     const lit = state.flipped.has(i);
-    return `<div class="slot${lit && card.major ? ' major' : ''}" data-i="${i}" style="animation-delay:${i * 0.12}s;z-index:${p.cross ? 2 : 1}">
-      <div class="rot${p.cross ? ' cross' : ''}${lit ? ' flipped' : ''}" role="button" tabindex="0" aria-label="${i + 1} ${esc(posName(p))}">
-        <span class="badge">${i + 1}</span>
-        <div class="tilt"><div class="inner"><div class="back">${BACK_HTML}</div><div class="face${rev ? ' rev' : ''}">${faceHTML(card)}</div></div></div>
-      </div></div>`;
-  }).join('');
-
-  $('#entries').innerHTML = sp.pos.map((p, i) => `<div class="panel entry pending" id="e-${i}"></div>`).join('');
-  sp.pos.forEach((_, i) => renderEntry(i, false));
-  $('#summary').classList.remove('on');
-  show('v-reading');
-  requestAnimationFrame(layoutStage);
-  updateDone();
-}
-
-function renderEntry(i, animate) {
-  const sp = SPREADS[state.spread];
-  const p = sp.pos[i];
-  const el = $('#e-' + i);
-  const head = `<span class="pos">${String(i + 1).padStart(2, '0')} · <b>${esc(posName(p))}</b></span>`;
-  if (!state.flipped.has(i)) {
-    el.className = 'panel entry pending';
-    el.innerHTML = `<div class="thumb">${BACK_HTML}</div><div><h3>${head}未揭晓</h3><div class="pd">${p.d}</div><p>点击上方的牌面翻开。</p></div>`;
-    return;
-  }
-  const { card, rev } = state.reading[i];
-  el.className = `panel entry${card.major ? ' major' : ''}${animate ? ' reveal' : ''}`;
-  el.innerHTML = `<div class="thumb${rev ? ' rev' : ''}">${faceHTML(card)}</div>
-    <div>
-      <h3>${head}${card.name}<span class="tag${rev ? ' rev' : ''}">${rev ? '逆位' : '正位'}</span>${card.major ? '<span class="tag maj">大阿卡纳</span>' : ''}</h3>
-      <div class="pd">${p.d}</div>
-      <div class="kws">${(rev ? card.rev : card.up).map(k => `<span>${k}</span>`).join('')}</div>
-      <p>${cardText(card, rev)}</p>
-      <div class="extra">${cardExtra(card)}</div>
+    return `<div class="slot${lit && card.major ? ' major' : ''}" data-i="${i}" style="animation-delay:${i * 0.1}s;z-index:${p.cross ? 2 : 1}">
+      <div class="rot${p.cross ? ' cross' : ''}${lit ? ' flipped' : ''}" role="button" tabindex="0" aria-label="${esc(posName(p))}">
+        ${sp.caps ? '' : `<span class="badge">${i + 1}</span>`}
+        <div class="inner"><div class="back">${BACK_HTML}</div><div class="face${rev ? ' rev' : ''}">${faceHTML(card)}</div></div>
+      </div>
+      ${sp.caps ? `<div class="cap" id="cap-${i}">${capHTML(i)}</div>` : ''}
     </div>`;
+  }).join('');
+  requestAnimationFrame(layoutStage);
+  updateReveal();
+};
+
+function updateReveal() {
+  const done = state.flipped.size === state.reading.length;
+  $('#reveal-title').textContent = done ? '牌面揭示' : '抽取你的牌';
+  $('#reveal-sub').textContent = done ? '星光洒落，答案浮现' : '凭直觉，一张一张翻开';
+  $('#flip-all').hidden = done;
+  $('#to-detail').hidden = !done;
 }
 
 function burst(slot, major) {
   if (STILL) return;
   const b = document.createElement('span');
   b.className = 'burst' + (major ? ' major' : '');
-  const n = major ? 22 : 14;
+  const n = major ? 20 : 12;
   b.innerHTML = Array.from({ length: n }, (_, k) =>
-    `<i style="--a:${(k * 360 / n + Math.random() * 12).toFixed(1)}deg;--d:calc(var(--cw) * ${(major ? 1.1 : .8) + Math.random() * .5})"></i>`).join('');
+    `<i style="--a:${(k * 360 / n + Math.random() * 12).toFixed(1)}deg;--d:calc(var(--cw) * ${(major ? 1 : .75) + Math.random() * .4})"></i>`).join('');
   slot.appendChild(b);
-  setTimeout(() => b.remove(), 1300);
+  setTimeout(() => b.remove(), 1200);
 }
 
 function flip(i) {
+  if (state.flipped.has(i)) { state.page = i; go('detail'); return; }
   const slot = $(`.slot[data-i="${i}"]`);
-  const rot = slot.querySelector('.rot');
-  if (state.flipped.has(i)) {
-    const entry = $('#e-' + i);
-    entry.scrollIntoView({ behavior: STILL ? 'auto' : 'smooth', block: 'center' });
-    for (const el of [entry, rot]) {
-      el.classList.add('flash');
-      setTimeout(() => el.classList.remove('flash'), 1200);
-    }
-    return;
-  }
-  const { card } = state.reading[i];
   state.flipped.add(i);
-  rot.classList.add('flipped');
+  slot.querySelector('.rot').classList.add('flipped');
+  const { card } = state.reading[i];
   setTimeout(() => {
     burst(slot, card.major);
-    rot.classList.add('shine');
-    setTimeout(() => rot.classList.remove('shine'), 1500);
-    if (card.major) {
-      slot.classList.add('major');
-      if (!STILL) {
-        const call = document.createElement('span');
-        call.className = 'arcana-call';
-        call.textContent = `ARCANUM ${ROMAN[card.num]}`;
-        slot.appendChild(call);
-        setTimeout(() => call.remove(), 2300);
-      }
-    }
+    if (card.major) slot.classList.add('major');
+    const cap = $('#cap-' + i);
+    if (cap) cap.innerHTML = capHTML(i);
   }, STILL ? 0 : 380);
-  renderEntry(i, true);
-  updateDone();
+  updateReveal();
 }
 
-function updateDone() {
-  const n = SPREADS[state.spread].pos.length;
-  const done = state.flipped.size === n;
-  $('#flip-all').hidden = done;
-  if (done && !$('#summary').classList.contains('on')) {
-    $('#summary').innerHTML = `<h2>整体来看</h2>${n > 1 ? energyHTML(state.reading) : ''}<ul>${summarize(state.reading).map(s => `<li>${esc(s)}</li>`).join('')}</ul>`;
-    $('#summary').classList.add('on');
-  }
-}
-
-const stageEl = $('#stage');
-stageEl.addEventListener('click', e => {
+$('#stage').addEventListener('click', e => {
   const slot = e.target.closest('.slot');
   if (slot) flip(+slot.dataset.i);
 });
-stageEl.addEventListener('keydown', e => {
+$('#stage').addEventListener('keydown', e => {
   const slot = e.target.closest('.slot');
   if (slot && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); flip(+slot.dataset.i); }
 });
-
-// 鼠标悬停时，翻开的牌跟着倾斜，并有镭射反光
-let tilted = null;
-function untilt() {
-  if (!tilted) return;
-  tilted.classList.remove('hover');
-  tilted.style.removeProperty('--rx');
-  tilted.style.removeProperty('--ry');
-  tilted = null;
-}
-stageEl.addEventListener('pointermove', e => {
-  const rot = e.pointerType === 'mouse' ? e.target.closest('.rot.flipped') : null;
-  if (rot !== tilted) untilt();
-  if (!rot || STILL) return;
-  const r = rot.getBoundingClientRect();
-  const px = (e.clientX - r.left) / r.width, py = (e.clientY - r.top) / r.height;
-  const sign = rot.classList.contains('cross') ? -1 : 1;
-  rot.style.setProperty('--ry', ((px - .5) * 22 * sign).toFixed(1) + 'deg');
-  rot.style.setProperty('--rx', ((.5 - py) * 22).toFixed(1) + 'deg');
-  rot.style.setProperty('--mx', (px * 100).toFixed(0) + '%');
-  rot.style.setProperty('--my', (py * 100).toFixed(0) + '%');
-  rot.style.setProperty('--sx', (px * 100).toFixed(0) + '%');
-  rot.style.setProperty('--sy', (py * 100).toFixed(0) + '%');
-  rot.classList.add('hover');
-  tilted = rot;
-});
-stageEl.addEventListener('pointerleave', untilt);
-
 $('#flip-all').addEventListener('click', () => {
   let k = 0;
-  SPREADS[state.spread].pos.forEach((_, i) => {
-    if (!state.flipped.has(i)) setTimeout(() => flip(i), k++ * 260);
-  });
+  state.reading.forEach((_, i) => { if (!state.flipped.has(i)) setTimeout(() => flip(i), k++ * 240); });
+});
+$('#to-detail').addEventListener('click', () => { state.page = 0; go('detail'); });
+
+// ---------- 牌义解析 ----------
+
+function shortQ() {
+  const q = state.question;
+  return q.length > 22 ? q.slice(0, 22) + '…' : q;
+}
+
+function insight(card, rev, p) {
+  const kws = rev ? card.rev : card.up;
+  const lead = state.question ? `关于「${shortQ()}」，` : '';
+  const advice = rev
+    ? `${lead}它提醒你先面对「${kws[0]}」的问题${kws[1] ? `，别让「${kws[1]}」拖住脚步` : ''}。`
+    : `${lead}它鼓励你顺着「${kws[0]}」去做${kws[1] ? `，「${kws[1]}」会是这一段的助力` : ''}。`;
+  return `这张牌落在「${posName(p)}」的位置：${p.d}${advice}`;
+}
+
+ENTER.detail = () => {
+  const sp = curSpread(), n = state.reading.length, i = state.page;
+  const { card, rev } = state.reading[i];
+  const p = sp.pos[i];
+  const kws = rev ? card.rev : card.up;
+  $('#detail').innerHTML = `
+    <div class="detail-top">
+      <div class="bigcard"><div class="card${rev ? ' rev' : ''}">${faceHTML(card)}</div></div>
+      <div class="info">
+        <div class="where">第 ${i + 1} 张 · ${esc(posName(p))}</div>
+        <h3>${card.name}</h3>
+        <div class="en">${card.en.toUpperCase()}</div>
+        <div class="tags"><span class="tag${rev ? ' rev' : ''}">${rev ? '逆位' : '正位'}</span>${card.major ? `<span class="tag maj">大阿卡纳 ${ROMAN[card.num]}</span>` : `<span class="tag">${card.suit.name} · ${card.suit.el}元素</span>`}</div>
+        <div class="kwline">${kws.join(' · ')}</div>
+      </div>
+    </div>
+    <div class="sec"><h3>核心含义</h3><p>${cardText(card, rev)}</p></div>
+    <div class="sec"><h3>在当前问题中的启示</h3><p>${esc(insight(card, rev, p))}</p></div>
+    <div class="sec"><p style="font-size:12px;color:var(--ink-soft)">${cardExtra(card)}</p></div>`;
+  $('#page').textContent = `${i + 1} / ${n}`;
+  $('#prev').disabled = i === 0;
+  $('#next').textContent = i === n - 1 ? '整体解读 →' : '下一张 →';
+};
+$('#prev').addEventListener('click', () => { if (state.page > 0) { state.page--; ENTER.detail(); window.scrollTo(0, 0); } });
+$('#next').addEventListener('click', () => {
+  if (state.page < state.reading.length - 1) { state.page++; ENTER.detail(); window.scrollTo(0, 0); } else go('overall');
 });
 
-$('#again').addEventListener('click', () => { renderSpreads(); renderHistory(); show('v-intro'); });
+// ---------- 整体解读 ----------
+
+function adviceList(reading) {
+  const sp = curSpread();
+  const out = reading.slice(0, 5).map(({ card, rev }, i) => {
+    const k = rev ? card.rev : card.up;
+    const where = sp.pos[i] ? posName(sp.pos[i]) : '';
+    return rev
+      ? `${where}：正视「${k[0]}」，先把卡住的地方理清`
+      : `${where}：把握「${k[0]}」，让「${k[1] || k[0]}」成为你的力量`;
+  });
+  out.push(reading.some(r => r.rev) ? '保持耐心，逆位的能量需要时间慢慢舒展' : '能量通畅，想清楚了就放手去做');
+  return out;
+}
+
+ENTER.overall = () => {
+  const r = state.reading, many = r.length > 5;
+  $('#overall').innerHTML = `
+    <div class="thumbs${many ? ' many' : ''}">${r.map(({ card, rev }, i) => `
+      <button class="thumb" data-i="${i}" aria-label="查看${card.name}"><span class="card${rev ? ' rev' : ''}">${faceHTML(card)}</span><b>${card.name}</b><small class="${rev ? 'rev' : ''}">${rev ? '逆位' : '正位'}</small></button>`).join('')}</div>
+    <div class="sec"><h3>整体寓意</h3><p>${esc(summarize(r).join(''))}</p></div>
+    <div class="sec"><h3>建议与指引</h3><ul class="advice">${adviceList(r).map(s => `<li>${esc(s)}</li>`).join('')}</ul></div>`;
+  $('#save').textContent = state.saved ? '已保存' : '保存记录';
+  $('#save').disabled = state.saved;
+};
+$('#overall').addEventListener('click', e => {
+  const t = e.target.closest('.thumb');
+  if (t) { state.page = +t.dataset.i; go('detail'); }
+});
+$('#save').addEventListener('click', () => { saveHistory(); ENTER.overall(); });
+$('#again').addEventListener('click', () => go('spreads'));
 
 $('#copy').addEventListener('click', async () => {
-  const sp = SPREADS[state.spread];
-  const lines = [`星夜塔罗 · ${sp.name}`, state.question ? `问题：${state.question}` : '', ''];
+  const sp = curSpread();
+  const lines = [`推演之梦 · ${sp.name}`];
+  if (state.question) lines.push(`问题：${state.question}`);
+  lines.push('');
   state.reading.forEach(({ card, rev }, i) => {
     lines.push(`${i + 1}. ${posName(sp.pos[i])}：${card.name}（${rev ? '逆位' : '正位'}）— ${(rev ? card.rev : card.up).join('、')}`);
     lines.push(`   ${cardText(card, rev)}`);
   });
-  lines.push('', '整体来看：', ...summarize(state.reading).map(s => '· ' + s));
+  lines.push('', '整体寓意：' + summarize(state.reading).join(''), '', '建议与指引：', ...adviceList(state.reading).map(s => '· ' + s));
   const btn = $('#copy');
   try {
-    await navigator.clipboard.writeText(lines.filter((l, i) => l || i > 1).join('\n'));
+    await navigator.clipboard.writeText(lines.join('\n'));
     btn.textContent = '已复制';
   } catch {
-    btn.textContent = '复制失败';
+    btn.textContent = '复制没成功，请长按页面文字手动复制';
   }
-  setTimeout(() => { btn.textContent = '复制结果'; }, 1500);
+  setTimeout(() => { btn.textContent = '复制这次的解读'; }, 2000);
 });
 
-let resizeTimer;
-window.addEventListener('resize', () => {
-  clearTimeout(resizeTimer);
-  resizeTimer = setTimeout(() => {
-    if ($('#v-reading').classList.contains('on')) layoutStage();
-    if ($('#v-pick').classList.contains('on')) layoutFan();
-  }, 100);
+// ---------- 牌阵图鉴 ----------
+
+ENTER.gallery = () => {
+  $('#gal').innerHTML = Object.keys(SPREADS).map(k => {
+    const sp = spreadOf(k, 4);
+    return `<div class="panel">${layoutIcon(sp).replace(/rgba\(246,220,149,\.18\)/g, '#3a3590')}<div><h3>${sp.name}</h3><p style="font-size:13px">${sp.desc}</p>
+      ${k === 'custom' ? '<ol><li>一到七张，每张都是「第几张」，凭直觉解读</li></ol>' : `<ol>${sp.pos.map(p => `<li><b>${esc(posName(p))}</b>：${p.d}</li>`).join('')}</ol>`}
+      <button class="use" data-k="${k}">用这个牌阵</button></div></div>`;
+  }).join('');
+};
+$('#gal').addEventListener('click', e => {
+  const b = e.target.closest('.use');
+  if (b) { state.spread = b.dataset.k; go('question'); }
 });
 
 // ---------- 记录 ----------
-
-const HKEY = 'starry-tarot-history';
 
 function loadHistory() {
   try { return JSON.parse(localStorage.getItem(HKEY)) || []; } catch { return []; }
 }
 
 function saveHistory() {
+  if (state.saved) return;
   const list = loadHistory();
   list.unshift({
-    t: Date.now(), q: state.question, s: state.spread, l: state.labels,
+    t: Date.now(), q: state.anon ? '' : state.question, s: state.spread, l: state.labels,
     c: state.reading.map(r => [r.card.id, r.rev ? 1 : 0]),
   });
-  try { localStorage.setItem(HKEY, JSON.stringify(list.slice(0, 30))); } catch { /* 无痕模式等情况下不保存 */ }
+  try { localStorage.setItem(HKEY, JSON.stringify(list.slice(0, 50))); state.saved = true; } catch { /* 无痕模式等情况下不保存 */ }
 }
 
-let historyItems = [];
-function renderHistory() {
-  historyItems = loadHistory().filter(h => SPREADS[h.s] && h.c.length === SPREADS[h.s].pos.length);
-  $('#history').hidden = !historyItems.length;
-  $('#hist-list').innerHTML = historyItems.map((h, i) => {
+let records = [];
+ENTER.records = () => {
+  records = loadHistory().filter(h => SPREADS[h.s] && (h.s === 'custom' || h.c.length === SPREADS[h.s].pos.length));
+  $('#recs').innerHTML = records.length ? records.map((h, i) => {
     const d = new Date(h.t);
     const when = `${d.getMonth() + 1}月${d.getDate()}日 ${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
-    const names = h.c.map(([id, r]) => DECK[id].name + (r ? '(逆)' : '')).join('、');
-    return `<li><button data-h="${i}"><div class="q">${esc(h.q || '心中所问')}</div><div class="meta">${when} · ${SPREADS[h.s].name} · ${names}</div></button></li>`;
-  }).join('');
-}
-
-$('#hist-list').addEventListener('click', e => {
-  const b = e.target.closest('button');
+    const names = h.c.map(([id, r]) => DECK[id].name + (r ? '（逆）' : '')).join('、');
+    return `<button class="rec" data-h="${i}"><div class="q">${esc(h.q || '匿名的问题')}</div><div class="meta">${when} · ${SPREADS[h.s].name} · ${names}</div></button>`;
+  }).join('') : '<div class="panel empty">还没有记录。<br>抽完牌时开着「保存到记录」，或在整体解读里点「保存记录」，就会出现在这里。</div>';
+};
+$('#recs').addEventListener('click', e => {
+  const b = e.target.closest('.rec');
   if (!b) return;
-  const h = historyItems[+b.dataset.h];
+  const h = records[+b.dataset.h];
   state.question = h.q;
   state.spread = h.s;
+  state.custom = h.c.length;
   state.labels = h.l || { A: '选择 A', B: '选择 B' };
   state.reading = h.c.map(([id, r]) => ({ card: DECK[id], rev: !!r }));
-  openReading(true);
+  state.flipped = new Set(h.c.map((_, i) => i));
+  state.saved = true;
+  state.fromRecords = true;
+  go('reveal');
 });
 
-$('#hist-clear').addEventListener('click', () => {
+// ---------- 设置 ----------
+
+ENTER.settings = () => {
+  $('#set-rev').setAttribute('aria-checked', settings.rev);
+  $('#set-save').setAttribute('aria-checked', settings.save);
+  const n = loadHistory().length;
+  $('#rec-count').textContent = n ? `现在有 ${n} 条，只存在这台设备的浏览器里` : '还没有记录';
+  $('#clear').textContent = '清空';
+  $('#clear').dataset.armed = '';
+};
+$('#set-rev').addEventListener('click', () => { settings.rev = !settings.rev; saveSettings(); ENTER.settings(); });
+$('#set-save').addEventListener('click', () => { settings.save = state.autosave = !settings.save; saveSettings(); ENTER.settings(); });
+$('#clear').addEventListener('click', e => {
+  const b = e.currentTarget;
+  if (!b.dataset.armed) { b.dataset.armed = '1'; b.textContent = '再点一次确认'; return; }
   try { localStorage.removeItem(HKEY); } catch { /* 忽略 */ }
-  renderHistory();
+  ENTER.settings();
+  $('#rec-count').textContent = '已清空';
 });
 
-renderSpreads();
-renderHistory();
+let resizeTimer;
+window.addEventListener('resize', () => {
+  clearTimeout(resizeTimer);
+  resizeTimer = setTimeout(() => {
+    if (current === 'reveal') layoutStage();
+    if (current === 'draw' && $('#ritual').classList.contains('ready')) layoutFan();
+  }, 100);
+});
+
+ENTER.home();
 </script>
 </body>
 </html>
