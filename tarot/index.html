@@ -1,0 +1,2068 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>推演之梦</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700&family=Noto+Serif+SC:wght@500;700;900&display=swap" rel="stylesheet">
+<style>
+/* 版式：一列手机宽的「App」，每一步一个页面。顶上是深靛蓝星空，往下是紫色水晶哥特大厅和发光魔法阵，
+   最底下一片紫白花丛；内容放在象牙白、金色花框的面板里，按钮是两端带菱形的深靛蓝牌子 */
+:root {
+  color-scheme: light;
+  --night: #1b1648;
+  --night-2: #2e2672;
+  --ink: #2b2766;
+  --ink-soft: #6b6497;
+  --violet: #8a74d6;
+  --ivory: #fdfaf3;
+  --cream: #fff6e2;
+  --gold: #c9a256;
+  --gold-hi: #f0d796;
+  --navy: #1f1a55;
+  --navy-2: #332c84;
+  --rev: #c0526b;
+  --serif: "Noto Serif SC", "Songti SC", "Noto Serif CJK SC", "Source Han Serif SC", "STSong", serif;
+  --latin: "Cinzel", Georgia, "Times New Roman", serif;
+  --sans: system-ui, -apple-system, "PingFang SC", "Microsoft YaHei", sans-serif;
+  --cw: 110px;
+  --frame: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 26 26'%3E%3Cg transform='' fill='none' stroke='%23c9a256'%3E%3Cpath d='M3 23V9Q3 3 9 3H23' stroke-width='1.3'/%3E%3Cpath d='M7 23V12Q7 7 12 7H23' stroke-width='.6'/%3E%3Cpath d='M3 10Q10 10 10 3' stroke-width='.8'/%3E%3Ccircle cx='6.3' cy='6.3' r='1.5' fill='%23c9a256' stroke='none'/%3E%3C/g%3E%3C/svg%3E") left 5px top 5px / 24px 24px no-repeat, url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 26 26'%3E%3Cg transform='translate%2826 0%29 scale%28-1 1%29' fill='none' stroke='%23c9a256'%3E%3Cpath d='M3 23V9Q3 3 9 3H23' stroke-width='1.3'/%3E%3Cpath d='M7 23V12Q7 7 12 7H23' stroke-width='.6'/%3E%3Cpath d='M3 10Q10 10 10 3' stroke-width='.8'/%3E%3Ccircle cx='6.3' cy='6.3' r='1.5' fill='%23c9a256' stroke='none'/%3E%3C/g%3E%3C/svg%3E") right 5px top 5px / 24px 24px no-repeat, url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 26 26'%3E%3Cg transform='translate%280 26%29 scale%281 -1%29' fill='none' stroke='%23c9a256'%3E%3Cpath d='M3 23V9Q3 3 9 3H23' stroke-width='1.3'/%3E%3Cpath d='M7 23V12Q7 7 12 7H23' stroke-width='.6'/%3E%3Cpath d='M3 10Q10 10 10 3' stroke-width='.8'/%3E%3Ccircle cx='6.3' cy='6.3' r='1.5' fill='%23c9a256' stroke='none'/%3E%3C/g%3E%3C/svg%3E") left 5px bottom 5px / 24px 24px no-repeat, url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 26 26'%3E%3Cg transform='translate%2826 26%29 scale%28-1 -1%29' fill='none' stroke='%23c9a256'%3E%3Cpath d='M3 23V9Q3 3 9 3H23' stroke-width='1.3'/%3E%3Cpath d='M7 23V12Q7 7 12 7H23' stroke-width='.6'/%3E%3Cpath d='M3 10Q10 10 10 3' stroke-width='.8'/%3E%3Ccircle cx='6.3' cy='6.3' r='1.5' fill='%23c9a256' stroke='none'/%3E%3C/g%3E%3C/svg%3E") right 5px bottom 5px / 24px 24px no-repeat, url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 44 12'%3E%3Cpath d='M2 6H15M29 6H42' stroke='%23c9a256' stroke-width='.9'/%3E%3Cpath d='M22 1L27 6L22 11L17 6Z' fill='%23c9a256'/%3E%3Ccircle cx='22' cy='6' r='1.4' fill='%23fffaf0'/%3E%3C/svg%3E") center top 0 / 44px 12px no-repeat, url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 44 12'%3E%3Cpath d='M2 6H15M29 6H42' stroke='%23c9a256' stroke-width='.9'/%3E%3Cpath d='M22 1L27 6L22 11L17 6Z' fill='%23c9a256'/%3E%3Ccircle cx='22' cy='6' r='1.4' fill='%23fffaf0'/%3E%3C/svg%3E") center bottom 0 / 44px 12px no-repeat;
+  --moon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 34 18'%3E%3Cpath d='M25 2.5a7 7 0 1 0 6.5 9.5a5.6 5.6 0 1 1-6.5-9.5z' fill='%23f0d796'/%3E%3Cpath d='M1 13Q8 17 14 11Q17 8 21 9' fill='none' stroke='%23f0d796' stroke-width='1'/%3E%3Cpath d='M8 6L8.8 7.6L10.4 8L8.8 8.4L8 10L7.2 8.4L5.6 8L7.2 7.6Z' fill='%23fff4cf'/%3E%3C/svg%3E");
+  --frame-sm: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 26 26'%3E%3Cg transform='' fill='none' stroke='%23c9a256'%3E%3Cpath d='M3 23V9Q3 3 9 3H23' stroke-width='1.3'/%3E%3Cpath d='M7 23V12Q7 7 12 7H23' stroke-width='.6'/%3E%3Cpath d='M3 10Q10 10 10 3' stroke-width='.8'/%3E%3Ccircle cx='6.3' cy='6.3' r='1.5' fill='%23c9a256' stroke='none'/%3E%3C/g%3E%3C/svg%3E") left 4px top 4px / 16px 16px no-repeat, url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 26 26'%3E%3Cg transform='translate%2826 0%29 scale%28-1 1%29' fill='none' stroke='%23c9a256'%3E%3Cpath d='M3 23V9Q3 3 9 3H23' stroke-width='1.3'/%3E%3Cpath d='M7 23V12Q7 7 12 7H23' stroke-width='.6'/%3E%3Cpath d='M3 10Q10 10 10 3' stroke-width='.8'/%3E%3Ccircle cx='6.3' cy='6.3' r='1.5' fill='%23c9a256' stroke='none'/%3E%3C/g%3E%3C/svg%3E") right 4px top 4px / 16px 16px no-repeat, url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 26 26'%3E%3Cg transform='translate%280 26%29 scale%281 -1%29' fill='none' stroke='%23c9a256'%3E%3Cpath d='M3 23V9Q3 3 9 3H23' stroke-width='1.3'/%3E%3Cpath d='M7 23V12Q7 7 12 7H23' stroke-width='.6'/%3E%3Cpath d='M3 10Q10 10 10 3' stroke-width='.8'/%3E%3Ccircle cx='6.3' cy='6.3' r='1.5' fill='%23c9a256' stroke='none'/%3E%3C/g%3E%3C/svg%3E") left 4px bottom 4px / 16px 16px no-repeat, url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 26 26'%3E%3Cg transform='translate%2826 26%29 scale%28-1 -1%29' fill='none' stroke='%23c9a256'%3E%3Cpath d='M3 23V9Q3 3 9 3H23' stroke-width='1.3'/%3E%3Cpath d='M7 23V12Q7 7 12 7H23' stroke-width='.6'/%3E%3Cpath d='M3 10Q10 10 10 3' stroke-width='.8'/%3E%3Ccircle cx='6.3' cy='6.3' r='1.5' fill='%23c9a256' stroke='none'/%3E%3C/g%3E%3C/svg%3E") right 4px bottom 4px / 16px 16px no-repeat;
+}
+* { box-sizing: border-box; }
+[hidden] { display: none !important; }
+html, body { margin: 0; }
+body {
+  min-height: 100vh;
+  color: var(--ink);
+  font: 15px/1.75 var(--sans);
+  background: linear-gradient(180deg, #17123f 0%, #2a2270 16%, #4c3f9f 32%, #8676cf 52%, #b9aae9 70%, #ddd3f6 86%, #efe9fb 100%) fixed;
+  overflow-x: hidden;
+}
+button, input, textarea { font: inherit; color: inherit; }
+button { cursor: pointer; }
+:focus-visible { outline: 2px solid var(--gold-hi); outline-offset: 2px; }
+#sky { position: fixed; inset: 0; width: 100%; height: 100%; pointer-events: none; z-index: 0; }
+.hall { position: fixed; top: 0; left: 50%; transform: translateX(-50%); width: max(100%, 460px); height: 100vh; pointer-events: none; z-index: 0; }
+.flowers { position: fixed; bottom: 0; left: 50%; transform: translateX(-50%); width: max(100%, 460px); height: 150px; pointer-events: none; z-index: 0; }
+
+/* ---------- App 外框 ---------- */
+.app {
+  position: relative; z-index: 1; max-width: 460px; min-height: 100vh; margin: 0 auto;
+  padding: 0 max(16px, env(safe-area-inset-right, 0px)) 130px max(16px, env(safe-area-inset-left, 0px));
+}
+.app::before {
+  content: ''; position: fixed; top: 6px; bottom: 6px; left: 50%; width: min(448px, calc(100% - 12px)); transform: translateX(-50%);
+  border: 1.5px solid rgba(240, 215, 150, .75); border-radius: 18px; pointer-events: none; z-index: 2;
+  box-shadow: inset 0 0 0 4px rgba(255, 255, 255, .08), inset 0 0 0 5px rgba(240, 215, 150, .4);
+}
+
+/* ---------- 顶栏 ---------- */
+.bar {
+  position: relative; z-index: 5; display: grid; grid-template-columns: 46px 1fr 46px; align-items: center;
+  padding: calc(14px + env(safe-area-inset-top, 0px)) 2px 0;
+}
+.bar .round {
+  width: 42px; height: 42px; border-radius: 50%; display: grid; place-items: center; padding: 0;
+  background: radial-gradient(circle at 50% 35%, #3a3290, var(--night)); border: 2px solid var(--gold); color: var(--gold-hi);
+  box-shadow: 0 0 0 2px rgba(27, 22, 72, .6), 0 0 0 3px rgba(240, 215, 150, .6), 0 4px 14px rgba(10, 6, 40, .5);
+}
+.bar .round svg { width: 20px; height: 20px; }
+.bar .round[hidden] { display: grid !important; visibility: hidden; }
+.emblem { justify-self: center; width: 72px; height: 72px; filter: drop-shadow(0 0 10px rgba(240, 215, 150, .55)); }
+
+/* ---------- 页面 ---------- */
+.screen { display: none; }
+.screen.on { display: block; animation: rise .55s cubic-bezier(.2, .8, .2, 1); }
+@keyframes rise { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: none; } }
+.head { text-align: center; margin: -4px 0 18px; }
+.head h2 {
+  display: inline-flex; align-items: center; gap: 10px; margin: 0;
+  font: 900 26px/1.35 var(--serif); letter-spacing: .12em; color: #fff; text-wrap: balance;
+  text-shadow: 0 0 2px #2a2270, 0 2px 0 #2a2270, 0 0 18px rgba(170, 150, 255, .9);
+}
+.head h2::before, .head h2::after { content: ''; width: 34px; height: 18px; flex: none; background: var(--moon) center / contain no-repeat; }
+.head h2::after { transform: scaleX(-1); }
+.head p { margin: 2px 0 0; color: #ece6ff; font-size: 13px; letter-spacing: .14em; text-shadow: 0 1px 4px rgba(20, 14, 60, .8); }
+
+.panel {
+  position: relative; border-radius: 12px; padding: 22px 20px;
+  background: var(--frame), var(--ivory);
+  border: 1.5px solid var(--gold);
+  box-shadow: inset 0 0 0 4px var(--ivory), inset 0 0 0 5px rgba(201, 162, 86, .55), 0 12px 30px rgba(20, 12, 70, .3);
+}
+.panel h3 { margin: 0 0 6px; font: 900 17px/1.5 var(--serif); color: var(--ink); letter-spacing: .08em; }
+.panel p { margin: 0; color: #3e3876; }
+
+.btn {
+  position: relative; overflow: hidden; display: block; width: min(290px, 100%); margin: 0 auto; padding: 14px 36px;
+  border-radius: 12px; border: 1.5px solid var(--gold-hi);
+  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12'%3E%3Cpath d='M6 0.5L11.5 6L6 11.5L0.5 6Z' fill='%23f0d796'/%3E%3Cpath d='M6 3.5L8.5 6L6 8.5L3.5 6Z' fill='%23c9a256'/%3E%3C/svg%3E") left 10px center / 12px 12px no-repeat, url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12'%3E%3Cpath d='M6 0.5L11.5 6L6 11.5L0.5 6Z' fill='%23f0d796'/%3E%3Cpath d='M6 3.5L8.5 6L6 8.5L3.5 6Z' fill='%23c9a256'/%3E%3C/svg%3E") right 10px center / 12px 12px no-repeat, linear-gradient(180deg, var(--navy-2), var(--navy));
+  color: #fff3d6; font: 900 18px/1.2 var(--serif); letter-spacing: .3em; text-indent: .3em;
+  box-shadow: inset 0 0 0 3px var(--navy), inset 0 0 0 4px rgba(240, 215, 150, .6), 0 0 0 2px rgba(201, 162, 86, .5), 0 10px 24px rgba(20, 12, 70, .4);
+  transition: transform .2s, box-shadow .2s;
+}
+.btn::after {
+  content: ''; position: absolute; top: 0; bottom: 0; left: -60%; width: 40%;
+  background: linear-gradient(100deg, transparent, rgba(255, 255, 255, .3), transparent); transform: skewX(-20deg);
+  animation: sweep 4.5s ease-in-out infinite;
+}
+@keyframes sweep { 0%, 60% { left: -60%; } 100% { left: 130%; } }
+.btn:hover { transform: translateY(-2px); }
+.btn:disabled { opacity: .55; cursor: default; transform: none; }
+.btn.light {
+  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12'%3E%3Cpath d='M6 0.5L11.5 6L6 11.5L0.5 6Z' fill='%23f0d796'/%3E%3Cpath d='M6 3.5L8.5 6L6 8.5L3.5 6Z' fill='%23c9a256'/%3E%3C/svg%3E") left 10px center / 12px 12px no-repeat, url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12'%3E%3Cpath d='M6 0.5L11.5 6L6 11.5L0.5 6Z' fill='%23f0d796'/%3E%3Cpath d='M6 3.5L8.5 6L6 8.5L3.5 6Z' fill='%23c9a256'/%3E%3C/svg%3E") right 10px center / 12px 12px no-repeat, linear-gradient(180deg, #fffdf8, var(--cream));
+  color: var(--navy); border-color: var(--gold);
+  box-shadow: inset 0 0 0 3px #fffdf8, inset 0 0 0 4px rgba(201, 162, 86, .55), 0 6px 16px rgba(20, 12, 70, .2);
+  letter-spacing: .2em; text-indent: .2em; font-size: 16px;
+}
+.btn.light::after { display: none; }
+.btn-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.btn-row .btn { width: 100%; font-size: 16px; letter-spacing: .2em; text-indent: .2em; padding-inline: 26px; }
+.link { display: block; margin: 12px auto 0; background: none; border: none; color: var(--ink); font-size: 13px; text-decoration: underline; text-underline-offset: 3px; }
+.foot { margin-top: 22px; display: grid; gap: 12px; }
+
+/* ---------- 首页 ---------- */
+.hero { text-align: center; margin-top: 2px; }
+.hero h1 {
+  margin: 0; font: 900 48px/1.15 var(--serif); letter-spacing: .12em; color: #fff; text-wrap: balance;
+  text-shadow: 0 0 2px #241d66, 0 3px 0 #2a2270, 0 0 26px rgba(170, 150, 255, .95), 0 0 50px rgba(120, 100, 230, .7);
+}
+.hero .sub { display: flex; align-items: center; justify-content: center; gap: 10px; margin-top: 10px; color: #f3eeff; font-size: 14px; letter-spacing: .3em; text-shadow: 0 1px 4px rgba(20, 14, 60, .8); }
+.hero .sub::before, .hero .sub::after { content: ''; width: 40px; height: 1px; background: linear-gradient(90deg, transparent, var(--gold-hi)); }
+.hero .sub::after { background: linear-gradient(90deg, var(--gold-hi), transparent); }
+.mascot { position: relative; display: grid; place-items: center; margin: 2px auto 0; }
+.mascot::before { content: ''; position: absolute; inset: 12% 8% 4%; border-radius: 50%; background: radial-gradient(closest-side, rgba(255, 255, 255, .85), rgba(210, 195, 255, .35) 60%, transparent); filter: blur(4px); }
+.mascot canvas { position: relative; width: min(300px, 76%); aspect-ratio: 730 / 1255; height: auto; cursor: pointer; filter: drop-shadow(0 12px 22px rgba(40, 25, 120, .4)); touch-action: manipulation; -webkit-tap-highlight-color: transparent; }
+.poke-hint {
+  position: absolute; bottom: 30%; left: 50%; transform: translateX(-50%); padding: 2px 12px; border-radius: 999px; pointer-events: none;
+  background: rgba(27, 22, 72, .7); border: 1px solid rgba(240, 215, 150, .7); color: #fff4d8; font: 700 12px var(--serif); letter-spacing: .1em;
+  animation: nudge 2.4s ease-in-out infinite;
+}
+@keyframes nudge { 50% { transform: translateX(-50%) translateY(-4px); opacity: .75; } }
+.bubble .voice {
+  position: absolute; top: -14px; right: -12px; width: 32px; height: 32px; border-radius: 50%; padding: 0; display: grid; place-items: center;
+  border: 1.5px solid var(--gold); background: radial-gradient(circle at 50% 35%, #3a3290, var(--night)); color: var(--gold-hi);
+  box-shadow: 0 3px 10px rgba(20, 12, 70, .35);
+}
+.bubble .voice svg { width: 17px; height: 17px; }
+.bubble .voice .off { display: none; }
+.bubble .voice[aria-pressed=false] .on { display: none; }
+.bubble .voice[aria-pressed=false] .off { display: inline; }
+.bubble .say { display: block; min-height: 3.2em; }
+.mascot img { position: relative; width: min(300px, 76%); height: auto; filter: drop-shadow(0 12px 22px rgba(40, 25, 120, .4)); animation: float 5s ease-in-out infinite; }
+@keyframes float { 50% { transform: translateY(-8px); } }
+.bubble {
+  position: relative; max-width: 300px; margin: -8px auto 18px; padding: 10px 18px; border-radius: 12px; text-align: center;
+  background: var(--frame-sm), var(--ivory); border: 1px solid var(--gold); color: #3e3876; font: 500 14px/1.6 var(--serif);
+  box-shadow: 0 6px 18px rgba(20, 12, 70, .2);
+}
+.bubble::before { content: ''; position: absolute; top: -7px; left: 50%; width: 12px; height: 12px; margin-left: -6px; background: var(--ivory); border-left: 1px solid var(--gold); border-top: 1px solid var(--gold); transform: rotate(45deg); }
+.nav3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-top: 24px; }
+.nav3 button { background: none; border: none; display: grid; justify-items: center; gap: 6px; color: var(--ink); font: 700 13px var(--serif); letter-spacing: .1em; text-shadow: 0 0 6px #fff, 0 0 2px #fff; }
+.nav3 .ico {
+  width: 46px; height: 46px; display: grid; place-items: center; border-radius: 50%;
+  border: 1.5px solid var(--gold); background: radial-gradient(circle at 50% 35%, #fffdf8, var(--cream));
+  box-shadow: 0 0 0 3px rgba(255, 255, 255, .6), 0 0 0 4px rgba(201, 162, 86, .5), 0 4px 12px rgba(20, 12, 70, .2);
+}
+.nav3 .ico svg { width: 22px; height: 22px; color: var(--navy); }
+
+/* ---------- 选牌阵 ---------- */
+.opts { display: grid; gap: 10px; }
+.opt {
+  display: grid; grid-template-columns: 78px 1fr; gap: 12px; align-items: center; text-align: left; padding: 12px 16px 12px 12px;
+  background: var(--frame-sm), var(--ivory); border: 1.5px solid rgba(201, 162, 86, .8); border-radius: 12px;
+  box-shadow: inset 0 0 0 3px var(--ivory), inset 0 0 0 4px rgba(201, 162, 86, .35), 0 6px 16px rgba(20, 12, 70, .18);
+  transition: transform .2s, box-shadow .2s;
+}
+.opt:hover { transform: translateY(-1px); }
+.opt[aria-pressed=true] {
+  background: var(--frame-sm), linear-gradient(160deg, #fffdf6, var(--cream)); border-color: var(--gold);
+  box-shadow: inset 0 0 0 3px #fffaf0, inset 0 0 0 4px var(--gold), 0 0 0 3px rgba(240, 215, 150, .7), 0 0 26px rgba(255, 236, 180, .7);
+}
+.opt b { display: block; font: 900 17px/1.4 var(--serif); letter-spacing: .1em; color: var(--ink); }
+.opt .pos { display: block; color: var(--ink); font-size: 13px; letter-spacing: .1em; }
+.opt small { display: block; color: var(--ink-soft); font-size: 12px; line-height: 1.5; }
+.minis { position: relative; height: 62px; }
+.minis i {
+  position: absolute; top: 4px; width: 36px; height: 54px; border-radius: 4px; left: calc(50% - 18px + var(--dx));
+  transform: rotate(var(--r)); background: url("art/back.webp") center / cover, linear-gradient(160deg, #3a3590, #1d1a4f);
+  border: 1px solid var(--gold); box-shadow: 0 3px 8px rgba(30, 20, 80, .35);
+}
+.stepper { display: none; align-items: center; gap: 10px; margin-top: 6px; }
+.opt[aria-pressed=true] .stepper { display: flex; }
+.stepper span[role=button] {
+  width: 28px; height: 28px; border-radius: 50%; display: grid; place-items: center; border: 1px solid var(--gold);
+  background: #fff; color: var(--navy); font-weight: 700; line-height: 1;
+}
+.stepper output { font: 700 16px var(--latin); min-width: 1.5em; text-align: center; }
+
+/* ---------- 问题 ---------- */
+.ask textarea {
+  width: 100%; min-height: 128px; resize: vertical; border: none; outline: none; background: transparent;
+  font: 500 16px/1.8 var(--serif); color: var(--ink);
+}
+.ask textarea::placeholder { color: #9c94c0; }
+.ab { display: none; gap: 10px; margin-top: 12px; }
+.ab.on { display: grid; grid-template-columns: 1fr 1fr; }
+.ab label { font-size: 12px; color: var(--ink-soft); }
+.ab input { display: block; width: 100%; margin-top: 4px; padding: 8px 10px; border-radius: 10px; border: 1px solid rgba(201, 162, 86, .7); background: #fff; outline: none; }
+.ab input:focus { border-color: var(--violet); }
+.scene { display: block; width: min(330px, 92%); height: auto; margin: 0 auto; }
+.toggles { display: flex; justify-content: center; gap: 10px; margin: 0 0 18px; flex-wrap: wrap; }
+.pill {
+  padding: 8px 18px; border-radius: 10px; border: 1.5px solid var(--gold); background: linear-gradient(180deg, #fffdf8, var(--cream)); color: var(--ink);
+  font: 700 14px var(--serif); letter-spacing: .1em; box-shadow: 0 4px 12px rgba(20, 12, 70, .18);
+}
+.pill[aria-pressed=true] { background: linear-gradient(180deg, var(--navy-2), var(--navy)); color: #fff4d8; border-color: var(--gold-hi); }
+
+/* ---------- 洗牌与抽牌 ---------- */
+.ritual { position: relative; height: 470px; margin: 0 -16px; overflow: hidden; touch-action: pan-y; }
+.floor { position: absolute; left: 50%; bottom: 10px; width: 420px; height: 420px; margin-left: -210px; transform: perspective(700px) rotateX(64deg); pointer-events: none; }
+.floor svg { width: 100%; height: 100%; animation: spin 50s linear infinite; filter: drop-shadow(0 0 8px rgba(255, 255, 255, .95)); }
+.floor::before { content: ''; position: absolute; inset: 8%; border-radius: 50%; background: radial-gradient(closest-side, rgba(255, 255, 255, .95), rgba(200, 185, 255, .6) 45%, transparent); filter: blur(4px); }
+@keyframes spin { to { transform: rotate(360deg); } }
+.vortex { position: absolute; left: 50%; top: 170px; width: 0; height: 0; }
+.vortex .c {
+  position: absolute; left: -36px; top: -54px; width: 72px; height: 108px;
+  animation: orbit 2.6s cubic-bezier(.65, 0, .35, 1) both; animation-delay: var(--dl);
+}
+.vortex .c > * { width: 100%; height: 100%; display: block; border-radius: 5px; filter: drop-shadow(0 4px 10px rgba(20, 12, 70, .45)); }
+@keyframes orbit {
+  0% { transform: rotate(0) translateY(0) scale(.9); }
+  30% { transform: rotate(var(--a)) translateY(-120px) scale(1); }
+  72% { transform: rotate(calc(var(--a) + 300deg)) translateY(-120px) scale(1); }
+  100% { transform: rotate(calc(var(--a) + 360deg)) translateY(0) scale(.9); opacity: 0; }
+}
+.wheel { position: absolute; inset: 0; display: none; cursor: grab; }
+.wheel.dragging { cursor: grabbing; }
+.wheel.smooth button { transition: transform .35s ease, opacity .35s; }
+.ritual.ready .wheel { display: block; }
+.ritual.ready .vortex { display: none; }
+.wheel button {
+  position: absolute; padding: 0; border: none; background: none; border-radius: 6px;
+  transform: rotate(var(--a)); transition: opacity .35s;
+}
+.wheel button > * {
+  width: 100%; height: 100%; display: block; border-radius: 6px; pointer-events: none;
+  box-shadow: 0 0 0 1px rgba(240, 215, 150, .7), 0 6px 14px rgba(20, 12, 70, .45);
+  transition: transform .25s cubic-bezier(.2, .8, .2, 1), box-shadow .25s;
+}
+.wheel button:hover > *, .wheel button:focus-visible > * { transform: translateY(-16px); box-shadow: 0 0 0 2px var(--gold-hi), 0 0 22px rgba(255, 236, 180, .95); }
+.wheel button.taken { opacity: 0; pointer-events: none; }
+.wheel button.taken > * { transform: translateY(-80px) scale(.8); }
+.wheel button.off { visibility: hidden; }
+.hand { position: absolute; right: -8px; bottom: 24px; width: 150px; pointer-events: none; transform: rotate(-6deg); }
+.spin-btn {
+  position: absolute; top: 128px; z-index: 3; width: 34px; height: 34px; border-radius: 50%; padding: 0;
+  border: 1.5px solid var(--gold); background: rgba(27, 22, 72, .8); color: var(--gold-hi); font: 700 18px/1 var(--serif);
+}
+.spin-btn.l { left: 18px; } .spin-btn.r { right: 18px; }
+.ritual:not(.ready) .spin-btn { display: none; }
+.hint { text-align: center; color: var(--ink); font: 700 14px/1.7 var(--serif); margin: 4px 0 0; text-shadow: 0 0 8px #fff, 0 0 2px #fff; }
+.slots { display: flex; flex-wrap: wrap; justify-content: center; gap: 6px; margin: -6px 0 6px; }
+.slots span { font-size: 12px; padding: 1px 10px; border-radius: 999px; border: 1px solid rgba(240, 215, 150, .6); color: #ece6ff; background: rgba(27, 22, 72, .45); }
+.slots span.done { background: linear-gradient(180deg, #fffdf8, var(--cream)); color: var(--navy); border-color: var(--gold); }
+.slots span.next { border-color: var(--gold-hi); color: #fff; box-shadow: 0 0 10px rgba(240, 215, 150, .6); }
+
+/* ---------- 牌阵 ---------- */
+.stage-wrap { position: relative; padding: 18px 0 8px; }
+.stage-wrap .floor { bottom: auto; top: 30px; width: 400px; height: 400px; margin-left: -200px; opacity: .9; }
+.stage { position: relative; margin: 0 auto; z-index: 1; }
+.backview { display: block; width: min(220px, 60%); margin: -6px auto -10px; position: relative; z-index: 0; }
+.slot {
+  position: absolute; width: var(--cw); height: calc(var(--cw) * 1.5); pointer-events: none;
+  animation: deal .7s cubic-bezier(.2, .8, .2, 1) backwards;
+}
+@keyframes deal { from { opacity: 0; transform: translateY(-120px) rotate(-10deg) scale(.75); } }
+.slot.major::before {
+  content: ''; position: absolute; inset: -18%; border-radius: 30%; z-index: -1;
+  background: radial-gradient(closest-side, rgba(255, 255, 255, .95), rgba(170, 140, 255, .5) 55%, transparent);
+  filter: blur(6px); animation: aura 3.2s ease-in-out infinite;
+}
+@keyframes aura { 50% { opacity: .55; transform: scale(.95); } }
+.rot { position: absolute; inset: 0; perspective: 900px; cursor: pointer; pointer-events: auto; }
+.rot.cross { transform: rotate(90deg); }
+.inner { position: absolute; inset: 0; transition: transform .9s cubic-bezier(.3, .7, .2, 1.15); transform-style: preserve-3d; }
+.flipped .inner { transform: rotateY(180deg); }
+.back, .face {
+  position: absolute; inset: 0; backface-visibility: hidden; -webkit-backface-visibility: hidden; overflow: hidden;
+  border-radius: calc(var(--cw) * .06); box-shadow: 0 8px 20px rgba(20, 12, 70, .4), 0 0 0 1.5px var(--gold);
+}
+.back > *, .face > * { width: 100%; height: 100%; display: block; object-fit: cover; user-select: none; }
+.face { transform: rotateY(180deg); }
+.face.rev > * { transform: rotate(180deg); }
+.rot:not(.flipped) .back { animation: beckon 2.4s ease-in-out infinite; }
+@keyframes beckon { 50% { box-shadow: 0 8px 20px rgba(20, 12, 70, .4), 0 0 0 1.5px var(--gold-hi), 0 0 22px rgba(255, 236, 180, .95); } }
+.badge {
+  position: absolute; top: -10px; left: -10px; z-index: 3; width: 22px; height: 22px; border-radius: 50%;
+  background: var(--navy); border: 1px solid var(--gold-hi); color: #fff4d8; font: 700 11px/20px var(--latin); text-align: center;
+}
+.rot.cross .badge { top: auto; bottom: -10px; }
+.cap { position: absolute; left: -20%; right: -20%; top: calc(100% + 8px); text-align: center; line-height: 1.35; pointer-events: none; text-shadow: 0 0 6px #fff, 0 0 2px #fff, 0 0 10px #fff; }
+.cap b { display: block; font: 900 15px/1.4 var(--serif); color: var(--ink); letter-spacing: .12em; }
+.cap small { display: block; color: var(--ink); font-size: 12px; }
+.cap small.rev { color: var(--rev); }
+.burst { position: absolute; left: 50%; top: 50%; width: 0; height: 0; pointer-events: none; z-index: 6; }
+.burst::before {
+  content: ''; position: absolute; left: calc(var(--cw) * -.6); top: calc(var(--cw) * -.6); width: calc(var(--cw) * 1.2); height: calc(var(--cw) * 1.2);
+  border-radius: 50%; border: 2px solid #fff; box-shadow: 0 0 24px var(--gold-hi), inset 0 0 24px var(--gold-hi);
+  animation: ring .9s ease-out forwards;
+}
+@keyframes ring { 0% { transform: scale(.15); opacity: 1; } 100% { transform: scale(2); opacity: 0; } }
+.burst i {
+  position: absolute; width: 5px; height: 5px; margin: -2.5px; border-radius: 50%; background: #fff;
+  box-shadow: 0 0 10px 3px var(--gold-hi); animation: spark 1s cubic-bezier(.1, .8, .3, 1) forwards;
+}
+.burst.major::before { box-shadow: 0 0 34px var(--violet), inset 0 0 30px var(--violet); }
+.burst.major i { box-shadow: 0 0 12px 4px var(--violet); }
+@keyframes spark { from { transform: rotate(var(--a)) translateY(0); opacity: 1; } to { transform: rotate(var(--a)) translateY(calc(var(--d) * -1)); opacity: 0; } }
+
+/* ---------- 牌义解析 ---------- */
+.detail-top { display: grid; grid-template-columns: 48% 1fr; gap: 16px; align-items: start; }
+.bigcard { position: relative; border-radius: 8px; padding: 6px; background: linear-gradient(160deg, #fffdf6, var(--cream)); border: 1.5px solid var(--gold); box-shadow: inset 0 0 0 3px #fffdf6, inset 0 0 0 4px rgba(201, 162, 86, .5), 0 10px 26px rgba(20, 12, 70, .25); }
+.bigcard .card { aspect-ratio: 2 / 3; max-width: 100%; border-radius: 5px; overflow: hidden; }
+.bigcard .card > * { width: 100%; height: 100%; display: block; object-fit: cover; }
+.bigcard .card.rev > * { transform: rotate(180deg); }
+.info { min-width: 0; }
+.info .where { font-size: 12px; color: var(--ink-soft); letter-spacing: .12em; }
+.info h3 { margin: 2px 0 0; font: 900 30px/1.25 var(--serif); letter-spacing: .1em; color: var(--ink); }
+.info .en { font: 500 14px/1.4 var(--latin); color: var(--ink); letter-spacing: .1em; }
+.tags { display: flex; flex-wrap: wrap; gap: 6px; margin: 10px 0; }
+.tag { font-size: 12px; padding: 2px 12px; border-radius: 999px; border: 1px solid var(--gold); background: linear-gradient(180deg, #fff3d4, #f4dfae); color: #6b4b12; }
+.tag.rev { border-color: var(--rev); color: var(--rev); background: #fff3f5; }
+.tag.maj { border-color: #b8a8ea; color: #4a3b9a; background: #ece6fb; }
+.kwline { display: flex; flex-wrap: wrap; gap: 6px; }
+.kwline span { font-size: 12px; padding: 1px 10px; border-radius: 999px; background: #efeaf8; color: #3e3876; }
+.sec { margin-top: 14px; }
+.sec + .sec { border-top: 1px solid rgba(201, 162, 86, .45); padding-top: 14px; }
+.pager { display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: 10px; margin-top: 18px; }
+.pager .btn { width: 100%; font-size: 14px; letter-spacing: .1em; text-indent: .1em; padding: 11px 22px; }
+.pager output { font: 700 16px var(--latin); color: var(--ink); text-shadow: 0 0 6px #fff; }
+
+/* ---------- 整体解读 ---------- */
+.thumbs { display: grid; grid-template-columns: repeat(auto-fit, minmax(64px, 1fr)); gap: 10px; justify-items: center; margin-bottom: 16px; }
+.thumbs.many { grid-template-columns: repeat(5, 1fr); }
+.thumb { display: grid; justify-items: center; gap: 4px; background: none; border: none; padding: 0; width: 100%; max-width: 88px; }
+.thumb .card { width: 100%; aspect-ratio: 2 / 3; border-radius: 5px; overflow: hidden; box-shadow: 0 0 0 1px var(--gold), 0 4px 10px rgba(20, 12, 70, .3); }
+.thumb .card > * { width: 100%; height: 100%; display: block; object-fit: cover; }
+.thumb .card.rev > * { transform: rotate(180deg); }
+.thumb b { font: 900 13px/1.3 var(--serif); color: var(--ink); }
+.thumb small { font-size: 11px; color: var(--ink-soft); line-height: 1.2; }
+.thumb small.rev { color: var(--rev); }
+.advice { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
+.advice li { position: relative; padding-left: 20px; color: #3e3876; }
+.advice li::before { content: '◆'; position: absolute; left: 0; top: 0; color: var(--gold); font-size: 11px; line-height: 2.3; }
+
+/* ---------- 图鉴、记录、设置 ---------- */
+.gal { display: grid; gap: 12px; }
+.gal .panel { display: grid; grid-template-columns: 64px 1fr; gap: 14px; align-items: start; }
+.gal svg { width: 64px; height: 64px; }
+.gal ol { margin: 6px 0 10px; padding-left: 1.3em; font-size: 13px; color: #3e3876; }
+.gal .use { padding: 6px 16px; border-radius: 10px; border: 1.5px solid var(--gold); background: linear-gradient(180deg, #fffdf8, var(--cream)); color: var(--navy); font: 700 13px var(--serif); }
+.recs { display: grid; gap: 10px; }
+.rec { text-align: left; width: 100%; padding: 14px 18px; border-radius: 12px; border: 1.5px solid rgba(201, 162, 86, .8); background: var(--frame-sm), var(--ivory); box-shadow: inset 0 0 0 3px var(--ivory), inset 0 0 0 4px rgba(201, 162, 86, .35), 0 6px 16px rgba(20, 12, 70, .18); }
+.rec .q { font: 700 15px/1.5 var(--serif); color: var(--ink); }
+.rec .meta { font-size: 12px; color: var(--ink-soft); }
+.empty { text-align: center; color: var(--ink-soft); }
+.set { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 12px 0; }
+.set + .set { border-top: 1px solid rgba(201, 162, 86, .45); }
+.set b { display: block; font: 700 15px var(--serif); }
+.set small { color: var(--ink-soft); font-size: 12px; }
+.switch { position: relative; flex: none; width: 50px; height: 28px; border-radius: 999px; border: 1px solid var(--gold); background: #e6def8; padding: 0; transition: background .2s; }
+.switch::after { content: ''; position: absolute; top: 2px; left: 2px; width: 22px; height: 22px; border-radius: 50%; background: #fff; box-shadow: 0 1px 4px rgba(0, 0, 0, .2); transition: transform .2s; }
+.switch[aria-checked=true] { background: linear-gradient(180deg, var(--navy-2), var(--navy)); }
+.switch[aria-checked=true]::after { transform: translateX(22px); }
+.danger { padding: 6px 14px; border-radius: 10px; border: 1px solid var(--rev); background: #fff; color: var(--rev); font-size: 13px; }
+.note { text-align: center; color: var(--ink); font-size: 11px; margin-top: 18px; text-shadow: 0 0 6px #fff; }
+
+@media (max-width: 380px) {
+  .hero h1 { font-size: 42px; }
+  .detail-top { grid-template-columns: 1fr; }
+  .bigcard { width: 68%; margin: 0 auto; }
+}
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; }
+}
+</style>
+</head>
+<body>
+<canvas id="sky" aria-hidden="true"></canvas>
+<svg width="0" height="0" style="position:absolute;width:0;height:0;overflow:hidden" aria-hidden="true" focusable="false">
+  <defs>
+    <linearGradient id="g-gold" gradientUnits="userSpaceOnUse" x1="0" y1="0" x2="100" y2="150">
+      <stop offset="0" stop-color="#fff4cf"/><stop offset=".3" stop-color="#e2b65c"/><stop offset=".5" stop-color="#a97b2e"/>
+      <stop offset=".7" stop-color="#f6dc95"/><stop offset="1" stop-color="#b8862f"/>
+    </linearGradient>
+    <linearGradient id="g-gold-i" gradientUnits="userSpaceOnUse" x1="-10" y1="-10" x2="10" y2="10">
+      <stop offset="0" stop-color="#fff4cf"/><stop offset=".45" stop-color="#e2b65c"/><stop offset=".75" stop-color="#9c6f26"/><stop offset="1" stop-color="#f6dc95"/>
+    </linearGradient>
+    <radialGradient id="g-face" cx=".5" cy=".4" r=".85">
+      <stop offset="0" stop-color="#262a66"/><stop offset=".5" stop-color="#14163f"/><stop offset="1" stop-color="#06071a"/>
+    </radialGradient>
+    <radialGradient id="g-neb1"><stop offset="0" stop-color="#7a5cff" stop-opacity=".45"/><stop offset=".6" stop-color="#4b3bb0" stop-opacity=".15"/><stop offset="1" stop-color="#4b3bb0" stop-opacity="0"/></radialGradient>
+    <radialGradient id="g-neb2"><stop offset="0" stop-color="#4fa8ff" stop-opacity=".32"/><stop offset=".6" stop-color="#2a5fb0" stop-opacity=".12"/><stop offset="1" stop-color="#2a5fb0" stop-opacity="0"/></radialGradient>
+    <linearGradient id="g-cream" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#fffbf2"/><stop offset=".6" stop-color="#f6ecd6"/><stop offset="1" stop-color="#efe0bd"/></linearGradient>
+    <linearGradient id="g-win" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#231b5e"/><stop offset=".45" stop-color="#4a3c9e"/><stop offset=".85" stop-color="#8d7bd6"/><stop offset="1" stop-color="#b8a8ea"/></linearGradient>
+    <radialGradient id="g-back" cx=".5" cy=".5" r=".75">
+      <stop offset="0" stop-color="#3a1f6e"/><stop offset=".5" stop-color="#1a1240"/><stop offset="1" stop-color="#08061a"/>
+    </radialGradient>
+    <radialGradient id="g-halo"><stop offset="0" stop-color="#f6dc95" stop-opacity=".45"/><stop offset="1" stop-color="#f6dc95" stop-opacity="0"/></radialGradient>
+    <radialGradient id="g-major"><stop offset="0" stop-color="#b48cff" stop-opacity=".55"/><stop offset="1" stop-color="#b48cff" stop-opacity="0"/></radialGradient>
+    <radialGradient id="g-wands"><stop offset="0" stop-color="#ff7a45" stop-opacity=".5"/><stop offset="1" stop-color="#ff7a45" stop-opacity="0"/></radialGradient>
+    <radialGradient id="g-cups"><stop offset="0" stop-color="#4fb3ff" stop-opacity=".5"/><stop offset="1" stop-color="#4fb3ff" stop-opacity="0"/></radialGradient>
+    <radialGradient id="g-swords"><stop offset="0" stop-color="#b8c4ff" stop-opacity=".45"/><stop offset="1" stop-color="#b8c4ff" stop-opacity="0"/></radialGradient>
+    <radialGradient id="g-pentacles"><stop offset="0" stop-color="#7be0a0" stop-opacity=".45"/><stop offset="1" stop-color="#7be0a0" stop-opacity="0"/></radialGradient>
+  </defs>
+</svg>
+<svg class="hall" id="hall" viewBox="0 0 460 900" preserveAspectRatio="xMidYMin slice" aria-hidden="true"></svg>
+<svg class="flowers" id="flowers" viewBox="0 0 460 150" preserveAspectRatio="xMidYMax slice" aria-hidden="true"></svg>
+
+<div class="app">
+  <div class="bar">
+    <button class="round" id="nav-back" aria-label="返回" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg></button>
+    <svg class="emblem" id="emblem" viewBox="-50 -50 100 100" aria-hidden="true"></svg>
+    <button class="round" id="nav-home" aria-label="回到首页" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><path d="M4 11l8-6 8 6v8H4z"/><path d="M10 19v-5h4v5"/></svg></button>
+  </div>
+
+  <section class="screen on" id="s-home">
+    <div class="hero">
+      <h1>推演之梦<br>龙娘</h1>
+      <div class="sub">星辰指引 · 命运回响</div>
+    </div>
+    <div class="mascot">
+      <canvas id="live" role="button" tabindex="0" aria-label="龙娘。点她一下，她会跟你说话"></canvas>
+      <img id="live-fallback" src="art/dragon-live.webp" alt="银白长发、紫色龙角和龙翼的龙娘" width="730" height="1255" hidden>
+      <span class="poke-hint" id="poke-hint">点她一下</span>
+    </div>
+    <div class="bubble" id="home-line"><span class="say">哼，想知道命运的走向？本小姐就勉为其难，帮你推演一次吧。</span>
+      <button class="voice" id="voice" aria-pressed="true" aria-label="龙娘的声音"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9.5h3.5L12 5.5v13L7.5 14.5H4z" fill="currentColor"/><path class="on" d="M15.5 9a4 4 0 0 1 0 6M18 6.5a7.5 7.5 0 0 1 0 11"/><path class="off" d="M16 9l5 6M21 9l-5 6"/></svg></button></div>
+    <button class="btn" id="start">开始占卜</button>
+    <div class="nav3">
+      <button data-go="gallery"><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="5" y="4" width="10" height="15" rx="1.5"/><path d="M9 7.5h10.5V20H11"/></svg></span>牌阵图鉴</button>
+      <button data-go="records"><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="5" y="3.5" width="14" height="17" rx="1.5"/><path d="M8.5 8h7M8.5 12h7M8.5 16h4"/></svg></span>我的记录</button>
+      <button data-go="settings"><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="12" cy="12" r="3.2"/><path d="M12 3v3M12 18v3M3 12h3M18 12h3M5.6 5.6l2.1 2.1M16.3 16.3l2.1 2.1M5.6 18.4l2.1-2.1M16.3 7.7l2.1-2.1"/></svg></span>设置</button>
+    </div>
+  </section>
+
+  <section class="screen" id="s-spreads">
+    <div class="head"><h2>选择牌阵</h2><p>星辰会指引你，找到想要的答案</p></div>
+    <div class="opts" id="opts"></div>
+    <div class="foot"><button class="btn" id="to-question">下一步</button></div>
+  </section>
+
+  <section class="screen" id="s-question">
+    <div class="head"><h2>请输入你的问题</h2><p>在星光下，聆听内心的声音</p></div>
+    <div class="panel ask">
+      <textarea id="question" aria-label="你的问题" maxlength="200" placeholder="例如：&#10;我现在的职业选择是否正确？&#10;这段感情的未来会如何？&#10;接下来我需要注意什么？"></textarea>
+      <div class="ab" id="ab">
+        <label for="opt-a">选项 A<input type="text" id="opt-a" maxlength="16" placeholder="比如：留下"></label>
+        <label for="opt-b">选项 B<input type="text" id="opt-b" maxlength="16" placeholder="比如：跳槽"></label>
+      </div>
+    </div>
+    <img class="scene" src="art/dragon-quill.webp" alt="龙娘拿着羽毛笔，身边摊着书" width="560" height="446">
+    <div class="toggles">
+      <button class="pill" id="anon" aria-pressed="false">保持匿名</button>
+      <button class="pill" id="autosave" aria-pressed="true">保存到记录</button>
+    </div>
+    <button class="btn" id="to-draw">开始洗牌</button>
+  </section>
+
+  <section class="screen" id="s-draw">
+    <div class="head"><h2 id="draw-title">星辰洗牌</h2><p id="draw-sub">请静下心来，集中你的意念</p></div>
+    <div class="slots" id="slots"></div>
+    <div class="ritual" id="ritual">
+      <div class="floor"><svg id="circle" viewBox="-100 -100 200 200" aria-hidden="true"></svg></div>
+      <img class="hand" src="art/hand.webp" alt="" width="284" height="404">
+      <div class="vortex" id="vortex"></div>
+      <div class="wheel" id="wheel"></div>
+      <button class="spin-btn l" id="spin-l" aria-label="牌堆往左转">‹</button>
+      <button class="spin-btn r" id="spin-r" aria-label="牌堆往右转">›</button>
+    </div>
+    <p class="hint" id="draw-hint">当你准备好时，左右滑动牌堆<br>点击卡牌，抽取属于你的命运之牌</p>
+    <button class="link" id="pick-auto">替我随机抽</button>
+  </section>
+
+  <section class="screen" id="s-reveal">
+    <div class="head"><h2 id="reveal-title">抽取你的牌</h2><p id="reveal-sub">凭直觉，一张一张翻开</p></div>
+    <div class="stage-wrap"><div class="floor"><svg id="circle2" viewBox="-100 -100 200 200" aria-hidden="true"></svg></div><div class="stage" id="stage"></div></div>
+    <img class="backview" src="art/dragon-back.webp" alt="龙娘背对着你，望向牌阵" width="400" height="442">
+    <div class="foot">
+      <button class="btn light" id="flip-all">全部翻开</button>
+      <button class="btn" id="to-detail" hidden>继续解读</button>
+    </div>
+  </section>
+
+  <section class="screen" id="s-detail">
+    <div class="head"><h2>牌义解析</h2><p>深入理解每一张牌的启示</p></div>
+    <div class="panel" id="detail"></div>
+    <div class="pager">
+      <button class="btn light" id="prev">← 上一张</button>
+      <output id="page"></output>
+      <button class="btn light" id="next">下一张 →</button>
+    </div>
+  </section>
+
+  <section class="screen" id="s-overall">
+    <div class="head"><h2>整体解读</h2><p>星辰为你编织的完整指引</p></div>
+    <div class="panel" id="overall"></div>
+    <div class="foot btn-row">
+      <button class="btn light" id="save">保存记录</button>
+      <button class="btn" id="again">重新占卜</button>
+    </div>
+    <button class="link" id="copy">复制这次的解读</button>
+  </section>
+
+  <section class="screen" id="s-gallery">
+    <div class="head"><h2>牌阵图鉴</h2><p>每个位置都在回答一个问题</p></div>
+    <div class="gal" id="gal"></div>
+  </section>
+
+  <section class="screen" id="s-records">
+    <div class="head"><h2>我的记录</h2><p>星辰记得你问过的每一个问题</p></div>
+    <div class="recs" id="recs"></div>
+  </section>
+
+  <section class="screen" id="s-settings">
+    <div class="head"><h2>设置</h2><p>调成你喜欢的推演方式</p></div>
+    <div class="panel">
+      <div class="set"><div><b>包含逆位牌</b><small>洗牌时每张牌有一半机会倒过来</small></div><button class="switch" id="set-rev" role="switch" aria-checked="true" aria-label="包含逆位牌"></button></div>
+      <div class="set"><div><b>默认保存到记录</b><small>抽完牌自动存进「我的记录」</small></div><button class="switch" id="set-save" role="switch" aria-checked="true" aria-label="默认保存到记录"></button></div>
+      <div class="set"><div><b>清空记录</b><small id="rec-count">记录只存在这台设备的浏览器里</small></div><button class="danger" id="clear">清空</button></div>
+    </div>
+    <p class="note">塔罗是一面帮助自我反思的镜子，不能代替医疗、法律、财务等专业意见。</p>
+  </section>
+</div>
+
+<script src="art/manifest.js"></script>
+<script src="art/dragon-live.js"></script>
+<script>
+'use strict';
+
+// ---------- 牌的数据 ----------
+
+const ROMAN = ['0', 'I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX', 'X', 'XI', 'XII', 'XIII', 'XIV', 'XV', 'XVI', 'XVII', 'XVIII', 'XIX', 'XX', 'XXI'];
+
+// 名字、英文名、占星对应（符号与名称）、正位关键词、逆位关键词、正位寓意、逆位寓意
+const MAJORS = [
+  ['愚者', 'The Fool', '♅', '天王星', '新的开始、天真、冒险、自由', '鲁莽、犹豫、冒失、逃避责任',
+    '放下顾虑，像第一次上路那样轻装出发；未知不是威胁，而是邀请。',
+    '冲动和逃避都披着「自由」的外衣——出发前，先看一眼脚下的悬崖。'],
+  ['魔术师', 'The Magician', '☿', '水星', '创造、意志、技能、行动力', '操纵、才能被浪费、空想',
+    '你需要的工具都已在手边，现在缺的只是把念头化为行动的那一下。',
+    '能力不是问题，问题是方向或动机：小心空谈，也小心别人的花言巧语。'],
+  ['女祭司', 'The High Priestess', '☽', '月亮', '直觉、潜意识、神秘、静观', '忽视直觉、秘密外泄、流于表面',
+    '答案不在外面的喧闹里；安静下来，先听听你心里早就知道的那个声音。',
+    '你在忽视直觉，或者太在意别人怎么看；有些事还没到说破的时候。'],
+  ['皇后', 'The Empress', '♀', '金星', '丰饶、滋养、美、创造力', '依赖、过度保护、停滞',
+    '这是滋养与生长的季节，善待自己和身边的人，事情会自然丰盈。',
+    '付出过度或过度依赖都会让能量停滞，先把照顾分一点给自己。'],
+  ['皇帝', 'The Emperor', '♈', '白羊座', '权威、结构、秩序、掌控', '专制、僵化、失控',
+    '建立规则、承担责任、拿出主导权——稳固的结构会给你底气。',
+    '控制欲过强或秩序崩坏都在提醒你：掌控不等于强硬。'],
+  ['教皇', 'The Hierophant', '♉', '金牛座', '传统、信念、指导、规范', '打破常规、教条、叛逆',
+    '向有经验的人请教，或回到可靠的传统与原则，会少走弯路。',
+    '现成的规矩未必适合你；是时候用自己的方式重新理解「应该」。'],
+  ['恋人', 'The Lovers', '♊', '双子座', '爱、结合、价值选择、和谐', '失衡、价值冲突、错误的选择',
+    '这是一道关于价值的选择题：选你真正认同的，而不只是看起来对的。',
+    '心与行不一致，或关系里出现了失衡；先弄清自己真正想要什么。'],
+  ['战车', 'The Chariot', '♋', '巨蟹座', '意志、胜利、前进、自律', '失去方向、受阻、急躁',
+    '握紧缰绳，把相互拉扯的力量统一到同一个方向，就能冲过去。',
+    '力气用散了：方向不明或急于求成，让车子在原地打转。'],
+  ['力量', 'Strength', '♌', '狮子座', '勇气、温柔的力量、耐心、自制', '自我怀疑、软弱、情绪失控',
+    '真正的力量是温柔而坚定的；用耐心驯服困难，而不是用蛮力。',
+    '你比自己以为的更有力量，别让一时的怀疑和情绪替你做决定。'],
+  ['隐士', 'The Hermit', '♍', '处女座', '内省、独处、寻求真理、指引', '孤立、退缩、迷失',
+    '暂时退一步，独处与沉思会点亮那盏只照亮下一步的灯。',
+    '独处变成了封闭；适度地回到人群，别让自己困在原地。'],
+  ['命运之轮', 'Wheel of Fortune', '♃', '木星', '转机、循环、命运、机遇', '厄运、抗拒变化、失控',
+    '轮子在转动，机会正在出现——顺着变化走，而不是抓着过去不放。',
+    '时运暂时不在你这边；低谷也是循环的一部分，耐心等待下一次转动。'],
+  ['正义', 'Justice', '♎', '天秤座', '公正、因果、真相、责任', '不公、逃避责任、偏见',
+    '种什么因，得什么果；诚实面对事实，公平的结果会到来。',
+    '有些事不够公平，或者你在回避自己的那一份责任。'],
+  ['倒吊人', 'The Hanged Man', '♆', '海王星', '暂停、换个角度、牺牲、臣服', '拖延、无谓的牺牲、执拗',
+    '暂停不是失败；换一个角度看，困局会露出意想不到的出口。',
+    '停太久就成了拖延；该放下的牺牲和执念，放下吧。'],
+  ['死神', 'Death', '♏', '天蝎座', '结束、转化、告别、新生', '抗拒改变、停滞、难以放手',
+    '一个阶段正在结束；好好告别，才能为新的开始腾出位置。',
+    '你在抗拒一个必然的结束，越抓紧，越痛。'],
+  ['节制', 'Temperance', '♐', '射手座', '平衡、调和、耐心、适度', '失衡、过度、急于求成',
+    '调和、适度、慢慢来——把看似矛盾的东西融合在一起，正是你的功课。',
+    '某处已经失衡：太多、太快或太急，先找回自己的节奏。'],
+  ['恶魔', 'The Devil', '♑', '摩羯座', '束缚、欲望、执念、诱惑', '解脱、觉醒、摆脱束缚',
+    '看清是什么在绑住你：欲望、习惯还是恐惧？锁链其实并没有锁死。',
+    '你正在挣脱束缚，或终于看清了它；继续往前走。'],
+  ['塔', 'The Tower', '♂', '火星', '剧变、崩塌、启示、突如其来', '侥幸躲过、恐惧改变、迟来的崩塌',
+    '建立在不稳地基上的东西会突然倒塌；很痛，但它让真相得以显露。',
+    '你也许躲过了一场崩塌，也许只是推迟了它——内在的改变已无法回避。'],
+  ['星星', 'The Star', '♒', '水瓶座', '希望、灵感、疗愈、平静', '失望、缺乏信心、灰心',
+    '风暴过后，希望重新亮起；相信疗愈正在发生，慢慢来。',
+    '你暂时看不见星光，但它还在；先重建一点点对自己的信心。'],
+  ['月亮', 'The Moon', '♓', '双鱼座', '迷惑、幻象、不安、潜意识', '释放恐惧、真相浮现、走出迷雾',
+    '眼前并非全部真相，不安也许来自想象；放慢脚步，别急着下结论。',
+    '迷雾正在散去，曾经让你害怕的东西，渐渐显出了原形。'],
+  ['太阳', 'The Sun', '☉', '太阳', '喜悦、成功、活力、坦诚', '暂时的阴霾、过度乐观、喜悦受阻',
+    '明朗、温暖、成功——坦率地表达自己，喜悦会如期而至。',
+    '阳光仍在，只是被云挡住了一会儿；别让小挫折遮住整片天空。'],
+  ['审判', 'Judgement', '♇', '冥王星', '觉醒、召唤、重生、反省', '自我怀疑、拒绝召唤、悔恨',
+    '一声召唤正在响起：回顾过去、原谅自己，然后带着领悟重生。',
+    '自我批判或犹豫让你听不见召唤；过去的，已经过去了。'],
+  ['世界', 'The World', '♄', '土星', '完成、圆满、整合、旅程的终点', '未竟之事、缺少收尾、停滞',
+    '一个周期圆满完成，你可以收获、庆祝，并准备迈向更大的旅程。',
+    '只差最后一步；把未竟之事收好尾，才能真正翻页。'],
+];
+
+const SUITS = [
+  { key: 'wands', en: 'Wands', name: '权杖', el: '火', color: '#ff7a45', theme: '行动、热情与事业',
+    most: '火元素最多：关键在行动与热情。想清楚了，就去做。' },
+  { key: 'cups', en: 'Cups', name: '圣杯', el: '水', color: '#4fb3ff', theme: '情感、关系与直觉',
+    most: '水元素最多：情感与关系是这件事的核心，先听听内心的感受。' },
+  { key: 'swords', en: 'Swords', name: '宝剑', el: '风', color: '#b8c4ff', theme: '思考、沟通与冲突',
+    most: '风元素最多：思虑、沟通或冲突占了上风，理清头绪、把话说清楚很重要。' },
+  { key: 'pentacles', en: 'Pentacles', name: '星币', el: '土', color: '#7be0a0', theme: '金钱、工作与身体',
+    most: '土元素最多：一切要落到实处——钱、工作、身体和具体的计划。' },
+];
+
+const RANKS = [
+  { name: '王牌', en: 'Ace', mark: 'A', theme: '新能量的种子' },
+  { name: '二', en: 'Two', mark: '2', theme: '两极与抉择' },
+  { name: '三', en: 'Three', mark: '3', theme: '最初的成形与成长' },
+  { name: '四', en: 'Four', mark: '4', theme: '稳定与巩固' },
+  { name: '五', en: 'Five', mark: '5', theme: '冲突与变动' },
+  { name: '六', en: 'Six', mark: '6', theme: '冲突之后的调和' },
+  { name: '七', en: 'Seven', mark: '7', theme: '考验与评估' },
+  { name: '八', en: 'Eight', mark: '8', theme: '推进与积累' },
+  { name: '九', en: 'Nine', mark: '9', theme: '接近完成、独自承担' },
+  { name: '十', en: 'Ten', mark: '10', theme: '一个周期的终点' },
+  { name: '侍从', en: 'Page', mark: '侍', court: true, line: '侍从是学徒与信使：带来消息，也代表好奇、初学的心态，或一位年轻的人。' },
+  { name: '骑士', en: 'Knight', mark: '骑', court: true, line: '骑士是行动者：把这股能量推向极致，有冲劲，也容易过头。' },
+  { name: '王后', en: 'Queen', mark: '后', court: true, line: '王后向内掌握这股能量：成熟、包容，靠影响力而非命令。' },
+  { name: '国王', en: 'King', mark: '王', court: true, line: '国王向外掌握这股能量：主导、负责，为结果拍板。' },
+];
+
+// 每个花色从王牌到国王，「正位|逆位」
+const MINOR_KW = {
+  wands: [
+    '灵感、新机会、热情的火花|延迟、缺乏动力、方向不明',
+    '规划、远见、抉择|害怕未知、计划不周',
+    '拓展、眺望远方、等待成果|受阻、目光短浅',
+    '庆祝、安定、和谐、归属|不稳定、过渡期',
+    '竞争、冲突、摩擦|回避冲突、内耗',
+    '胜利、认可、凯旋|自负、失去认可',
+    '坚守立场、迎接挑战、防御|力不从心、退让',
+    '迅速、进展、消息|延误、受挫、仓促',
+    '坚韧、防备、最后的坚持|疲惫、偏执、想要放弃',
+    '重担、责任过多、压力|卸下重担、学会委派',
+    '热情的探索、好消息、冒险心|三分钟热度、坏消息',
+    '冲劲、冒险、激情行动|冲动、鲁莽、半途而废',
+    '自信、魅力、独立、温暖|嫉妒、自我中心、情绪化',
+    '远见、领导力、魄力|专横、急躁、期望过高',
+  ],
+  cups: [
+    '新的感情、爱、情感涌现|情感压抑、空虚',
+    '结合、伙伴、相互吸引|失和、分离、付出不对等',
+    '友谊、庆祝、团聚|过度放纵、小圈子、三角关系',
+    '冷淡、沉思、错过机会|重新投入、接受新事物',
+    '失落、遗憾、悲伤|释怀、走出悲伤',
+    '怀旧、童真、旧情|沉溺过去、向前看',
+    '幻想、选择太多、白日梦|看清现实、做出决定',
+    '离开、寻找更深的意义|害怕离开、徘徊不定',
+    '满足、心愿达成|贪心、表面的满足',
+    '家庭幸福、圆满、和谐|家庭不和、理想破灭',
+    '浪漫的讯息、直觉、敏感|情绪化、不成熟',
+    '浪漫、邀约、追随内心|不切实际、情绪多变',
+    '同理心、温柔、直觉|情感依赖、过度敏感',
+    '情绪成熟、包容、冷静|情绪操控、冷漠',
+  ],
+  swords: [
+    '清晰、真相、突破|混乱、误判',
+    '僵局、难以抉择、回避|信息过载、终于做出选择',
+    '心碎、悲伤、分离|疗伤、释放痛苦',
+    '休息、恢复、冥想|焦躁、倦怠、重新出发',
+    '争执、输赢、不择手段|和解、放下争执',
+    '过渡、离开困境、平复|无法离开、旧事未了',
+    '策略、隐瞒、独自行动|坦白、良心发现',
+    '受困、自我设限、无助|解开束缚、新的视角',
+    '焦虑、失眠、担忧|走出阴影、恐惧减轻',
+    '结束、谷底、痛苦的终结|复苏、最坏的已经过去',
+    '好奇、警觉、求知|流言、多疑',
+    '果断、迅速、直言|莽撞、言语伤人',
+    '独立、清醒、直率|刻薄、冷酷',
+    '理性、权威、公正的判断|滥用权力、冷血',
+  ],
+  pentacles: [
+    '新的财源、机会、稳固的开端|错失机会、规划不足',
+    '平衡、多线并行、灵活应变|失衡、手忙脚乱',
+    '合作、技艺、团队|缺乏协作、敷衍了事',
+    '守财、保守、安全感|吝啬、过度控制、学会放手',
+    '困顿、匮乏、被排斥|走出困境、获得援助',
+    '慷慨、给予与接受、分享|施受失衡、附带条件',
+    '耐心、长期投资、评估|焦虑回报、白费功夫',
+    '专注、钻研、勤奋|敷衍、完美主义',
+    '独立、富足、自给自足|过度工作、虚荣',
+    '财富传承、家族、长久稳定|家庭纠纷、财务不稳',
+    '学习、踏实、新计划|拖延、缺乏进展',
+    '稳健、勤勉、可靠|停滞、固执、乏味',
+    '务实、滋养、富足|过度操劳、忽视自己',
+    '稳重、成功、财务掌控|物质主义、固执',
+  ],
+};
+
+const kw = s => s.split('、');
+
+const DECK = [];
+MAJORS.forEach((m, i) => DECK.push({
+  id: i, major: true, num: i, name: m[0], en: m[1], glyph: m[2], astro: m[3],
+  up: kw(m[4]), rev: kw(m[5]), msg: m[6], rmsg: m[7],
+}));
+SUITS.forEach(suit => RANKS.forEach((rank, r) => {
+  const [up, rev] = MINOR_KW[suit.key][r].split('|');
+  DECK.push({
+    id: DECK.length, major: false, suit, rank, num: r + 1,
+    name: suit.name + rank.name, en: `${rank.en} of ${suit.en}`, up: kw(up), rev: kw(rev),
+  });
+}));
+
+// ---------- 牌阵 ----------
+// x 以牌宽为单位，y 以牌高为单位；caps 为真时牌下面写位置名（行距留出写字的地方）
+
+const ROW = 1.4;
+
+const SPREADS = {
+  one: {
+    name: '单张神谕', brief: '当前的核心指引', desc: '简洁直接的答案',
+    w: 1, h: 1, max: 190, caps: true,
+    pos: [{ n: '指引', d: '此刻你最需要知道的事。', x: 0, y: 0 }],
+  },
+  three: {
+    name: '三张牌阵', brief: '过去 · 现在 · 未来', desc: '看清事情的来龙去脉',
+    w: 3.4, h: 1, max: 118, caps: true,
+    pos: [
+      { n: '过去', d: '已经发生、仍在影响你的事。', x: 0, y: 0 },
+      { n: '现在', d: '你此刻所处的状态与课题。', x: 1.2, y: 0 },
+      { n: '未来', d: '照现在的方向走下去，最可能的走向。', x: 2.4, y: 0 },
+    ],
+  },
+  love: {
+    name: '恋爱牌阵', brief: '关系 · 现状 · 建议', desc: '探索情感的可能性',
+    w: 3.4, h: 1, max: 118, caps: true,
+    pos: [
+      { n: '关系', d: '你们之间真正的连结是什么。', x: 0, y: 0 },
+      { n: '现状', d: '这段关系此刻的状态。', x: 1.2, y: 0 },
+      { n: '建议', d: '接下来你可以怎么做。', x: 2.4, y: 0 },
+    ],
+  },
+  career: {
+    name: '事业牌阵', brief: '现状 · 挑战 · 发展', desc: '洞察职业与机遇',
+    w: 3.4, h: 1, max: 118, caps: true,
+    pos: [
+      { n: '现状', d: '你在工作上的处境。', x: 0, y: 0 },
+      { n: '挑战', d: '眼前要跨过的难关。', x: 1.2, y: 0 },
+      { n: '发展', d: '照这样走下去的发展方向。', x: 2.4, y: 0 },
+    ],
+  },
+  choice: {
+    name: '二选一', brief: '现状 · 两条路的过程与结果', desc: '在两条路之间犹豫时',
+    w: 3.4, h: 1 + ROW, max: 100, caps: true,
+    pos: [
+      { n: '现状', d: '你做这个选择时的处境与心态。', x: 1.2, y: ROW / 2 },
+      { n: '{A}·过程', d: '选了它之后，会经历些什么。', x: 0, y: ROW },
+      { n: '{A}·结果', d: '这条路最可能的结果。', x: 0, y: 0 },
+      { n: '{B}·过程', d: '选了它之后，会经历些什么。', x: 2.4, y: ROW },
+      { n: '{B}·结果', d: '这条路最可能的结果。', x: 2.4, y: 0 },
+    ],
+  },
+  celtic: {
+    name: '凯尔特十字', brief: '十张牌 · 全面梳理', desc: '复杂的事，一次看清',
+    w: 5.2, h: 4.3, max: 100,
+    pos: [
+      { n: '现状', d: '问题的核心，你此刻的处境。', x: 1.4, y: 1.65 },
+      { n: '阻碍', d: '横在你面前的挑战（有时也是助力）。', x: 1.4, y: 1.65, cross: true },
+      { n: '根基', d: '事情的深层原因，潜意识里的东西。', x: 1.4, y: 2.8 },
+      { n: '过去', d: '刚刚过去、正在淡出的影响。', x: 0, y: 1.65 },
+      { n: '目标', d: '你意识里的期望，或可能达到的最好结果。', x: 1.4, y: 0.5 },
+      { n: '近未来', d: '接下来不久会出现的情况。', x: 2.8, y: 1.65 },
+      { n: '自我', d: '你在这件事里的态度与姿态。', x: 4.2, y: 3.3 },
+      { n: '环境', d: '他人和周围环境的影响。', x: 4.2, y: 2.2 },
+      { n: '希望与恐惧', d: '你心底盼望、也害怕的东西。', x: 4.2, y: 1.1 },
+      { n: '结果', d: '综合以上，事情最可能的结局。', x: 4.2, y: 0 },
+    ],
+  },
+  custom: {
+    name: '自定义牌阵', brief: '自由选择牌位数量', desc: '一到七张，想抽几张抽几张',
+    caps: true, pos: [],
+  },
+};
+
+// 自定义牌阵按张数现排：四张以内一排，再多分两排
+function customSpread(n) {
+  const rows = n <= 4 ? 1 : 2, per = Math.ceil(n / rows);
+  const pos = Array.from({ length: n }, (_, i) => {
+    const row = Math.floor(i / per), inRow = Math.min(per, n - row * per), k = i - row * per;
+    return { n: `第 ${i + 1} 张`, d: '凭直觉解读这张牌给你的提示。', x: (per - inRow) * 0.6 + k * 1.2, y: row * ROW };
+  });
+  return { ...SPREADS.custom, w: per * 1.2 - 0.2, h: 1 + (rows - 1) * ROW, max: rows === 1 && n <= 2 ? 150 : 100, pos };
+}
+
+function spreadOf(key, n) {
+  return key === 'custom' ? customSpread(n) : SPREADS[key];
+}
+
+// ---------- 牌面绘制 ----------
+// 牌是 2:3 的竖版（viewBox 100×150），版式照着「星星」那张插画：星空底、金色细框、四角星芒圆章、
+// 顶部罗马数字铭牌、底部英文名牌和一行关键词。有插画的牌（见 art/manifest.js）直接显示插画。
+// 所有渐变定义在页面顶部那个不可见的 <svg> 里，每张牌只引用 id。
+
+const GOLD = 'url(#g-gold)';
+const GOLD_I = 'url(#g-gold-i)';
+const MAJOR_COLOR = '#b48cff';
+const ART = window.TAROT_ART || {};
+
+const f1 = n => n.toFixed(1);
+const polar = (cx, cy, r, a) => [cx + r * Math.cos(a), cy + r * Math.sin(a)];
+
+function rays(cx, cy, n, r1, r2, r3, attrs) {
+  let d = '';
+  for (let k = 0; k < n; k++) {
+    const a = -Math.PI / 2 + k * 2 * Math.PI / n;
+    const [x1, y1] = polar(cx, cy, r1, a), [x2, y2] = polar(cx, cy, k % 2 ? r3 : r2, a);
+    d += `M${f1(x1)},${f1(y1)}L${f1(x2)},${f1(y2)}`;
+  }
+  return `<path d="${d}" ${attrs}/>`;
+}
+
+function polygon(cx, cy, r, n, rot) {
+  const pts = [];
+  for (let k = 0; k < n; k++) pts.push(polar(cx, cy, r, rot + k * 2 * Math.PI / n).map(f1).join(','));
+  return pts.join(' ');
+}
+
+// 尖角星：points 个尖，外径 R、内径 r
+function starPath(cx, cy, R, r, points) {
+  let d = '';
+  for (let k = 0; k < points * 2; k++) {
+    const [x, y] = polar(cx, cy, k % 2 ? r : R, -Math.PI / 2 + k * Math.PI / points);
+    d += (k ? 'L' : 'M') + f1(x) + ',' + f1(y);
+  }
+  return d + 'Z';
+}
+
+const STAR = polygon(0, 0, 7.4, 10, -Math.PI / 2).split(' ').map((p, k) => {
+  if (k % 2 === 0) return p;
+  const [x, y] = p.split(',').map(Number);
+  return f1(x * 3 / 7.4) + ',' + f1(y * 3 / 7.4);
+}).join(' ');
+
+const SPARK = 'M0,-5L1.1,-1.1L5,0L1.1,1.1L0,5L-1.1,1.1L-5,0L-1.1,-1.1z';
+
+// 亮星：一大一小两层四芒星，叠出插画里那种闪光
+function twinkle(x, y, s, op = 1) {
+  return `<g transform="translate(${f1(x)} ${f1(y)})" opacity="${op}">
+    <path transform="scale(${f1(s * .5)} ${f1(s * 1.15)})" d="${SPARK}" fill="#fff4cf"/>
+    <path transform="scale(${f1(s * .7)})" d="${SPARK}" fill="#fff8e6"/>
+    <circle r="${f1(s * 1.4)}" fill="#f6dc95" opacity=".18"/></g>`;
+}
+
+function suitIcon(key, cx, cy, s, fill) {
+  const g = {
+    wands: `<path d="M-1.5,-10.5h3v21h-3z"/><path d="M1.5,-5q5.5,-2 6.5,-6.5q-5.5,0 -6.5,4.5zM-1.5,1.5q-5.5,-2 -6.5,-6.5q5.5,0 6.5,4.5z" opacity=".8"/><circle cy="-11" r="1.6"/>`,
+    cups: `<path d="M-7.5,-9.5h15q0,10.5 -7.5,12q-7.5,-1.5 -7.5,-12z"/><path d="M-1.3,2.3h2.6v5h-2.6zM-5.5,7h11v2.6h-11z"/><path d="M-5,-7.5q2,4 5,4" fill="none" stroke="#07060f" stroke-width=".8" opacity=".5"/>`,
+    swords: `<path d="M0,-11l2.3,3.2v9.6h-4.6v-9.6z"/><path d="M-7,1.6h14v2.1h-14zM-1.05,3.7h2.1v5h-2.1z"/><circle cy="10" r="1.8"/><path d="M0,-8.5v8" stroke="#07060f" stroke-width=".5" opacity=".45"/>`,
+    pentacles: `<circle r="9.2" fill="none" stroke="${fill}" stroke-width="1.7"/><circle r="6.9" fill="none" stroke="${fill}" stroke-width=".5"/><polygon points="${STAR}"/>`,
+  }[key];
+  return `<g transform="translate(${f1(cx)} ${f1(cy)}) scale(${s})" fill="${fill}">${g}</g>`;
+}
+
+const ART_TOP = 20, ART_BOTTOM = 112, ART_CY = 64;
+
+function pipPositions(n) {
+  const top = ART_TOP + 4, span = ART_BOTTOM - ART_TOP - 8, out = [];
+  if (n <= 3) {
+    for (let i = 0; i < n; i++) out.push([50, top + (i + 0.5) * span / n]);
+    return out;
+  }
+  const rows = Math.floor(n / 2);
+  for (let i = 0; i < rows; i++) {
+    const y = top + (i + 0.5) * span / rows;
+    out.push([30, y], [70, y]);
+  }
+  // 七的中间那枚放在第一、二排之间，免得跟第二排挤在一起
+  if (n % 2) out.push([50, n === 7 ? top + span / rows : top + span / 2]);
+  return out;
+}
+
+// 一个小的确定性随机数，让每张牌的星点位置固定
+function prng(seed) {
+  let s = seed * 9301 + 49297;
+  return () => (s = (s * 9301 + 49297) % 233280) / 233280;
+}
+
+// 牌面：奶油色金框，中间一扇深紫到淡紫的星空窗，细碎星点和几颗亮星
+function nightSky(seed, tint) {
+  const rnd = prng(seed);
+  let dust = '', bright = '';
+  for (let k = 0; k < 42; k++) {
+    dust += `<circle cx="${f1(10 + rnd() * 80)}" cy="${f1(18 + rnd() * 92)}" r="${f1(.15 + rnd() * .45)}" fill="${rnd() < .3 ? '#f6dc95' : '#ffffff'}" opacity="${f1(.3 + rnd() * .7)}"/>`;
+  }
+  for (let k = 0; k < 5; k++) bright += twinkle(14 + rnd() * 72, 22 + rnd() * 80, .35 + rnd() * .45, .6 + rnd() * .4);
+  return `<rect width="100" height="150" rx="5" fill="url(#g-cream)"/>
+    <rect x="7" y="15" width="86" height="100" rx="2.5" fill="url(#g-win)"/>
+    <ellipse cx="50" cy="${ART_CY}" rx="36" ry="44" fill="url(#g-${tint})" opacity=".9"/>
+    <ellipse cx="50" cy="104" rx="40" ry="10" fill="#ffffff" opacity=".18"/>
+    ${dust}${bright}
+    <rect x="7" y="15" width="86" height="100" rx="2.5" fill="none" stroke="${GOLD}" stroke-width=".9"/>`;
+}
+
+function medallion(x, y) {
+  return `<circle cx="${x}" cy="${y}" r="6.6" fill="#fffaf0" stroke="${GOLD}" stroke-width=".9"/>
+    <circle cx="${x}" cy="${y}" r="5.3" fill="none" stroke="${GOLD}" stroke-width=".3"/>
+    <path d="${starPath(x, y, 4.8, 1, 4)}" fill="${GOLD}"/>
+    <path d="${starPath(x, y, 3, .8, 4)}" fill="${GOLD}" transform="rotate(45 ${x} ${y})" opacity=".7"/>`;
+}
+
+function frame(top) {
+  const plaque = `<path d="M38,3.6H62Q64.5,3.6 65.5,6L67,8.6L65.5,11.2Q64.5,13.6 62,13.6H38Q35.5,13.6 34.5,11.2L33,8.6L34.5,6Q35.5,3.6 38,3.6Z" fill="#fffaf0" stroke="${GOLD}" stroke-width=".8"/>
+    <path d="M24,8.6H31.4M68.6,8.6H76" stroke="${GOLD}" stroke-width=".5"/>
+    <circle cx="23" cy="8.6" r=".8" fill="${GOLD}"/><circle cx="77" cy="8.6" r=".8" fill="${GOLD}"/>
+    <text x="50" y="11.3" text-anchor="middle" font-size="7" fill="#2b2766" font-weight="700" font-family="Cinzel,Georgia,'Noto Serif SC',serif">${top}</text>`;
+  return `<rect x="1.4" y="1.4" width="97.2" height="147.2" rx="4.4" fill="none" stroke="${GOLD}" stroke-width="1.6"/>
+    <rect x="3.6" y="3.6" width="92.8" height="142.8" rx="3" fill="none" stroke="${GOLD}" stroke-width=".4" opacity=".8"/>
+    ${medallion(9.5, 9.5)}${medallion(90.5, 9.5)}${medallion(9.5, 140.5)}${medallion(90.5, 140.5)}
+    ${plaque}`;
+}
+
+function namePlate(card) {
+  const en = card.en.toUpperCase();
+  const fs = Math.min(6.4, 62 / (en.length * 0.8));
+  const kws = card.up.slice(0, 3).join(' · ');
+  return `<path d="M14,135V122Q14,117 19,117H81Q86,117 86,122V135Z" fill="#fffaf0" stroke="${GOLD}" stroke-width=".8"/>
+    <path d="M17,135V123Q17,120 20,120H80Q83,120 83,123V135" fill="none" stroke="${GOLD}" stroke-width=".25" opacity=".8"/>
+    <text x="50" y="126.4" text-anchor="middle" font-size="${f1(fs)}" letter-spacing=".5" fill="#2b2766" font-weight="700" font-family="Cinzel,Georgia,serif">${en}</text>
+    <text x="50" y="133.2" text-anchor="middle" font-size="4.8" letter-spacing="1.2" fill="#4a4290" font-weight="700"
+      font-family="'Noto Serif SC','Songti SC','Noto Serif CJK SC',serif">${card.name}</text>
+    <text x="50" y="142" text-anchor="middle" font-size="3.3" letter-spacing=".6" fill="#6b6497"
+      font-family="'Noto Serif SC','Songti SC','Noto Serif CJK SC',serif">${kws}</text>`;
+}
+
+const faceCache = new Map();
+function faceSVG(card) {
+  if (faceCache.has(card.id)) return faceCache.get(card.id);
+  const tint = card.major ? 'major' : card.suit.key;
+  let art, top;
+  const cy = ART_CY;
+  if (card.major) {
+    top = ROMAN[card.num];
+    const sides = [3, 4, 5, 6, 7, 8][card.num % 6];
+    art = `<circle cx="50" cy="${cy}" r="34" fill="url(#g-halo)"/>
+      <circle cx="50" cy="${cy}" r="33" fill="none" stroke="${GOLD}" stroke-width=".35"/>
+      <circle cx="50" cy="${cy}" r="38" fill="none" stroke="${GOLD}" stroke-width=".2" stroke-dasharray=".6 1.8"/>
+      ${rays(50, cy, 40, 25, 37, 30, `stroke="${GOLD}" stroke-width=".45" opacity=".75"`)}
+      <path d="${starPath(50, cy, 44, 3, 4)}" fill="#fff4cf" opacity=".12"/>
+      <circle cx="50" cy="${cy}" r="23" fill="#1c1550" fill-opacity=".55" stroke="${GOLD}" stroke-width="1"/>
+      <circle cx="50" cy="${cy}" r="20.8" fill="none" stroke="${GOLD}" stroke-width=".3" stroke-dasharray="1 1.4"/>
+      <polygon points="${polygon(50, cy, 19.5, sides, -Math.PI / 2)}" fill="none" stroke="${MAJOR_COLOR}" stroke-width=".5" opacity=".85"/>
+      <polygon points="${polygon(50, cy, 19.5, sides, -Math.PI / 2 + Math.PI / sides)}" fill="none" stroke="${GOLD}" stroke-width=".3" opacity=".6"/>
+      <text x="50" y="${cy + 1}" text-anchor="middle" dominant-baseline="central" font-size="21" fill="${GOLD}"
+        font-family="'Segoe UI Symbol','Noto Sans Symbols','Noto Sans Symbols 2','DejaVu Sans',serif">${card.glyph}︎</text>
+      ${twinkle(50, cy - 36, 1.1)}
+      <text x="50" y="108" text-anchor="middle" font-size="3.6" letter-spacing="1.2" fill="#e9d6a6" opacity=".85"
+        font-family="'Noto Serif SC','Songti SC',serif">${card.astro}</text>`;
+  } else if (card.rank.court) {
+    top = card.rank.mark;
+    const crown = card.num >= 13
+      ? `<path transform="translate(50 30) scale(.9)" d="M-9,4L-9,-4L-4.5,0L0,-7L4.5,0L9,-4L9,4Z" fill="${GOLD}"/><circle cx="50" cy="23.2" r="1.1" fill="${GOLD}"/>`
+      : twinkle(50, 29, .9);
+    art = `${crown}
+      <path d="M28,110V56A22,22 0 0 1 72,56V110Z" fill="#0a0820" fill-opacity=".55" stroke="${GOLD}" stroke-width=".9"/>
+      <path d="M31.5,110V56.5A18.5,18.5 0 0 1 68.5,56.5V110" fill="none" stroke="${card.suit.color}" stroke-width=".4" opacity=".8"/>
+      ${rays(50, 76, 24, 13, 21, 17, `stroke="${GOLD}" stroke-width=".35" opacity=".45"`)}
+      ${suitIcon(card.suit.key, 50, 76, 2, GOLD_I)}`;
+  } else if (card.num === 1) {
+    top = 'A';
+    art = `<circle cx="50" cy="${cy}" r="30" fill="url(#g-halo)"/>
+      ${rays(50, cy, 40, 27, 41, 34, `stroke="${GOLD}" stroke-width=".45" opacity=".75"`)}
+      <circle cx="50" cy="${cy}" r="25" fill="none" stroke="${GOLD}" stroke-width=".8"/>
+      <circle cx="50" cy="${cy}" r="22.5" fill="none" stroke="${GOLD}" stroke-width=".25" stroke-dasharray=".8 1.4"/>
+      ${suitIcon(card.suit.key, 50, cy, 2.5, GOLD_I)}`;
+  } else {
+    top = String(card.num);
+    const s = card.num <= 3 ? 1.3 : card.num >= 7 ? 0.88 : 1.02;
+    art = pipPositions(card.num).map(([x, y]) => suitIcon(card.suit.key, x, y, s, GOLD_I)).join('');
+  }
+  const svg = `<svg viewBox="0 0 100 150" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+    ${nightSky(card.id + 3, tint)}
+    ${art}
+    ${frame(top)}
+    ${namePlate(card)}
+  </svg>`;
+  faceCache.set(card.id, svg);
+  return svg;
+}
+
+// 有插画就用插画，没有就用上面画的牌面
+function faceHTML(card) {
+  return ART[card.id]
+    ? `<img src="art/${ART[card.id]}" alt="${card.name}" draggable="false" decoding="async">`
+    : faceSVG(card);
+}
+
+const BACK_SVG = (() => {
+  const cy = 75;
+  const rnd = prng(99);
+  let dust = '';
+  for (let k = 0; k < 60; k++) {
+    dust += `<circle cx="${f1(6 + rnd() * 88)}" cy="${f1(6 + rnd() * 138)}" r="${f1(.15 + rnd() * .4)}" fill="#f6dc95" opacity="${f1(.25 + rnd() * .65)}"/>`;
+  }
+  let dots = '';
+  for (let k = 0; k < 36; k++) {
+    const [x, y] = polar(50, cy, 31, k * Math.PI / 18);
+    dots += `<circle cx="${f1(x)}" cy="${f1(y)}" r="${k % 3 ? .4 : .85}"/>`;
+  }
+  let phases = '';
+  [-24, -12, 0, 12, 24].forEach((dx, k) => {
+    const x = 50 + dx, y = 124;
+    phases += k === 2
+      ? `<circle cx="${x}" cy="${y}" r="3" fill="${GOLD}"/>`
+      : `<circle cx="${x}" cy="${y}" r="2.6" fill="${GOLD}"/><circle cx="${f1(x + (k < 2 ? 1.3 : -1.3) * (k % 2 ? 1 : 1.6))}" cy="${y}" r="2.4" fill="#120d30"/>`;
+  });
+  return `<svg viewBox="0 0 100 150" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+    <rect width="100" height="150" rx="5" fill="url(#g-back)"/>
+    <ellipse cx="30" cy="40" rx="40" ry="24" fill="url(#g-neb1)" transform="rotate(-30 30 40)"/>
+    <ellipse cx="72" cy="112" rx="36" ry="22" fill="url(#g-neb2)" transform="rotate(25 72 112)"/>
+    ${dust}
+    ${rays(50, cy, 64, 33, 44, 38, `stroke="${GOLD}" stroke-width=".35" opacity=".5"`)}
+    <path d="${starPath(50, cy, 46, 2.5, 4)}" fill="#fff4cf" opacity=".1"/>
+    <g fill="#f6dc95" opacity=".85">${dots}</g>
+    <circle cx="50" cy="${cy}" r="28" fill="#0a0820" fill-opacity=".6" stroke="${GOLD}" stroke-width=".8"/>
+    <circle cx="50" cy="${cy}" r="25.5" fill="none" stroke="${GOLD}" stroke-width=".3" stroke-dasharray="1 1.5"/>
+    <polygon points="${polygon(50, cy, 25.5, 3, -Math.PI / 2)}" fill="none" stroke="${GOLD}" stroke-width=".45" opacity=".8"/>
+    <polygon points="${polygon(50, cy, 25.5, 3, Math.PI / 2)}" fill="none" stroke="${GOLD}" stroke-width=".45" opacity=".8"/>
+    <path d="${starPath(50, cy, 21, 4.2, 8)}" fill="${GOLD}" opacity=".95"/>
+    <path d="${starPath(50, cy, 13, 2.6, 4)}" fill="#fff4cf"/>
+    <circle cx="50" cy="${cy}" r="2.4" fill="#fff8e6"/>
+    ${twinkle(30, 34, .7)}${twinkle(72, 28, .5)}${twinkle(76, 100, .6, .8)}${twinkle(24, 104, .45, .8)}
+    <g>${phases}</g>
+    <path d="M30,24H70" stroke="${GOLD}" stroke-width=".4"/>
+    <path d="${starPath(50, 24, 3.2, .8, 4)}" fill="${GOLD}"/>
+    ${frame('')}
+  </svg>`.replace(/<text[^>]*><\/text>/, '');
+})();
+
+// 牌背同理：有插画用插画
+const BACK_HTML = ART.back ? `<img src="art/${ART.back}" alt="" draggable="false" decoding="async">` : BACK_SVG;
+
+function layoutIcon(sp) {
+  const s = 46 / Math.max(sp.w, sp.h * 1.5);
+  const ox = (54 - sp.w * s) / 2, oy = (54 - sp.h * 1.5 * s) / 2;
+  return `<svg viewBox="0 0 54 54" aria-hidden="true">${sp.pos.map(p => {
+    const x = ox + p.x * s, y = oy + p.y * 1.5 * s, w = s, h = 1.5 * s;
+    const t = p.cross ? ` transform="rotate(90 ${f1(x + w / 2)} ${f1(y + h / 2)})"` : '';
+    return `<rect x="${f1(x + .4)}" y="${f1(y + .4)}" width="${f1(w - .8)}" height="${f1(h - .8)}" rx=".8" fill="${p.cross ? '#f6dc95' : 'rgba(246,220,149,.18)'}" stroke="#d9b46a" stroke-width=".7"${t}/>`;
+  }).join('')}</svg>`;
+}
+
+// ---------- 解读 ----------
+
+function joinCn(list) {
+  return list.length < 2 ? list.join('') : list.slice(0, -1).join('、') + '和' + list[list.length - 1];
+}
+
+const rankLabel = rank => rank.mark === 'A' ? '王牌' : '数字' + rank.name;
+
+function cardText(card, rev) {
+  if (card.major) return rev ? card.rmsg : card.msg;
+  const kws = joinCn(rev ? card.rev : card.up);
+  const tail = rev
+    ? `逆位时，这股能量受阻、过了头或转向内在：${kws}。`
+    : `正位时，它表现为${kws}。`;
+  if (card.rank.court) return `${card.rank.line}在${card.suit.name}（${card.suit.theme}）里，${tail}`;
+  return `${rankLabel(card.rank)}象征${card.rank.theme}；落在${card.suit.name}（${card.suit.theme}）上，${tail}`;
+}
+
+function cardExtra(card) {
+  if (card.major) return `大阿卡纳 ${ROMAN[card.num]} · ${card.en} · 对应${card.astro}`;
+  return `小阿卡纳 · ${card.suit.name} · ${card.suit.el}元素`;
+}
+
+function summarize(reading) {
+  const n = reading.length;
+  if (n === 1) {
+    const { card, rev } = reading[0];
+    return [`这张${card.name}${rev ? '（逆位）' : ''}就是今天的答案：${(rev ? card.rev : card.up).slice(0, 3).join('、')}。`];
+  }
+  const out = [];
+  const majors = reading.filter(r => r.card.major).length;
+  const revs = reading.filter(r => r.rev).length;
+  const courts = reading.filter(r => !r.card.major && r.card.rank.court).length;
+
+  if (majors === 0) out.push('全是小阿卡纳：问题落在日常层面，主动权大多握在你自己手里。');
+  else if (majors / n >= 0.5) out.push(`大阿卡纳占了 ${majors} 张：这不只是日常琐事，牵动的是更深的人生课题，顺势而为比硬拗更重要。`);
+  else out.push(`大阿卡纳有 ${majors} 张：大方向上有命运的推动，细节仍靠你自己把握。`);
+
+  const counts = SUITS.map(s => reading.filter(r => !r.card.major && r.card.suit === s).length);
+  const top = Math.max(...counts);
+  if (top >= 2 && counts.filter(c => c === top).length === 1) out.push(SUITS[counts.indexOf(top)].most);
+  const missing = SUITS.filter((s, i) => counts[i] === 0);
+  if (n >= 5 && missing.length === 1) out.push(`唯独没有${missing[0].name}：${missing[0].theme}这一块，也许是被你忽略的地方。`);
+
+  if (revs === 0) out.push('没有逆位：能量通畅，可以放手去做。');
+  else if (revs / n > 0.5) out.push(`逆位有 ${revs} 张，偏多：能量有些堵塞或在向内收，先处理卡住的地方，再谈向前。`);
+
+  if (courts >= 2) out.push(`宫廷牌有 ${courts} 张：别人的态度，或你在其中扮演的角色，是这件事的关键。`);
+
+  const nums = {};
+  reading.forEach(r => { if (!r.card.major && !r.card.rank.court) nums[r.card.num] = (nums[r.card.num] || 0) + 1; });
+  Object.entries(nums).filter(([, c]) => c >= 2).forEach(([num, c]) => {
+    out.push(`出现了 ${c} 张「${RANKS[num - 1].name}」：${rankLabel(RANKS[num - 1])}象征${RANKS[num - 1].theme}，这个主题在这次占卜里被强调了。`);
+  });
+
+  const last = reading[n - 1];
+  if (state.spread === 'choice') {
+    const score = r => (r.rev ? -1 : 1) + (r.card.major ? 0.5 : 0);
+    const sa = score(reading[1]) + score(reading[2]), sb = score(reading[3]) + score(reading[4]);
+    if (sa !== sb) {
+      const better = sa > sb ? state.labels.A : state.labels.B;
+      out.push(`两条路相比，「${better}」那一边的牌更顺畅；但最终的选择，仍要回到「现状」那张牌提醒你的东西上。`);
+    } else {
+      out.push('两条路的牌势不相上下：重要的不是哪条路更好，而是你更愿意承担哪一种过程。');
+    }
+  } else {
+    out.push(`最后一张「${last.card.name}${last.rev ? '（逆位）' : ''}」是走向：${last.rev ? last.card.rev[0] : last.card.up[0]}。`);
+  }
+  return out;
+}
+
+function energyHTML(reading) {
+  const n = reading.length;
+  const cells = [{ lab: '大阿卡纳', color: MAJOR_COLOR, c: reading.filter(r => r.card.major).length }]
+    .concat(SUITS.map(s => ({ lab: `${s.el} · ${s.name}`, color: s.color, c: reading.filter(r => !r.card.major && r.card.suit === s).length })));
+  return `<div class="energy">${cells.map(x =>
+    `<div><div class="num" style="color:${x.color};text-shadow:0 0 14px ${x.color}">${x.c}</div><div class="lab">${x.lab}</div>
+      <div class="bar"><i style="width:${(x.c / n) * 100}%;background:${x.color};color:${x.color}"></i></div></div>`).join('')}</div>`;
+}
+
+// ---------- 背景：星屑与花瓣、哥特大厅、花丛、徽记、魔法阵 ----------
+
+const STILL = matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+(function sky() {
+  const cv = document.getElementById('sky'), ctx = cv.getContext('2d');
+  let W, H, motes = [];
+  function resize() {
+    const dpr = Math.min(2, devicePixelRatio || 1);
+    W = innerWidth; H = innerHeight;
+    cv.width = W * dpr; cv.height = H * dpr;
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    motes = Array.from({ length: Math.round(W * H / 9000) }, () => ({
+      x: Math.random() * W, y: Math.random() * H, r: .6 + Math.random() * 1.6, p: Math.random() * 6.28,
+      s: .5 + Math.random() * 1.5, v: .08 + Math.random() * .25, petal: Math.random() < .22, rot: Math.random() * 6.28,
+      c: Math.random() < .5 ? '#d9b46a' : Math.random() < .5 ? '#a48ae6' : '#ffffff',
+    }));
+    if (STILL) draw(0);
+  }
+  function sparkle(x, y, r) {
+    ctx.beginPath();
+    ctx.moveTo(x, y - r * 2.2); ctx.lineTo(x + r * .45, y - r * .45); ctx.lineTo(x + r * 2.2, y); ctx.lineTo(x + r * .45, y + r * .45);
+    ctx.lineTo(x, y + r * 2.2); ctx.lineTo(x - r * .45, y + r * .45); ctx.lineTo(x - r * 2.2, y); ctx.lineTo(x - r * .45, y - r * .45);
+    ctx.closePath(); ctx.fill();
+  }
+  function draw(t) {
+    ctx.clearRect(0, 0, W, H);
+    for (const m of motes) {
+      ctx.globalAlpha = .25 + .6 * (.5 + .5 * Math.sin(m.p + t * .0012 * m.s));
+      ctx.fillStyle = m.petal ? '#c9b6f2' : m.c;
+      if (m.petal) {
+        ctx.save(); ctx.translate(m.x, m.y); ctx.rotate(m.rot + t * .0004);
+        ctx.beginPath(); ctx.ellipse(0, 0, m.r * 2.6, m.r * 1.3, 0, 0, 6.283); ctx.fill(); ctx.restore();
+        if (!STILL) { m.y += m.v; m.x += Math.sin(t * .001 + m.p) * .3; if (m.y > H + 6) { m.y = -6; m.x = Math.random() * W; } }
+      } else {
+        sparkle(m.x, m.y, m.r);
+        if (!STILL) { m.y -= m.v * .4; if (m.y < -6) { m.y = H + 6; m.x = Math.random() * W; } }
+      }
+    }
+    ctx.globalAlpha = 1;
+  }
+  function loop(t) { if (!document.hidden) draw(t); requestAnimationFrame(loop); }
+  addEventListener('resize', resize);
+  resize();
+  if (!STILL) requestAnimationFrame(loop);
+})();
+
+// 背后的水晶哥特大厅：顶上是星空和金色星座线，中间一排发光的尖拱和窗格，两侧大理石柱，正中一道光
+document.getElementById('hall').innerHTML = (() => {
+  let s = 11;
+  const rnd = () => (s = (s * 9301 + 49297) % 233280) / 233280;
+  let g = `<defs>
+      <linearGradient id="arch-fill" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff" stop-opacity=".02"/><stop offset=".5" stop-color="#e6dcff" stop-opacity=".22"/><stop offset="1" stop-color="#fff" stop-opacity=".4"/></linearGradient>
+      <linearGradient id="pillar" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#bfb2ec"/><stop offset=".45" stop-color="#ffffff"/><stop offset="1" stop-color="#a99ade"/></linearGradient>
+      <radialGradient id="beam" cx=".5" cy=".55" r=".6"><stop offset="0" stop-color="#fff" stop-opacity=".85"/><stop offset=".4" stop-color="#e7defc" stop-opacity=".35"/><stop offset="1" stop-color="#fff" stop-opacity="0"/></radialGradient>
+    </defs>
+    <rect x="0" y="0" width="460" height="900" fill="url(#beam)"/>`;
+  // 星座线
+  const stars = Array.from({ length: 14 }, () => [30 + rnd() * 400, 20 + rnd() * 170]);
+  stars.forEach(([x, y], k) => {
+    if (k && rnd() < .75) g += `<path d="M${stars[k - 1][0].toFixed(0)},${stars[k - 1][1].toFixed(0)}L${x.toFixed(0)},${y.toFixed(0)}" stroke="#f0d796" stroke-width=".6" opacity=".55"/>`;
+    g += `<path transform="translate(${x.toFixed(0)} ${y.toFixed(0)}) scale(${(.5 + rnd() * .7).toFixed(2)})" d="M0,-6L1.3,-1.3L6,0L1.3,1.3L0,6L-1.3,1.3L-6,0L-1.3,-1.3z" fill="#fff4cf"/>`;
+  });
+  // 三层尖拱，越往后越小越淡
+  [[0.55, 260, 70, .5], [0.8, 210, 92, .75], [1, 170, 120, 1]].forEach(([sc, top, w, op]) => {
+    for (let x = -w / 2; x < 460 + w; x += w) {
+      const mid = x + w / 2, spring = top + w * .8, apex = top - w * .35;
+      g += `<g opacity="${op}">
+        <path d="M${x + 4},900V${spring}Q${x + 4},${apex + w * .3} ${mid},${apex}Q${x + w - 4},${apex + w * .3} ${x + w - 4},${spring}V900" fill="url(#arch-fill)" stroke="#efe8ff" stroke-width="${1.6 * sc}"/>
+        <path d="M${mid},${apex + 10}V900M${x + 10},${spring + 20}H${x + w - 10}M${x + 10},${spring + 90}H${x + w - 10}" stroke="#e2d8ff" stroke-width="${.8 * sc}" opacity=".8"/>
+        <circle cx="${mid}" cy="${spring - w * .18}" r="${w * .17}" fill="none" stroke="#f3eeff" stroke-width="${sc}"/>
+        <path d="${starPath(mid, spring - w * .18, w * .14, w * .03, 4)}" fill="#fff8e6" opacity=".8"/></g>`;
+    }
+  });
+  // 两侧大理石柱，柱头描金
+  [[-8, 44], [424, 44]].forEach(([x, w]) => {
+    g += `<rect x="${x}" y="70" width="${w}" height="830" fill="url(#pillar)" opacity=".92"/>
+      <path d="M${x - 6},70h${w + 12}v12h-${w + 12}zM${x - 3},86h${w + 6}v6h-${w + 6}z" fill="#e9d9a8" stroke="#c9a256" stroke-width=".8"/>
+      <path d="M${x + w * .3},96V900M${x + w * .7},96V900" stroke="#cfc4f0" stroke-width="1"/>`;
+  });
+  return g;
+})();
+
+// 底部花丛：一大片紫白小花和叶子
+document.getElementById('flowers').innerHTML = (() => {
+  let s = 7, g = '';
+  const rnd = () => (s = (s * 9301 + 49297) % 233280) / 233280;
+  for (let k = 0; k < 26; k++) {
+    const x = rnd() * 460, y = 150 - rnd() * 60;
+    g += `<path d="M${x.toFixed(0)},150Q${(x + (rnd() - .5) * 40).toFixed(0)},${(y + 20).toFixed(0)} ${(x + (rnd() - .5) * 30).toFixed(0)},${y.toFixed(0)}" stroke="#8fa98f" stroke-width="3" fill="none" opacity=".45" stroke-linecap="round"/>`;
+  }
+  for (let k = 0; k < 150; k++) {
+    const x = rnd() * 460, edge = Math.min(x, 460 - x) / 230, y = 150 - rnd() * (26 + (1 - edge) * 100) - 4;
+    const r = 3 + rnd() * 6.5, c = rnd() < .45 ? '#ffffff' : rnd() < .55 ? '#cdbcf5' : '#9b82e0';
+    let petals = '';
+    for (let p = 0; p < 5; p++) petals += `<ellipse cx="0" cy="${(-r * .55).toFixed(1)}" rx="${(r * .42).toFixed(1)}" ry="${(r * .6).toFixed(1)}" transform="rotate(${p * 72})"/>`;
+    g += `<g transform="translate(${x.toFixed(1)} ${y.toFixed(1)}) rotate(${(rnd() * 72).toFixed(0)})" fill="${c}" stroke="#a48ae6" stroke-width=".4" opacity="${(.75 + rnd() * .25).toFixed(2)}">${petals}<circle r="${(r * .22).toFixed(1)}" fill="#f0d796" stroke="none"/></g>`;
+  }
+  return g;
+})();
+
+document.getElementById('emblem').innerHTML = `
+  ${rays(0, 0, 40, 30, 48, 38, 'stroke="#f0d796" stroke-width=".7" opacity=".8"')}
+  <circle r="29" fill="#1f1a55" stroke="#c9a256" stroke-width="2"/>
+  <circle r="25" fill="none" stroke="#f0d796" stroke-width=".6" stroke-dasharray="1.5 2"/>
+  <path d="${starPath(0, 0, 24, 4, 4)}" fill="url(#g-gold-i)" transform="scale(1)"/>
+  <path d="${starPath(0, 0, 14, 3, 4)}" fill="#fff6dc" transform="rotate(45)"/>
+  <circle r="3.2" fill="#fff"/>
+  <path transform="translate(-38 -14) scale(.5)" d="M0,-6L1.3,-1.3L6,0L1.3,1.3L0,6L-1.3,1.3L-6,0L-1.3,-1.3z" fill="#fff4cf"/>
+  <path transform="translate(38 -14) scale(.5)" d="M0,-6L1.3,-1.3L6,0L1.3,1.3L0,6L-1.3,1.3L-6,0L-1.3,-1.3z" fill="#fff4cf"/>`;
+
+function magicCircle() {
+  const glyphs = ['♈', '♉', '♊', '♋', '♌', '♍', '♎', '♏', '♐', '♑', '♒', '♓'];
+  const signs = glyphs.map((z, k) => {
+    const [x, y] = polar(0, 0, 80, -Math.PI / 2 + k * Math.PI / 6);
+    return `<text x="${f1(x)}" y="${f1(y)}" text-anchor="middle" dominant-baseline="central" font-size="11" fill="#8a74d6"
+      font-family="'Segoe UI Symbol','Noto Sans Symbols','DejaVu Sans',serif">${z}︎</text>`;
+  }).join('');
+  return `<circle r="96" fill="rgba(255,255,255,.25)" stroke="#c39b52" stroke-width="1"/>
+    <circle r="91" fill="none" stroke="#c39b52" stroke-width=".4" stroke-dasharray="2 3"/>
+    ${rays(0, 0, 72, 86, 91, 88.5, 'stroke="#c39b52" stroke-width=".6"')}
+    <circle r="70" fill="none" stroke="#a48ae6" stroke-width=".8"/>
+    <polygon points="${polygon(0, 0, 70, 6, -Math.PI / 2)}" fill="none" stroke="#c39b52" stroke-width=".6"/>
+    <polygon points="${polygon(0, 0, 70, 3, -Math.PI / 2)}" fill="none" stroke="#a48ae6" stroke-width=".6"/>
+    <polygon points="${polygon(0, 0, 70, 3, Math.PI / 2)}" fill="none" stroke="#a48ae6" stroke-width=".6"/>
+    <circle r="35" fill="none" stroke="#c39b52" stroke-width=".6"/>
+    <path d="${starPath(0, 0, 30, 5, 8)}" fill="rgba(255,246,220,.7)" stroke="#c39b52" stroke-width=".4"/>
+    ${signs}`;
+}
+document.getElementById('circle').innerHTML = document.getElementById('circle2').innerHTML = magicCircle();
+
+// ---------- 状态 ----------
+
+const $ = s => document.querySelector(s);
+const $$ = s => [...document.querySelectorAll(s)];
+const esc = s => String(s).replace(/[&<>"']/g, ch => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[ch]));
+
+const SKEY = 'dream-tarot-settings', HKEY = 'dream-tarot-history';
+const settings = Object.assign({ rev: true, save: true, voice: true }, (() => { try { return JSON.parse(localStorage.getItem(SKEY)) || {}; } catch { return {}; } })());
+function saveSettings() { try { localStorage.setItem(SKEY, JSON.stringify(settings)); } catch { /* 无痕模式等情况下不保存 */ } }
+
+const state = {
+  spread: 'three', custom: 4, question: '', labels: { A: '选择 A', B: '选择 B' }, anon: false, autosave: settings.save,
+  deck: [], picks: [], reading: [], flipped: new Set(), page: 0, saved: false, fromRecords: false,
+};
+
+const curSpread = () => spreadOf(state.spread, state.spread === 'custom' ? state.custom : 0);
+const posName = p => p.n.replace('{A}', state.labels.A).replace('{B}', state.labels.B);
+
+function rand() {
+  const a = new Uint32Array(1);
+  crypto.getRandomValues(a);
+  return a[0] / 4294967296;
+}
+
+function shuffled() {
+  const d = DECK.map(card => ({ card, rev: settings.rev && rand() < 0.5 }));
+  for (let i = d.length - 1; i > 0; i--) {
+    const j = Math.floor(rand() * (i + 1));
+    [d[i], d[j]] = [d[j], d[i]];
+  }
+  return d;
+}
+
+// ---------- 页面切换 ----------
+
+let current = 'home';
+const BACK_TO = { spreads: 'home', question: 'spreads', draw: 'question', detail: 'reveal', overall: 'detail', gallery: 'home', records: 'home', settings: 'home' };
+const ENTER = {};
+
+function go(id) {
+  current = id;
+  $$('.screen').forEach(s => s.classList.toggle('on', s.id === 's-' + id));
+  $('#nav-back').hidden = $('#nav-home').hidden = id === 'home';
+  window.scrollTo({ top: 0, behavior: 'auto' });
+  if (ENTER[id]) ENTER[id]();
+}
+
+$('#nav-back').addEventListener('click', () => {
+  if (current === 'reveal') go(state.fromRecords ? 'records' : 'question');
+  else go(BACK_TO[current] || 'home');
+});
+$('#nav-home').addEventListener('click', () => go('home'));
+$$('[data-go]').forEach(b => b.addEventListener('click', () => go(b.dataset.go)));
+
+// ---------- 首页：会动、会说话的龙娘 ----------
+// 立绘贴在一张 36×60 的网格上，用 WebGL 逐顶点变形：呼吸、长发和裙摆随风摆、翅膀扇、尾巴摇，
+// 头跟着指针转一点，点她一下会压扁再弹起来。眨眼和说话是把闭眼、闭嘴的小补丁画到贴图上再换上去。
+// 各部位的范围都按这张立绘的位置写死（uv 坐标，0–1）。
+
+const DL = window.DRAGON_LIVE || {};
+const LIVE = {
+  src: DL.base || 'art/dragon-live.webp', w: 730, h: 1255,
+  eyes: [[DL.eyeL || 'art/dragon-eye-l.png', 314, 146], [DL.eyeR || 'art/dragon-eye-r.png', 378, 124]],
+  mouth: [DL.mouth || 'art/dragon-mouth.png', 364, 176],
+};
+const LINES = [
+  '哼，想知道命运的走向？本小姐就勉为其难，帮你推演一次吧。',
+  '星辰已经排好了，你还在犹豫什么？',
+  '本小姐的推演，可是从来没有失手过的……大概。',
+  '问吧问吧，难得本小姐今天心情不错。',
+];
+const TAP_LINES = [
+  '哼，又来找本小姐了？……既然来了，就让星星替你说句话吧。',
+  '别戳啦！本小姐的角可不是按钮。……好吧，再戳一下也不是不行。',
+  '今晚的星光很亮呢。你想问的事，答案也许比你想的更近。',
+  '本小姐的推演从来没有失手过。……大概吧，你要不要试试看？',
+  '洗牌、抽牌、翻牌，三步就够了。剩下的，交给本小姐。',
+  '你一直盯着本小姐看做什么？……快去问你想问的事啦。',
+];
+
+const live = (() => {
+  const canvas = $('#live');
+  const M = 0.06; // 四周留白，摆动的头发和翅膀不会被裁掉
+  const st = { blink: false, mouthShut: false, talking: false, look: [0, 0], lookTo: [0, 0], bounce: 0, bv: 0, dirty: true, ok: false };
+  let gl, prog, tex, uni = {}, nIdx = 0, comp, cctx, imgs = {};
+
+  const load = src => new Promise((res, rej) => { const im = new Image(); im.onload = () => res(im); im.onerror = rej; im.src = src; });
+
+  const VS = `
+    attribute vec2 a_uv;
+    uniform float u_t, u_bounce, u_aspect, u_m, u_still;
+    uniform vec2 u_look;
+    varying vec2 v_uv;
+    float ell(vec2 p, vec2 c, vec2 r) { return 1.0 - smoothstep(0.55, 1.0, length((p - c) / r)); }
+    vec2 rot(vec2 p, vec2 o, float a) {
+      vec2 q = (p - o) * vec2(u_aspect, 1.0);
+      float c = cos(a), s = sin(a);
+      return o + vec2(c * q.x - s * q.y, s * q.x + c * q.y) / vec2(u_aspect, 1.0);
+    }
+    void main() {
+      vec2 p = a_uv; float t = u_t * (1.0 - u_still);
+      vec2 d = vec2(0.0);
+      // 呼吸：上半身轻轻抬起又落下
+      d.y -= (sin(t * 1.7) * 0.5 + 0.5) * 0.004 * (1.0 - smoothstep(0.18, 0.5, p.y));
+      // 头：跟着指针看过去，偶尔点一下
+      float head = ell(p, vec2(0.52, 0.12), vec2(0.17, 0.11));
+      d += head * vec2(u_look.x * 0.011, u_look.y * 0.006 + sin(t * 0.9) * 0.0018);
+      // 长发：两侧越往下摆得越开，避开两只手
+      float side = smoothstep(0.1, 0.32, abs(p.x - 0.52));
+      float hairY = smoothstep(0.1, 0.25, p.y) * (1.0 - smoothstep(0.55, 0.68, p.y));
+      float arms = max(ell(p, vec2(0.36, 0.32), vec2(0.11, 0.07)), ell(p, vec2(0.83, 0.37), vec2(0.09, 0.10)));
+      float hair = side * hairY * (1.0 - arms) * smoothstep(0.1, 0.6, p.y);
+      d.x += hair * (sin(t * 1.25 + p.y * 7.0) * 0.011 - u_look.x * 0.004);
+      d.y += hair * sin(t * 1.25 + p.y * 7.0 + 1.3) * 0.0025;
+      // 翅膀：绕翅根上下扇
+      float flap = sin(t * 2.4) * 0.09;
+      d += ell(p, vec2(0.34, 0.25), vec2(0.10, 0.075)) * (rot(p, vec2(0.43, 0.23), -flap) - p);
+      d += ell(p, vec2(0.69, 0.25), vec2(0.10, 0.075)) * (rot(p, vec2(0.61, 0.23), flap) - p);
+      // 尾巴：绕尾根左右摇
+      d += ell(p, vec2(0.16, 0.62), vec2(0.15, 0.14)) * (rot(p, vec2(0.30, 0.56), sin(t * 1.5) * 0.07) - p);
+      // 裙摆：裙边一波一波地荡，腿不动
+      float skirt = smoothstep(0.42, 0.78, p.y) * (1.0 - smoothstep(0.79, 0.86, p.y));
+      float legs = ell(p, vec2(0.51, 0.7), vec2(0.09, 0.22));
+      d.x += skirt * (1.0 - legs) * sin(t * 1.8 + p.y * 9.0) * 0.006;
+      vec2 q = p + d;
+      // 点一下：以脚底为原点压扁、变宽，再弹回去
+      q.y = 1.0 - (1.0 - q.y) * (1.0 - u_bounce * 0.06);
+      q.x = 0.52 + (q.x - 0.52) * (1.0 + u_bounce * 0.035);
+      q.y += sin(t * 1.1) * 0.004;
+      vec2 c = q * (1.0 - 2.0 * u_m) + u_m;
+      gl_Position = vec4(c.x * 2.0 - 1.0, 1.0 - c.y * 2.0, 0.0, 1.0);
+      v_uv = a_uv;
+    }`;
+  const FS = `
+    precision mediump float;
+    uniform sampler2D u_tex;
+    varying vec2 v_uv;
+    void main() { gl_FragColor = texture2D(u_tex, v_uv); }`;
+
+  function compile(type, src) {
+    const s = gl.createShader(type);
+    gl.shaderSource(s, src); gl.compileShader(s);
+    if (!gl.getShaderParameter(s, gl.COMPILE_STATUS)) throw new Error(gl.getShaderInfoLog(s));
+    return s;
+  }
+
+  function setup() {
+    gl = canvas.getContext('webgl', { premultipliedAlpha: true, alpha: true, antialias: true });
+    if (!gl) throw new Error('no webgl');
+    prog = gl.createProgram();
+    gl.attachShader(prog, compile(gl.VERTEX_SHADER, VS));
+    gl.attachShader(prog, compile(gl.FRAGMENT_SHADER, FS));
+    gl.linkProgram(prog);
+    if (!gl.getProgramParameter(prog, gl.LINK_STATUS)) throw new Error(gl.getProgramInfoLog(prog));
+    gl.useProgram(prog);
+    const NX = 36, NY = 60, uv = [], idx = [];
+    for (let j = 0; j <= NY; j++) for (let i = 0; i <= NX; i++) uv.push(i / NX, j / NY);
+    for (let j = 0; j < NY; j++) for (let i = 0; i < NX; i++) {
+      const a = j * (NX + 1) + i, b = a + 1, c = a + NX + 1, e = c + 1;
+      idx.push(a, b, c, b, e, c);
+    }
+    nIdx = idx.length;
+    gl.bindBuffer(gl.ARRAY_BUFFER, gl.createBuffer());
+    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(uv), gl.STATIC_DRAW);
+    const loc = gl.getAttribLocation(prog, 'a_uv');
+    gl.enableVertexAttribArray(loc);
+    gl.vertexAttribPointer(loc, 2, gl.FLOAT, false, 0, 0);
+    gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, gl.createBuffer());
+    gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, new Uint16Array(idx), gl.STATIC_DRAW);
+    ['u_t', 'u_bounce', 'u_aspect', 'u_m', 'u_still', 'u_look', 'u_tex'].forEach(n => { uni[n] = gl.getUniformLocation(prog, n); });
+    tex = gl.createTexture();
+    gl.bindTexture(gl.TEXTURE_2D, tex);
+    gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, true);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+    gl.enable(gl.BLEND);
+    gl.blendFunc(gl.ONE, gl.ONE_MINUS_SRC_ALPHA);
+    gl.uniform1f(uni.u_aspect, LIVE.w / LIVE.h);
+    gl.uniform1f(uni.u_m, M);
+    gl.uniform1f(uni.u_still, STILL ? 1 : 0);
+    gl.uniform1i(uni.u_tex, 0);
+    comp = document.createElement('canvas');
+    comp.width = LIVE.w; comp.height = LIVE.h;
+    cctx = comp.getContext('2d');
+  }
+
+  // 把立绘和当前的闭眼、闭嘴补丁拼成一张贴图
+  function upload() {
+    cctx.clearRect(0, 0, LIVE.w, LIVE.h);
+    cctx.drawImage(imgs.base, 0, 0);
+    if (st.blink) LIVE.eyes.forEach(([, x, y], k) => cctx.drawImage(imgs['eye' + k], x, y));
+    if (st.mouthShut) cctx.drawImage(imgs.mouth, LIVE.mouth[1], LIVE.mouth[2]);
+    gl.bindTexture(gl.TEXTURE_2D, tex);
+    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, comp);
+    st.dirty = false;
+  }
+
+  function resize() {
+    const dpr = Math.min(2, devicePixelRatio || 1);
+    const r = canvas.getBoundingClientRect();
+    if (!r.width) return;
+    const w = Math.round(r.width * dpr), h = Math.round(r.height * dpr);
+    if (canvas.width !== w || canvas.height !== h) { canvas.width = w; canvas.height = h; }
+    gl.viewport(0, 0, w, h);
+  }
+
+  function fallback() {
+    st.ok = false;
+    canvas.hidden = true;
+    $('#live-fallback').hidden = false;
+  }
+
+  let last = 0, nextBlink = 0, blinkEnd = 0, nextMouth = 0;
+  function frame(now) {
+    if (!st.ok) return;
+    requestAnimationFrame(frame);
+    if (current !== 'home' || document.hidden) return;
+    const dt = Math.min(0.05, (now - last) / 1000 || 0.016); last = now;
+    // 眨眼：每 2.5–6 秒一次，偶尔连眨两下
+    if (!st.blink && now > nextBlink) { st.blink = true; st.dirty = true; blinkEnd = now + 120; }
+    if (st.blink && now > blinkEnd) {
+      st.blink = false; st.dirty = true;
+      nextBlink = now + (Math.random() < .2 ? 180 : 2500 + Math.random() * 3500);
+    }
+    // 说话：嘴一张一合
+    if (st.talking && now > nextMouth) { st.mouthShut = !st.mouthShut; st.dirty = true; nextMouth = now + 90 + Math.random() * 90; }
+    if (!st.talking && st.mouthShut) { st.mouthShut = false; st.dirty = true; }
+    // 视线和弹跳都用弹簧慢慢跟上
+    st.look[0] += (st.lookTo[0] - st.look[0]) * Math.min(1, dt * 4);
+    st.look[1] += (st.lookTo[1] - st.look[1]) * Math.min(1, dt * 4);
+    st.bv += (-st.bounce * 180 - st.bv * 11) * dt;
+    st.bounce += st.bv * dt;
+    if (st.dirty) {
+      try { upload(); } catch { fallback(); return; }
+    }
+    resize();
+    gl.clearColor(0, 0, 0, 0);
+    gl.clear(gl.COLOR_BUFFER_BIT);
+    gl.uniform1f(uni.u_t, now / 1000);
+    gl.uniform1f(uni.u_bounce, st.bounce);
+    gl.uniform2f(uni.u_look, st.look[0], st.look[1]);
+    gl.drawElements(gl.TRIANGLES, nIdx, gl.UNSIGNED_SHORT, 0);
+  }
+
+  Promise.all([load(LIVE.src), load(LIVE.eyes[0][0]), load(LIVE.eyes[1][0]), load(LIVE.mouth[0])]).then(([b, e0, e1, m]) => {
+    imgs = { base: b, eye0: e0, eye1: e1, mouth: m };
+    try {
+      setup();
+      st.ok = true;
+      requestAnimationFrame(frame);
+    } catch { fallback(); }
+  }).catch(fallback);
+
+  addEventListener('pointermove', e => {
+    if (current !== 'home') return;
+    const r = canvas.getBoundingClientRect();
+    const cx = r.left + r.width * 0.52, cy = r.top + r.height * 0.15;
+    st.lookTo = [Math.max(-1, Math.min(1, (e.clientX - cx) / 260)), Math.max(-1, Math.min(1, (e.clientY - cy) / 260))];
+  });
+  document.addEventListener('pointerleave', () => { st.lookTo = [0, 0]; });
+
+  return {
+    poke() { st.bv += 9; $('#poke-hint').hidden = true; },
+    talk(on) { st.talking = on; if (!on) nextMouth = 0; },
+  };
+})();
+
+// 说话：气泡里一个字一个字地出来，嘴跟着动；打开声音时用系统自带的中文语音念出来
+const voice = (() => {
+  const can = 'speechSynthesis' in window && 'SpeechSynthesisUtterance' in window;
+  let typing = 0, speaking = false, typingDone = true;
+  const pickVoice = () => {
+    const vs = can ? speechSynthesis.getVoices() : [];
+    const zh = vs.filter(v => /^zh([-_](CN|Hans))?/i.test(v.lang));
+    return zh.find(v => /xiaoxiao|xiaoyi|tingting|huihui|yaoyao|晓|婷|female|女/i.test(v.name)) || zh[0] || null;
+  };
+  if (can) speechSynthesis.onvoiceschanged = () => {};
+  const settle = () => { if (!speaking && typingDone) live.talk(false); };
+  function say(text, aloud) {
+    const el = $('#home-line .say');
+    clearInterval(typing);
+    typingDone = false;
+    live.talk(true);
+    let i = 0;
+    el.textContent = '';
+    typing = setInterval(() => {
+      el.textContent = text.slice(0, ++i);
+      if (i >= text.length) { clearInterval(typing); typingDone = true; setTimeout(settle, 250); }
+    }, 70);
+    if (!can) return;
+    speechSynthesis.cancel();
+    speaking = false;
+    const v = pickVoice();
+    if (!aloud || !settings.voice || !v) return;
+    const u = new SpeechSynthesisUtterance(text.replace(/……/g, '，'));
+    u.voice = v; u.lang = v.lang; u.pitch = 1.6; u.rate = 1.05;
+    u.onstart = () => { speaking = true; live.talk(true); };
+    u.onend = u.onerror = () => { speaking = false; settle(); };
+    speechSynthesis.speak(u);
+  }
+  const btn = $('#voice');
+  const paint = () => {
+    btn.hidden = !can;
+    btn.setAttribute('aria-pressed', !!settings.voice);
+    btn.title = settings.voice ? '关掉龙娘的声音' : '打开龙娘的声音';
+  };
+  btn.addEventListener('click', e => {
+    e.stopPropagation();
+    settings.voice = !settings.voice; saveSettings(); paint();
+    if (!settings.voice && can) speechSynthesis.cancel();
+  });
+  paint();
+  return { say };
+})();
+
+let lastTap = -1;
+function pokeDragon() {
+  live.poke();
+  let k;
+  do { k = Math.floor(rand() * TAP_LINES.length); } while (k === lastTap && TAP_LINES.length > 1);
+  lastTap = k;
+  voice.say(TAP_LINES[k], true);
+}
+$('#live').addEventListener('click', pokeDragon);
+$('#live').addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); pokeDragon(); } });
+$('#live-fallback').addEventListener('click', pokeDragon);
+
+ENTER.home = () => { voice.say(LINES[Math.floor(rand() * LINES.length)], false); };
+$('#start').addEventListener('click', () => go('spreads'));
+
+// ---------- 选择牌阵 ----------
+
+const MINI = {
+  one: [[0, 0]], three: [[-20, -6], [0, 0], [20, 6]], love: [[-14, -8], [0, 0], [14, 8]], career: [[-20, 0], [0, 0], [20, 0]],
+  choice: [[-22, -10], [-11, -5], [0, 0], [11, 5], [22, 10]], celtic: [[-16, 0], [0, 0], [0, 90], [16, 0]], custom: [[-12, -8], [12, 8]],
+};
+function minis(key) {
+  return `<span class="minis" aria-hidden="true">${MINI[key].map(([dx, r]) => `<i style="--dx:${dx}px;--r:${r}deg"></i>`).join('')}</span>`;
+}
+
+function renderOpts() {
+  $('#opts').innerHTML = Object.entries(SPREADS).map(([k, s]) => `
+    <button class="opt" data-k="${k}" aria-pressed="${k === state.spread}">
+      ${minis(k)}
+      <span><b>${s.name}</b><span class="pos">${s.brief}</span><small>${s.desc}</small>
+      ${k === 'custom' ? `<span class="stepper"><span role="button" tabindex="0" data-step="-1" aria-label="少一张">−</span><output id="custom-n">${state.custom}</output><span role="button" tabindex="0" data-step="1" aria-label="多一张">+</span><small>张</small></span>` : ''}
+      </span>
+    </button>`).join('');
+}
+ENTER.spreads = renderOpts;
+
+$('#opts').addEventListener('click', e => {
+  const step = e.target.closest('[data-step]');
+  if (step) {
+    state.custom = Math.max(1, Math.min(7, state.custom + +step.dataset.step));
+    $('#custom-n').textContent = state.custom;
+    return;
+  }
+  const b = e.target.closest('.opt');
+  if (!b) return;
+  state.spread = b.dataset.k;
+  $$('.opt').forEach(o => o.setAttribute('aria-pressed', o === b));
+});
+$('#opts').addEventListener('keydown', e => {
+  const step = e.target.closest('[data-step]');
+  if (step && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); e.stopPropagation(); step.click(); }
+});
+$('#to-question').addEventListener('click', () => go('question'));
+
+// ---------- 输入问题 ----------
+
+ENTER.question = () => {
+  $('#ab').classList.toggle('on', state.spread === 'choice');
+  $('#autosave').setAttribute('aria-pressed', state.autosave);
+  $('#anon').setAttribute('aria-pressed', state.anon);
+};
+$('#anon').addEventListener('click', () => { state.anon = !state.anon; ENTER.question(); });
+$('#autosave').addEventListener('click', () => { state.autosave = !state.autosave; ENTER.question(); });
+$('#to-draw').addEventListener('click', () => {
+  state.question = $('#question').value.trim();
+  state.labels = { A: $('#opt-a').value.trim() || '选择 A', B: $('#opt-b').value.trim() || '选择 B' };
+  state.deck = shuffled();
+  state.picks = [];
+  state.fromRecords = false;
+  go('draw');
+});
+
+// ---------- 星辰洗牌与抽牌 ----------
+
+// 牌摆成一条大弧，像设计图那样露出中间七八张；左右拖动（或滚轮、两侧箭头）转动，点一张抽一张
+const wheel = { center: 0, W: 0, w: 0, h: 0, R: 0, step: 7 };
+let drawTimer;
+
+ENTER.draw = () => {
+  const n = 12;
+  const ritual = $('#ritual');
+  ritual.classList.remove('ready');
+  $('#vortex').innerHTML = Array.from({ length: n }, (_, i) =>
+    `<div class="c" style="--a:${i * 360 / n}deg;--dl:${i * 0.03}s">${BACK_HTML}</div>`).join('');
+  $('#wheel').innerHTML = state.deck.map((_, i) => `<button data-i="${i}" aria-label="第 ${i + 1} 张牌">${BACK_HTML}</button>`).join('');
+  wheel.center = (state.deck.length - 1) / 2;
+  $('#draw-title').textContent = '星辰洗牌';
+  $('#draw-sub').textContent = '请静下心来，集中你的意念';
+  $('#draw-hint').hidden = $('#pick-auto').hidden = true;
+  renderSlots();
+  clearTimeout(drawTimer);
+  drawTimer = setTimeout(() => {
+    if (current !== 'draw') return;
+    ritual.classList.add('ready');
+    const n2 = curSpread().pos.length;
+    $('#draw-title').textContent = '抽取你的牌';
+    $('#draw-sub').textContent = `请凭直觉选择${'一两三四五六七八九十'[n2 - 1]}张牌`;
+    $('#draw-hint').hidden = $('#pick-auto').hidden = false;
+    layoutWheel();
+  }, STILL ? 200 : 2700);
+};
+
+function layoutWheel() {
+  const W = $('#ritual').clientWidth;
+  const w = Math.round(Math.min(86, W / 5)), h = Math.round(w * 1.5);
+  Object.assign(wheel, { W, w, h, R: Math.max(380, W * 1.3) });
+  placeWheel();
+}
+
+function placeWheel() {
+  const { W, w, h, R, step, center } = wheel;
+  $$('#wheel button').forEach((b, i) => {
+    const a = (i - center) * step;
+    const off = Math.abs(a) > 42;
+    b.classList.toggle('off', off);
+    if (off) return;
+    b.style.cssText = `width:${w}px;height:${h}px;left:${(W - w) / 2}px;top:34px;transform-origin:50% ${(h / 2 + R).toFixed(0)}px;transform:rotate(${a.toFixed(2)}deg);z-index:${100 - Math.round(Math.abs(a))}`;
+  });
+}
+
+const clampCenter = c => Math.max(0, Math.min(state.deck.length - 1, c));
+function spinTo(c, smooth) {
+  const el = $('#wheel');
+  el.classList.toggle('smooth', !!smooth);
+  wheel.center = clampCenter(c);
+  placeWheel();
+}
+
+(() => {
+  const el = $('#wheel');
+  let drag = null, justDragged = false;
+  el.addEventListener('pointerdown', e => { drag = { x: e.clientX, c: wheel.center, moved: false, id: e.pointerId }; });
+  el.addEventListener('pointermove', e => {
+    if (!drag) return;
+    const dx = e.clientX - drag.x;
+    if (!drag.moved && Math.abs(dx) > 6) {
+      drag.moved = true;
+      el.classList.add('dragging');
+      try { el.setPointerCapture(drag.id); } catch { /* 有的浏览器在指针已离开时会拒绝 */ }
+    }
+    if (drag.moved) spinTo(drag.c - dx / (wheel.R * wheel.step * Math.PI / 180), false);
+  });
+  const end = () => {
+    if (drag && drag.moved) { justDragged = true; setTimeout(() => { justDragged = false; }, 60); }
+    drag = null;
+    el.classList.remove('dragging');
+  };
+  el.addEventListener('pointerup', end);
+  el.addEventListener('pointercancel', end);
+  el.addEventListener('click', e => {
+    if (justDragged) return;
+    const b = e.target.closest('button');
+    if (b) pick(+b.dataset.i);
+  });
+  el.addEventListener('wheel', e => {
+    e.preventDefault();
+    spinTo(wheel.center + (Math.abs(e.deltaX) > Math.abs(e.deltaY) ? e.deltaX : e.deltaY) / 40, false);
+  }, { passive: false });
+  $('#spin-l').addEventListener('click', () => spinTo(wheel.center - 4, true));
+  $('#spin-r').addEventListener('click', () => spinTo(wheel.center + 4, true));
+})();
+
+function renderSlots() {
+  const sp = curSpread();
+  $('#slots').innerHTML = sp.pos.map((p, i) =>
+    `<span class="${i < state.picks.length ? 'done' : i === state.picks.length ? 'next' : ''}">${esc(posName(p))}</span>`).join('');
+}
+
+function pick(i) {
+  const sp = curSpread();
+  if (state.picks.length >= sp.pos.length || state.picks.includes(i)) return;
+  state.picks.push(i);
+  $(`#wheel button[data-i="${i}"]`).classList.add('taken');
+  renderSlots();
+  if (state.picks.length === sp.pos.length) {
+    state.reading = state.picks.map(k => state.deck[k]);
+    state.saved = false;
+    if (state.autosave) saveHistory();
+    state.flipped = new Set();
+    setTimeout(() => go('reveal'), 600);
+  }
+}
+
+// 随机抽：从眼前这段弧里挑，让人看得到牌被抽走
+$('#pick-auto').addEventListener('click', () => {
+  const need = curSpread().pos.length;
+  const timer = setInterval(() => {
+    if (state.picks.length >= need || current !== 'draw') return clearInterval(timer);
+    const lo = Math.max(0, Math.ceil(wheel.center - 4)), hi = Math.min(state.deck.length - 1, Math.floor(wheel.center + 4));
+    const free = [];
+    for (let i = lo; i <= hi; i++) if (!state.picks.includes(i)) free.push(i);
+    if (!free.length) { spinTo(wheel.center + 6, true); return; }
+    pick(free[Math.floor(rand() * free.length)]);
+  }, 320);
+});
+
+// ---------- 翻牌 ----------
+
+function capHTML(i) {
+  const sp = curSpread();
+  if (!sp.caps) return '';
+  const p = sp.pos[i];
+  if (!state.flipped.has(i)) return `<b>${esc(posName(p))}</b>`;
+  const { card, rev } = state.reading[i];
+  return `<b>${card.name}</b><small class="${rev ? 'rev' : ''}">${esc(posName(p))} · ${rev ? '逆位' : '正位'}</small>`;
+}
+
+function layoutStage() {
+  const sp = curSpread();
+  const avail = $('.stage-wrap').clientWidth - 8;
+  const cw = Math.max(44, Math.min(sp.max, Math.floor(avail / sp.w)));
+  const stage = $('#stage');
+  stage.style.setProperty('--cw', cw + 'px');
+  stage.style.width = sp.w * cw + 'px';
+  stage.style.height = sp.h * cw * 1.5 + (sp.caps ? 46 : 0) + 'px';
+  stage.querySelectorAll('.slot').forEach(el => {
+    const p = sp.pos[+el.dataset.i];
+    el.style.left = p.x * cw + 'px';
+    el.style.top = p.y * cw * 1.5 + 'px';
+  });
+}
+
+ENTER.reveal = () => {
+  const sp = curSpread();
+  $('#stage').innerHTML = state.reading.map(({ card, rev }, i) => {
+    const p = sp.pos[i];
+    const lit = state.flipped.has(i);
+    return `<div class="slot${lit && card.major ? ' major' : ''}" data-i="${i}" style="animation-delay:${i * 0.1}s;z-index:${p.cross ? 2 : 1}">
+      <div class="rot${p.cross ? ' cross' : ''}${lit ? ' flipped' : ''}" role="button" tabindex="0" aria-label="${esc(posName(p))}">
+        ${sp.caps ? '' : `<span class="badge">${i + 1}</span>`}
+        <div class="inner"><div class="back">${BACK_HTML}</div><div class="face${rev ? ' rev' : ''}">${faceHTML(card)}</div></div>
+      </div>
+      ${sp.caps ? `<div class="cap" id="cap-${i}">${capHTML(i)}</div>` : ''}
+    </div>`;
+  }).join('');
+  requestAnimationFrame(layoutStage);
+  updateReveal();
+};
+
+function updateReveal() {
+  const done = state.flipped.size === state.reading.length;
+  $('#reveal-title').textContent = done ? '牌面揭示' : '抽取你的牌';
+  $('#reveal-sub').textContent = done ? '星光洒落，答案浮现' : '凭直觉，一张一张翻开';
+  $('#flip-all').hidden = done;
+  $('#to-detail').hidden = !done;
+}
+
+function burst(slot, major) {
+  if (STILL) return;
+  const b = document.createElement('span');
+  b.className = 'burst' + (major ? ' major' : '');
+  const n = major ? 20 : 12;
+  b.innerHTML = Array.from({ length: n }, (_, k) =>
+    `<i style="--a:${(k * 360 / n + Math.random() * 12).toFixed(1)}deg;--d:calc(var(--cw) * ${(major ? 1 : .75) + Math.random() * .4})"></i>`).join('');
+  slot.appendChild(b);
+  setTimeout(() => b.remove(), 1200);
+}
+
+function flip(i) {
+  if (state.flipped.has(i)) { state.page = i; go('detail'); return; }
+  const slot = $(`.slot[data-i="${i}"]`);
+  state.flipped.add(i);
+  slot.querySelector('.rot').classList.add('flipped');
+  const { card } = state.reading[i];
+  setTimeout(() => {
+    burst(slot, card.major);
+    if (card.major) slot.classList.add('major');
+    const cap = $('#cap-' + i);
+    if (cap) cap.innerHTML = capHTML(i);
+  }, STILL ? 0 : 380);
+  updateReveal();
+}
+
+$('#stage').addEventListener('click', e => {
+  const slot = e.target.closest('.slot');
+  if (slot) flip(+slot.dataset.i);
+});
+$('#stage').addEventListener('keydown', e => {
+  const slot = e.target.closest('.slot');
+  if (slot && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); flip(+slot.dataset.i); }
+});
+$('#flip-all').addEventListener('click', () => {
+  let k = 0;
+  state.reading.forEach((_, i) => { if (!state.flipped.has(i)) setTimeout(() => flip(i), k++ * 240); });
+});
+$('#to-detail').addEventListener('click', () => { state.page = 0; go('detail'); });
+
+// ---------- 牌义解析 ----------
+
+function shortQ() {
+  const q = state.question;
+  return q.length > 22 ? q.slice(0, 22) + '…' : q;
+}
+
+function insight(card, rev, p) {
+  const kws = rev ? card.rev : card.up;
+  const lead = state.question ? `关于「${shortQ()}」，` : '';
+  // 正位不等于好事（宝剑九正位就是焦虑），所以只点出主题，不替牌下好坏的结论
+  const advice = rev
+    ? `${lead}它显示这股能量受阻或转向了内在，先正视「${kws[0]}」${kws[1] ? `，「${kws[1]}」也需要你留意` : ''}。`
+    : `${lead}这一段的关键是「${kws[0]}」${kws[1] ? `，「${kws[1]}」也会是你要面对的课题` : ''}。`;
+  return `这张牌落在「${posName(p)}」的位置：${p.d}${advice}`;
+}
+
+ENTER.detail = () => {
+  const sp = curSpread(), n = state.reading.length, i = state.page;
+  const { card, rev } = state.reading[i];
+  const p = sp.pos[i];
+  const kws = rev ? card.rev : card.up;
+  $('#detail').innerHTML = `
+    <div class="detail-top">
+      <div class="bigcard"><div class="card${rev ? ' rev' : ''}">${faceHTML(card)}</div></div>
+      <div class="info">
+        <div class="where">第 ${i + 1} 张 · ${esc(posName(p))}</div>
+        <h3>${card.name}</h3>
+        <div class="en">${card.en.toUpperCase()}</div>
+        <div class="tags"><span class="tag${rev ? ' rev' : ''}">${rev ? '逆位' : '正位'}</span>${card.major ? `<span class="tag maj">大阿卡纳 ${ROMAN[card.num]}</span>` : `<span class="tag">${card.suit.name} · ${card.suit.el}元素</span>`}</div>
+        <div class="kwline">${kws.map(k => `<span>${k}</span>`).join('')}</div>
+      </div>
+    </div>
+    <div class="sec"><h3>核心含义</h3><p>${cardText(card, rev)}</p></div>
+    <div class="sec"><h3>在当前问题中的启示</h3><p>${esc(insight(card, rev, p))}</p></div>
+    <div class="sec"><p style="font-size:12px;color:var(--ink-soft)">${cardExtra(card)}</p></div>`;
+  $('#page').textContent = `${i + 1} / ${n}`;
+  $('#prev').disabled = i === 0;
+  $('#next').textContent = i === n - 1 ? '整体解读 →' : '下一张 →';
+};
+$('#prev').addEventListener('click', () => { if (state.page > 0) { state.page--; ENTER.detail(); window.scrollTo(0, 0); } });
+$('#next').addEventListener('click', () => {
+  if (state.page < state.reading.length - 1) { state.page++; ENTER.detail(); window.scrollTo(0, 0); } else go('overall');
+});
+
+// ---------- 整体解读 ----------
+
+function adviceList(reading) {
+  const sp = curSpread();
+  const out = reading.slice(0, 5).map(({ card, rev }, i) => {
+    const k = rev ? card.rev : card.up;
+    const where = sp.pos[i] ? posName(sp.pos[i]) : '';
+    return rev
+      ? `${where}：正视「${k[0]}」，先把卡住的地方理清`
+      : `${where}：留意「${k[0]}」，这是这一段的关键`;
+  });
+  out.push(reading.some(r => r.rev) ? '保持耐心，逆位的能量需要时间慢慢舒展' : '能量通畅，想清楚了就放手去做');
+  return out;
+}
+
+ENTER.overall = () => {
+  const r = state.reading, many = r.length > 5;
+  $('#overall').innerHTML = `
+    <div class="thumbs${many ? ' many' : ''}">${r.map(({ card, rev }, i) => `
+      <button class="thumb" data-i="${i}" aria-label="查看${card.name}"><span class="card${rev ? ' rev' : ''}">${faceHTML(card)}</span><b>${card.name}</b><small class="${rev ? 'rev' : ''}">${rev ? '逆位' : '正位'}</small></button>`).join('')}</div>
+    <div class="sec"><h3>整体寓意</h3><p>${esc(summarize(r).join(''))}</p></div>
+    <div class="sec"><h3>建议与指引</h3><ul class="advice">${adviceList(r).map(s => `<li>${esc(s)}</li>`).join('')}</ul></div>`;
+  $('#save').textContent = state.saved ? '已保存' : '保存记录';
+  $('#save').disabled = state.saved;
+};
+$('#overall').addEventListener('click', e => {
+  const t = e.target.closest('.thumb');
+  if (t) { state.page = +t.dataset.i; go('detail'); }
+});
+$('#save').addEventListener('click', () => { saveHistory(); ENTER.overall(); });
+$('#again').addEventListener('click', () => go('spreads'));
+
+$('#copy').addEventListener('click', async () => {
+  const sp = curSpread();
+  const lines = [`推演之梦 · ${sp.name}`];
+  if (state.question) lines.push(`问题：${state.question}`);
+  lines.push('');
+  state.reading.forEach(({ card, rev }, i) => {
+    lines.push(`${i + 1}. ${posName(sp.pos[i])}：${card.name}（${rev ? '逆位' : '正位'}）— ${(rev ? card.rev : card.up).join('、')}`);
+    lines.push(`   ${cardText(card, rev)}`);
+  });
+  lines.push('', '整体寓意：' + summarize(state.reading).join(''), '', '建议与指引：', ...adviceList(state.reading).map(s => '· ' + s));
+  const btn = $('#copy');
+  try {
+    await navigator.clipboard.writeText(lines.join('\n'));
+    btn.textContent = '已复制';
+  } catch {
+    btn.textContent = '复制没成功，请长按页面文字手动复制';
+  }
+  setTimeout(() => { btn.textContent = '复制这次的解读'; }, 2000);
+});
+
+// ---------- 牌阵图鉴 ----------
+
+ENTER.gallery = () => {
+  $('#gal').innerHTML = Object.keys(SPREADS).map(k => {
+    const sp = spreadOf(k, 4);
+    return `<div class="panel">${layoutIcon(sp).replace(/rgba\(246,220,149,\.18\)/g, '#3a3590')}<div><h3>${sp.name}</h3><p style="font-size:13px">${sp.desc}</p>
+      ${k === 'custom' ? '<ol><li>一到七张，每张都是「第几张」，凭直觉解读</li></ol>' : `<ol>${sp.pos.map(p => `<li><b>${esc(posName(p))}</b>：${p.d}</li>`).join('')}</ol>`}
+      <button class="use" data-k="${k}">用这个牌阵</button></div></div>`;
+  }).join('');
+};
+$('#gal').addEventListener('click', e => {
+  const b = e.target.closest('.use');
+  if (b) { state.spread = b.dataset.k; go('question'); }
+});
+
+// ---------- 记录 ----------
+
+function loadHistory() {
+  try { return JSON.parse(localStorage.getItem(HKEY)) || []; } catch { return []; }
+}
+
+function saveHistory() {
+  if (state.saved) return;
+  const list = loadHistory();
+  list.unshift({
+    t: Date.now(), q: state.anon ? '' : state.question, s: state.spread, l: state.labels,
+    c: state.reading.map(r => [r.card.id, r.rev ? 1 : 0]),
+  });
+  try { localStorage.setItem(HKEY, JSON.stringify(list.slice(0, 50))); state.saved = true; } catch { /* 无痕模式等情况下不保存 */ }
+}
+
+let records = [];
+ENTER.records = () => {
+  records = loadHistory().filter(h => SPREADS[h.s] && (h.s === 'custom' || h.c.length === SPREADS[h.s].pos.length));
+  $('#recs').innerHTML = records.length ? records.map((h, i) => {
+    const d = new Date(h.t);
+    const when = `${d.getMonth() + 1}月${d.getDate()}日 ${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
+    const names = h.c.map(([id, r]) => DECK[id].name + (r ? '（逆）' : '')).join('、');
+    return `<button class="rec" data-h="${i}"><div class="q">${esc(h.q || '匿名的问题')}</div><div class="meta">${when} · ${SPREADS[h.s].name} · ${names}</div></button>`;
+  }).join('') : '<div class="panel empty">还没有记录。<br>抽完牌时开着「保存到记录」，或在整体解读里点「保存记录」，就会出现在这里。</div>';
+};
+$('#recs').addEventListener('click', e => {
+  const b = e.target.closest('.rec');
+  if (!b) return;
+  const h = records[+b.dataset.h];
+  state.question = h.q;
+  state.spread = h.s;
+  state.custom = h.c.length;
+  state.labels = h.l || { A: '选择 A', B: '选择 B' };
+  state.reading = h.c.map(([id, r]) => ({ card: DECK[id], rev: !!r }));
+  state.flipped = new Set(h.c.map((_, i) => i));
+  state.saved = true;
+  state.fromRecords = true;
+  go('reveal');
+});
+
+// ---------- 设置 ----------
+
+ENTER.settings = () => {
+  $('#set-rev').setAttribute('aria-checked', settings.rev);
+  $('#set-save').setAttribute('aria-checked', settings.save);
+  const n = loadHistory().length;
+  $('#rec-count').textContent = n ? `现在有 ${n} 条，只存在这台设备的浏览器里` : '还没有记录';
+  $('#clear').textContent = '清空';
+  $('#clear').dataset.armed = '';
+};
+$('#set-rev').addEventListener('click', () => { settings.rev = !settings.rev; saveSettings(); ENTER.settings(); });
+$('#set-save').addEventListener('click', () => { settings.save = state.autosave = !settings.save; saveSettings(); ENTER.settings(); });
+$('#clear').addEventListener('click', e => {
+  const b = e.currentTarget;
+  if (!b.dataset.armed) { b.dataset.armed = '1'; b.textContent = '再点一次确认'; return; }
+  try { localStorage.removeItem(HKEY); } catch { /* 忽略 */ }
+  ENTER.settings();
+  $('#rec-count').textContent = '已清空';
+});
+
+let resizeTimer;
+window.addEventListener('resize', () => {
+  clearTimeout(resizeTimer);
+  resizeTimer = setTimeout(() => {
+    if (current === 'reveal') layoutStage();
+    if (current === 'draw' && $('#ritual').classList.contains('ready')) layoutWheel();
+  }, 100);
+});
+
+ENTER.home();
+</script>
+</body>
+</html>
