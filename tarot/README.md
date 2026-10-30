@@ -20,6 +20,6 @@
 - 「整体寓意」会看这几件事：大阿卡纳占多少、哪种元素最多或缺了哪种、逆位多不多、宫廷牌多不多、有没有重复出现的数字，以及最后一张牌（二选一则比较两条路）。
 - 牌是 2:3 的竖版。有插画的牌直接显示插画（目前是 22 张大阿卡纳和牌背，见 [`art/`](art/README.md)）；其余的牌用 SVG 画：星空底、金色细框、四角星芒圆章、顶部罗马数字铭牌、底部英文名牌加中文名和三个关键词。
 - 想把其余的牌也换成插画：用 [`art/README.md`](art/README.md) 里的提示词生成同画风的图，再运行 `python3 tarot/tools/add-art.py 图片 牌名` 放进来。
-- 首页会动的龙娘是作者给的一张全身立绘，去掉黑底后存成 `art/dragon-live.webp`；闭眼、闭嘴是两块小补丁（`art/dragon-eye-l.png`、`art/dragon-eye-r.png`、`art/dragon-mouth.png`），眨眼和说话时画到贴图上。动起来的做法是把立绘贴在一张 36×60 的网格上，用 WebGL 按部位让网格变形：上半身呼吸，头跟着指针，两侧长发和裙边按正弦波摆，翅膀和尾巴绕各自的根部转，点一下时以脚底为原点压扁再弹回；各部位的范围按这张图的位置写死。这几张图另外编码成 data URI 放在 `art/dragon-live.js` 里，因为双击打开（`file://`）时浏览器不让同目录的图片当 WebGL 贴图；浏览器不支持 WebGL 时退回静态立绘。
+- 首页会动的龙娘是作者给的一张全身立绘，去掉黑底后存成 `art/dragon-live.webp`；闭眼、闭嘴是三块小补丁（`art/dragon-eye-l.png`、`art/dragon-eye-r.png`、`art/dragon-mouth.png`），眨眼和说话时画到贴图上；补丁由 `tools/dragon-face-patches.py` 生成：用眼睛四周较亮的皮肤往里扩散填色，再按原画睫毛的颜色画闭眼线。动起来的做法是把立绘贴在一张 36×60 的网格上，用 WebGL 按部位让网格变形：上半身呼吸，头跟着指针，两侧长发和裙边按正弦波摆，翅膀和尾巴绕各自的根部转，点一下时以脚底为原点压扁再弹回；各部位的范围按这张图的位置写死。这几张图另外编码成 data URI 放在 `art/dragon-live.js` 里，因为双击打开（`file://`）时浏览器不让同目录的图片当 WebGL 贴图；浏览器不支持 WebGL 时退回静态立绘。
 - `art/dragon.webp` 和游戏里用的是同一张旧立绘（`action-roguelike/art/dragon.webp`），现在页面上已经不用了。问题页拿着羽毛笔的龙娘（`art/dragon-quill.webp`）、翻牌页的龙娘背影（`art/dragon-back.webp`）和洗牌页那只手（`art/hand.webp`）是从设计图里裁出来、边缘做了渐隐的，原图很小，放大后会有点软，有原图可以直接替换同名文件。
 - 洗牌用的是 `crypto.getRandomValues`。系统设置了「减少动态效果」时，动画都会关掉。
