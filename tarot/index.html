@@ -136,7 +136,24 @@ button { cursor: pointer; }
 .hero .sub::after { background: linear-gradient(90deg, var(--gold-hi), transparent); }
 .mascot { position: relative; display: grid; place-items: center; margin: 2px auto 0; }
 .mascot::before { content: ''; position: absolute; inset: 12% 8% 4%; border-radius: 50%; background: radial-gradient(closest-side, rgba(255, 255, 255, .85), rgba(210, 195, 255, .35) 60%, transparent); filter: blur(4px); }
-.mascot img { position: relative; width: min(330px, 84%); height: auto; filter: drop-shadow(0 12px 22px rgba(40, 25, 120, .4)); animation: float 5s ease-in-out infinite; }
+.mascot canvas { position: relative; width: min(300px, 76%); aspect-ratio: 730 / 1255; height: auto; cursor: pointer; filter: drop-shadow(0 12px 22px rgba(40, 25, 120, .4)); touch-action: manipulation; -webkit-tap-highlight-color: transparent; }
+.poke-hint {
+  position: absolute; bottom: 30%; left: 50%; transform: translateX(-50%); padding: 2px 12px; border-radius: 999px; pointer-events: none;
+  background: rgba(27, 22, 72, .7); border: 1px solid rgba(240, 215, 150, .7); color: #fff4d8; font: 700 12px var(--serif); letter-spacing: .1em;
+  animation: nudge 2.4s ease-in-out infinite;
+}
+@keyframes nudge { 50% { transform: translateX(-50%) translateY(-4px); opacity: .75; } }
+.bubble .voice {
+  position: absolute; top: -14px; right: -12px; width: 32px; height: 32px; border-radius: 50%; padding: 0; display: grid; place-items: center;
+  border: 1.5px solid var(--gold); background: radial-gradient(circle at 50% 35%, #3a3290, var(--night)); color: var(--gold-hi);
+  box-shadow: 0 3px 10px rgba(20, 12, 70, .35);
+}
+.bubble .voice svg { width: 17px; height: 17px; }
+.bubble .voice .off { display: none; }
+.bubble .voice[aria-pressed=false] .on { display: none; }
+.bubble .voice[aria-pressed=false] .off { display: inline; }
+.bubble .say { display: block; min-height: 3.2em; }
+.mascot img { position: relative; width: min(300px, 76%); height: auto; filter: drop-shadow(0 12px 22px rgba(40, 25, 120, .4)); animation: float 5s ease-in-out infinite; }
 @keyframes float { 50% { transform: translateY(-8px); } }
 .bubble {
   position: relative; max-width: 300px; margin: -8px auto 18px; padding: 10px 18px; border-radius: 12px; text-align: center;
@@ -416,8 +433,13 @@ button { cursor: pointer; }
       <h1>推演之梦<br>龙娘</h1>
       <div class="sub">星辰指引 · 命运回响</div>
     </div>
-    <div class="mascot"><img src="art/dragon.webp" alt="银白长发、紫色龙角和龙翼的龙娘" width="655" height="899"></div>
-    <div class="bubble" id="home-line">哼，想知道命运的走向？本小姐就勉为其难，帮你推演一次吧。</div>
+    <div class="mascot">
+      <canvas id="live" role="button" tabindex="0" aria-label="龙娘。点她一下，她会跟你说话"></canvas>
+      <img id="live-fallback" src="art/dragon-live.webp" alt="银白长发、紫色龙角和龙翼的龙娘" width="730" height="1255" hidden>
+      <span class="poke-hint" id="poke-hint">点她一下</span>
+    </div>
+    <div class="bubble" id="home-line"><span class="say">哼，想知道命运的走向？本小姐就勉为其难，帮你推演一次吧。</span>
+      <button class="voice" id="voice" aria-pressed="true" aria-label="龙娘的声音"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9.5h3.5L12 5.5v13L7.5 14.5H4z" fill="currentColor"/><path class="on" d="M15.5 9a4 4 0 0 1 0 6M18 6.5a7.5 7.5 0 0 1 0 11"/><path class="off" d="M16 9l5 6M21 9l-5 6"/></svg></button></div>
     <button class="btn" id="start">开始占卜</button>
     <div class="nav3">
       <button data-go="gallery"><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="5" y="4" width="10" height="15" rx="1.5"/><path d="M9 7.5h10.5V20H11"/></svg></span>牌阵图鉴</button>
@@ -516,6 +538,7 @@ button { cursor: pointer; }
 </div>
 
 <script src="art/manifest.js"></script>
+<script src="art/dragon-live.js"></script>
 <script>
 'use strict';
 
@@ -1260,7 +1283,7 @@ const $$ = s => [...document.querySelectorAll(s)];
 const esc = s => String(s).replace(/[&<>"']/g, ch => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[ch]));
 
 const SKEY = 'dream-tarot-settings', HKEY = 'dream-tarot-history';
-const settings = Object.assign({ rev: true, save: true }, (() => { try { return JSON.parse(localStorage.getItem(SKEY)) || {}; } catch { return {}; } })());
+const settings = Object.assign({ rev: true, save: true, voice: true }, (() => { try { return JSON.parse(localStorage.getItem(SKEY)) || {}; } catch { return {}; } })());
 function saveSettings() { try { localStorage.setItem(SKEY, JSON.stringify(settings)); } catch { /* 无痕模式等情况下不保存 */ } }
 
 const state = {
@@ -1307,15 +1330,282 @@ $('#nav-back').addEventListener('click', () => {
 $('#nav-home').addEventListener('click', () => go('home'));
 $$('[data-go]').forEach(b => b.addEventListener('click', () => go(b.dataset.go)));
 
-// ---------- 首页 ----------
+// ---------- 首页：会动、会说话的龙娘 ----------
+// 立绘贴在一张 36×60 的网格上，用 WebGL 逐顶点变形：呼吸、长发和裙摆随风摆、翅膀扇、尾巴摇，
+// 头跟着指针转一点，点她一下会压扁再弹起来。眨眼和说话是把闭眼、闭嘴的小补丁画到贴图上再换上去。
+// 各部位的范围都按这张立绘的位置写死（uv 坐标，0–1）。
 
+const DL = window.DRAGON_LIVE || {};
+const LIVE = {
+  src: DL.base || 'art/dragon-live.webp', w: 730, h: 1255,
+  eyes: [[DL.eyeL || 'art/dragon-eye-l.png', 320, 157], [DL.eyeR || 'art/dragon-eye-r.png', 381, 131]],
+  mouth: [DL.mouth || 'art/dragon-mouth.png', 368, 179],
+};
 const LINES = [
   '哼，想知道命运的走向？本小姐就勉为其难，帮你推演一次吧。',
   '星辰已经排好了，你还在犹豫什么？',
   '本小姐的推演，可是从来没有失手过的……大概。',
   '问吧问吧，难得本小姐今天心情不错。',
 ];
-ENTER.home = () => { $('#home-line').textContent = LINES[Math.floor(rand() * LINES.length)]; };
+const TAP_LINES = [
+  '哼，又来找本小姐了？……既然来了，就让星星替你说句话吧。',
+  '别戳啦！本小姐的角可不是按钮。……好吧，再戳一下也不是不行。',
+  '今晚的星光很亮呢。你想问的事，答案也许比你想的更近。',
+  '本小姐的推演从来没有失手过。……大概吧，你要不要试试看？',
+  '洗牌、抽牌、翻牌，三步就够了。剩下的，交给本小姐。',
+  '你一直盯着本小姐看做什么？……快去问你想问的事啦。',
+];
+
+const live = (() => {
+  const canvas = $('#live');
+  const M = 0.06; // 四周留白，摆动的头发和翅膀不会被裁掉
+  const st = { blink: false, mouthShut: false, talking: false, look: [0, 0], lookTo: [0, 0], bounce: 0, bv: 0, dirty: true, ok: false };
+  let gl, prog, tex, uni = {}, nIdx = 0, comp, cctx, imgs = {};
+
+  const load = src => new Promise((res, rej) => { const im = new Image(); im.onload = () => res(im); im.onerror = rej; im.src = src; });
+
+  const VS = `
+    attribute vec2 a_uv;
+    uniform float u_t, u_bounce, u_aspect, u_m, u_still;
+    uniform vec2 u_look;
+    varying vec2 v_uv;
+    float ell(vec2 p, vec2 c, vec2 r) { return 1.0 - smoothstep(0.55, 1.0, length((p - c) / r)); }
+    vec2 rot(vec2 p, vec2 o, float a) {
+      vec2 q = (p - o) * vec2(u_aspect, 1.0);
+      float c = cos(a), s = sin(a);
+      return o + vec2(c * q.x - s * q.y, s * q.x + c * q.y) / vec2(u_aspect, 1.0);
+    }
+    void main() {
+      vec2 p = a_uv; float t = u_t * (1.0 - u_still);
+      vec2 d = vec2(0.0);
+      // 呼吸：上半身轻轻抬起又落下
+      d.y -= (sin(t * 1.7) * 0.5 + 0.5) * 0.004 * (1.0 - smoothstep(0.18, 0.5, p.y));
+      // 头：跟着指针看过去，偶尔点一下
+      float head = ell(p, vec2(0.52, 0.12), vec2(0.17, 0.11));
+      d += head * vec2(u_look.x * 0.011, u_look.y * 0.006 + sin(t * 0.9) * 0.0018);
+      // 长发：两侧越往下摆得越开，避开两只手
+      float side = smoothstep(0.1, 0.32, abs(p.x - 0.52));
+      float hairY = smoothstep(0.1, 0.25, p.y) * (1.0 - smoothstep(0.55, 0.68, p.y));
+      float arms = max(ell(p, vec2(0.36, 0.32), vec2(0.11, 0.07)), ell(p, vec2(0.83, 0.37), vec2(0.09, 0.10)));
+      float hair = side * hairY * (1.0 - arms) * smoothstep(0.1, 0.6, p.y);
+      d.x += hair * (sin(t * 1.25 + p.y * 7.0) * 0.011 - u_look.x * 0.004);
+      d.y += hair * sin(t * 1.25 + p.y * 7.0 + 1.3) * 0.0025;
+      // 翅膀：绕翅根上下扇
+      float flap = sin(t * 2.4) * 0.09;
+      d += ell(p, vec2(0.34, 0.25), vec2(0.10, 0.075)) * (rot(p, vec2(0.43, 0.23), -flap) - p);
+      d += ell(p, vec2(0.69, 0.25), vec2(0.10, 0.075)) * (rot(p, vec2(0.61, 0.23), flap) - p);
+      // 尾巴：绕尾根左右摇
+      d += ell(p, vec2(0.16, 0.62), vec2(0.15, 0.14)) * (rot(p, vec2(0.30, 0.56), sin(t * 1.5) * 0.07) - p);
+      // 裙摆：裙边一波一波地荡，腿不动
+      float skirt = smoothstep(0.42, 0.78, p.y) * (1.0 - smoothstep(0.79, 0.86, p.y));
+      float legs = ell(p, vec2(0.51, 0.7), vec2(0.09, 0.22));
+      d.x += skirt * (1.0 - legs) * sin(t * 1.8 + p.y * 9.0) * 0.006;
+      vec2 q = p + d;
+      // 点一下：以脚底为原点压扁、变宽，再弹回去
+      q.y = 1.0 - (1.0 - q.y) * (1.0 - u_bounce * 0.06);
+      q.x = 0.52 + (q.x - 0.52) * (1.0 + u_bounce * 0.035);
+      q.y += sin(t * 1.1) * 0.004;
+      vec2 c = q * (1.0 - 2.0 * u_m) + u_m;
+      gl_Position = vec4(c.x * 2.0 - 1.0, 1.0 - c.y * 2.0, 0.0, 1.0);
+      v_uv = a_uv;
+    }`;
+  const FS = `
+    precision mediump float;
+    uniform sampler2D u_tex;
+    varying vec2 v_uv;
+    void main() { gl_FragColor = texture2D(u_tex, v_uv); }`;
+
+  function compile(type, src) {
+    const s = gl.createShader(type);
+    gl.shaderSource(s, src); gl.compileShader(s);
+    if (!gl.getShaderParameter(s, gl.COMPILE_STATUS)) throw new Error(gl.getShaderInfoLog(s));
+    return s;
+  }
+
+  function setup() {
+    gl = canvas.getContext('webgl', { premultipliedAlpha: true, alpha: true, antialias: true });
+    if (!gl) throw new Error('no webgl');
+    prog = gl.createProgram();
+    gl.attachShader(prog, compile(gl.VERTEX_SHADER, VS));
+    gl.attachShader(prog, compile(gl.FRAGMENT_SHADER, FS));
+    gl.linkProgram(prog);
+    if (!gl.getProgramParameter(prog, gl.LINK_STATUS)) throw new Error(gl.getProgramInfoLog(prog));
+    gl.useProgram(prog);
+    const NX = 36, NY = 60, uv = [], idx = [];
+    for (let j = 0; j <= NY; j++) for (let i = 0; i <= NX; i++) uv.push(i / NX, j / NY);
+    for (let j = 0; j < NY; j++) for (let i = 0; i < NX; i++) {
+      const a = j * (NX + 1) + i, b = a + 1, c = a + NX + 1, e = c + 1;
+      idx.push(a, b, c, b, e, c);
+    }
+    nIdx = idx.length;
+    gl.bindBuffer(gl.ARRAY_BUFFER, gl.createBuffer());
+    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(uv), gl.STATIC_DRAW);
+    const loc = gl.getAttribLocation(prog, 'a_uv');
+    gl.enableVertexAttribArray(loc);
+    gl.vertexAttribPointer(loc, 2, gl.FLOAT, false, 0, 0);
+    gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, gl.createBuffer());
+    gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, new Uint16Array(idx), gl.STATIC_DRAW);
+    ['u_t', 'u_bounce', 'u_aspect', 'u_m', 'u_still', 'u_look', 'u_tex'].forEach(n => { uni[n] = gl.getUniformLocation(prog, n); });
+    tex = gl.createTexture();
+    gl.bindTexture(gl.TEXTURE_2D, tex);
+    gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, true);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+    gl.enable(gl.BLEND);
+    gl.blendFunc(gl.ONE, gl.ONE_MINUS_SRC_ALPHA);
+    gl.uniform1f(uni.u_aspect, LIVE.w / LIVE.h);
+    gl.uniform1f(uni.u_m, M);
+    gl.uniform1f(uni.u_still, STILL ? 1 : 0);
+    gl.uniform1i(uni.u_tex, 0);
+    comp = document.createElement('canvas');
+    comp.width = LIVE.w; comp.height = LIVE.h;
+    cctx = comp.getContext('2d');
+  }
+
+  // 把立绘和当前的闭眼、闭嘴补丁拼成一张贴图
+  function upload() {
+    cctx.clearRect(0, 0, LIVE.w, LIVE.h);
+    cctx.drawImage(imgs.base, 0, 0);
+    if (st.blink) LIVE.eyes.forEach(([, x, y], k) => cctx.drawImage(imgs['eye' + k], x, y));
+    if (st.mouthShut) cctx.drawImage(imgs.mouth, LIVE.mouth[1], LIVE.mouth[2]);
+    gl.bindTexture(gl.TEXTURE_2D, tex);
+    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, comp);
+    st.dirty = false;
+  }
+
+  function resize() {
+    const dpr = Math.min(2, devicePixelRatio || 1);
+    const r = canvas.getBoundingClientRect();
+    if (!r.width) return;
+    const w = Math.round(r.width * dpr), h = Math.round(r.height * dpr);
+    if (canvas.width !== w || canvas.height !== h) { canvas.width = w; canvas.height = h; }
+    gl.viewport(0, 0, w, h);
+  }
+
+  function fallback() {
+    st.ok = false;
+    canvas.hidden = true;
+    $('#live-fallback').hidden = false;
+  }
+
+  let last = 0, nextBlink = 0, blinkEnd = 0, nextMouth = 0;
+  function frame(now) {
+    if (!st.ok) return;
+    requestAnimationFrame(frame);
+    if (current !== 'home' || document.hidden) return;
+    const dt = Math.min(0.05, (now - last) / 1000 || 0.016); last = now;
+    // 眨眼：每 2.5–6 秒一次，偶尔连眨两下
+    if (!st.blink && now > nextBlink) { st.blink = true; st.dirty = true; blinkEnd = now + 120; }
+    if (st.blink && now > blinkEnd) {
+      st.blink = false; st.dirty = true;
+      nextBlink = now + (Math.random() < .2 ? 180 : 2500 + Math.random() * 3500);
+    }
+    // 说话：嘴一张一合
+    if (st.talking && now > nextMouth) { st.mouthShut = !st.mouthShut; st.dirty = true; nextMouth = now + 90 + Math.random() * 90; }
+    if (!st.talking && st.mouthShut) { st.mouthShut = false; st.dirty = true; }
+    // 视线和弹跳都用弹簧慢慢跟上
+    st.look[0] += (st.lookTo[0] - st.look[0]) * Math.min(1, dt * 4);
+    st.look[1] += (st.lookTo[1] - st.look[1]) * Math.min(1, dt * 4);
+    st.bv += (-st.bounce * 180 - st.bv * 11) * dt;
+    st.bounce += st.bv * dt;
+    if (st.dirty) {
+      try { upload(); } catch { fallback(); return; }
+    }
+    resize();
+    gl.clearColor(0, 0, 0, 0);
+    gl.clear(gl.COLOR_BUFFER_BIT);
+    gl.uniform1f(uni.u_t, now / 1000);
+    gl.uniform1f(uni.u_bounce, st.bounce);
+    gl.uniform2f(uni.u_look, st.look[0], st.look[1]);
+    gl.drawElements(gl.TRIANGLES, nIdx, gl.UNSIGNED_SHORT, 0);
+  }
+
+  Promise.all([load(LIVE.src), load(LIVE.eyes[0][0]), load(LIVE.eyes[1][0]), load(LIVE.mouth[0])]).then(([b, e0, e1, m]) => {
+    imgs = { base: b, eye0: e0, eye1: e1, mouth: m };
+    try {
+      setup();
+      st.ok = true;
+      requestAnimationFrame(frame);
+    } catch { fallback(); }
+  }).catch(fallback);
+
+  addEventListener('pointermove', e => {
+    if (current !== 'home') return;
+    const r = canvas.getBoundingClientRect();
+    const cx = r.left + r.width * 0.52, cy = r.top + r.height * 0.15;
+    st.lookTo = [Math.max(-1, Math.min(1, (e.clientX - cx) / 260)), Math.max(-1, Math.min(1, (e.clientY - cy) / 260))];
+  });
+  document.addEventListener('pointerleave', () => { st.lookTo = [0, 0]; });
+
+  return {
+    poke() { st.bv += 9; $('#poke-hint').hidden = true; },
+    talk(on) { st.talking = on; if (!on) nextMouth = 0; },
+  };
+})();
+
+// 说话：气泡里一个字一个字地出来，嘴跟着动；打开声音时用系统自带的中文语音念出来
+const voice = (() => {
+  const can = 'speechSynthesis' in window && 'SpeechSynthesisUtterance' in window;
+  let typing = 0, speaking = false, typingDone = true;
+  const pickVoice = () => {
+    const vs = can ? speechSynthesis.getVoices() : [];
+    const zh = vs.filter(v => /^zh([-_](CN|Hans))?/i.test(v.lang));
+    return zh.find(v => /xiaoxiao|xiaoyi|tingting|huihui|yaoyao|晓|婷|female|女/i.test(v.name)) || zh[0] || null;
+  };
+  if (can) speechSynthesis.onvoiceschanged = () => {};
+  const settle = () => { if (!speaking && typingDone) live.talk(false); };
+  function say(text, aloud) {
+    const el = $('#home-line .say');
+    clearInterval(typing);
+    typingDone = false;
+    live.talk(true);
+    let i = 0;
+    el.textContent = '';
+    typing = setInterval(() => {
+      el.textContent = text.slice(0, ++i);
+      if (i >= text.length) { clearInterval(typing); typingDone = true; setTimeout(settle, 250); }
+    }, 70);
+    if (!can) return;
+    speechSynthesis.cancel();
+    speaking = false;
+    const v = pickVoice();
+    if (!aloud || !settings.voice || !v) return;
+    const u = new SpeechSynthesisUtterance(text.replace(/……/g, '，'));
+    u.voice = v; u.lang = v.lang; u.pitch = 1.6; u.rate = 1.05;
+    u.onstart = () => { speaking = true; live.talk(true); };
+    u.onend = u.onerror = () => { speaking = false; settle(); };
+    speechSynthesis.speak(u);
+  }
+  const btn = $('#voice');
+  const paint = () => {
+    btn.hidden = !can;
+    btn.setAttribute('aria-pressed', !!settings.voice);
+    btn.title = settings.voice ? '关掉龙娘的声音' : '打开龙娘的声音';
+  };
+  btn.addEventListener('click', e => {
+    e.stopPropagation();
+    settings.voice = !settings.voice; saveSettings(); paint();
+    if (!settings.voice && can) speechSynthesis.cancel();
+  });
+  paint();
+  return { say };
+})();
+
+let lastTap = -1;
+function pokeDragon() {
+  live.poke();
+  let k;
+  do { k = Math.floor(rand() * TAP_LINES.length); } while (k === lastTap && TAP_LINES.length > 1);
+  lastTap = k;
+  voice.say(TAP_LINES[k], true);
+}
+$('#live').addEventListener('click', pokeDragon);
+$('#live').addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); pokeDragon(); } });
+$('#live-fallback').addEventListener('click', pokeDragon);
+
+ENTER.home = () => { voice.say(LINES[Math.floor(rand() * LINES.length)], false); };
 $('#start').addEventListener('click', () => go('spreads'));
 
 // ---------- 选择牌阵 ----------
