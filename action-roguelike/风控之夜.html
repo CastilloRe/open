@@ -5086,7 +5086,7 @@ const WEAPONS = {
   },
   // 锁链: a dart on a chain that hooks one enemy; it runs from her for all it's worth and drags her along behind it
   shackle: {
-    name: '锁链', g: '锁', desc: '朝敌人甩出带铁镖的锁链，直接拴住一只怪物：它会拼命朝远离你的方向逃，不会再扑向你，一边被锁链勒得掉血，一边把挡路的敌人撞开；链子绷紧时它拖着你一起走，绷直的锁链扫到的敌人也会受伤。最多五条，BOSS 拴不住。',
+    name: '锁链', g: '锁', desc: '朝敌人甩出带铁镖的锁链，直接拴住一只怪物：它会拼命朝远离你的方向逃，不会再扑向你，一边被锁链勒得掉血，一边把挡路的敌人撞开；链子绷紧时它拖着你一起走，绷直的锁链扫到的敌人也会受伤。升级最多五条，每层多重施法再多两条；BOSS 拴不住。',
     evo: { need: 'ratelimit', name: '铁索连环', desc: '五条烧红的锁链，拴得更久；锁链扫过的敌人着火，拴住的怪物一死，锁链立刻缠上它身边的下一只。' },
     lv: [
       { cd: 1.8, n: 1, dmg: 20, len: 170, dur: 3.0 },
@@ -5189,7 +5189,7 @@ const TALENTS = [
   { id: 'conc', name: '急速咏唱', g: '咏', cat: 'atk', rar: 0, max: 5, desc: '武器冷却 -8%', apply: p => { p.cd *= 0.92; } },
   { id: 'spark', name: '会心', g: '会', cat: 'atk', rar: 0, max: 5, desc: '暴击率 +6%', apply: p => { p.crit += 0.06; } },
   { id: 'epiph', name: '致命一击', g: '致', cat: 'atk', rar: 1, max: 3, desc: '暴击伤害 +35%', apply: p => { p.critDmg += 0.35; } },
-  { id: 'multi', name: '多重施法', g: '多', cat: 'atk', rar: 2, max: 2, desc: '投射物数量 +1（十四行诗 +3 片花瓣，思维链多跳 1 次）', apply: p => { p.amount += 1; } },
+  { id: 'multi', name: '多重施法', g: '多', cat: 'atk', rar: 2, max: 2, desc: '投射物数量 +1（十四行诗 +3 片花瓣，锁链 +2 条，思维链多跳 1 次）', apply: p => { p.amount += 1; } },
   { id: 'area', name: '范围扩大', g: '域', cat: 'atk', rar: 0, max: 5, desc: '攻击范围 +12%', apply: p => { p.area += 0.12; } },
   { id: 'amplify', name: '扩容', g: '容', cat: 'atk', rar: 1, max: 3, desc: '武器宽度 +15%（潮汐、人机验证、多模态和激光炮更粗），攻击范围 +8%，持续时间 +12%', apply: p => { p.wid += 0.15; p.area += 0.08; p.dur += 0.12; } },
   { id: 'stream', name: '疾速弹道', g: '疾', cat: 'atk', rar: 0, max: 3, desc: '投射物速度 +15%，持续时间 +10%', apply: p => { p.pspeed += 0.15; p.dur += 0.1; } },
@@ -9331,14 +9331,25 @@ function updateWeapons(dt) {
       case 'huo': {
         // 火 · 龙息: when an enemy comes close she breathes fire at it for a while, following it; everything in the
         // cone is hurt every tick and set alight
+        if (w.flames) {
+          // the puffs of fire roll on out, slowing, and burn out (the last of them after she stops)
+          for (const f of w.flames) { f.life += dt; f.d += f.v * dt; f.v *= 1 - dt * 2.2; }
+          w.flames = w.flames.filter(f => f.life < f.max);
+        }
         if (w.breath > 0) {
           w.breath -= dt;
           const R = s.range * P.area, tg = nearest(P.x, P.y, R + 40);
           if (tg) { const d = Math.atan2(tg.y - P.y, tg.x - P.x) - w.aim; w.aim += Math.atan2(Math.sin(d), Math.cos(d)) * Math.min(1, dt * 8); }
-          const ox = P.x + Math.cos(w.aim) * 14, oy = P.y - 14 * P.size + Math.sin(w.aim) * 8;
-          for (let i = 0; i < 5 && G.parts.length < PART_MAX; i++) {
-            const a = w.aim + rand(-0.38, 0.38), v = R * rand(2.0, 2.8);
-            G.parts.push({ x: ox, y: oy, vx: Math.cos(a) * v, vy: Math.sin(a) * v, life: 0.4, max: 0.4, size: rand(5, 9), color: evo ? pick(['#9fe8ff', '#5ab8ff', '#e8fbff']) : pick(['#ffb347', '#ff7a2a', '#ffe08a']), add: true });
+          // the flame itself: puffs of fire born at her mouth that roll out along the cone, swelling as they go
+          const fl = w.flames || (w.flames = []);
+          for (let i = 0; i < 3 && fl.length < 70; i++) {
+            const a = w.aim + rand(-0.3, 0.3), v = R * rand(2.1, 2.7);
+            fl.push({ a, d: rand(0, 10), v, life: 0, max: rand(0.36, 0.46), s: rand(0.8, 1.2), spin: rand(0, TAU), k: Math.random() < 0.5 ? 0 : 1 });
+          }
+          // embers flying off the edges
+          if (G.parts.length < PART_MAX && Math.random() < dt * 30) {
+            const a = w.aim + rand(-0.5, 0.5), v = R * rand(1.2, 2.2), ox = P.x + Math.cos(w.aim) * 14, oy = P.y - 14 * P.size + Math.sin(w.aim) * 8;
+            G.parts.push({ x: ox, y: oy, vx: Math.cos(a) * v, vy: Math.sin(a) * v - 40, life: 0.6, max: 0.6, size: rand(1.6, 2.6), color: evo ? pick(['#d8f6ff', '#7fd0ff']) : pick(['#ffe08a', '#ffb347']), add: true });
           }
           sfx.breath();
           w.acc += dt;
@@ -9586,8 +9597,9 @@ function updateWeapons(dt) {
         break;
       }
       case 'shackle': {
-        // 锁链: each of up to five chains has its own cooldown, counted from when it comes back to her hand
-        const n = Math.min(5, s.n + P.amount);
+        // 锁链: each chain has its own cooldown, counted from when it comes back to her hand; up to five from its levels,
+        // and two more for each 多重施法
+        const n = Math.min(9, s.n + P.amount * 2);
         w.hooks = w.hooks || [];
         for (const h of w.hooks.slice()) if (!hookTick(h, dt, s, evo)) { w.hooks.splice(w.hooks.indexOf(h), 1); w.ts[h.slot] = cdOf(s.cd); }
         for (let i = 0; i < n; i++) {
@@ -10054,11 +10066,12 @@ function hookTick(h, dt, s, evo) {
     if (gone) { letGo(h); return true; }
     const tx = e.x, ty = e.y - e.r * 0.2, d = Math.hypot(tx - o.x, ty - o.y);
     h.a = Math.atan2(ty - o.y, tx - o.x);
-    h.ext = Math.min(d, h.ext + 1500 * P.pspeed * dt);
+    // (slow enough that it can be seen slithering there)
+    h.ext = Math.min(d, h.ext + 750 * P.pspeed * dt);
     if (h.ext < d) return true;
     hit(e, s.dmg * h.m, 'shackle');
     if (e.dead) { letGo(h); return true; }
-    e.hooking = false; e.leash = h; h.st = 'leash'; h.life = s.dur * P.dur;
+    e.hooking = false; e.leash = h; h.st = 'leash'; h.life = s.dur * P.dur; h.lockT = h.t;
     sfx.clank();
     return true;
   }
@@ -14560,25 +14573,30 @@ function drawShackle() {
   const w = P.weapons.find(v => v.id === 'shackle');
   if (!w || !w.hooks) return;
   const o = hookFrom(), t = G.time;
-  // it wriggles like a snake: a wave running down it from the far end to her hand, both ends held still, each link
-  // turned along the curve
+  // flying out it slithers like a snake: the dart weaves its way to the target and the chain follows the same winding
+  // path behind it, the waves easing off at her hand and closing in on the target so the dart lands on it; locked on,
+  // it snaps straight (what wave is left dies away in a moment). Each link is turned along the curve
   const snake = (n, pt, hot) => chainDraw(n, i => {
     const f = (i + 0.5) / n, [x, y] = pt(f), [x2, y2] = pt(f + 0.01);
     return [x, y, Math.atan2(y2 - y, x2 - x)];
   }, hot);
-  const wig = (f, len, amp, ph) => Math.sin(f * Math.PI) * amp * Math.sin(f * len / 90 * TAU + ph);
+  // how far the path is off the straight line s along it, D the whole way to the target
+  const slither = (s, D, amp, h) => amp * Math.sin(s / 110 * TAU + h.slot * 1.7 + (h.wob > 0 ? 0 : Math.PI)) * Math.min(1, s / 35) * clamp((D - s) / 70, 0, 1);
   for (const h of w.hooks) {
-    const ph = t * 10 + h.slot * 2.1;
     if (h.st === 'leash') {
-      const e = h.e, ex = e.x, ey = e.y - e.r * 0.1, d = Math.hypot(ex - o.x, ey - o.y) || 1, L = wStats(w).len * P.area;
-      const sag = h.taut ? 0 : Math.min(40, Math.sqrt(Math.max(0, L * L - d * d)) * 0.3), nx = -(ey - o.y) / d, ny = (ex - o.x) / d, amp = Math.min(h.taut ? 9 : 14, d * 0.09);
-      snake(Math.max(1, Math.round(d / 7)), f => { const b = wig(f, d, amp, ph); return [o.x + (ex - o.x) * f + nx * b, o.y + (ey - o.y) * f + sag * 4 * f * (1 - f) + ny * b]; }, h.hot);
+      const e = h.e, ex = e.x, ey = e.y - e.r * 0.1, d = Math.hypot(ex - o.x, ey - o.y) || 1, nx = -(ey - o.y) / d, ny = (ex - o.x) / d;
+      const amp = 24 * clamp(1 - (h.t - (h.lockT || 0)) / 0.18, 0, 1);
+      snake(Math.max(1, Math.round(d / 7)), f => { const b = amp ? slither(f * d, d, amp, h) : 0; return [o.x + (ex - o.x) * f + nx * b, o.y + (ey - o.y) * f + ny * b]; }, h.hot);
       continue;
     }
     const L = Math.max(0, h.ext), dx = Math.cos(h.a), dy = Math.sin(h.a), nx = -dy, ny = dx;
-    const wob = h.st === 'out' ? 12 * Math.max(0, 1 - h.t * 3) * h.wob : 0, amp = Math.min(12, L * 0.09);
-    snake(Math.max(1, Math.round(L / 7)), f => { const b = Math.sin(f * Math.PI) * wob + wig(f, L, amp, ph); return [o.x + dx * L * f + nx * b, o.y + dy * L * f + ny * b]; }, h.hot);
-    ctx.save(); ctx.translate(o.x + dx * L, o.y + dy * L); ctx.rotate(h.a);
+    const D = h.st === 'out' && !h.e.dead ? Math.max(L, Math.hypot(h.e.x - o.x, h.e.y - h.e.r * 0.2 - o.y)) : L + 70, amp = h.st === 'out' ? 24 : 0;
+    const at = sd => { const b = amp ? slither(sd, D, amp, h) : 0; return [o.x + dx * sd + nx * b, o.y + dy * sd + ny * b]; };
+    snake(Math.max(1, Math.round(L / 7)), f => at(f * L), h.hot);
+    // the dart at the head of it, pointing the way the path goes there
+    const [hx, hy] = at(L), [px, py] = at(Math.max(0, L - 6));
+    h.da = L > 6 ? Math.atan2(hy - py, hx - px) : h.a;
+    ctx.save(); ctx.translate(hx, hy); ctx.rotate(h.da);
     ctx.strokeStyle = '#d8323a'; ctx.lineWidth = 2.2; ctx.lineCap = 'round';
     for (const k of [-1, 1]) { ctx.beginPath(); ctx.moveTo(-8, 0); ctx.quadraticCurveTo(-13, k * 3 + Math.sin(t * 20) * 2, -19, k * 4); ctx.stroke(); }
     if (h.hot) { ctx.globalCompositeOperation = 'lighter'; ctx.fillStyle = 'rgba(255,130,50,0.35)'; disc(ctx, 4, 0, 12); ctx.fill(); ctx.globalCompositeOperation = 'source-over'; }
@@ -15129,7 +15147,10 @@ function drawInjected() {
 // a pale core low down) flickering through three shapes, a purple glow on the ground under it; it grows with the
 // marks. The count beside the ones carrying ten or more (and every elite and boss)
 const VFIRE = [[1, 0.72, 0.62, 0], [0.86, 0.82, 0.55, 1.1], [0.94, 0.6, 0.78, 2.3]];
-const violetFire = i => sprite('vfire' + i, 40, 52, x => {
+const violetFire = i => fireTongues('vfire' + i, i, ['rgba(112,40,225,0.6)', 'rgba(172,100,255,0.75)', 'rgba(242,220,255,0.92)']);
+// the same flames in fire's own colours, for 火 · 龙息
+const orangeFire = i => fireTongues('ofire' + i, i, ['rgba(230,60,10,0.6)', 'rgba(255,150,40,0.75)', 'rgba(255,240,190,0.92)']);
+const fireTongues = (key, i, cols) => sprite(key, 40, 52, x => {
   const [hc, hl, hr, ph] = VFIRE[i];
   const tongue = (cx, w, h, lean) => {
     x.beginPath(); x.moveTo(cx - w, 24);
@@ -15137,7 +15158,7 @@ const violetFire = i => sprite('vfire' + i, 40, 52, x => {
     x.bezierCurveTo(cx + w * 0.4 + lean, 24 - h * 0.65, cx + w * 1.15, 24 - h * 0.4, cx + w, 24);
     x.closePath(); x.fill();
   };
-  for (const [col, k] of [['rgba(112,40,225,0.6)', 1], ['rgba(172,100,255,0.75)', 0.72], ['rgba(242,220,255,0.92)', 0.42]]) {
+  for (const [col, k] of [[cols[0], 1], [cols[1], 0.72], [cols[2], 0.42]]) {
     x.fillStyle = col;
     tongue(-8, 8 * k, 34 * hl * k, -3 + Math.sin(ph + 1) * 2);
     tongue(8, 8 * k, 34 * hr * k, 3 + Math.sin(ph + 2) * 2);
@@ -15570,21 +15591,68 @@ function drawQuake(z) {
   ctx.restore();
 }
 // 龙息: a flickering cone of flame from her toward what she's burning; 三昧真火 burns blue
+// 火 · 龙息: soft puffs of flame, painted once (two shapes, each in fire and in the 三昧真火's blue), drawn additively
+// a puff at heat h (0 white-hot, 1 a dark red going to smoke), in one of two lumpy shapes
+const BREATH_HEAT = 4;
+const breathPuff = (k, h, blue) => sprite('bpuff' + k + h + (blue ? 'b' : ''), 64, 64, x => {
+  const fire = [['255,248,220', '255,220,120'], ['255,210,90', '255,150,40'], ['255,140,40', '230,70,15'], ['220,70,20', '150,30,10']];
+  const ice = [['255,255,255', '200,245,255'], ['190,240,255', '110,200,255'], ['110,190,255', '50,120,240'], ['70,130,240', '40,60,200']];
+  const [c0, c1] = (blue ? ice : fire)[h], a = [0.55, 0.5, 0.42, 0.32][h];
+  const lobes = k ? [[0, 0, 24], [-9, -6, 16], [10, 5, 15], [6, -11, 12]] : [[0, 0, 25], [11, -4, 16], [-10, 7, 15], [-4, -12, 12]];
+  for (const [lx, ly, r] of lobes) {
+    const g = x.createRadialGradient(lx, ly, 0, lx, ly, r);
+    g.addColorStop(0, `rgba(${c0},${a})`); g.addColorStop(0.55, `rgba(${c1},${a * 0.7})`); g.addColorStop(1, `rgba(${c1},0)`);
+    x.fillStyle = g; disc(x, lx, ly, r); x.fill();
+  }
+});
 function drawBreath() {
   const w = P.weapons.find(v => v.id === 'huo');
-  if (!w || !(w.breath > 0)) return;
-  const s = wStats(w), R = s.range * P.area, ox = P.x + Math.cos(w.aim) * 14, oy = P.y - 14 * P.size + Math.sin(w.aim) * 8;
-  const fade = Math.min(1, w.breath / 0.2, (s.dur * P.dur - w.breath) / 0.12 + 0.2);
-  ctx.save(); ctx.globalCompositeOperation = 'lighter'; ctx.globalAlpha = fade;
-  ctx.translate(ox, oy); ctx.rotate(w.aim);
-  const g = ctx.createRadialGradient(0, 0, 4, 0, 0, R);
-  const [c0, c1, c2] = w.level === 6 ? ['220,250,255', '90,180,255', '40,90,255'] : ['255,240,200', '255,150,50', '255,80,20'];
-  g.addColorStop(0, `rgba(${c0},0.75)`); g.addColorStop(0.35, `rgba(${c1},0.45)`); g.addColorStop(1, `rgba(${c2},0)`);
-  ctx.fillStyle = g;
-  ctx.beginPath(); ctx.moveTo(0, 0);
-  for (let i = 0; i <= 12; i++) { const a = -0.42 + i / 12 * 0.84, rr = R * (0.85 + 0.15 * Math.sin(G.time * 30 + i * 1.7)); ctx.lineTo(Math.cos(a) * rr, Math.sin(a) * rr); }
-  ctx.closePath(); ctx.fill();
+  if (!w || !((w.breath > 0) || (w.flames && w.flames.length))) return;
+  const s = wStats(w), R = s.range * P.area, ox = P.x + Math.cos(w.aim) * 14, oy = P.y - 14 * P.size + Math.sin(w.aim) * 8, blue = w.level === 6, t = G.time;
+  const on = w.breath > 0 ? Math.min(1, w.breath / 0.2, (s.dur * P.dur - w.breath) / 0.1 + 0.3) : 0;
+  ctx.save(); ctx.globalCompositeOperation = 'lighter';
+  // the ground lit and scorched under the cone
+  if (on > 0) {
+    ctx.save(); ctx.translate(ox, oy + 10); ctx.rotate(w.aim); ctx.scale(1, 0.75);
+    const g = ctx.createRadialGradient(R * 0.45, 0, 0, R * 0.45, 0, R * 0.75);
+    g.addColorStop(0, blue ? `rgba(80,170,255,${0.22 * on})` : `rgba(255,120,30,${0.24 * on})`); g.addColorStop(1, 'rgba(255,80,20,0)');
+    ctx.fillStyle = g; ctx.beginPath(); ctx.ellipse(R * 0.45, 0, R * 0.75, R * 0.42, 0, 0, TAU); ctx.fill();
+    ctx.restore();
+  }
+  // the puffs, from the oldest (outermost, reddest, biggest) to the newest (white-hot at her mouth)
+  const fl = w.flames || [];
+  for (let i = 0; i < fl.length; i++) {
+    const f = fl[i], k = f.life / f.max, x = ox + Math.cos(f.a) * f.d, y = oy + Math.sin(f.a) * f.d - k * k * 18;
+    const size = (8 + f.d * 0.3) * f.s * (0.75 + 0.45 * k), a = Math.min(1, f.life / 0.04) * (1 - k * k) * 0.85;
+    if (a <= 0.02) continue;
+    const sp = breathPuff(f.k, Math.min(BREATH_HEAT - 1, Math.floor(k * BREATH_HEAT)), blue);
+    ctx.globalAlpha = a;
+    ctx.save(); ctx.translate(x, y); ctx.rotate(f.spin + f.life * 3); ctx.drawImage(sp.c, -size, -size, size * 2, size * 2); ctx.restore();
+  }
+  // licks of flame rising off the older puffs, the 火 flame sprites the rest of the fire uses
+  for (let i = 0; i < fl.length; i += 3) {
+    const f = fl[i], k = f.life / f.max;
+    if (k < 0.35 || k > 0.9) continue;
+    const x = ox + Math.cos(f.a) * f.d, y = oy + Math.sin(f.a) * f.d - k * k * 18, fr = blue ? null : orangeFire(i % 3), sz = (0.5 + 0.5 * f.s) * (1 - k);
+    ctx.globalAlpha = Math.sin((k - 0.35) / 0.55 * Math.PI) * 0.8;
+    if (fr) ctx.drawImage(fr.c, x - fr.w * sz / 2, y - fr.h * sz, fr.w * sz, fr.h * sz);
+    else { ctx.fillStyle = rgrad(ctx, x, y - 10, 12 * sz + 4, ['rgba(220,250,255,0.8)', 'rgba(90,170,255,0.4)', 'rgba(40,90,255,0)']); disc(ctx, x, y - 10, 12 * sz + 4); ctx.fill(); }
+  }
+  // the hot core: a tongue of white-gold from her mouth, flickering, and a flare where it leaves her
+  if (on > 0) {
+    ctx.save(); ctx.translate(ox, oy); ctx.rotate(w.aim);
+    const L = R * (0.42 + 0.05 * Math.sin(t * 37)), wd = 7 + 2 * Math.sin(t * 53);
+    const g = ctx.createLinearGradient(0, 0, L, 0);
+    g.addColorStop(0, blue ? `rgba(255,255,255,${0.7 * on})` : `rgba(255,255,235,${0.7 * on})`); g.addColorStop(0.4, blue ? `rgba(150,225,255,${0.4 * on})` : `rgba(255,210,90,${0.4 * on})`); g.addColorStop(1, 'rgba(255,140,40,0)');
+    ctx.fillStyle = g;
+    ctx.beginPath(); ctx.moveTo(0, -wd * 0.5); ctx.quadraticCurveTo(L * 0.5, -wd * 1.4, L, Math.sin(t * 23) * wd * 0.6); ctx.quadraticCurveTo(L * 0.5, wd * 1.4, 0, wd * 0.5); ctx.closePath(); ctx.fill();
+    ctx.globalAlpha = on;
+    ctx.fillStyle = rgrad(ctx, 0, 0, 16, [blue ? 'rgba(255,255,255,0.95)' : 'rgba(255,250,220,0.95)', blue ? 'rgba(120,200,255,0.5)' : 'rgba(255,170,60,0.5)', 'rgba(255,100,30,0)']);
+    disc(ctx, 0, 0, 16); ctx.fill();
+    ctx.restore();
+  }
   ctx.restore();
+  ctx.globalAlpha = 1;
 }
 function drawHoles(behind) {
   const w = P.weapons.find(v => v.id === 'hole');
