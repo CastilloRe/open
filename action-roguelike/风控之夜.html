@@ -8439,7 +8439,11 @@ function updateUlt(dt) {
     if (u.whale) {
       if (P.talents.tokfree) P.tokFree = 10;
       puff(P.x, P.y - 20, 40, '#bfeaff', 420, 0.9, 4, true);
-      ring(P.x, P.y, 30, Math.max(viewW, viewH) * 0.7, 0.8, '#8fd8ff', 10);
+      // the spray where the whale breaks the surface
+      for (let i = 0; i < 70 && G.parts.length < PART_MAX; i++) {
+        const a = -Math.PI / 2 + rand(-1.3, 1.3), v = rand(240, 760), l = rand(0.55, 1.1);
+        G.parts.push({ x: P.x + rand(-24, 24), y: P.y, vx: Math.cos(a) * v, vy: Math.sin(a) * v, life: l, max: l, size: rand(2.5, 5.5), color: pick(['#ffffff', '#cdeeff', '#8fd0ff']), add: true });
+      }
       sfx.splash();
     }
     // only the big targets get their own number; everyone else adds to one total
@@ -8503,6 +8507,15 @@ function silverMouth(u) {
 }
 function silverTick(u, dt) {
   const S0 = Math.min(viewW, viewH);
+  // at the end it goes as it came, in motes of light drifting up off its wings and its head
+  if (u.t > ULT_DRAGON_T - 0.4 && G.parts.length < PART_MAX) {
+    const h = silverHead(u);
+    for (let i = 0; i < 5; i++) {
+      const side = Math.random() < 0.5 ? -1 : 1, onHead = Math.random() < 0.3;
+      const x = onHead ? h.x + rand(-60, 60) * h.s : P.x + side * rand(0.05, 0.45) * S0, y = onHead ? h.y + rand(-30, 30) * h.s : P.y - 30 - S0 * rand(0.05, 0.4);
+      G.parts.push({ x, y, vx: rand(-30, 30), vy: rand(-140, -50), life: 0.7, max: 0.7, size: rand(1.8, 3.4), color: pick(['#ffffff', '#efe6ff', '#c8a8ff']), add: true });
+    }
+  }
   if (!u.fired && u.t > 0.25 && G.parts.length < PART_MAX) {
     // motes of light drawn in to where it's taking shape
     for (let i = 0; i < 3; i++) {
@@ -8525,6 +8538,12 @@ function silverTick(u, dt) {
     if (weak && (big || u.pops++ < 8)) { const t = floatText(e.x, e.y - e.r - 16, '破局', '#f0dcff', 15); t.pop = 1; }
     if (G.parts.length < PART_MAX) puff(e.x, e.y, 5, pick(['#2a1840', '#4a3070', '#e8d8ff']), 240, 0.5, 3);
     if (!e.dead && e.hp <= 0) kill(e, 'ult');
+  }
+  // fire left burning on the ground along it, a little way apart
+  const sc = u.scorch || (u.scorch = []);
+  if (sc.length < 70 && Math.random() < dt * 40) {
+    const l = rand(0.15, 1) * S0 * 1.1, x = m.x + c * l + rand(-hw, hw) * 0.5 * -s, y = m.y + s * l + rand(-hw, hw) * 0.5 * c;
+    if (inView(x, y, 20)) sc.push({ x, y, t: u.t, s: rand(0.8, 1.4) });
   }
   // light streaming along the breath
   for (let i = 0; i < 4 && G.parts.length < PART_MAX; i++) {
@@ -15231,6 +15250,20 @@ const silverWingArt = () => sprite('silverwing', 320, 260, x => {
 function drawSilverDragon(u) {
   const t = u.t, h = silverHead(u), S0 = h.S0, since = u.fired ? t - u.firedAt : 0;
   const ap = clamp((t - 0.25) / 0.45, 0, 1) * clamp((ULT_DRAGON_T - t) / 0.3, 0, 1);
+  // under her, the working-out: a sigil of 推演 opening as the dragon takes shape, flaring as it roars
+  const sk = clamp((t - 0.1) / 0.5, 0, 1), sa = Math.min(sk * 1.5, 1) * (u.fired ? Math.max(0, 1 - since / 0.7) : 1);
+  if (sa > 0) drawSigil(P.x, P.y + 14, S0 * (0.16 + 0.2 * (1 - Math.pow(1 - sk, 3))) * (1 + (u.fired ? since * 1.2 : 0)), t, sa, u.fired && since < 0.15);
+  // the purple fire the breath leaves burning on the ground behind it
+  if (u.scorch) {
+    for (let i = 0; i < u.scorch.length; i++) {
+      const f = u.scorch[i], age = t - f.t, a = Math.min(1, age * 8) * Math.max(0, 1 - age / 1.1) * clamp((ULT_DRAGON_T - t) / 0.35, 0, 1);
+      if (a <= 0) continue;
+      ctx.globalAlpha = a;
+      const fr = violetFire((i + Math.floor(t * 9)) % 3), k = f.s * (1 - age * 0.3);
+      ctx.drawImage(fr.c, f.x - fr.w * k / 2, f.y - fr.h * k * 0.9, fr.w * k, fr.h * k);
+    }
+    ctx.globalAlpha = 1;
+  }
   if (ap <= 0) return;
   const bx = P.x, by = P.y - 30 - S0 * 0.05, wk = 0.3 + 0.7 * clamp((t - 0.3) / 0.6, 0, 1), flap = Math.sin(t * 3);
   ctx.globalCompositeOperation = 'lighter';
@@ -15243,16 +15276,37 @@ function drawSilverDragon(u) {
     ctx.globalAlpha = ap * 0.8; ctx.drawImage(wing.c, -20, -220, 320, 260);
     ctx.restore();
   }
-  // the neck, from behind her up to the head
-  const c = Math.cos(h.a), s = Math.sin(h.a), nx = h.x - c * 70 * h.s, ny = h.y - s * 70 * h.s + 12 * h.s * h.flip;
-  ctx.lineCap = 'round';
-  ctx.strokeStyle = `rgba(210,190,255,${0.4 * ap})`; ctx.lineWidth = S0 * 0.075;
-  ctx.beginPath(); ctx.moveTo(bx, by); ctx.quadraticCurveTo((bx + nx) / 2, Math.max(by, ny) + S0 * 0.04, nx, ny); ctx.stroke();
-  ctx.strokeStyle = `rgba(255,255,255,${0.35 * ap})`; ctx.lineWidth = S0 * 0.03; ctx.stroke();
   ctx.globalCompositeOperation = 'source-over';
+  // the neck, from behind her up to the head: silver scales, pale on top and lilac beneath, with a crest of spines
+  const c = Math.cos(h.a), s = Math.sin(h.a), nx = h.x - c * 70 * h.s, ny = h.y - s * 70 * h.s + 12 * h.s * h.flip;
+  const qx = (bx + nx) / 2, qy = Math.max(by, ny) + S0 * 0.04, N = 16;
+  const pt = f => [(1 - f) * (1 - f) * bx + 2 * (1 - f) * f * qx + f * f * nx, (1 - f) * (1 - f) * by + 2 * (1 - f) * f * qy + f * f * ny];
+  ctx.globalAlpha = ap * 0.9;
+  for (let i = 0; i <= N; i++) {
+    const f = i / N, [x, y] = pt(f), r = S0 * (0.046 - 0.016 * f);
+    ctx.fillStyle = 'rgba(120,80,200,0.8)'; disc(ctx, x, y + r * 0.12, r * 1.08); ctx.fill();
+    ctx.fillStyle = rgrad(ctx, x - r * 0.3, y - r * 0.45, r * 1.2, ['#ffffff', '#e6dcff', '#a888e8']); disc(ctx, x, y, r); ctx.fill();
+  }
+  ctx.fillStyle = '#f4efff'; ctx.strokeStyle = 'rgba(140,100,220,0.8)'; ctx.lineWidth = 1.2;
+  for (let i = 1; i < N; i += 2) {
+    const f = i / N, [x, y] = pt(f), [x2, y2] = pt(f + 0.02), dx = x2 - x, dy = y2 - y, l = Math.hypot(dx, dy) || 1, r = S0 * (0.046 - 0.016 * f);
+    // a spine on the upper side of the curve, leaning back along it
+    const ux = dy / l, uy = -dx / l, sgn = uy < 0 ? 1 : -1, tx = x + ux * sgn * r, ty = y + uy * sgn * r;
+    ctx.beginPath(); ctx.moveTo(tx - dx / l * r * 0.4, ty - dy / l * r * 0.4); ctx.lineTo(tx + ux * sgn * r * 0.9 - dx / l * r * 0.6, ty + uy * sgn * r * 0.9 - dy / l * r * 0.6); ctx.lineTo(tx + dx / l * r * 0.3, ty + dy / l * r * 0.3); ctx.closePath(); ctx.fill(); ctx.stroke();
+  }
+  ctx.globalAlpha = 1;
   ctx.globalCompositeOperation = 'lighter';
   ctx.fillStyle = rgrad(ctx, h.x, h.y, S0 * 0.2, [`rgba(235,225,255,${0.3 * ap})`, 'rgba(200,170,255,0)']);
   disc(ctx, h.x, h.y, S0 * 0.2); ctx.fill();
+  // the roar: two rings going out from its jaws
+  if (u.fired && since < 0.5) {
+    for (const [d, col] of [[0, '255,255,255'], [0.1, '190,140,255']]) {
+      const k = clamp((since - d) / 0.4, 0, 1);
+      if (k <= 0 || k >= 1) continue;
+      ctx.strokeStyle = `rgba(${col},${0.7 * (1 - k)})`; ctx.lineWidth = 10 * (1 - k) + 2;
+      disc(ctx, h.x, h.y, 30 + k * S0 * 0.7); ctx.stroke();
+    }
+  }
   if (u.beam && since < BEAM_T) {
     // the breath: a broad beam, white at its heart going to violet at its edges, flickering, with streaks running out
     // along it and a flare at the mouth
@@ -15264,6 +15318,13 @@ function drawSilverDragon(u) {
     g.addColorStop(0.5, 'rgba(255,255,255,1)'); g.addColorStop(0.58, 'rgba(232,214,255,0.85)'); g.addColorStop(0.78, 'rgba(170,110,255,0.4)'); g.addColorStop(1, 'rgba(150,90,255,0)');
     ctx.fillStyle = g;
     ctx.beginPath(); ctx.moveTo(0, -bw * 0.5); ctx.lineTo(S0 * 0.15, -bw * 1.4); ctx.lineTo(L, -bw * 1.4); ctx.lineTo(L, bw * 1.4); ctx.lineTo(S0 * 0.15, bw * 1.4); ctx.lineTo(0, bw * 0.5); ctx.closePath(); ctx.fill();
+    // a spiral of violet light winding along it
+    ctx.strokeStyle = `rgba(200,150,255,${0.55 * k})`; ctx.lineWidth = 3;
+    for (const ph of [0, Math.PI]) {
+      ctx.beginPath();
+      for (let x = 0; x <= L; x += 24) { const y = Math.sin(x * 0.02 - t * 30 + ph) * bw * 0.95; if (x) ctx.lineTo(x, y); else ctx.moveTo(x, y); }
+      ctx.stroke();
+    }
     ctx.strokeStyle = `rgba(255,255,255,${0.6 * k})`; ctx.lineWidth = 2;
     for (let i = 0; i < 6; i++) {
       const x0 = ((t * 1400 + i * 233) % L), y0 = Math.sin(t * 13 + i * 2.1) * bw * 0.7;
@@ -15274,11 +15335,43 @@ function drawSilverDragon(u) {
     disc(ctx, m.x, m.y, bw * 1.3); ctx.fill();
   }
   ctx.globalCompositeOperation = 'source-over';
-  // the head, over where its breath starts
+  // the head, over where its breath starts, and its eye burning violet
   ctx.save(); ctx.translate(h.x, h.y); ctx.rotate(h.a); ctx.scale(h.s, h.s * h.flip);
-  ctx.globalAlpha = ap * 0.92; ctx.drawImage(silverHeadArt().c, -150, -100, 300, 200);
+  ctx.globalAlpha = ap * 0.95; ctx.drawImage(silverHeadArt().c, -150, -100, 300, 200);
+  ctx.globalCompositeOperation = 'lighter'; ctx.globalAlpha = ap * (0.6 + 0.4 * Math.sin(t * 12));
+  ctx.fillStyle = rgrad(ctx, 36, -24, 26, ['rgba(220,170,255,0.9)', 'rgba(160,90,255,0)']); disc(ctx, 36, -24, 26); ctx.fill();
   ctx.restore();
-  ctx.globalAlpha = 1;
+  ctx.globalAlpha = 1; ctx.globalCompositeOperation = 'source-over';
+}
+// 龙娘's sigil on the ground (squashed into the floor): two rings turning opposite ways, the marks of her working-out
+// round them, a six-pointed star and a ring of light at its heart; `flare` lights it all up at the roar
+const SIGIL_MARKS = ['∑', '∫', '∂', 'λ', 'π', '∞', 'Δ', '√', 'θ', 'φ', 'Ω', '≈'];
+function drawSigil(x, y, R, t, a, flare) {
+  ctx.save(); ctx.translate(x, y); ctx.scale(1, CALC_SQ);
+  ctx.globalCompositeOperation = 'lighter';
+  ctx.fillStyle = rgrad(ctx, 0, 0, R * 1.1, [`rgba(150,90,255,${(flare ? 0.4 : 0.16) * a})`, `rgba(190,140,255,${0.12 * a})`, 'rgba(150,90,255,0)']);
+  disc(ctx, 0, 0, R * 1.1); ctx.fill();
+  ctx.lineWidth = 2.4; ctx.strokeStyle = `rgba(230,210,255,${0.85 * a})`; disc(ctx, 0, 0, R); ctx.stroke();
+  ctx.lineWidth = 1.4; ctx.strokeStyle = `rgba(190,150,255,${0.8 * a})`; disc(ctx, 0, 0, R * 0.8); ctx.stroke(); disc(ctx, 0, 0, R * 0.36); ctx.stroke();
+  ctx.save(); ctx.rotate(-t * 0.9);
+  ctx.strokeStyle = `rgba(210,180,255,${0.75 * a})`; ctx.lineWidth = 1.8;
+  for (const off of [0, Math.PI]) {
+    ctx.beginPath();
+    for (let i = 0; i <= 3; i++) { const an = off + i / 3 * TAU - Math.PI / 2, px = Math.cos(an) * R * 0.78, py = Math.sin(an) * R * 0.78; if (i) ctx.lineTo(px, py); else ctx.moveTo(px, py); }
+    ctx.stroke();
+  }
+  ctx.restore();
+  ctx.save(); ctx.rotate(t * 0.6);
+  ctx.globalAlpha = a;
+  for (let i = 0; i < SIGIL_MARKS.length; i++) {
+    const an = i / SIGIL_MARKS.length * TAU;
+    ctx.save(); ctx.translate(Math.cos(an) * R * 0.9, Math.sin(an) * R * 0.9); ctx.rotate(an + Math.PI / 2); ctx.scale(1, 1 / CALC_SQ);
+    blit(textSprite(SIGIL_MARKS[i], '#e8d8ff', 16), 0, 0);
+    ctx.restore();
+  }
+  ctx.restore();
+  ctx.globalAlpha = 1; ctx.globalCompositeOperation = 'source-over';
+  ctx.restore();
 }
 // a dizzy swirl, with three little stars going round it
 function drawDizzy(x, y, t) {
@@ -15859,24 +15952,58 @@ function drawUltWorld() {
   ctx.globalCompositeOperation = 'source-over';
   ctx.globalAlpha = 1;
 }
-// 深海鲸歌, in the five beats of her design sheet: ① a vortex of water opens at her feet, ② a great whale of light
-// rises out of it, ③ swims once round her, ④ and breaks over the whole screen as a whale-shaped wave, ⑤ leaving
+// 深海鲸歌, in the five beats of her design sheet: ① a vortex of water opens at her feet, light coming down through the
+// sea, ② a great whale of light rises out of it, ③ swims round her singing (rings of song from its head, notes
+// drifting up), ④ breaches, leaping up over her out of the vortex as the sea breaks outward in a ring, ⑤ leaving
 // bubbles drifting up
 function drawSong(u) {
-  const t = u.t, S0 = Math.min(viewW, viewH), since = u.fired ? t - u.firedAt : 0;
+  const t = u.t, S0 = Math.min(viewW, viewH), S1 = Math.max(viewW, viewH), since = u.fired ? t - u.firedAt : 0;
   ctx.globalCompositeOperation = 'lighter';
+  drawGodRays(t, Math.min(1, t / 0.35) * (u.fired ? Math.max(0, 1 - Math.max(0, since - 0.45) / 0.4) : 1));
   const vk = Math.min(1, t / 0.3) * (u.fired ? Math.max(0, 1 - since / 0.4) : 1);
   if (vk > 0) drawVortex(P.x, P.y + 12, S0 * 0.3 * vk + 20, t, vk);
   const img = spiritWhale();
   if (!u.fired) {
     const rise = clamp((t - 0.25) / 0.35, 0, 1), round = clamp((t - 0.6) / 0.45, 0, 1);
-    if (round <= 0) drawSpirit(img, P.x, P.y + 20 - rise * S0 * 0.3, S0 * (0.3 + 0.35 * rise), -Math.PI / 2 + 0.3, rise);
+    if (round <= 0) drawSpirit(img, P.x, P.y + 20 - rise * S0 * 0.32, S0 * (0.32 + 0.4 * rise), -Math.PI / 2 + 0.3, rise);
     else {
-      const th = -Math.PI / 2 + round * TAU * 0.9, rx = S0 * 0.42, ry = S0 * 0.25;
-      drawSpirit(img, P.x + Math.cos(th) * rx, P.y - 10 + Math.sin(th) * ry, S0 * 0.62, Math.atan2(Math.cos(th) * ry, -Math.sin(th) * rx), 1);
+      const rx = S0 * 0.48, ry = S0 * 0.27, at = th => [P.x + Math.cos(th) * rx, P.y - 10 + Math.sin(th) * ry];
+      const th = -Math.PI / 2 + round * TAU * 0.9, [wx, wy] = at(th), head = Math.atan2(Math.cos(th) * ry, -Math.sin(th) * rx);
+      // a wake of light along the way it came
+      for (let k = 8; k >= 1; k--) {
+        const [qx, qy] = at(th - k * 0.09), r = S0 * (0.11 - k * 0.009);
+        ctx.fillStyle = rgrad(ctx, qx, qy, r, [`rgba(150,215,255,${0.22 * (1 - k / 9)})`, 'rgba(80,150,255,0)']);
+        disc(ctx, qx, qy, r); ctx.fill();
+      }
+      drawSpirit(img, wx, wy, S0 * 0.72, head, 1);
+      // it sings: rings of sound going out ahead of it
+      const hx = wx + Math.cos(head) * S0 * 0.3, hy = wy + Math.sin(head) * S0 * 0.3;
+      ctx.lineCap = 'round';
+      for (let j = 0; j < 4; j++) {
+        const age = (t - 0.6 - j * 0.12) % 0.48;
+        if (age < 0 || t - 0.6 < j * 0.12) continue;
+        const r = 20 + age * S0 * 0.9, a = 1 - age / 0.48;
+        ctx.strokeStyle = `rgba(190,235,255,${0.55 * a})`; ctx.lineWidth = 5 * a + 1;
+        ctx.beginPath(); ctx.arc(hx, hy, r, head - 0.75, head + 0.75); ctx.stroke();
+      }
     }
-  } else if (since < 0.65) {
-    drawSpirit(img, P.x, P.y - 20, Math.max(viewW, viewH) * (1 + since * 0.6), -0.1, 1 - since / 0.65);
+    // notes drifting up round her
+    for (let i = 0; i < 10; i++) {
+      const ph = (t * 0.8 + i * 0.1) % 1, a = Math.sin(ph * Math.PI) * Math.min(1, (t - 0.3) * 3);
+      if (a <= 0) continue;
+      ctx.globalAlpha = a * 0.9;
+      blit(textSprite(i % 3 ? '♪' : '♫', '#c8f0ff', 20 + (i % 3) * 4), P.x + Math.sin(i * 2.3) * S0 * 0.42, P.y + S0 * 0.18 - ph * S0 * 0.55);
+    }
+    ctx.globalAlpha = 1;
+  } else {
+    // it breaches: out of the vortex below her and in an arc up over her, gone as it comes down the far side
+    const k = clamp(since / 0.8, 0, 1);
+    if (k < 1) {
+      const x = P.x - S1 * 0.36 + k * S1 * 0.72, y = P.y + S0 * 0.28 - Math.sin(k * Math.PI) * S0 * 0.62 - k * S0 * 0.12;
+      const ang = Math.atan2(-Math.cos(k * Math.PI) * Math.PI * S0 * 0.62 - S0 * 0.12, S1 * 0.72);
+      drawSpirit(img, x, y, S1 * 0.62, ang, Math.min(1, since / 0.06) * (1 - k * k * k));
+    }
+    drawWave(P.x, P.y + 12, since);
   }
   const b = SPR.bubble();
   for (const p of u.bub) {
@@ -15885,16 +16012,35 @@ function drawSong(u) {
     ctx.globalAlpha = a; ctx.drawImage(b.c, p.x - p.r, p.y - p.r, p.r * 2, p.r * 2);
   }
   ctx.globalAlpha = 1;
-  if (u.fired && since < 0.9) {
-    // the crown of water where the wave breaks
-    const S = S0 * 0.95, hgt = Math.sin(Math.min(1, since / 0.75) * Math.PI) * S * 0.38;
-    ctx.fillStyle = 'rgba(140,210,255,0.32)';
-    for (let i = 0; i < 18; i++) {
-      const a = i / 18 * TAU, rx = Math.cos(a) * S * 0.46, ry = Math.sin(a) * S * 0.13, hh = hgt * (0.55 + 0.45 * Math.abs(Math.sin(i * 2.3)));
-      ctx.beginPath(); ctx.moveTo(P.x + rx - 10, P.y + ry); ctx.quadraticCurveTo(P.x + rx * 1.12, P.y + ry - hh * 2, P.x + rx + 10, P.y + ry); ctx.fill();
-    }
-  }
   ctx.globalCompositeOperation = 'source-over';
+}
+// light coming down through the water: a few broad shafts from the top of the view, slanting and swaying
+function drawGodRays(t, a) {
+  if (a <= 0) return;
+  const top = G.cam.y - viewH / 2 - 40, len = viewH * 1.05;
+  for (let i = 0; i < 6; i++) {
+    const x0 = G.cam.x - viewW / 2 + (i + 0.5) / 6 * viewW + Math.sin(t * 0.9 + i * 1.7) * 40, w0 = 26 + (i % 3) * 18, w1 = w0 * 3.2, sl = 0.28 * len;
+    const g = ctx.createLinearGradient(0, top, 0, top + len);
+    g.addColorStop(0, `rgba(150,215,255,${0.2 * a})`); g.addColorStop(1, 'rgba(90,170,255,0)');
+    ctx.fillStyle = g;
+    ctx.beginPath(); ctx.moveTo(x0 - w0, top); ctx.lineTo(x0 + w0, top); ctx.lineTo(x0 + sl + w1, top + len); ctx.lineTo(x0 + sl - w1, top + len); ctx.closePath(); ctx.fill();
+  }
+}
+// the sea breaking outward from her in a ring: a broad band of blue, a bright crest and foam along it
+function drawWave(x, y, since) {
+  const k = clamp(since / 0.85, 0, 1), a = 1 - k * k;
+  if (a <= 0) return;
+  const R = Math.max(viewW, viewH) * 0.78 * (1 - Math.pow(1 - k, 2.2)) + 20;
+  ctx.save(); ctx.translate(x, y); ctx.scale(1, 0.52);
+  ctx.lineWidth = 70 * (1 - k * 0.6); ctx.strokeStyle = `rgba(50,140,255,${0.26 * a})`; disc(ctx, 0, 0, R); ctx.stroke();
+  ctx.lineWidth = 26 * (1 - k * 0.5); ctx.strokeStyle = `rgba(140,210,255,${0.42 * a})`; disc(ctx, 0, 0, R + 16); ctx.stroke();
+  ctx.lineWidth = 4; ctx.strokeStyle = `rgba(255,255,255,${0.75 * a})`; disc(ctx, 0, 0, R + 28); ctx.stroke();
+  ctx.fillStyle = `rgba(235,250,255,${0.7 * a})`;
+  for (let i = 0; i < 44; i++) {
+    const an = i / 44 * TAU + Math.sin(i * 7.1) * 0.05, rr = R + 26 + Math.sin(i * 3.7 + since * 18) * 10;
+    disc(ctx, Math.cos(an) * rr, Math.sin(an) * rr, 3 + (i % 3) * 1.5); ctx.fill();
+  }
+  ctx.restore();
 }
 function drawVortex(x, y, R, t, a) {
   ctx.save(); ctx.translate(x, y); ctx.scale(1, 0.55);
@@ -15994,9 +16140,11 @@ function drawCutin() {
   if (!u || !(ultReady || M3.ready || u.whale || u.dragon) || u.t < 0.12 || u.t > 1.32) return;
   const r = ULT_ART.cutin;
   const h = Math.min(H * 0.27, 230), w = h * r[2] / r[3];
-  const cy = Math.max(H * 0.32, 160);
+  // 大肥鱼's and 龙娘's sit low, out of the way of the whale and the dragon taking shape over her, and are gone by
+  // the time it strikes
+  const low = u.whale || u.dragon, cy = low ? Math.min(H * 0.77, H - h / 2 - 10) : Math.max(H * 0.32, 160);
   const ease = k => 1 - Math.pow(1 - k, 3);
-  const inK = clamp((u.t - 0.12) / 0.22, 0, 1), outK = clamp((u.t - 1.05) / 0.27, 0, 1);
+  const inK = clamp((u.t - 0.12) / 0.22, 0, 1), outK = clamp((u.t - (low ? 0.78 : 1.05)) / 0.27, 0, 1);
   const x = W / 2 + (1 - ease(inK)) * (W / 2 + w) - ease(outK) * (W / 2 + w);
   const a = Math.min(1, inK * 2) * (1 - outK);
   ctx.globalAlpha = a * 0.85;
