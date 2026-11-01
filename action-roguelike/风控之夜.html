@@ -5084,17 +5084,18 @@ const WEAPONS = {
       { cd: 2.8, r: 240, pct: 0.24, dmg: 14 },
     ],
   },
-  // 锁链: a dart on a chain that hooks one enemy; it runs from her for all it's worth and drags her along behind it
+  // 锁链: a dart on a chain that hooks one enemy; it runs from her for all it's worth and drags her along behind it.
+  // One chain at every level (each level makes it hit harder), one more for each 多重施法
   shackle: {
-    name: '锁链', g: '锁', desc: '朝敌人甩出带铁镖的锁链，直接拴住一只怪物：它会拼命朝远离你的方向逃，不会再扑向你，一边被锁链勒得掉血，一边把挡路的敌人撞开；链子绷紧时它拖着你一起走，绷直的锁链扫到的敌人也会受伤。升级最多五条，每层多重施法再多两条；BOSS 拴不住。',
-    evo: { need: 'ratelimit', name: '铁索连环', desc: '五条烧红的锁链，拴得更久；锁链扫过的敌人着火，拴住的怪物一死，锁链立刻缠上它身边的下一只。' },
+    name: '锁链', g: '锁', desc: '朝敌人甩出带铁镖的锁链，直接拴住一只怪物：它会拼命朝远离你的方向逃，不会再扑向你，一边被锁链勒得掉血，一边把挡路的敌人撞开；链子绷紧时它拖着你一起走，绷直的锁链扫到的敌人也会受伤。每级都只甩一条（升级让它更狠），每层多重施法多一条；BOSS 拴不住。',
+    evo: { need: 'ratelimit', name: '铁索连环', desc: '烧红的锁链，拴得更久；锁链扫过的敌人着火，拴住的怪物一死，锁链立刻缠上它身边的下一只。' },
     lv: [
       { cd: 1.8, n: 1, dmg: 20, len: 170, dur: 3.0 },
       { cd: 1.8, n: 1, dmg: 27, len: 180, dur: 3.2 },
-      { cd: 1.6, n: 2, dmg: 27, len: 190, dur: 3.4 },
-      { cd: 1.6, n: 3, dmg: 30, len: 200, dur: 3.6 },
-      { cd: 1.4, n: 4, dmg: 28, len: 215, dur: 3.8 },
-      { cd: 1.2, n: 5, dmg: 36, len: 240, dur: 4.5 },
+      { cd: 1.6, n: 1, dmg: 40, len: 190, dur: 3.4 },
+      { cd: 1.6, n: 1, dmg: 58, len: 200, dur: 3.6 },
+      { cd: 1.4, n: 1, dmg: 72, len: 215, dur: 3.8 },
+      { cd: 1.2, n: 1, dmg: 80, len: 240, dur: 4.5 },
     ],
   },
   // 反向传播: a ball of light that bounces back off the edges of the screen, to and fro through whatever is in the way
@@ -5189,7 +5190,7 @@ const TALENTS = [
   { id: 'conc', name: '急速咏唱', g: '咏', cat: 'atk', rar: 0, max: 5, desc: '武器冷却 -8%', apply: p => { p.cd *= 0.92; } },
   { id: 'spark', name: '会心', g: '会', cat: 'atk', rar: 0, max: 5, desc: '暴击率 +6%', apply: p => { p.crit += 0.06; } },
   { id: 'epiph', name: '致命一击', g: '致', cat: 'atk', rar: 1, max: 3, desc: '暴击伤害 +35%', apply: p => { p.critDmg += 0.35; } },
-  { id: 'multi', name: '多重施法', g: '多', cat: 'atk', rar: 2, max: 2, desc: '投射物数量 +1（十四行诗 +3 片花瓣，锁链 +2 条，思维链多跳 1 次）', apply: p => { p.amount += 1; } },
+  { id: 'multi', name: '多重施法', g: '多', cat: 'atk', rar: 2, max: 2, desc: '投射物数量 +1（十四行诗 +3 片花瓣，思维链多跳 1 次）', apply: p => { p.amount += 1; } },
   { id: 'area', name: '范围扩大', g: '域', cat: 'atk', rar: 0, max: 5, desc: '攻击范围 +12%', apply: p => { p.area += 0.12; } },
   { id: 'amplify', name: '扩容', g: '容', cat: 'atk', rar: 1, max: 3, desc: '武器宽度 +15%（潮汐、人机验证、多模态和激光炮更粗），攻击范围 +8%，持续时间 +12%', apply: p => { p.wid += 0.15; p.area += 0.08; p.dur += 0.12; } },
   { id: 'stream', name: '疾速弹道', g: '疾', cat: 'atk', rar: 0, max: 3, desc: '投射物速度 +15%，持续时间 +10%', apply: p => { p.pspeed += 0.15; p.dur += 0.1; } },
@@ -9597,9 +9598,9 @@ function updateWeapons(dt) {
         break;
       }
       case 'shackle': {
-        // 锁链: each chain has its own cooldown, counted from when it comes back to her hand; up to five from its levels,
-        // and two more for each 多重施法
-        const n = Math.min(9, s.n + P.amount * 2);
+        // 锁链: one chain at every level, one more for each 多重施法; each has its own cooldown, counted from when it
+        // comes back to her hand
+        const n = s.n + P.amount;
         w.hooks = w.hooks || [];
         for (const h of w.hooks.slice()) if (!hookTick(h, dt, s, evo)) { w.hooks.splice(w.hooks.indexOf(h), 1); w.ts[h.slot] = cdOf(s.cd); }
         for (let i = 0; i < n; i++) {
