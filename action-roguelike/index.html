@@ -4507,40 +4507,37 @@ function densestAim() {
   return best;
 }
 const beamHalf = () => Math.min(viewW, viewH) * 0.11;
-// where the silver dragon is: its body rises out of her to rear up behind her, on the side away from where it will
-// breathe (bs is how big a unit of its art is in the world), its shoulders at (sx, sy)
+// where the drawing goes: over her, as big as the view allows (k world units to its pixel), facing (side) the way it
+// will breathe; e is how far it has been worked out yet, spreading from her
 function silverBody(u) {
   const S0 = Math.min(viewW, viewH), ca = Math.cos(u.aim), side = Math.abs(ca) > 0.2 ? Math.sign(ca) : (P.face || 1);
-  const bs = S0 * 0.00175, e = 1 - Math.pow(1 - clamp((u.t - 0.25) / 0.5, 0, 1), 3);
-  const bx = P.x - side * S0 * 0.17, by = P.y - 16 - S0 * 0.03 + (1 - e) * S0 * 0.1;
-  return { bx, by, side, bs, e, S0, sx: bx + side * DRAGON_NECK[0] * bs, sy: by + DRAGON_NECK[1] * bs };
+  // (on a phone held upright its wingtips may go off the sides)
+  const k = Math.min(viewH * 0.8 / DRAGON_ART.h, viewW * (viewW < viewH ? 1.4 : 1.05) / DRAGON_ART.w), e = 1 - Math.pow(1 - clamp((u.t - 0.15) / 0.65, 0, 1), 2);
+  return { S0, side, k, e, x: P.x, y: P.y - 10 + Math.sin(u.t * 2.2) * 4 };
 }
-// where its head is, which way it faces (where its breath goes), how big it is, and whether it's drawn flipped (so its
-// horns stay up facing left): held up over her on the arch of its neck, from where its breath comes down through the
-// crowd she faces, sweeping across it
+// a point of the drawing in the world
+const silverPt = (B, px, py) => [B.x + (px - DRAGON_ART.at[0]) * B.k * -B.side, B.y + (py - DRAGON_ART.at[1]) * B.k];
+// its mouth, and the way its breath goes from there: down through the crowd she faces, sweeping across it
 function silverHead(u) {
-  const B = silverBody(u), S0 = B.S0, ca = Math.cos(u.aim), sa = Math.sin(u.aim);
-  const fx = B.sx + B.side * S0 * 0.11 + ca * S0 * 0.05, fy = B.sy - S0 * 0.12 + sa * S0 * 0.04;
-  const base = Math.atan2(P.y + sa * S0 * 0.35 - fy, P.x + ca * S0 * 0.35 - fx);
+  const B = silverBody(u), S0 = B.S0, [x, y] = silverPt(B, DRAGON_ART.mouth[0], DRAGON_ART.mouth[1]), ca = Math.cos(u.aim), sa = Math.sin(u.aim);
+  const base = Math.atan2(P.y + sa * S0 * 0.35 - y, P.x + ca * S0 * 0.35 - x);
   const bt = u.fired ? u.t - u.firedAt : 0, q = clamp(bt / BEAM_T, 0, 1);
   const a = u.fired ? base + u.dir * (-0.55 + 1.1 * q * q * (3 - 2 * q)) : base;
-  const rec = u.fired ? Math.max(0, 1 - bt / 0.25) * S0 * 0.025 : 0;
-  const x = B.sx + (fx - B.sx) * B.e - Math.cos(a) * rec, y = B.sy + (fy - B.sy) * B.e - Math.sin(a) * rec;
-  return { x, y, a, s: S0 * 0.24 / 300, flip: Math.cos(base) < 0 ? -1 : 1, S0, B };
+  return { x, y, a, S0, B };
 }
 function silverMouth(u) {
-  const h = silverHead(u), c = Math.cos(h.a), s = Math.sin(h.a), mx = 114 * h.s, my = 18 * h.s * h.flip;
-  return { x: h.x + c * mx - s * my, y: h.y + s * mx + c * my };
+  const h = silverHead(u);
+  return { x: h.x, y: h.y };
 }
 function silverTick(u, dt) {
   const S0 = Math.min(viewW, viewH);
   // at the end it goes as it came, in motes of light drifting up off its wings and its head
-  if (u.t > ULT_DRAGON_T - 0.4 && G.parts.length < PART_MAX) {
-    const h = silverHead(u);
-    for (let i = 0; i < 5; i++) {
-      const side = Math.random() < 0.5 ? -1 : 1, onHead = Math.random() < 0.3;
-      const x = onHead ? h.x + rand(-60, 60) * h.s : P.x + side * rand(0.05, 0.45) * S0, y = onHead ? h.y + rand(-30, 30) * h.s : P.y - 30 - S0 * rand(0.05, 0.4);
-      G.parts.push({ x, y, vx: rand(-30, 30), vy: rand(-140, -50), life: 0.7, max: 0.7, size: rand(1.8, 3.4), color: pick(['#ffffff', '#efe6ff', '#c8a8ff']), add: true });
+  const gl = silverGlints();
+  if (u.t > ULT_DRAGON_T - 0.45 && gl.length && G.parts.length < PART_MAX) {
+    const B = silverBody(u);
+    for (let i = 0; i < 8; i++) {
+      const [x, y] = silverPt(B, ...pick(gl));
+      G.parts.push({ x, y, vx: rand(-30, 30), vy: rand(-140, -50), life: 0.7, max: 0.7, size: rand(1.8, 3.4), color: pick(['#ffffff', '#efe6ff', '#c8a8ff', '#ffd98a']), add: true });
     }
   }
   if (!u.fired && u.t > 0.25 && G.parts.length < PART_MAX) {
@@ -11218,187 +11215,30 @@ const starScale = evo => sprite('starscale' + (evo ? 'e' : ''), 32, 20, x => {
   path(); x.strokeStyle = evo ? '#8a2a8a' : '#4a2a8a'; x.lineWidth = 1; x.stroke();
   x.fillStyle = 'rgba(255,255,255,0.85)'; x.beginPath(); x.ellipse(2, -3.5, 6, 1.4, -0.1, 0, TAU); x.fill();
 });
-// 此即，最优解's silver dragon, a creature of light like 大肥鱼's whale: a pale glowing fill, a bright rim, ridges, plates
-// and scales picked out in light, specks of light inside. It is painted once, facing right, in three pieces on canvases
-// of its own: its body (legs, tail), a wing (the far one is the same, smaller and further back) and its head; the neck
-// between its shoulders and its head is drawn every frame, arching up and over her
-const DRAGON_K = 2.2, DRAGON_NECK = [62, -50], DRAGON_SHOULDER = [0, -52];
-// the outline of a tapering tube through [x, y, half-width] points, smoothed
-function tubePath(x, pts) {
-  const L = [], R = [], n = pts.length;
-  for (let i = 0; i < n; i++) {
-    const [px, py, w] = pts[i], a = pts[Math.max(0, i - 1)], b = pts[Math.min(n - 1, i + 1)];
-    const dx = b[0] - a[0], dy = b[1] - a[1], l = Math.hypot(dx, dy) || 1;
-    L.push([px - dy / l * w, py + dx / l * w]); R.push([px + dy / l * w, py - dx / l * w]);
-  }
-  const run = S => {
-    for (let i = 1; i < S.length; i++) x.quadraticCurveTo(S[i - 1][0], S[i - 1][1], (S[i - 1][0] + S[i][0]) / 2, (S[i - 1][1] + S[i][1]) / 2);
-    x.lineTo(S[S.length - 1][0], S[S.length - 1][1]);
-  };
-  R.reverse();
-  x.beginPath(); x.moveTo(L[0][0], L[0][1]); run(L); x.lineTo(R[0][0], R[0][1]); run(R); x.closePath();
-}
-// light: a glowing fill from white at (gx, gy) out to violet, and a rim (a soft halo, a lilac line, a white thread)
-function lightFill(x, path, a, gx, gy, r, deep) {
-  path();
-  const g = x.createRadialGradient(gx, gy, r * 0.05, gx, gy, r);
-  g.addColorStop(0, `rgba(255,255,255,${0.8 * a})`); g.addColorStop(0.45, `rgba(218,204,255,${0.58 * a})`); g.addColorStop(1, deep ? `rgba(104,66,200,${0.42 * a})` : `rgba(150,112,236,${0.4 * a})`);
-  x.fillStyle = g; x.fill();
-}
-function lightRim(x, path, a, w = 1) {
-  path();
-  x.shadowColor = '#b48cff'; x.shadowBlur = 28;
-  x.strokeStyle = `rgba(190,160,255,${0.42 * a})`; x.lineWidth = 5 * w; x.stroke();
-  x.shadowBlur = 0;
-  x.strokeStyle = `rgba(228,214,255,${0.78 * a})`; x.lineWidth = 2 * w; x.stroke();
-  x.strokeStyle = `rgba(255,255,255,${0.92 * a})`; x.lineWidth = 0.7 * w; x.stroke();
-}
-function lightCanvas(w, h, ox, oy, draw) {
-  const c = document.createElement('canvas');
-  c.width = w; c.height = h;
-  const x = c.getContext('2d');
-  x.translate(ox, oy); x.scale(DRAGON_K, DRAGON_K); x.lineJoin = 'round'; x.lineCap = 'round';
-  draw(x);
-  return { c, ox: ox / DRAGON_K, oy: oy / DRAGON_K, w: w / DRAGON_K, h: h / DRAGON_K };
-}
-const specks = (x, seed, n, x0, y0, w, h) => {
-  const rnd = seeded(seed);
-  for (let i = 0; i < n; i++) { x.fillStyle = `rgba(255,255,255,${0.3 + rnd() * 0.6})`; disc(x, x0 + rnd() * w, y0 + rnd() * h, 0.4 + rnd() * 1.1); x.fill(); }
-};
-let dragonArt = null;
-function silverArt() {
-  if (dragonArt) return dragonArt;
-  // the body: rearing, chest up towards the right, the far legs darker behind, the tail curling down and round
-  const body = lightCanvas(800, 680, 420, 300, x => {
-    const leg = (pts, deep, a) => { const pth = () => tubePath(x, pts); lightFill(x, pth, a, pts[0][0], pts[0][1], 70, deep); lightRim(x, pth, a * 0.8, 0.8); };
-    const claws = (cx, cy, a) => {
-      x.strokeStyle = `rgba(255,255,255,${0.85 * a})`; x.lineWidth = 2;
-      for (let i = -1; i <= 1; i++) { x.beginPath(); x.moveTo(cx + i * 5, cy); x.quadraticCurveTo(cx + i * 6 + 6, cy + 4, cx + i * 6 + 7, cy + 10); x.stroke(); }
-    };
-    leg([[22, 28, 11], [10, 56, 8], [20, 78, 5], [30, 86, 3]], true, 0.6); claws(30, 86, 0.6);
-    const tail = [[-104, 38, 24], [-140, 66, 19], [-168, 100, 15], [-166, 138, 11], [-136, 158, 8], [-102, 152, 5], [-84, 138, 2]];
-    lightFill(x, () => tubePath(x, tail), 0.85, -130, 80, 110, true); lightRim(x, () => tubePath(x, tail), 0.85);
-    const spade = () => { x.beginPath(); x.moveTo(-88, 142); x.quadraticCurveTo(-74, 112, -56, 124); x.quadraticCurveTo(-64, 148, -88, 142); x.closePath(); };
-    lightFill(x, spade, 0.9, -70, 130, 30); lightRim(x, spade, 0.9, 0.8);
-    leg([[-84, 34, 22], [-72, 70, 14], [-86, 98, 9], [-72, 110, 6], [-60, 112, 3]], false, 0.9); claws(-62, 112, 0.9);
-    const torso = () => {
-      x.beginPath(); x.moveTo(DRAGON_NECK[0], DRAGON_NECK[1]);
-      x.bezierCurveTo(30, -72, -42, -62, -82, -32); x.bezierCurveTo(-112, -12, -128, 24, -114, 50);
-      x.bezierCurveTo(-96, 78, -40, 82, 2, 64); x.bezierCurveTo(42, 48, 74, 22, 78, -8);
-      x.bezierCurveTo(80, -28, 74, -44, DRAGON_NECK[0], DRAGON_NECK[1]); x.closePath();
-    };
-    lightFill(x, torso, 1, 10, -20, 150); lightRim(x, torso, 1);
-    // the plates down its chest and belly, and a ridge of spines along its back
-    x.save(); torso(); x.clip();
-    x.strokeStyle = 'rgba(245,238,255,0.55)'; x.lineWidth = 1.6;
-    for (let i = 0; i < 9; i++) {
-      const f = i / 8, px = 70 - f * 150, py = 4 + f * 52 + Math.sin(f * Math.PI) * 14;
-      x.beginPath(); x.arc(px, py - 18, 20, Math.PI * 0.3, Math.PI * 0.75); x.stroke();
-    }
-    x.strokeStyle = 'rgba(200,175,255,0.4)'; x.lineWidth = 1.2;
-    x.beginPath(); x.moveTo(-60, -20); x.quadraticCurveTo(-90, 10, -80, 46); x.stroke();
-    specks(x, 11, 60, -120, -60, 200, 130);
-    x.restore();
-    x.fillStyle = 'rgba(244,238,255,0.85)'; x.strokeStyle = 'rgba(170,140,255,0.8)'; x.lineWidth = 1;
-    for (let i = 0; i < 8; i++) {
-      const f = i / 7, px = 40 - f * 150, py = -66 + f * 48 + Math.sin(f * Math.PI) * -6, l = 13 - f * 6;
-      x.beginPath(); x.moveTo(px + 6, py + 4); x.lineTo(px - 6, py - l); x.lineTo(px - 6, py + 4); x.closePath(); x.fill(); x.stroke();
-    }
-    leg([[44, 18, 14], [56, 46, 10], [48, 72, 7], [60, 84, 4]], false, 1); claws(60, 84, 1);
-  });
-  // a wing, from its shoulder: the arm up through the elbow to the wrist, four long fingers out to the tips, the membrane
-  // between them scalloped in towards the wrist, the trailing edge back to the body
-  const wing = lightCanvas(660, 520, 600, 420, x => {
-    const el = [-36, -66], wr = [-70, -116], tips = [[-214, -148], [-232, -76], [-196, -10], [-128, 22]], root = [-60, 12];
-    const membrane = () => {
-      x.beginPath(); x.moveTo(0, 0); x.quadraticCurveTo(-20, -38, el[0], el[1]); x.quadraticCurveTo(-50, -98, wr[0], wr[1]);
-      x.quadraticCurveTo(-140, -150, tips[0][0], tips[0][1]);
-      for (let i = 1; i < tips.length; i++) {
-        const p = tips[i - 1], q = tips[i], mx = (p[0] + q[0]) / 2, my = (p[1] + q[1]) / 2;
-        x.quadraticCurveTo(mx + (wr[0] - mx) * 0.3, my + (wr[1] - my) * 0.3, q[0], q[1]);
-      }
-      const p = tips[tips.length - 1]; x.quadraticCurveTo((p[0] + root[0]) / 2 + 4, (p[1] + root[1]) / 2 - 14, root[0], root[1]);
-      x.closePath();
-    };
-    membrane();
-    const g = x.createLinearGradient(wr[0], wr[1], -120, 20);
-    g.addColorStop(0, 'rgba(240,232,255,0.6)'); g.addColorStop(1, 'rgba(140,100,232,0.22)');
-    x.fillStyle = g; x.fill();
-    x.save(); membrane(); x.clip();
-    // light veining across the membrane, parallel to the fingers
-    x.strokeStyle = 'rgba(230,220,255,0.28)'; x.lineWidth = 1;
-    for (let i = 0; i < tips.length - 1; i++) {
-      for (let j = 1; j < 3; j++) {
-        const f = j / 3, tx = tips[i][0] + (tips[i + 1][0] - tips[i][0]) * f, ty = tips[i][1] + (tips[i + 1][1] - tips[i][1]) * f;
-        x.beginPath(); x.moveTo(wr[0], wr[1]); x.quadraticCurveTo((wr[0] + tx) / 2 + 6, (wr[1] + ty) / 2 + 6, tx, ty); x.stroke();
-      }
-    }
-    specks(x, 23, 40, -230, -150, 230, 170);
-    x.restore();
-    lightRim(x, membrane, 0.55, 0.7);
-    // the bones
-    const arm = () => tubePath(x, [[0, 0, 7], [el[0], el[1], 5], [wr[0], wr[1], 4]]);
-    lightFill(x, arm, 1, el[0], el[1], 60); lightRim(x, arm, 1, 0.8);
-    for (const tp of tips) { const f = () => tubePath(x, [[wr[0], wr[1], 3.2], [(wr[0] + tp[0]) / 2, (wr[1] + tp[1]) / 2, 2], [tp[0], tp[1], 0.6]]); lightFill(x, f, 1, wr[0], wr[1], 120); lightRim(x, f, 0.9, 0.6); }
-    // a claw at the wrist
-    x.strokeStyle = 'rgba(255,255,255,0.9)'; x.lineWidth = 2; x.beginPath(); x.moveTo(wr[0], wr[1]); x.quadraticCurveTo(wr[0] - 2, wr[1] - 12, wr[0] + 8, wr[1] - 16); x.stroke();
-  });
-  // the head in profile, jaws open on the light it breathes: horns swept back, a mane of light streaming behind,
-  // spikes back from the jaw, teeth, a brow ridge, a glowing violet eye
-  const head = lightCanvas(800, 560, 400, 280, x => {
-    for (const [pts, a] of [
-      [[[-46, -20, 9], [-86, -30, 8], [-122, -24, 6], [-152, -38, 3], [-170, -54, 0.6]], 0.6],
-      [[[-50, -4, 8], [-92, -2, 7], [-130, 10, 5], [-160, 4, 2], [-176, -6, 0.6]], 0.55],
-      [[[-44, 12, 7], [-80, 26, 6], [-112, 42, 4], [-140, 46, 2], [-160, 40, 0.6]], 0.5],
-    ]) { lightFill(x, () => tubePath(x, pts), a, pts[0][0], pts[0][1], 120, true); lightRim(x, () => tubePath(x, pts), a * 0.8, 0.6); }
-    for (const pts of [[[-16, -36, 7], [-58, -60, 5.5], [-102, -76, 3.5], [-138, -88, 0.8]], [[-32, -28, 5.5], [-70, -44, 4], [-108, -50, 2.5], [-132, -48, 0.6]]]) {
-      const f = () => tubePath(x, pts);
-      lightFill(x, f, 1, pts[0][0], pts[0][1], 130); lightRim(x, f, 1, 0.8);
-      x.strokeStyle = 'rgba(170,140,255,0.6)'; x.lineWidth = 1;
-      for (let i = 1; i < 6; i++) { const k = i / 6, j = Math.min(pts.length - 2, Math.floor(k * (pts.length - 1))), u = k * (pts.length - 1) - j, px = pts[j][0] + (pts[j + 1][0] - pts[j][0]) * u, py = pts[j][1] + (pts[j + 1][1] - pts[j][1]) * u; x.beginPath(); x.arc(px, py, pts[j][2] * (1 - u * 0.3), Math.PI * 0.2, Math.PI * 0.9); x.stroke(); }
-    }
-    const frill = () => { x.beginPath(); x.moveTo(-40, 26); x.lineTo(-86, 40); x.lineTo(-52, 16); x.lineTo(-96, 18); x.lineTo(-54, 4); x.lineTo(-88, -6); x.lineTo(-48, -10); x.closePath(); };
-    lightFill(x, frill, 0.8, -50, 10, 60, true); lightRim(x, frill, 0.8, 0.7);
-    const jaw = () => { x.beginPath(); x.moveTo(-32, 18); x.quadraticCurveTo(40, 28, 112, 34); x.quadraticCurveTo(128, 36, 132, 44); x.quadraticCurveTo(80, 60, 20, 54); x.quadraticCurveTo(-22, 48, -32, 18); x.closePath(); };
-    lightFill(x, jaw, 0.95, 30, 40, 110, true); lightRim(x, jaw, 0.95);
-    // the light in its mouth
-    const mouth = () => { x.beginPath(); x.moveTo(-14, 14); x.lineTo(124, 6); x.lineTo(120, 34); x.quadraticCurveTo(50, 30, -14, 24); x.closePath(); };
-    mouth(); x.fillStyle = 'rgba(200,150,255,0.85)'; x.fill();
-    x.fillStyle = '#ffffff';
-    for (let i = 0; i < 6; i++) { const tx = 44 + i * 13, ty = 29 + i * 1.2; x.beginPath(); x.moveTo(tx, ty + 1); x.lineTo(tx + 3, ty - 7); x.lineTo(tx + 6, ty + 1); x.closePath(); x.fill(); }
-    const skull = () => {
-      x.beginPath(); x.moveTo(-66, 14);
-      x.bezierCurveTo(-72, -20, -48, -46, -12, -46); x.bezierCurveTo(24, -48, 52, -34, 84, -22);
-      x.bezierCurveTo(112, -12, 136, -12, 144, -4); x.quadraticCurveTo(146, 4, 134, 8);
-      x.quadraticCurveTo(90, 10, 40, 8); x.quadraticCurveTo(0, 10, -30, 22); x.quadraticCurveTo(-58, 30, -66, 14); x.closePath();
-    };
-    lightFill(x, skull, 1, 30, -20, 150); lightRim(x, skull, 1);
-    x.fillStyle = '#ffffff';
-    for (let i = 0; i < 7; i++) { const tx = 40 + i * 13, ty = 8 - i * 0.4; x.beginPath(); x.moveTo(tx, ty - 1); x.lineTo(tx + 3, ty + 8); x.lineTo(tx + 6, ty - 1); x.closePath(); x.fill(); }
-    x.save(); skull(); x.clip();
-    x.strokeStyle = 'rgba(255,255,255,0.75)'; x.lineWidth = 2;
-    x.beginPath(); x.moveTo(-14, -42); x.quadraticCurveTo(24, -46, 64, -30); x.stroke();
-    x.strokeStyle = 'rgba(200,175,255,0.55)'; x.lineWidth = 1.2;
-    for (let i = 0; i < 6; i++) { x.beginPath(); x.arc(70 + i * 12, -18 + i * 2.4, 6, Math.PI * 1.1, Math.PI * 1.9); x.stroke(); }
-    x.beginPath(); x.moveTo(-58, -6); x.quadraticCurveTo(-30, 0, -6, 6); x.stroke();
-    specks(x, 37, 30, -60, -46, 190, 56);
-    x.restore();
-    x.fillStyle = 'rgba(120,80,210,0.9)'; x.beginPath(); x.ellipse(132, -6, 4, 1.8, -0.3, 0, TAU); x.fill();
-    // the eye
-    const eg = x.createRadialGradient(34, -24, 0, 34, -24, 22);
-    eg.addColorStop(0, 'rgba(230,190,255,0.9)'); eg.addColorStop(1, 'rgba(160,90,255,0)');
-    x.fillStyle = eg; disc(x, 34, -24, 22); x.fill();
-    x.fillStyle = 'rgba(176,110,255,1)'; x.beginPath(); x.ellipse(34, -24, 11, 5, -0.2, 0, TAU); x.fill();
-    x.fillStyle = '#2a1050'; x.beginPath(); x.ellipse(36, -24, 1.6, 4.4, -0.2, 0, TAU); x.fill();
-    x.strokeStyle = 'rgba(255,255,255,0.95)'; x.lineWidth = 1.4; x.beginPath(); x.ellipse(34, -24, 11, 5, -0.2, 0, TAU); x.stroke();
-    x.fillStyle = '#fff'; disc(x, 30, -26, 1.6); x.fill();
-  });
-  dragonArt = { body, wing, head };
-  return dragonArt;
+// 此即，最优解's dragon is an illustration (art/dragon-ult.webp, from tools/dragon-ult-art.py): a winged dragon in blue
+// and gold ink among rings, beads and leaves, lit up as lilac and gold light. DRAGON_ART is the drawing's size, the
+// point of it that stands over her and its mouth; its head looks left, so it is mirrored to breathe to the right
+const DRAGON_ART = { w: 1536, h: 1024, at: [768, 560], mouth: [708, 300] };
+const dragonUltArt = new Image();
+dragonUltArt.onload = () => { dragonUltArt.ready = true; };
+// points along its lines, in the drawing's pixels, for glints to twinkle at and motes to rise from as it goes
+let dragonGlints = null;
+function silverGlints() {
+  if (dragonGlints || !dragonUltArt.ready) return dragonGlints || [];
+  dragonGlints = [];
+  try {
+    const W = 192, H = 128, c = document.createElement('canvas');
+    c.width = W; c.height = H;
+    const x = c.getContext('2d');
+    x.drawImage(dragonUltArt, 0, 0, W, H);
+    const d = x.getImageData(0, 0, W, H).data;
+    for (let i = 0; i < W * H; i++) if (d[i * 4 + 3] > 120) dragonGlints.push([(i % W + 0.5) * DRAGON_ART.w / W, (Math.floor(i / W) + 0.5) * DRAGON_ART.h / H]);
+  } catch (e) { /* a canvas it can't read back: no glints */ }
+  return dragonGlints;
 }
 function drawSilverDragon(u) {
-  const t = u.t, h = silverHead(u), S0 = h.S0, since = u.fired ? t - u.firedAt : 0;
-  const ap = clamp((t - 0.25) / 0.45, 0, 1) * clamp((ULT_DRAGON_T - t) / 0.3, 0, 1);
+  const t = u.t, h = silverHead(u), S0 = h.S0, B = h.B, since = u.fired ? t - u.firedAt : 0;
+  const ap = clamp((t - 0.15) / 0.3, 0, 1) * clamp((ULT_DRAGON_T - t) / 0.35, 0, 1);
   // under her, the working-out: a sigil of 推演 opening as the dragon takes shape, flaring as it roars
   const sk = clamp((t - 0.1) / 0.5, 0, 1), sa = Math.min(sk * 1.5, 1) * (u.fired ? Math.max(0, 1 - since / 0.7) : 1);
   if (sa > 0) drawSigil(P.x, P.y + 14, S0 * (0.16 + 0.2 * (1 - Math.pow(1 - sk, 3))) * (1 + (u.fired ? since * 1.2 : 0)), t, sa, u.fired && since < 0.15);
@@ -11413,54 +11253,36 @@ function drawSilverDragon(u) {
     }
     ctx.globalAlpha = 1;
   }
-  if (ap <= 0) return;
-  const B = h.B, art = silverArt(), flap = Math.sin(t * 3.2), grow = 0.75 + 0.25 * B.e;
   ctx.globalCompositeOperation = 'lighter';
-  ctx.fillStyle = rgrad(ctx, B.bx, B.by - S0 * 0.12, S0 * 0.42, [`rgba(225,210,255,${0.22 * ap})`, 'rgba(200,170,255,0)']);
-  disc(ctx, B.bx, B.by - S0 * 0.12, S0 * 0.42); ctx.fill();
-  ctx.globalCompositeOperation = 'source-over';
-  // a piece of its art at a place in its body's frame, turned by `rot` about the art's origin
-  const piece = (pc, x, y, k, rot, a) => {
-    ctx.save(); ctx.translate(B.bx + B.side * x * B.bs, B.by + y * B.bs); ctx.scale(B.side * B.bs * grow * k / DRAGON_K, B.bs * grow * k / DRAGON_K); ctx.rotate(rot);
-    ctx.globalAlpha = a; ctx.drawImage(pc.c, -pc.ox * DRAGON_K, -pc.oy * DRAGON_K);
+  if (ap > 0 && dragonUltArt.ready) {
+    // the drawing, worked out from her outward: it shows inside a circle that spreads from her, a ring of light at its
+    // edge; brighter for a moment as it roars
+    const [cx, cy] = silverPt(B, DRAGON_ART.at[0], DRAGON_ART.at[1] - 120), R = Math.hypot(DRAGON_ART.w, DRAGON_ART.h) * B.k * 0.58 * B.e;
+    ctx.fillStyle = rgrad(ctx, cx, cy, S0 * 0.5, [`rgba(200,170,255,${0.2 * ap})`, 'rgba(150,110,255,0)']);
+    disc(ctx, cx, cy, S0 * 0.5); ctx.fill();
+    ctx.save();
+    if (B.e < 1) { ctx.beginPath(); ctx.arc(cx, cy, R, 0, TAU); ctx.clip(); }
+    ctx.translate(B.x, B.y); ctx.scale(-B.side * B.k, B.k);
+    ctx.globalAlpha = ap * 0.88;
+    ctx.drawImage(dragonUltArt, -DRAGON_ART.at[0], -DRAGON_ART.at[1]);
+    if (u.fired && since < 0.35) { ctx.globalAlpha = ap * 0.7 * (1 - since / 0.35); ctx.drawImage(dragonUltArt, -DRAGON_ART.at[0], -DRAGON_ART.at[1]); }
     ctx.restore();
-  };
-  // the far wing behind, smaller and dimmer; the body; the near wing over it, both beating slowly
-  piece(art.wing, DRAGON_SHOULDER[0] + 30, DRAGON_SHOULDER[1] - 8, 0.8, 0.18 + flap * 0.07, ap * 0.55);
-  piece(art.body, 0, 0, 1, 0, ap * 0.95);
-  piece(art.wing, DRAGON_SHOULDER[0], DRAGON_SHOULDER[1], 1, -0.04 - flap * 0.08, ap * 0.85);
-  // the neck, arching from its shoulders up and over to the back of its head
-  const c = Math.cos(h.a), s = Math.sin(h.a), hb = [h.x - c * 50 * h.s + s * 6 * h.s * h.flip, h.y - s * 50 * h.s - c * 6 * h.s * h.flip];
-  const qx = (B.sx + hb[0]) / 2 - B.side * S0 * 0.03, qy = Math.min(B.sy, hb[1]) - S0 * 0.07, N = 14, pts = [];
-  for (let i = 0; i <= N; i++) {
-    const f = i / N, x = (1 - f) * (1 - f) * B.sx + 2 * (1 - f) * f * qx + f * f * hb[0], y = (1 - f) * (1 - f) * B.sy + 2 * (1 - f) * f * qy + f * f * hb[1];
-    pts.push([x, y, S0 * (0.036 - 0.013 * f) * grow]);
+    if (B.e < 1) {
+      ctx.lineWidth = 3; ctx.strokeStyle = `rgba(255,226,160,${0.7 * (1 - B.e)})`; disc(ctx, cx, cy, R); ctx.stroke();
+      ctx.lineWidth = 10; ctx.strokeStyle = `rgba(190,150,255,${0.25 * (1 - B.e)})`; disc(ctx, cx, cy, R); ctx.stroke();
+    }
+    // glints running along its lines
+    const gl = silverGlints();
+    if (gl.length) {
+      for (let i = 0; i < 26; i++) {
+        const ph = (t * 1.3 + i * 0.173) % 1, p = gl[(i * 7919 + Math.floor(t * 1.3 + i * 0.173) * 104729) % gl.length], [x, y] = silverPt(B, p[0], p[1]);
+        if (B.e < 1 && Math.hypot(x - cx, y - cy) > R) continue;
+        ctx.globalAlpha = ap * Math.sin(ph * Math.PI);
+        ctx.fillStyle = i % 3 ? '#f4ecff' : '#ffe2a0'; sparkle(ctx, x, y, 3 + (i % 4));
+      }
+      ctx.globalAlpha = 1;
+    }
   }
-  const neck = () => tubePath(ctx, pts), rw = S0 / 640;
-  ctx.globalAlpha = ap;
-  lightFill(ctx, neck, 0.95, qx, qy, S0 * 0.3);
-  // plates down its throat, and spines along the top of the arch
-  ctx.save(); neck(); ctx.clip();
-  ctx.strokeStyle = 'rgba(245,238,255,0.5)'; ctx.lineWidth = 1.6 * rw;
-  for (let i = 1; i < N; i++) {
-    const [x, y, w] = pts[i], [x2, y2] = pts[i + 1], an = Math.atan2(y2 - y, x2 - x);
-    ctx.beginPath(); ctx.arc(x, y, w * 0.9, an + Math.PI * 0.15, an + Math.PI * 0.6); ctx.stroke();
-  }
-  ctx.restore();
-  lightRim(ctx, neck, 0.95, rw);
-  ctx.fillStyle = 'rgba(244,238,255,0.85)'; ctx.strokeStyle = 'rgba(170,140,255,0.8)'; ctx.lineWidth = rw;
-  for (let i = 2; i < N; i += 2) {
-    const [x, y, w] = pts[i], [x2, y2] = pts[i + 1], dx = x2 - x, dy = y2 - y, l = Math.hypot(dx, dy) || 1;
-    // on the upper side of the arch
-    let ux = -dy / l, uy = dx / l;
-    if (uy > 0) { ux = -ux; uy = -uy; }
-    const bxx = x + ux * w * 0.8, byy = y + uy * w * 0.8, sp = w * 0.6;
-    ctx.beginPath(); ctx.moveTo(bxx + dx / l * sp * 0.5, byy + dy / l * sp * 0.5); ctx.lineTo(bxx + ux * sp - dx / l * sp * 0.6, byy + uy * sp - dy / l * sp * 0.6); ctx.lineTo(bxx - dx / l * sp * 0.5, byy - dy / l * sp * 0.5); ctx.closePath(); ctx.fill(); ctx.stroke();
-  }
-  ctx.globalAlpha = 1;
-  ctx.globalCompositeOperation = 'lighter';
-  ctx.fillStyle = rgrad(ctx, h.x, h.y, S0 * 0.2, [`rgba(235,225,255,${0.3 * ap})`, 'rgba(200,170,255,0)']);
-  disc(ctx, h.x, h.y, S0 * 0.2); ctx.fill();
   // the roar: two rings going out from its jaws
   if (u.fired && since < 0.5) {
     for (const [d, col] of [[0, '255,255,255'], [0.1, '190,140,255']]) {
@@ -11470,9 +11292,11 @@ function drawSilverDragon(u) {
       disc(ctx, h.x, h.y, 30 + k * S0 * 0.7); ctx.stroke();
     }
   }
+  // a light gathering at its jaws before it breathes
+  if (!u.fired && t > 0.6) { const k = clamp((t - 0.6) / 0.45, 0, 1); ctx.fillStyle = rgrad(ctx, h.x, h.y, 14 + k * S0 * 0.06, ['rgba(255,255,255,0.9)', 'rgba(210,180,255,0.5)', 'rgba(170,110,255,0)']); disc(ctx, h.x, h.y, 14 + k * S0 * 0.06); ctx.fill(); }
   if (u.beam && since < BEAM_T) {
-    // the breath: a broad beam, white at its heart going to violet at its edges, flickering, with streaks running out
-    // along it and a flare at the mouth
+    // the breath: a broad beam, white at its heart going to violet at its edges, flickering, two strands of violet light
+    // winding along it, streaks running out along it and a flare at the mouth
     const m = silverMouth(u), a = h.a, L = Math.hypot(viewW, viewH) * 1.2;
     const k = Math.min(1, since / 0.08) * Math.min(1, (BEAM_T - since) / 0.2), bw = beamHalf() * k * (0.92 + 0.08 * Math.sin(t * 60));
     ctx.save(); ctx.translate(m.x, m.y); ctx.rotate(a);
@@ -11481,7 +11305,6 @@ function drawSilverDragon(u) {
     g.addColorStop(0.5, 'rgba(255,255,255,1)'); g.addColorStop(0.58, 'rgba(232,214,255,0.85)'); g.addColorStop(0.78, 'rgba(170,110,255,0.4)'); g.addColorStop(1, 'rgba(150,90,255,0)');
     ctx.fillStyle = g;
     ctx.beginPath(); ctx.moveTo(0, -bw * 0.5); ctx.lineTo(S0 * 0.15, -bw * 1.4); ctx.lineTo(L, -bw * 1.4); ctx.lineTo(L, bw * 1.4); ctx.lineTo(S0 * 0.15, bw * 1.4); ctx.lineTo(0, bw * 0.5); ctx.closePath(); ctx.fill();
-    // a spiral of violet light winding along it
     ctx.strokeStyle = `rgba(200,150,255,${0.55 * k})`; ctx.lineWidth = 3;
     for (const ph of [0, Math.PI]) {
       ctx.beginPath();
@@ -11498,14 +11321,7 @@ function drawSilverDragon(u) {
     disc(ctx, m.x, m.y, bw * 1.3); ctx.fill();
   }
   ctx.globalCompositeOperation = 'source-over';
-  // the head, over where its breath starts, and its eye burning violet
-  ctx.save(); ctx.translate(h.x, h.y); ctx.rotate(h.a); ctx.scale(h.s, h.s * h.flip);
-  const hd = art.head;
-  ctx.globalAlpha = ap; ctx.drawImage(hd.c, -hd.ox, -hd.oy, hd.w, hd.h);
-  ctx.globalCompositeOperation = 'lighter'; ctx.globalAlpha = ap * (0.6 + 0.4 * Math.sin(t * 12));
-  ctx.fillStyle = rgrad(ctx, 36, -24, 26, ['rgba(220,170,255,0.9)', 'rgba(160,90,255,0)']); disc(ctx, 36, -24, 26); ctx.fill();
-  ctx.restore();
-  ctx.globalAlpha = 1; ctx.globalCompositeOperation = 'source-over';
+  ctx.globalAlpha = 1;
 }
 // 龙娘's sigil on the ground (squashed into the floor): two rings turning opposite ways, the marks of her working-out
 // round them, a six-pointed star and a ring of light at its heart; `flare` lights it all up at the roar
@@ -12872,6 +12688,7 @@ function selectChar(id) {
   if (CH.model) load3D(id);
   audio.loadVoice(id);
   if (id === 'whale' && !songArt.src) songArt.src = 'art/whale-ult.webp';
+  if (id === 'dragon' && !dragonUltArt.src) dragonUltArt.src = 'art/dragon-ult.webp';
 }
 function showBest() {
   const b = store.get(bestKey(modeChoice), null);
