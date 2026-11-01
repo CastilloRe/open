@@ -4512,7 +4512,7 @@ const beamHalf = () => Math.min(viewW, viewH) * 0.11;
 function silverBody(u) {
   const S0 = Math.min(viewW, viewH), ca = Math.cos(u.aim), side = Math.abs(ca) > 0.2 ? Math.sign(ca) : (P.face || 1);
   // (on a phone held upright its wingtips may go off the sides)
-  const k = Math.min(viewH * 0.8 / DRAGON_ART.sheet[1], viewW * (viewW < viewH ? 1.4 : 1.05) / DRAGON_ART.sheet[0]), e = 1 - Math.pow(1 - clamp((u.t - 0.15) / 0.65, 0, 1), 2);
+  const k = Math.min(viewH * 0.8 / DRAGON_ART.h, viewW * (viewW < viewH ? 1.4 : 1.05) / DRAGON_ART.w), e = 1 - Math.pow(1 - clamp((u.t - 0.15) / 0.65, 0, 1), 2);
   return { S0, side, k, e, x: P.x, y: P.y - 10 + Math.sin(u.t * 2.2) * 4 };
 }
 // a point of the drawing in the world
@@ -11216,14 +11216,12 @@ const starScale = evo => sprite('starscale' + (evo ? 'e' : ''), 32, 20, x => {
   x.fillStyle = 'rgba(255,255,255,0.85)'; x.beginPath(); x.ellipse(2, -3.5, 6, 1.4, -0.1, 0, TAU); x.fill();
 });
 // 此即，最优解's dragon is an illustration (art/dragon-ult.webp, from tools/dragon-ult-art.py): a winged dragon in blue
-// and gold ink among rings, beads and leaves, exactly as drawn, on a cloud of its own paper that fades out round it.
-// DRAGON_ART is the picture's size (the sheet with a margin of paper round it) and the sheet's, the point of it that
-// stands over her and its mouth; its head looks left, so it is mirrored to breathe to the right
-const DRAGON_ART = { w: 1716, h: 1204, sheet: [1536, 1024], at: [858, 650], mouth: [798, 390] };
+// and gold ink among rings, beads and leaves, lit up as lilac and gold light. DRAGON_ART is the drawing's size, the
+// point of it that stands over her and its mouth; its head looks left, so it is mirrored to breathe to the right
+const DRAGON_ART = { w: 1536, h: 1024, at: [768, 560], mouth: [708, 300] };
 const dragonUltArt = new Image();
 dragonUltArt.onload = () => { dragonUltArt.ready = true; };
-// points on its ink lines (dark on the paper), in the drawing's pixels, for glints to twinkle at and motes to rise
-// from as it goes
+// points along its lines, in the drawing's pixels, for glints to twinkle at and motes to rise from as it goes
 let dragonGlints = null;
 function silverGlints() {
   if (dragonGlints || !dragonUltArt.ready) return dragonGlints || [];
@@ -11234,7 +11232,7 @@ function silverGlints() {
     const x = c.getContext('2d');
     x.drawImage(dragonUltArt, 0, 0, W, H);
     const d = x.getImageData(0, 0, W, H).data;
-    for (let i = 0; i < W * H; i++) if (d[i * 4 + 3] > 200 && d[i * 4] + d[i * 4 + 1] + d[i * 4 + 2] < 600) dragonGlints.push([(i % W + 0.5) * DRAGON_ART.w / W, (Math.floor(i / W) + 0.5) * DRAGON_ART.h / H]);
+    for (let i = 0; i < W * H; i++) if (d[i * 4 + 3] > 120) dragonGlints.push([(i % W + 0.5) * DRAGON_ART.w / W, (Math.floor(i / W) + 0.5) * DRAGON_ART.h / H]);
   } catch (e) { /* a canvas it can't read back: no glints */ }
   return dragonGlints;
 }
@@ -11258,33 +11256,31 @@ function drawSilverDragon(u) {
   ctx.globalCompositeOperation = 'lighter';
   if (ap > 0 && dragonUltArt.ready) {
     // the drawing, worked out from her outward: it shows inside a circle that spreads from her, a ring of light at its
-    // edge; it flashes as it roars
-    const [cx, cy] = silverPt(B, DRAGON_ART.at[0], DRAGON_ART.at[1] - 120), R = Math.hypot(DRAGON_ART.w, DRAGON_ART.h) * B.k * 0.56 * B.e;
+    // edge; brighter for a moment as it roars
+    const [cx, cy] = silverPt(B, DRAGON_ART.at[0], DRAGON_ART.at[1] - 120), R = Math.hypot(DRAGON_ART.w, DRAGON_ART.h) * B.k * 0.58 * B.e;
     ctx.fillStyle = rgrad(ctx, cx, cy, S0 * 0.5, [`rgba(200,170,255,${0.2 * ap})`, 'rgba(150,110,255,0)']);
     disc(ctx, cx, cy, S0 * 0.5); ctx.fill();
     ctx.save();
     if (B.e < 1) { ctx.beginPath(); ctx.arc(cx, cy, R, 0, TAU); ctx.clip(); }
     ctx.translate(B.x, B.y); ctx.scale(-B.side * B.k, B.k);
-    ctx.globalCompositeOperation = 'source-over'; ctx.globalAlpha = ap;
+    ctx.globalAlpha = ap * 0.88;
     ctx.drawImage(dragonUltArt, -DRAGON_ART.at[0], -DRAGON_ART.at[1]);
-    if (u.fired && since < 0.35) { ctx.globalCompositeOperation = 'lighter'; ctx.globalAlpha = ap * 0.45 * (1 - since / 0.35); ctx.drawImage(dragonUltArt, -DRAGON_ART.at[0], -DRAGON_ART.at[1]); }
+    if (u.fired && since < 0.35) { ctx.globalAlpha = ap * 0.7 * (1 - since / 0.35); ctx.drawImage(dragonUltArt, -DRAGON_ART.at[0], -DRAGON_ART.at[1]); }
     ctx.restore();
-    ctx.globalCompositeOperation = 'lighter';
     if (B.e < 1) {
       ctx.lineWidth = 3; ctx.strokeStyle = `rgba(255,226,160,${0.7 * (1 - B.e)})`; disc(ctx, cx, cy, R); ctx.stroke();
       ctx.lineWidth = 10; ctx.strokeStyle = `rgba(190,150,255,${0.25 * (1 - B.e)})`; disc(ctx, cx, cy, R); ctx.stroke();
     }
-    // glints of gold and blue running along its lines, in the drawing's own inks
+    // glints running along its lines
     const gl = silverGlints();
     if (gl.length) {
-      ctx.globalCompositeOperation = 'source-over';
       for (let i = 0; i < 26; i++) {
         const ph = (t * 1.3 + i * 0.173) % 1, p = gl[(i * 7919 + Math.floor(t * 1.3 + i * 0.173) * 104729) % gl.length], [x, y] = silverPt(B, p[0], p[1]);
         if (B.e < 1 && Math.hypot(x - cx, y - cy) > R) continue;
         ctx.globalAlpha = ap * Math.sin(ph * Math.PI);
-        ctx.fillStyle = i % 3 ? '#e0a83a' : '#4a5ab8'; sparkle(ctx, x, y, 3 + (i % 4));
+        ctx.fillStyle = i % 3 ? '#f4ecff' : '#ffe2a0'; sparkle(ctx, x, y, 3 + (i % 4));
       }
-      ctx.globalAlpha = 1; ctx.globalCompositeOperation = 'lighter';
+      ctx.globalAlpha = 1;
     }
   }
   // the roar: two rings going out from its jaws
